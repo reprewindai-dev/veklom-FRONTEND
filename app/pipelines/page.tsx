@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 import Shell from "@/components/Shell";
 import TierGate from "@/components/TierGate";
 import { useApi } from "@/hooks/useApi";
@@ -14,6 +15,19 @@ import { Play, Rocket, Plus, Save, Search, Cpu, Settings2, History, Library, Shi
 
 const RUN_STAGES = ["Source", "Build", "Validate", "Test", "Stage", "Gate", "Deploy"];
 type PanelTab = "library" | "inspector" | "templates" | "runs";
+type CatalogCertification = {
+  status?: string;
+  adapter?: string;
+  requires?: string[];
+};
+type CatalogNode = {
+  id: string;
+  name: string;
+  type?: string;
+  description?: string;
+  provider?: string;
+  certification?: CatalogCertification;
+};
 type NodeConfig = {
   provider?: string;
   model?: string;
@@ -30,6 +44,29 @@ type NodeConfig = {
   method?: string;
   query?: string;
   body?: string;
+  collection?: string;
+  class_name?: string;
+  record_id?: string;
+  repo_url?: string;
+  max_risk_score?: number;
+  max_cost_usd?: number;
+  monthly_cap_usd?: number;
+  committed_spend_usd?: number;
+  approval_id?: string;
+  approved_by?: string;
+  status?: string;
+  format?: string;
+  scope?: string;
+  top_k?: number;
+  question?: string;
+  sandbox_url?: string;
+  language?: string;
+  code?: string;
+  providers?: { provider: string; model?: string; estimated_cost?: number }[];
+  candidates?: { provider: string; model?: string; estimated_cost?: number }[];
+  routes?: { route?: string; label?: string; provider?: string; model?: string; keywords?: string[] }[];
+  labels?: ({ label: string; keywords?: string[] } | string)[];
+  steps?: ({ label: string; operation?: string } | string)[];
   policy?: string;
   maxLatencyMs?: number;
   monthlyCapUsd?: number;
@@ -94,22 +131,26 @@ export default function PipelinesPage() {
   const runs = useApi<any>(pid ? `/api/v1/pipelines/${pid}/runs` : null);
   const selectedNode = nodes.find((n) => n.id === selected) || null;
 
-  // nodeType -> category lookup from live palette
+  // nodeType -> backend category/certification lookup from live palette
   const catLookup = useMemo(() => {
     const m: Record<string, string> = {};
-    (palette.data?.categories || []).forEach((c: any) => (c.nodes || []).forEach((n: any) => (m[n.id] = c.id)));
-    LANGCHAIN_CAT.nodes.forEach((n) => (m[n.id] = "langchain"));
-    Object.entries(EXTRA).forEach(([cat, ns]) => ns.forEach((n) => (m[n.id] = cat)));
+    (palette.data?.categories || []).forEach((c: any) => (c.nodes || []).forEach((n: any) => {
+      if (!m[n.id]) m[n.id] = c.id;
+    }));
     return m;
   }, [palette.data]);
 
-  // Merge live palette + extras + LangChain
-  const categories = useMemo(() => {
-    const base = (palette.data?.categories || []).map((c: any) => ({
-      ...c,
-      nodes: [...(c.nodes || []), ...(EXTRA[c.id] || [])],
+  const nodeCatalog = useMemo(() => {
+    const m: Record<string, CatalogNode> = {};
+    (palette.data?.categories || []).forEach((c: any) => (c.nodes || []).forEach((n: CatalogNode) => {
+      if (!m[n.id]) m[n.id] = n;
     }));
-    return base.some((c: any) => c.id === "langchain") ? base : [...base, LANGCHAIN_CAT];
+    return m;
+  }, [palette.data]);
+
+  // The backend node catalog is the execution contract.
+  const categories = useMemo(() => {
+    return palette.data?.categories || [];
   }, [palette.data]);
 
   // Default selection
@@ -130,6 +171,7 @@ export default function PipelinesPage() {
           nodeType: n.data?.nodeType || n.type || "node",
           label: n.data?.label || n.id,
           cat: catOf(n.data?.nodeType || "", n.type, catLookup),
+          certification: nodeCatalog[n.data?.nodeType || n.type || "node"]?.certification,
           x: n.position?.x ?? 60,
           y: n.position?.y ?? 60,
         }));
@@ -141,13 +183,13 @@ export default function PipelinesPage() {
       })
       .finally(() => !cancelled && setLoadingGraph(false));
     return () => { cancelled = true; };
-  }, [pid, catLookup]);
+  }, [pid, catLookup, nodeCatalog]);
 
   function addNode(catId: string, node: any) {
     const id = `${node.id}-${Date.now().toString(36)}`;
     const cx = 120 + (nodes.length % 6) * 60;
     const cy = 80 + (nodes.length % 5) * 70;
-    setNodes((ns) => [...ns, { id, nodeType: node.id, label: node.name, cat: catId, x: cx, y: cy }]);
+    setNodes((ns) => [...ns, { id, nodeType: node.id, label: node.name, cat: catId, x: cx, y: cy, certification: node.certification }]);
     setNodeConfigs((cfg) => ({ ...cfg, [id]: defaultNodeConfig(catId, node.id) }));
     setSelected(id);
     setPanelTab("inspector");
@@ -380,7 +422,15 @@ export default function PipelinesPage() {
                                 className="group flex items-center gap-2 rounded-lg border border-border bg-white/[0.02] hover:border-ink-600 hover:bg-white/[0.04] px-2.5 py-1.5 text-left transition">
                                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: CAT_COLOR[cat.id] || CAT_COLOR.input }} />
                                 <span className="min-w-0">
-                                  <span className="block text-[12px] text-ink-50 truncate">{n.name}</span>
+                                  <span className="flex items-center gap-1.5 text-[12px] text-ink-50">
+                                    <span className="truncate">{n.name}</span>
+                                    <span className={clsx(
+                                      "rounded border px-1 py-0.5 text-[8px] uppercase leading-none shrink-0",
+                                      n.certification?.status === "real" ? "border-accent-green/30 bg-accent-green/10 text-accent-green"
+                                      : n.certification?.status === "unsafe" ? "border-accent-red/30 bg-accent-red/10 text-accent-red"
+                                      : "border-brand-500/30 bg-brand-500/10 text-brand-400"
+                                    )}>{n.certification?.status || "real"}</span>
+                                  </span>
                                   <span className="block text-[10px] text-ink-600 truncate">{n.description}</span>
                                 </span>
                                 <Plus size={12} className="ml-auto text-ink-600 group-hover:text-brand-400 shrink-0" />
@@ -474,6 +524,21 @@ export default function PipelinesPage() {
 function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "input") return { text: "Describe the task for this governed pipeline.", policy: "inherit", requireEvidence: true };
   if (nodeType === "doc-loader" || nodeType === "file-read") return { text: "Paste document text or configure a governed URL.", policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "embed-bge") return { provider: "ollama", model: "bge-m3", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "embed-openai") return { provider: "openai", model: "text-embedding-3-small", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "pgvector") return { record_id: "", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "qdrant") return { url: "", collection: "veklom_pipeline", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "weaviate") return { url: "", class_name: "VeklomPipelineRecord", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "chunker") return { top_k: 5, policy: "inherit", requireEvidence: true };
+  if (nodeType === "reranker" || nodeType === "hybrid-search") return { query: "", top_k: 5, policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "evidence-pack") return { format: "signed_json", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "pgl-register") return { record_id: "", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "repo-risk-gate") return { repo_url: "", max_risk_score: 70, policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "cost-gate") return { max_cost_usd: 0.25, policy: "cost_quality_balanced", requireEvidence: true };
+  if (nodeType === "budget-gate") return { monthly_cap_usd: 2500, committed_spend_usd: 0, policy: "cost_quality_balanced", requireEvidence: true };
+  if (nodeType === "human-approval") return { status: "pending", approval_id: "", approved_by: "", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "deploy-endpoint" || nodeType === "deploy-agent") return { policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "lock-engine") return { scope: "pipeline_execution_contract", policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "langchain_agent" || nodeType === "lc-agent") return {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
@@ -488,6 +553,44 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
     redact_pii: true,
     redactPii: true,
   };
+  if (nodeType === "lc-langgraph") return {
+    steps: [
+      { label: "Normalize input", operation: "pass" },
+      { label: "Apply governed state transition", operation: "pass" },
+    ],
+    policy: "sovereign_default",
+    requireEvidence: true,
+  };
+  if (nodeType === "lc-memory") return { policy: "inherit", requireEvidence: true };
+  if (nodeType === "lc-toolnode") return { tools_allowed: ["marketplace_tool"], policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "lc-retrievalqa") return {
+    model_provider: "ollama",
+    model_name: "qwen2.5:3b",
+    question: "",
+    temperature: 0.2,
+    policy: "sovereign_default",
+    requireEvidence: true,
+  };
+  if (nodeType === "cost-router") return {
+    candidates: [
+      { provider: "ollama", model: "qwen2.5:3b", estimated_cost: 0 },
+      { provider: "groq", model: "llama-3.1-8b-instant", estimated_cost: 0.00002 },
+      { provider: "gemini", model: "gemini-2.5-flash", estimated_cost: 0.00004 },
+    ],
+    policy: "cost_quality_balanced",
+    requireEvidence: true,
+  };
+  if (nodeType === "fallback" || nodeType === "load-balancer") return {
+    providers: [
+      { provider: "ollama", model: "qwen2.5:3b" },
+      { provider: "groq", model: "llama-3.1-8b-instant" },
+    ],
+    policy: "sovereign_default",
+    requireEvidence: true,
+  };
+  if (nodeType === "classifier") return { labels: [{ label: "support", keywords: ["help", "issue"] }, { label: "sales", keywords: ["price", "demo"] }], policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "semantic-router") return { routes: [{ route: "support", keywords: ["help", "issue"], provider: "ollama", model: "qwen2.5:3b" }, { route: "sales", keywords: ["price", "demo"], provider: "groq", model: "llama-3.1-8b-instant" }], policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "code-exec") return { sandbox_url: "", language: "python", code: "print(input)", policy: "tool_allowlist", requireEvidence: true };
   if (catId === "models" || nodeType.startsWith("llm-")) return { provider: nodeType.replace("llm-", ""), model: nodeType, policy: "cost_quality_balanced", maxLatencyMs: 1200, monthlyCapUsd: 2500, requireEvidence: true };
   if (catId === "routing" || nodeType.includes("policy")) return { policy: "sovereign_default", requireEvidence: true, redactPii: true, maxLatencyMs: 300 };
   if (catId === "output") return { outputSchema: "signed_json", requireEvidence: true, redactPii: nodeType.includes("pii") };
@@ -554,10 +657,16 @@ function ReadinessPanel({ readiness }: { readiness: { label: string; pass: boole
 
 function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeConfig; onChange: (patch: NodeConfig) => void }) {
   const isLangChainAgent = node.nodeType === "langchain_agent" || node.nodeType === "lc-agent";
+  const isModelBacked = isLangChainAgent || node.nodeType === "lc-retrievalqa" || node.nodeType.startsWith("llm-") || node.nodeType.startsWith("embed-");
   const acceptsText = ["input", "doc-loader", "file-read"].includes(node.nodeType);
-  const acceptsUrl = ["doc-loader", "file-read", "http-call", "webhook"].includes(node.nodeType);
-  const acceptsQuery = ["web-search", "sql-query", "marketplace-tool"].includes(node.nodeType);
+  const acceptsUrl = ["doc-loader", "file-read", "http-call", "webhook", "qdrant", "weaviate"].includes(node.nodeType);
+  const acceptsQuery = ["web-search", "sql-query", "marketplace-tool", "reranker", "hybrid-search"].includes(node.nodeType);
   const acceptsHttp = node.nodeType === "http-call";
+  const isVectorStore = ["pgvector", "qdrant", "weaviate"].includes(node.nodeType);
+  const isRoutingConfig = ["cost-router", "fallback", "load-balancer", "classifier", "semantic-router"].includes(node.nodeType);
+  const isLangGraph = node.nodeType === "lc-langgraph";
+  const isCodeExec = node.nodeType === "code-exec";
+  const isVeklomGate = ["repo-risk-gate", "cost-gate", "budget-gate", "human-approval", "pgl-register", "evidence-pack", "lock-engine", "deploy-endpoint", "deploy-agent"].includes(node.nodeType);
   const allowedTools = config.tools_allowed || [];
   const blockedTools = config.blocked_tools || [];
   const toggleTool = (tool: string) => {
@@ -577,8 +686,22 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
           <div className="text-[12px] font-semibold text-ink-50 truncate">{node.label}</div>
           <div className="text-[10px] uppercase tracking-wider text-ink-600">{node.nodeType}</div>
         </div>
+        <span className={clsx(
+          "ml-auto rounded-md border px-1.5 py-0.5 text-[9px] uppercase",
+          node.certification?.status === "real" ? "border-accent-green/30 bg-accent-green/10 text-accent-green"
+          : node.certification?.status === "unsafe" ? "border-accent-red/30 bg-accent-red/10 text-accent-red"
+          : "border-brand-500/30 bg-brand-500/10 text-brand-400"
+        )}>
+          {node.certification?.status || "real"}
+        </span>
       </div>
       <div className="space-y-2">
+        {node.certification?.adapter && (
+          <div className="rounded-md border border-border bg-bg-900 px-2 py-1.5 text-[10px] text-ink-500">
+            Adapter: <span className="font-mono text-ink-300">{node.certification.adapter}</span>
+            {!!node.certification.requires?.length && <span className="block mt-1">Requires: {node.certification.requires.join(", ")}</span>}
+          </div>
+        )}
         <Control label="Policy">
           <select className="input h-8 text-xs" value={config.policy || "inherit"} onChange={(e) => onChange({ policy: e.target.value })}>
             <option className="bg-bg-800" value="inherit">Inherit workspace policy</option>
@@ -596,9 +719,16 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
             <input className="input h-8 text-xs" type="number" value={config.monthlyCapUsd || ""} onChange={(e) => onChange({ monthlyCapUsd: Number(e.target.value) || undefined })} placeholder="USD" />
           </Control>
         </div>
-        <Control label="Model / endpoint">
-          <input className="input h-8 text-xs" value={isLangChainAgent ? (config.model_name || "") : (config.model || "")} onChange={(e) => onChange(isLangChainAgent ? { model_name: e.target.value } : { model: e.target.value })} placeholder={isLangChainAgent ? "qwen2.5:3b" : "policy-routed"} />
-        </Control>
+        {isModelBacked && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Provider">
+              <input className="input h-8 text-xs" value={config.model_provider || config.provider || ""} onChange={(e) => onChange(isLangChainAgent || node.nodeType === "lc-retrievalqa" ? { model_provider: e.target.value } : { provider: e.target.value })} placeholder="ollama" />
+            </Control>
+            <Control label="Model">
+              <input className="input h-8 text-xs" value={isLangChainAgent || node.nodeType === "lc-retrievalqa" ? (config.model_name || "") : (config.model || "")} onChange={(e) => onChange(isLangChainAgent || node.nodeType === "lc-retrievalqa" ? { model_name: e.target.value } : { model: e.target.value })} placeholder="qwen2.5:3b" />
+            </Control>
+          </div>
+        )}
         {acceptsText && (
           <Control label="Input text">
             <textarea className="input min-h-20 py-2 text-xs resize-none" value={config.text || ""} onChange={(e) => onChange({ text: e.target.value })} placeholder="Text payload" />
@@ -626,20 +756,129 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
             </Control>
           </div>
         )}
+        {isVectorStore && (
+          <div className="grid grid-cols-2 gap-2">
+            {node.nodeType !== "pgvector" && (
+              <Control label={node.nodeType === "qdrant" ? "Collection" : "Class name"}>
+                <input className="input h-8 text-xs" value={node.nodeType === "qdrant" ? (config.collection || "") : (config.class_name || "")} onChange={(e) => onChange(node.nodeType === "qdrant" ? { collection: e.target.value } : { class_name: e.target.value })} placeholder={node.nodeType === "qdrant" ? "veklom_pipeline" : "VeklomPipelineRecord"} />
+              </Control>
+            )}
+            <Control label="Record id">
+              <input className="input h-8 text-xs" value={config.record_id || ""} onChange={(e) => onChange({ record_id: e.target.value })} placeholder="auto" />
+            </Control>
+          </div>
+        )}
+        {isVeklomGate && node.nodeType === "repo-risk-gate" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Repo URL">
+              <input className="input h-8 text-xs" value={config.repo_url || ""} onChange={(e) => onChange({ repo_url: e.target.value })} placeholder="https://github.com/org/repo" />
+            </Control>
+            <Control label="Max risk">
+              <input className="input h-8 text-xs" type="number" value={config.max_risk_score || 70} onChange={(e) => onChange({ max_risk_score: Number(e.target.value) || 70 })} />
+            </Control>
+          </div>
+        )}
+        {isVeklomGate && node.nodeType === "cost-gate" && (
+          <Control label="Max cost USD">
+            <input className="input h-8 text-xs" type="number" step="0.000001" value={config.max_cost_usd ?? 0.25} onChange={(e) => onChange({ max_cost_usd: Number(e.target.value) })} />
+          </Control>
+        )}
+        {isVeklomGate && node.nodeType === "budget-gate" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Monthly cap">
+              <input className="input h-8 text-xs" type="number" value={config.monthly_cap_usd ?? 2500} onChange={(e) => onChange({ monthly_cap_usd: Number(e.target.value) })} />
+            </Control>
+            <Control label="Committed">
+              <input className="input h-8 text-xs" type="number" value={config.committed_spend_usd ?? 0} onChange={(e) => onChange({ committed_spend_usd: Number(e.target.value) })} />
+            </Control>
+          </div>
+        )}
+        {isVeklomGate && node.nodeType === "human-approval" && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <Control label="Status">
+                <select className="input h-8 text-xs" value={config.status || "pending"} onChange={(e) => onChange({ status: e.target.value })}>
+                  <option className="bg-bg-800" value="pending">Pending</option>
+                  <option className="bg-bg-800" value="approved">Approved</option>
+                </select>
+              </Control>
+              <Control label="Approval ID">
+                <input className="input h-8 text-xs" value={config.approval_id || ""} onChange={(e) => onChange({ approval_id: e.target.value })} placeholder="approval ticket" />
+              </Control>
+            </div>
+            <Control label="Approved by">
+              <input className="input h-8 text-xs" value={config.approved_by || ""} onChange={(e) => onChange({ approved_by: e.target.value })} placeholder="security@company.com" />
+            </Control>
+          </>
+        )}
+        {isVeklomGate && node.nodeType === "pgl-register" && (
+          <Control label="Ledger record">
+            <input className="input h-8 text-xs" value={config.record_id || ""} onChange={(e) => onChange({ record_id: e.target.value })} placeholder="auto" />
+          </Control>
+        )}
+        {isVeklomGate && node.nodeType === "evidence-pack" && (
+          <Control label="Evidence format">
+            <input className="input h-8 text-xs" value={config.format || "signed_json"} onChange={(e) => onChange({ format: e.target.value })} />
+          </Control>
+        )}
+        {isVeklomGate && node.nodeType === "lock-engine" && (
+          <Control label="Lock scope">
+            <input className="input h-8 text-xs" value={config.scope || "pipeline_execution_contract"} onChange={(e) => onChange({ scope: e.target.value })} />
+          </Control>
+        )}
+        {(node.nodeType === "reranker" || node.nodeType === "hybrid-search" || node.nodeType === "chunker") && (
+          <Control label={node.nodeType === "chunker" ? "Chunk / top size" : "Top K"}>
+            <input className="input h-8 text-xs" type="number" min="1" max="25" value={config.top_k || 5} onChange={(e) => onChange({ top_k: Number(e.target.value) || 5 })} />
+          </Control>
+        )}
+        {node.nodeType === "lc-retrievalqa" && (
+          <Control label="Question">
+            <textarea className="input min-h-16 py-2 text-xs resize-none" value={config.question || ""} onChange={(e) => onChange({ question: e.target.value })} placeholder="Question over retrieved context" />
+          </Control>
+        )}
+        {isLangGraph && (
+          <JsonConfigControl label="Graph steps" field="steps" value={config.steps || []} onChange={onChange} />
+        )}
+        {isRoutingConfig && node.nodeType === "cost-router" && (
+          <JsonConfigControl label="Candidates" field="candidates" value={config.candidates || []} onChange={onChange} />
+        )}
+        {isRoutingConfig && ["fallback", "load-balancer"].includes(node.nodeType) && (
+          <JsonConfigControl label="Providers" field="providers" value={config.providers || []} onChange={onChange} />
+        )}
+        {isRoutingConfig && node.nodeType === "classifier" && (
+          <JsonConfigControl label="Labels" field="labels" value={config.labels || []} onChange={onChange} />
+        )}
+        {isRoutingConfig && node.nodeType === "semantic-router" && (
+          <JsonConfigControl label="Routes" field="routes" value={config.routes || []} onChange={onChange} />
+        )}
+        {isCodeExec && (
+          <>
+            <Control label="Sandbox URL">
+              <input className="input h-8 text-xs" value={config.sandbox_url || ""} onChange={(e) => onChange({ sandbox_url: e.target.value })} placeholder="https://sandbox.example.com/execute" />
+            </Control>
+            <div className="grid grid-cols-2 gap-2">
+              <Control label="Language">
+                <select className="input h-8 text-xs" value={config.language || "python"} onChange={(e) => onChange({ language: e.target.value })}>
+                  {["python", "javascript"].map((lang) => <option key={lang} className="bg-bg-800" value={lang}>{lang}</option>)}
+                </select>
+              </Control>
+              <Control label="Code">
+                <input className="input h-8 text-xs font-mono" value={config.code || ""} onChange={(e) => onChange({ code: e.target.value })} placeholder="print(input)" />
+              </Control>
+            </div>
+          </>
+        )}
         {isLangChainAgent && (
           <>
             <div className="grid grid-cols-2 gap-2">
-              <Control label="Provider">
-                <select className="input h-8 text-xs" value={config.model_provider || "ollama"} onChange={(e) => onChange({ model_provider: e.target.value })}>
-                  <option className="bg-bg-800" value="ollama">Ollama</option>
-                  <option className="bg-bg-800" value="openai">OpenAI</option>
-                  <option className="bg-bg-800" value="gemini">Gemini</option>
-                  <option className="bg-bg-800" value="groq">Groq</option>
-                  <option className="bg-bg-800" value="huggingface">Hugging Face</option>
-                </select>
-              </Control>
               <Control label="Temperature">
                 <input className="input h-8 text-xs" type="number" step="0.1" min="0" max="2" value={config.temperature ?? 0.2} onChange={(e) => onChange({ temperature: Number(e.target.value) })} />
+              </Control>
+              <Control label="PII mode">
+                <select className="input h-8 text-xs" value={(config.redactPii || config.redact_pii) ? "redact" : "pass"} onChange={(e) => onChange({ redactPii: e.target.value === "redact", redact_pii: e.target.value === "redact" })}>
+                  <option className="bg-bg-800" value="redact">Redact</option>
+                  <option className="bg-bg-800" value="pass">Pass through</option>
+                </select>
               </Control>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -690,6 +929,36 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
         </label>
       </div>
     </div>
+  );
+}
+
+function JsonConfigControl({ label, field, value, onChange }: { label: string; field: keyof NodeConfig; value: unknown; onChange: (patch: NodeConfig) => void }) {
+  const [raw, setRaw] = useState(() => JSON.stringify(value, null, 2));
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRaw(JSON.stringify(value, null, 2));
+  }, [value]);
+
+  return (
+    <Control label={label}>
+      <textarea
+        className={clsx("input min-h-28 py-2 text-xs resize-none font-mono", error && "border-accent-red/60")}
+        value={raw}
+        onChange={(e) => {
+          const next = e.target.value;
+          setRaw(next);
+          try {
+            const parsed = JSON.parse(next);
+            setError(null);
+            onChange({ [field]: parsed } as NodeConfig);
+          } catch {
+            setError("Invalid JSON");
+          }
+        }}
+      />
+      {error && <span className="mt-1 block text-[10px] text-accent-red">{error}</span>}
+    </Control>
   );
 }
 

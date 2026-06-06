@@ -11,6 +11,11 @@ export interface PNode {
   cat: string; // models | retrieval | tools | routing | output | langchain | input
   x: number;
   y: number;
+  certification?: {
+    status?: string;
+    adapter?: string;
+    requires?: string[];
+  };
 }
 export interface PEdge {
   id: string;
@@ -19,6 +24,7 @@ export interface PEdge {
 }
 
 export const CAT_COLOR: Record<string, string> = {
+  veklom: "#FFB800",      // Veklom governance
   models: "#22D3EE",      // cyan
   retrieval: "#A78BFA",   // violet
   tools: "#3FB6FF",       // blue
@@ -155,6 +161,7 @@ export default function PipelineCanvas({
         {nodes.map((n) => {
           const color = CAT_COLOR[n.cat] || CAT_COLOR.input;
           const isSel = selected === n.id;
+          const certStatus = n.certification?.status || "real";
           return (
             <div
               key={n.id}
@@ -189,7 +196,13 @@ export default function PipelineCanvas({
                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium text-ink-50 truncate leading-tight">{n.label}</div>
-                  <div className="text-[9px] uppercase tracking-wider text-ink-600 truncate">{n.cat}</div>
+                  <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-ink-600 truncate">
+                    <span className="truncate">{n.cat}</span>
+                    <span className={clsx(
+                      "h-1.5 w-1.5 rounded-full shrink-0",
+                      certStatus === "real" ? "bg-accent-green" : certStatus === "unsafe" ? "bg-accent-red" : "bg-brand-400"
+                    )} title={`Node certification: ${certStatus}`} />
+                  </div>
                 </div>
               </div>
               {isSel && (
