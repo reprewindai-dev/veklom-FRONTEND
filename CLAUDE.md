@@ -8,7 +8,7 @@ The primary operator journey is:
 
 `Connected Source -> Repo Risk Gate -> Asset Wrapper -> Marketplace Asset -> Workspace Install -> Deployment -> Terminal Runtime -> Evidence Ledger`
 
-The `/ship` route is the canonical operating surface for that journey. Preserve one primary action per stage, inline evidence/context, and honest proof states.
+The Asset Spine surface is the canonical operating surface for that journey. Preserve one primary action per stage, inline evidence/context, and honest proof states.
 
 ## Non-Negotiables
 
@@ -22,7 +22,7 @@ The `/ship` route is the canonical operating surface for that journey. Preserve 
 
 ## Critical Files
 
-- `app/ship/page.tsx`: governed asset spine and proof context.
+- `app/ship/page.tsx` and `app/spine/page.tsx`: governed asset spine and proof context.
 - `lib/modules.ts`: navigation hierarchy and tiered module inventory.
 - `components/Shell.tsx`: authenticated shell, sidebar, command search, tier state.
 - `lib/api.ts`: API base, token handling, fetch behavior.
@@ -39,7 +39,7 @@ npm run lint
 npm run build
 ```
 
-For visible UI changes, also run the app locally and inspect the affected route. The `/ship` page must show a readable stage rail, one obvious primary action per stage, inline evidence/context, and no clipped or overlapping text.
+For visible UI changes, also run the app locally and inspect the affected route. The Asset Spine page must show a readable stage rail, one obvious primary action per stage, inline evidence/context, and no clipped or overlapping text.
 
 ## Commit And Push
 

@@ -599,8 +599,8 @@ export default function ShipAssetPage() {
   return (
     <Shell>
       <ModuleHeader
-        breadcrumb="Operate / Ship Asset"
-        title="Ship a governed asset"
+        breadcrumb="Operate / Asset Spine"
+        title="Governed asset spine"
         subtitle="The proactive, self-healing sovereign control plane spine: source to evidence, with live status and proof kept in the same operating surface."
         pills={
           <>

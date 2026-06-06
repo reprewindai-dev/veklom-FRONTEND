@@ -16,7 +16,7 @@ export interface ModuleDef {
 export const MODULES: ModuleDef[] = [
   // OVERVIEW
   { slug: "dashboard", label: "Overview", href: "/dashboard", group: "overview", minTier: "starter", description: "Live workspace overview, health, and recent activity.", icon: "LayoutDashboard" },
-  { slug: "ship", label: "Ship Asset", href: "/ship", group: "overview", minTier: "starter", description: "The one governed flow — source → risk gate → wrap → list → install → deploy → run → evidence.", icon: "Rocket" },
+  { slug: "spine", label: "Asset Spine", href: "/spine", group: "overview", minTier: "starter", description: "The governed control-plane spine — source → risk gate → wrap → list → install → deploy → run → evidence.", icon: "GitBranch" },
 
   // BUILD — intent becomes a governed, packaged asset
   { slug: "gpc", label: "Plan Compiler (GPC)", href: "/gpc", group: "build", minTier: "pro", description: "Governed Plan Compiler — compile intent into deterministic, policy-checked execution plans.", icon: "GitBranch" },

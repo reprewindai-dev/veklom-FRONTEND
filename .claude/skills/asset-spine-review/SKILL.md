@@ -1,11 +1,11 @@
 ---
-name: ship-spine-review
+name: asset-spine-review
 description: Review Veklom UI changes against the governed asset spine and proof-first operator flow.
 ---
 
-# Ship Spine Review
+# Asset Spine Review
 
-Use this skill when editing or reviewing `/ship`, navigation, marketplace, deployments, runtime, audit, or related control-plane surfaces.
+Use this skill when editing or reviewing the Asset Spine surface, navigation, marketplace, deployments, runtime, audit, or related control-plane surfaces.
 
 ## Review Rules
 
