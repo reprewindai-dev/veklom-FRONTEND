@@ -67,6 +67,21 @@ type NodeConfig = {
   routes?: { route?: string; label?: string; provider?: string; model?: string; keywords?: string[] }[];
   labels?: ({ label: string; keywords?: string[] } | string)[];
   steps?: ({ label: string; operation?: string } | string)[];
+  agents?: { name: string; role?: string; model_provider?: string; model_name?: string }[];
+  recipient?: string;
+  headers?: Record<string, string>;
+  auth_token?: string;
+  retry_count?: number;
+  payload_template?: Record<string, string>;
+  max_attempts?: number;
+  backoff_ms?: number;
+  failure_threshold?: number;
+  cooldown_seconds?: number;
+  limit?: number;
+  window_seconds?: number;
+  server_url?: string;
+  package_url?: string;
+  base_url?: string;
   policy?: string;
   maxLatencyMs?: number;
   monthlyCapUsd?: number;
@@ -539,6 +554,25 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "human-approval") return { status: "pending", approval_id: "", approved_by: "", policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "deploy-endpoint" || nodeType === "deploy-agent") return { policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "lock-engine") return { scope: "pipeline_execution_contract", policy: "sovereign_default", requireEvidence: true };
+  if (["agent-node", "supervisor-agent", "critic-agent", "planner-agent"].includes(nodeType)) return {
+    model_provider: "ollama",
+    model_name: "qwen2.5:3b",
+    temperature: 0.2,
+    policy: "sovereign_default",
+    requireEvidence: true,
+    redact_pii: true,
+    redactPii: true,
+  };
+  if (nodeType === "agent-team") return {
+    agents: [
+      { name: "Planner", role: "planner", model_provider: "ollama", model_name: "qwen2.5:3b" },
+      { name: "Critic", role: "critic", model_provider: "ollama", model_name: "qwen2.5:3b" },
+    ],
+    policy: "sovereign_default",
+    requireEvidence: true,
+  };
+  if (nodeType === "agent-handoff") return { recipient: "human", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "pgl-register-agent") return { record_id: "", policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "langchain_agent" || nodeType === "lc-agent") return {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
@@ -591,6 +625,25 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "classifier") return { labels: [{ label: "support", keywords: ["help", "issue"] }, { label: "sales", keywords: ["price", "demo"] }], policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "semantic-router") return { routes: [{ route: "support", keywords: ["help", "issue"], provider: "ollama", model: "qwen2.5:3b" }, { route: "sales", keywords: ["price", "demo"], provider: "groq", model: "llama-3.1-8b-instant" }], policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "code-exec") return { sandbox_url: "", language: "python", code: "print(input)", policy: "tool_allowlist", requireEvidence: true };
+  if (["webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event"].includes(nodeType)) return {
+    method: "POST",
+    url: "",
+    headers: {},
+    auth_token: "",
+    retry_count: 2,
+    timeout_seconds: 10,
+    payload_template: { result: "$.result", audit_hash: "$.audit_hash", cost: "$.cost" },
+    policy: "tool_allowlist",
+    requireEvidence: true,
+  };
+  if (nodeType === "custom-http") return { method: "POST", url: "", policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "custom-python") return { sandbox_url: "", language: "python", code: "print(input)", policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "custom-mcp-tool") return { server_url: "", policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "custom-node-package") return { package_url: "", sandbox_url: "", policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "retry-logic") return { max_attempts: 3, backoff_ms: 500, policy: "inherit", requireEvidence: true };
+  if (nodeType === "circuit-breaker") return { failure_threshold: 3, cooldown_seconds: 60, policy: "inherit", requireEvidence: true };
+  if (nodeType === "rate-limiter") return { limit: 100, window_seconds: 60, policy: "inherit", requireEvidence: true };
+  if (nodeType === "llm-openai-compatible") return { provider: "openai-compatible", model: "custom-model", base_url: "", policy: "cost_quality_balanced", requireEvidence: true };
   if (catId === "models" || nodeType.startsWith("llm-")) return { provider: nodeType.replace("llm-", ""), model: nodeType, policy: "cost_quality_balanced", maxLatencyMs: 1200, monthlyCapUsd: 2500, requireEvidence: true };
   if (catId === "routing" || nodeType.includes("policy")) return { policy: "sovereign_default", requireEvidence: true, redactPii: true, maxLatencyMs: 300 };
   if (catId === "output") return { outputSchema: "signed_json", requireEvidence: true, redactPii: nodeType.includes("pii") };
@@ -657,16 +710,20 @@ function ReadinessPanel({ readiness }: { readiness: { label: string; pass: boole
 
 function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeConfig; onChange: (patch: NodeConfig) => void }) {
   const isLangChainAgent = node.nodeType === "langchain_agent" || node.nodeType === "lc-agent";
-  const isModelBacked = isLangChainAgent || node.nodeType === "lc-retrievalqa" || node.nodeType.startsWith("llm-") || node.nodeType.startsWith("embed-");
+  const isAgentModel = ["agent-node", "supervisor-agent", "critic-agent", "planner-agent"].includes(node.nodeType);
+  const isModelBacked = isLangChainAgent || isAgentModel || node.nodeType === "lc-retrievalqa" || node.nodeType.startsWith("llm-") || node.nodeType.startsWith("embed-");
   const acceptsText = ["input", "doc-loader", "file-read"].includes(node.nodeType);
-  const acceptsUrl = ["doc-loader", "file-read", "http-call", "webhook", "qdrant", "weaviate"].includes(node.nodeType);
+  const acceptsUrl = ["doc-loader", "file-read", "http-call", "custom-http", "webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event", "qdrant", "weaviate"].includes(node.nodeType);
   const acceptsQuery = ["web-search", "sql-query", "marketplace-tool", "reranker", "hybrid-search"].includes(node.nodeType);
-  const acceptsHttp = node.nodeType === "http-call";
+  const acceptsHttp = ["http-call", "custom-http", "webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event"].includes(node.nodeType);
   const isVectorStore = ["pgvector", "qdrant", "weaviate"].includes(node.nodeType);
   const isRoutingConfig = ["cost-router", "fallback", "load-balancer", "classifier", "semantic-router"].includes(node.nodeType);
   const isLangGraph = node.nodeType === "lc-langgraph";
-  const isCodeExec = node.nodeType === "code-exec";
-  const isVeklomGate = ["repo-risk-gate", "cost-gate", "budget-gate", "human-approval", "pgl-register", "evidence-pack", "lock-engine", "deploy-endpoint", "deploy-agent"].includes(node.nodeType);
+  const isCodeExec = ["code-exec", "custom-python"].includes(node.nodeType);
+  const isVeklomGate = ["repo-risk-gate", "cost-gate", "budget-gate", "human-approval", "pgl-register", "pgl-register-agent", "evidence-pack", "lock-engine", "deploy-endpoint", "deploy-agent"].includes(node.nodeType);
+  const isWebhookLike = ["webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event"].includes(node.nodeType);
+  const isCustomContract = ["custom-mcp-tool", "custom-node-package"].includes(node.nodeType);
+  const isRuntimeContract = ["retry-logic", "circuit-breaker", "rate-limiter"].includes(node.nodeType);
   const allowedTools = config.tools_allowed || [];
   const blockedTools = config.blocked_tools || [];
   const toggleTool = (tool: string) => {
@@ -722,10 +779,10 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
         {isModelBacked && (
           <div className="grid grid-cols-2 gap-2">
             <Control label="Provider">
-              <input className="input h-8 text-xs" value={config.model_provider || config.provider || ""} onChange={(e) => onChange(isLangChainAgent || node.nodeType === "lc-retrievalqa" ? { model_provider: e.target.value } : { provider: e.target.value })} placeholder="ollama" />
+              <input className="input h-8 text-xs" value={config.model_provider || config.provider || ""} onChange={(e) => onChange(isLangChainAgent || isAgentModel || node.nodeType === "lc-retrievalqa" ? { model_provider: e.target.value } : { provider: e.target.value })} placeholder="ollama" />
             </Control>
             <Control label="Model">
-              <input className="input h-8 text-xs" value={isLangChainAgent || node.nodeType === "lc-retrievalqa" ? (config.model_name || "") : (config.model || "")} onChange={(e) => onChange(isLangChainAgent || node.nodeType === "lc-retrievalqa" ? { model_name: e.target.value } : { model: e.target.value })} placeholder="qwen2.5:3b" />
+              <input className="input h-8 text-xs" value={isLangChainAgent || isAgentModel || node.nodeType === "lc-retrievalqa" ? (config.model_name || "") : (config.model || "")} onChange={(e) => onChange(isLangChainAgent || isAgentModel || node.nodeType === "lc-retrievalqa" ? { model_name: e.target.value } : { model: e.target.value })} placeholder="qwen2.5:3b" />
             </Control>
           </div>
         )}
@@ -748,13 +805,35 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
           <div className="grid grid-cols-2 gap-2">
             <Control label="Method">
               <select className="input h-8 text-xs" value={config.method || "GET"} onChange={(e) => onChange({ method: e.target.value })}>
-                {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => <option key={m} className="bg-bg-800" value={m}>{m}</option>)}
+                {(isWebhookLike ? ["POST", "PUT", "PATCH"] : ["GET", "POST", "PUT", "PATCH", "DELETE"]).map((m) => <option key={m} className="bg-bg-800" value={m}>{m}</option>)}
               </select>
             </Control>
             <Control label="Body">
               <input className="input h-8 text-xs" value={config.body || ""} onChange={(e) => onChange({ body: e.target.value })} placeholder="JSON or text" />
             </Control>
           </div>
+        )}
+        {node.nodeType === "llm-openai-compatible" && (
+          <Control label="Base URL">
+            <input className="input h-8 text-xs" value={config.base_url || ""} onChange={(e) => onChange({ base_url: e.target.value })} placeholder="https://models.example.com/v1" />
+          </Control>
+        )}
+        {isWebhookLike && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <Control label="Retry count">
+                <input className="input h-8 text-xs" type="number" min="0" max="5" value={config.retry_count ?? 2} onChange={(e) => onChange({ retry_count: Number(e.target.value) || 0 })} />
+              </Control>
+              <Control label="Timeout">
+                <input className="input h-8 text-xs" type="number" min="2" max="60" value={config.timeout_seconds ?? 10} onChange={(e) => onChange({ timeout_seconds: Number(e.target.value) || 10 })} />
+              </Control>
+            </div>
+            <Control label="Auth token">
+              <input className="input h-8 text-xs" type="password" value={config.auth_token || ""} onChange={(e) => onChange({ auth_token: e.target.value })} placeholder="Bearer token" />
+            </Control>
+            <JsonConfigControl label="Headers" field="headers" value={config.headers || {}} onChange={onChange} />
+            <JsonConfigControl label="Payload template" field="payload_template" value={config.payload_template || { result: "$.result", audit_hash: "$.audit_hash", cost: "$.cost" }} onChange={onChange} />
+          </>
         )}
         {isVectorStore && (
           <div className="grid grid-cols-2 gap-2">
@@ -825,6 +904,59 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
           <Control label="Lock scope">
             <input className="input h-8 text-xs" value={config.scope || "pipeline_execution_contract"} onChange={(e) => onChange({ scope: e.target.value })} />
           </Control>
+        )}
+        {node.nodeType === "agent-team" && (
+          <JsonConfigControl label="Agents" field="agents" value={config.agents || []} onChange={onChange} />
+        )}
+        {node.nodeType === "agent-handoff" && (
+          <Control label="Recipient">
+            <input className="input h-8 text-xs" value={config.recipient || "human"} onChange={(e) => onChange({ recipient: e.target.value })} placeholder="human or agent id" />
+          </Control>
+        )}
+        {isRuntimeContract && node.nodeType === "retry-logic" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Max attempts">
+              <input className="input h-8 text-xs" type="number" min="1" max="10" value={config.max_attempts ?? 3} onChange={(e) => onChange({ max_attempts: Number(e.target.value) || 3 })} />
+            </Control>
+            <Control label="Backoff ms">
+              <input className="input h-8 text-xs" type="number" value={config.backoff_ms ?? 500} onChange={(e) => onChange({ backoff_ms: Number(e.target.value) || 500 })} />
+            </Control>
+          </div>
+        )}
+        {isRuntimeContract && node.nodeType === "circuit-breaker" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Failures">
+              <input className="input h-8 text-xs" type="number" value={config.failure_threshold ?? 3} onChange={(e) => onChange({ failure_threshold: Number(e.target.value) || 3 })} />
+            </Control>
+            <Control label="Cooldown">
+              <input className="input h-8 text-xs" type="number" value={config.cooldown_seconds ?? 60} onChange={(e) => onChange({ cooldown_seconds: Number(e.target.value) || 60 })} />
+            </Control>
+          </div>
+        )}
+        {isRuntimeContract && node.nodeType === "rate-limiter" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Limit">
+              <input className="input h-8 text-xs" type="number" value={config.limit ?? 100} onChange={(e) => onChange({ limit: Number(e.target.value) || 100 })} />
+            </Control>
+            <Control label="Window sec">
+              <input className="input h-8 text-xs" type="number" value={config.window_seconds ?? 60} onChange={(e) => onChange({ window_seconds: Number(e.target.value) || 60 })} />
+            </Control>
+          </div>
+        )}
+        {isCustomContract && node.nodeType === "custom-mcp-tool" && (
+          <Control label="MCP server URL">
+            <input className="input h-8 text-xs" value={config.server_url || ""} onChange={(e) => onChange({ server_url: e.target.value })} placeholder="https://mcp.example.com/run" />
+          </Control>
+        )}
+        {isCustomContract && node.nodeType === "custom-node-package" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Control label="Package URL">
+              <input className="input h-8 text-xs" value={config.package_url || ""} onChange={(e) => onChange({ package_url: e.target.value })} placeholder="https://..." />
+            </Control>
+            <Control label="Sandbox URL">
+              <input className="input h-8 text-xs" value={config.sandbox_url || ""} onChange={(e) => onChange({ sandbox_url: e.target.value })} placeholder="https://sandbox..." />
+            </Control>
+          </div>
         )}
         {(node.nodeType === "reranker" || node.nodeType === "hybrid-search" || node.nodeType === "chunker") && (
           <Control label={node.nodeType === "chunker" ? "Chunk / top size" : "Top K"}>

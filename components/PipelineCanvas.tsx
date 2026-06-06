@@ -25,9 +25,14 @@ export interface PEdge {
 
 export const CAT_COLOR: Record<string, string> = {
   veklom: "#FFB800",      // Veklom governance
+  agents: "#F59E0B",      // amber-orange
   models: "#22D3EE",      // cyan
   retrieval: "#A78BFA",   // violet
-  tools: "#3FB6FF",       // blue
+  integrations: "#3FB6FF",// blue
+  data: "#60A5FA",        // steel-blue
+  runtime: "#34D399",     // green
+  custom: "#FB7185",      // rose
+  tools: "#3FB6FF",       // legacy
   routing: "#FFB800",     // amber
   output: "#3EE7A2",      // green
   langchain: "#F59E0B",   // amber-orange
