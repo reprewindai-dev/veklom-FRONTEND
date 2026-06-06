@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env
+.env.local
+.vercel
+.DS_Store
+*.log
+coverage
+tsconfig.tsbuildinfo
+openapi.json
+route_catalog.txt
