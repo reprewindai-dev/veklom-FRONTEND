@@ -9,7 +9,7 @@ import { ModuleHeader, SectionCard, Pill, Field, Select, KV } from "@/components
 import Modal from "@/components/Modal";
 import {
   Store, Download, Play, ShoppingBag, Plus, Star, Sparkles, ExternalLink,
-  Search, ShieldCheck, FileCheck2, BadgeCheck, Wand2, Check, Server, Boxes,
+  Search, ShieldCheck, FileCheck2, BadgeCheck, Wand2, Check, Server, Boxes, Trash2,
 } from "lucide-react";
 
 const CAT_LABELS: Record<string, string> = {
@@ -29,12 +29,12 @@ function priceLabel(l: any) {
   return `${amt} / mo`;
 }
 const AVAILABILITY = [
-  { value: "open_source", label: "Open source — everywhere (free)" },
-  { value: "common", label: "Common — easy to find (low)" },
-  { value: "standard", label: "Standard — typical commercial" },
-  { value: "uncommon", label: "Uncommon — harder to source" },
-  { value: "rare", label: "Rare — few alternatives" },
-  { value: "exclusive", label: "Veklom-exclusive — unheard-of" },
+  { value: "open_source", label: "Open source â€” everywhere (free)" },
+  { value: "common", label: "Common â€” easy to find (low)" },
+  { value: "standard", label: "Standard â€” typical commercial" },
+  { value: "uncommon", label: "Uncommon â€” harder to source" },
+  { value: "rare", label: "Rare â€” few alternatives" },
+  { value: "exclusive", label: "Veklom-exclusive â€” unheard-of" },
 ];
 
 function RarityPill({ rarity, exclusive }: { rarity?: string; exclusive?: boolean }) {
@@ -54,12 +54,23 @@ function Badges({ badges, compliance }: { badges: string[]; compliance: string[]
   );
 }
 
+function MiniList({ title, items, empty = "not required" }: { title: string; items: string[]; empty?: string }) {
+  return (
+    <div className="rounded-md border border-border bg-bg-800/60 p-2">
+      <div className="text-[10px] uppercase tracking-wider text-ink-600 mb-1">{title}</div>
+      <div className="flex flex-wrap gap-1">
+        {(items || []).length ? items.slice(0, 8).map((item) => <Pill key={item} tone="neutral">{item}</Pill>) : <span className="text-[11px] text-ink-500">{empty}</span>}
+      </div>
+    </div>
+  );
+}
+
 function ListingCard({ l, onOpen }: { l: any; onOpen: (l: any) => void }) {
   return (
     <button onClick={() => onOpen(l)} className="card card-hover p-4 text-left flex flex-col gap-2.5 group">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-ink-600">
         <span>{catLabel(l.category)}</span>
-        <span className="text-ink-600">·</span>
+        <span className="text-ink-600">Â·</span>
         <span className="text-ink-400">{l.vendor_name}</span>
         <span className="ml-auto flex items-center gap-1 text-brand-400 normal-case tracking-normal">
           <Star size={11} className="fill-brand-400" /> {Number(l.rating || 0).toFixed(1)}
@@ -71,6 +82,11 @@ function ListingCard({ l, onOpen }: { l: any; onOpen: (l: any) => void }) {
       </div>
       <p className="text-[12.5px] text-ink-400 line-clamp-2 leading-snug">{l.description}</p>
       <Badges badges={l.badges} compliance={l.compliance_tags} />
+      <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+        <span className="rounded-md border border-border bg-bg-900 px-1.5 py-1 text-ink-400 truncate">{l.backend_adapter?.adapter || "adapter"}</span>
+        <span className="rounded-md border border-border bg-bg-900 px-1.5 py-1 text-ink-400">{l.pipeline_integration?.nodes?.length || 0} nodes</span>
+        <span className="rounded-md border border-border bg-bg-900 px-1.5 py-1 text-ink-400 truncate">{l.billing_meter?.model || "metered"}</span>
+      </div>
       <div className="flex items-center gap-2 mt-auto pt-2">
         {(l.deploy_target || "").split("+").map((d: string) => d.trim()).filter(Boolean).map((d: string) => (
           <span key={d} className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ink-600">
@@ -79,7 +95,7 @@ function ListingCard({ l, onOpen }: { l: any; onOpen: (l: any) => void }) {
         ))}
         <span className="ml-auto text-[13px] font-semibold text-ink-50">{priceLabel(l)}</span>
       </div>
-      <div className="text-[9px] text-ink-600 text-right mt-0.5 italic">Simulated stats: {l.downloads || "0"} installs · ★ {Number(l.rating || 0).toFixed(1)}</div>
+      <div className="text-[9px] text-ink-600 text-right mt-0.5">Install health: {l.health_check?.status || "configured"} · proof {String(l.package?.proof_hash || "").slice(0, 10) || "pending"}</div>
     </button>
   );
 }
@@ -126,15 +142,15 @@ export default function MarketplacePage() {
   return (
     <Shell>
       <ModuleHeader
-        breadcrumb="Workspace · Marketplace"
+        breadcrumb="Workspace Â· Marketplace"
         title="Sovereign-ready assets, governed distribution"
-        subtitle="Models, pipelines, compliance packs, connectors, and managed services — every listing inherits Veklom's policy engine and audit trail. Listed metrics are simulated for demonstration."
+        subtitle="Installable packages with backend adapters, pipeline nodes, policy hooks, audit proof, billing meters, health checks, tests, docs, and clean uninstall."
         pills={
           <>
-            <Pill tone="amber" dot>License-bound · Watermarked · Signed</Pill>
+            <Pill tone="amber" dot>License-bound Â· Watermarked Â· Signed</Pill>
             <Pill tone="neutral">{all.length} listings</Pill>
             <Pill tone="green">{providerCount} verified providers</Pill>
-            <Pill tone="violet">DEMO MODE</Pill>
+            <Pill tone="violet">INSTALLABLE PACKAGES</Pill>
           </>
         }
         actions={
@@ -158,14 +174,14 @@ export default function MarketplacePage() {
               <div className="flex items-center gap-2 mb-2">
                 <Pill tone="amber"><Sparkles size={11} /> Featured</Pill>
                 <span className="text-[10px] uppercase tracking-wider text-ink-600">{catLabel(l.category)}</span>
-                <span className="text-[10px] uppercase tracking-wider text-ink-400">· {l.vendor_name}</span>
+                <span className="text-[10px] uppercase tracking-wider text-ink-400">Â· {l.vendor_name}</span>
               </div>
               <h3 className="text-[18px] font-semibold text-ink-50 group-hover:text-brand-400 transition">{l.name}</h3>
               <p className="text-[13px] text-ink-400 mt-1.5 line-clamp-2 max-w-md">{l.description}</p>
               <div className="mt-3"><Badges badges={l.badges} compliance={l.compliance_tags} /></div>
               <div className="flex items-end gap-3 mt-4">
                 <span className="text-[17px] font-semibold text-ink-50">{priceLabel(l)}</span>
-                <span className="text-[11px] text-ink-600">{l.downloads} installs · ★ {Number(l.rating || 0).toFixed(1)}</span>
+                <span className="text-[11px] text-ink-600">{l.downloads} installs Â· â˜… {Number(l.rating || 0).toFixed(1)}</span>
                 <span className="ml-auto inline-flex items-center gap-1 text-[12px] text-brand-400 font-medium">View listing <ExternalLink size={12} /></span>
               </div>
             </button>
@@ -176,7 +192,7 @@ export default function MarketplacePage() {
       {/* Search + tabs */}
       <div className="flex items-center gap-2 rounded-xl border border-border bg-bg-900 px-3 h-11 mb-3">
         <Search size={15} className="text-ink-600" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search listings, providers, compliance frameworks…" className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-600" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search listings, providers, compliance frameworksâ€¦" className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-600" />
       </div>
       <div className="flex flex-wrap gap-1.5 mb-4">
         {categories.map((c) => (
@@ -207,9 +223,9 @@ export default function MarketplacePage() {
       {/* Trust footer */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 card p-5">
         {[
-          { icon: <ShieldCheck size={16} />, t: "Governed packaging", d: "Hosted APIs · containers · CLI · SDK · signed builds" },
+          { icon: <ShieldCheck size={16} />, t: "Governed packaging", d: "Hosted APIs Â· containers Â· CLI Â· SDK Â· signed builds" },
           { icon: <BadgeCheck size={16} />, t: "License-bound", d: "Activation, account binding, watermarking, metering, expiry" },
-          { icon: <FileCheck2 size={16} />, t: "Vetted providers", d: "Identity verified · signed builds · evidence-linked" },
+          { icon: <FileCheck2 size={16} />, t: "Vetted providers", d: "Identity verified Â· signed builds Â· evidence-linked" },
           { icon: <Boxes size={16} />, t: "One bill", d: "Marketplace charges roll into your Veklom invoice" },
         ].map((f) => (
           <div key={f.t} className="flex flex-col gap-1.5">
@@ -232,6 +248,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
   const [demo, setDemo] = useState<any>(null);
   const [demoLoading, setDemoLoading] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [uninstalling, setUninstalling] = useState(false);
   const [installed2, setInstalled2] = useState(installed);
   const [msg, setMsg] = useState<string>();
   const [downloading, setDownloading] = useState(false);
@@ -239,9 +256,9 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
   async function runDemo() {
     setDemoLoading(true); setDemo(null);
     try {
-      const res = await api<any>(`/api/v1/marketplace/listings/${listing.id}/demo`, { method: "POST", body: { input: "Evaluate this asset for our workspace." } });
+      const res = await api<any>(`/api/v1/marketplace/listings/${listing.id}/test`, { method: "POST", body: { input: "Verify package adapter, policy, audit, and billing meter." } });
       setDemo(res);
-    } catch (e) { setMsg(`Demo error: ${(e as Error).message}`); }
+    } catch (e) { setMsg(`Test error: ${(e as Error).message}`); }
     finally { setDemoLoading(false); }
   }
   async function install() {
@@ -253,6 +270,16 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
       onInstalled();
     } catch (e) { setMsg(`Install error: ${(e as Error).message}`); }
     finally { setInstalling(false); }
+  }
+  async function uninstall() {
+    setUninstalling(true); setMsg(undefined);
+    try {
+      const res = await api<any>(`/api/v1/marketplace/installed/${listing.id}`, { method: "DELETE" });
+      setInstalled2(false);
+      setMsg(res.message || "Package uninstalled.");
+      onInstalled();
+    } catch (e) { setMsg(`Uninstall error: ${(e as Error).message}`); }
+    finally { setUninstalling(false); }
   }
   async function downloadDatasheet() {
     setDownloading(true);
@@ -267,6 +294,8 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
   }
 
   const paid = listing.price && listing.price > 0;
+  const pkg = listing.package || {};
+  const health = listing.health_check || pkg.health_check || {};
 
   return (
     <Modal
@@ -274,18 +303,21 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
       onClose={onClose}
       size="xl"
       title={<span className="flex items-center gap-2">{listing.name} {listing.exclusive && <Sparkles size={14} className="text-accent-violet" />}</span>}
-      subtitle={<span>{catLabel(listing.category)} · {listing.vendor_name} · ★ {Number(listing.rating || 0).toFixed(1)} · {listing.downloads} installs</span>}
+      subtitle={<span>{catLabel(listing.category)} Â· {listing.vendor_name} Â· â˜… {Number(listing.rating || 0).toFixed(1)} Â· {listing.downloads} installs</span>}
       footer={
         <>
           <span className="text-[15px] font-semibold text-ink-50">{priceLabel(listing)}</span>
           <RarityPill rarity={listing.rarity} exclusive={listing.exclusive} />
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" onClick={downloadDatasheet} loading={downloading}><Download size={14} /> Datasheet</Button>
-            {listing.demo_available && <Button variant="ghost" onClick={runDemo} loading={demoLoading}><Play size={14} /> Try demo</Button>}
+            <Button variant="ghost" onClick={runDemo} loading={demoLoading}><Play size={14} /> Run test</Button>
             {installed2 ? (
-              <Button variant="ghost" disabled><Check size={14} /> Installed</Button>
+              <>
+                <Button variant="ghost" disabled><Check size={14} /> Installed</Button>
+                <Button variant="ghost" onClick={uninstall} loading={uninstalling}><Trash2 size={14} /> Uninstall</Button>
+              </>
             ) : (
-              <Button onClick={install} loading={installing}>{paid ? <>Buy · {priceLabel(listing)}</> : <>Install free</>}</Button>
+              <Button onClick={install} loading={installing}>{paid ? <>Buy Â· {priceLabel(listing)}</> : <>Install free</>}</Button>
             )}
           </div>
         </>
@@ -307,6 +339,25 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
             </div>
           )}
 
+          {pkg.marketplace_json && (
+            <div className="rounded-lg border border-border bg-bg-900 p-3">
+              <div className="text-[11px] uppercase tracking-wider text-ink-600 mb-2">Package contract</div>
+              <div className="grid sm:grid-cols-2 gap-2">
+                <KV k="Adapter" v={pkg.backend_adapter?.adapter || listing.backend_adapter?.adapter} />
+                <KV k="Version" v={pkg.marketplace_json?.version} />
+                <KV k="Billing" v={pkg.billing_meter?.model || listing.billing_meter?.model} />
+                <KV k="Health" v={health.status || "configured"} />
+              </div>
+              <div className="mt-3 grid sm:grid-cols-2 gap-2">
+                <MiniList title="Pipeline nodes" items={pkg.pipeline_integration?.nodes || []} />
+                <MiniList title="Policy hooks" items={pkg.policy_integration?.rules || []} />
+                <MiniList title="Env vars" items={pkg.install_manifest?.env_vars || []} />
+                <MiniList title="Secrets" items={pkg.install_manifest?.secrets_needed || []} empty="none" />
+              </div>
+              <div className="mt-2 text-[10px] text-ink-600 font-mono">proof {pkg.proof_hash || "pending"}</div>
+            </div>
+          )}
+
           {!!(listing.install_instructions) && (
             <div>
               <div className="text-[11px] uppercase tracking-wider text-ink-600 mb-2">Installation</div>
@@ -319,7 +370,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
               <div className="text-[11px] uppercase tracking-wider text-ink-600 mb-2">Changelog</div>
               <div className="space-y-2">
                 {listing.changelog.map((c: any, i: number) => (
-                  <div key={i} className="text-[12px]"><span className="font-mono text-brand-400">v{c.version}</span> <span className="text-ink-600">· {c.date}</span><div className="text-ink-400">{c.notes}</div></div>
+                  <div key={i} className="text-[12px]"><span className="font-mono text-brand-400">v{c.version}</span> <span className="text-ink-600">Â· {c.date}</span><div className="text-ink-400">{c.notes}</div></div>
                 ))}
               </div>
             </div>
@@ -327,12 +378,12 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
 
           {(demo || msg) && (
             <div className="rounded-lg border border-border bg-bg-900 p-3">
-              {msg && <div className="mb-2">{msg.startsWith("Install error") || msg.startsWith("Demo error") ? <ErrorBox message={msg} /> : <SuccessBox message={msg} />}</div>}
+              {msg && <div className="mb-2">{/^(Install|Demo|Test|Uninstall) error/.test(msg) ? <ErrorBox message={msg} /> : <SuccessBox message={msg} />}</div>}
               {demo && (
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-[11px]"><Pill tone="green" dot>Demo · {demo.policy_result}</Pill><span className="text-ink-600 font-mono">{demo.billing_impact}</span></div>
+                  <div className="flex items-center gap-2 text-[11px]"><Pill tone={demo.status === "pass" ? "green" : "amber"} dot>Test · {demo.policy_result}</Pill><span className="text-ink-600 font-mono">{demo.billing_impact}</span></div>
                   <div className="text-[12.5px] text-ink-200">{demo.output}</div>
-                  <div className="text-[10px] text-ink-600 font-mono">evidence {demo.evidence_id} · provider {demo.provider}</div>
+                  <div className="text-[10px] text-ink-600 font-mono">evidence {demo.evidence_id} · proof {demo.proof_hash} · provider {demo.provider}</div>
                 </div>
               )}
             </div>
@@ -359,7 +410,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
             <div className="card p-3">
               <div className="text-[10px] uppercase tracking-wider text-ink-600 mb-2">Compatibility</div>
               <ul className="space-y-1">
-                {listing.compatibility.map((c: string, i: number) => <li key={i} className="text-[11.5px] text-ink-300">· {c}</li>)}
+                {listing.compatibility.map((c: string, i: number) => <li key={i} className="text-[11.5px] text-ink-300">Â· {c}</li>)}
               </ul>
             </div>
           )}
@@ -391,9 +442,9 @@ function PurchasesModal({ installed, all, onClose, onOpen }: { installed: any; a
                 <Boxes size={16} className="text-brand-400 shrink-0" />
                 <div className="min-w-0">
                   <div className="text-[13px] text-ink-50 truncate">{a.name}</div>
-                  <div className="text-[11px] text-ink-600">{catLabel(a.asset_type)} · v{a.version} · {a.installed_at ? new Date(a.installed_at).toLocaleDateString() : "—"}</div>
+                  <div className="text-[11px] text-ink-600">{catLabel(a.asset_type)} · v{a.version} · {a.health?.status || a.status} · {a.installed_at ? new Date(a.installed_at).toLocaleDateString() : "—"}</div>
                 </div>
-                <Pill tone="green" dot>{a.status}</Pill>
+                <Pill tone={a.health?.status === "missing_secrets" || a.status === "needs_configuration" ? "amber" : "green"} dot>{a.status}</Pill>
                 {full && <Button variant="ghost" onClick={() => onOpen(full)} className="ml-auto">Open</Button>}
               </div>
             );
@@ -451,7 +502,7 @@ function ProviderWizard({ onClose, onPublished }: { onClose: () => void; onPubli
       onClose={onClose}
       size="xl"
       title={<span className="flex items-center gap-2"><Wand2 size={15} className="text-brand-400" /> Become a provider</span>}
-      subtitle="Give us a few details — the marketplace auto-writes the listing and prices it for you."
+      subtitle="Give us a few details â€” the marketplace auto-writes the listing and prices it for you."
       footer={
         published ? (
           <div className="ml-auto"><Button onClick={onClose}>Done</Button></div>
@@ -476,7 +527,7 @@ function ProviderWizard({ onClose, onPublished }: { onClose: () => void; onPubli
             <Field label="Asset name"><input className="input" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Radiology Report Summariser" /></Field>
             <Field label="Category"><Select value={form.category} onChange={(v) => set("category", v)} options={Object.keys(CAT_LABELS).map((k) => ({ value: k, label: CAT_LABELS[k] }))} /></Field>
             <Field label="One-line summary"><textarea className="input min-h-[68px]" value={form.summary} onChange={(e) => set("summary", e.target.value)} placeholder="What it does, in a sentence." /></Field>
-            <Field label="Availability" hint="Drives the price — common is cheap, exclusive is priced to worth."><Select value={form.availability} onChange={(v) => set("availability", v)} options={AVAILABILITY} /></Field>
+            <Field label="Availability" hint="Drives the price â€” common is cheap, exclusive is priced to worth."><Select value={form.availability} onChange={(v) => set("availability", v)} options={AVAILABILITY} /></Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Deploy target"><input className="input" value={form.deploy_target} onChange={(e) => set("deploy_target", e.target.value)} placeholder="hetzner" /></Field>
               <Field label="Compliance" hint="comma separated"><input className="input" value={form.compliance} onChange={(e) => set("compliance", e.target.value)} placeholder="HIPAA, SOC2" /></Field>
