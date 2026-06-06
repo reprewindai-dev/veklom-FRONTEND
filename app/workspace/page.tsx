@@ -1,12 +1,24 @@
 "use client";
 
 import clsx from "clsx";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import Shell from "@/components/Shell";
 import TierGate from "@/components/TierGate";
 import { useApi } from "@/hooks/useApi";
 import { Card, PageHeader, Skeleton, Table } from "@/components/ui";
 import { unwrapList } from "@/types/api";
+import { ChevronRight, CreditCard, Gauge, KeyRound, Receipt, Users, Wallet, Webhook } from "lucide-react";
+
+const WORKSPACE_SURFACES = [
+  { href: "/team", label: "Team & RBAC", icon: Users, copy: "Members, roles, SSO, SCIM, and MFA." },
+  { href: "/api-keys", label: "API Keys", icon: KeyRound, copy: "Issue, rotate, revoke, and audit access keys." },
+  { href: "/webhooks", label: "Webhooks", icon: Webhook, copy: "Workspace events and alert delivery." },
+  { href: "/wallet", label: "Token Wallet", icon: Wallet, copy: "Balance, top-ups, and transaction history." },
+  { href: "/billing", label: "Billing", icon: Receipt, copy: "Invoices, allocation, and reconciliation." },
+  { href: "/budget", label: "Budget Caps", icon: Gauge, copy: "Forecasts, caps, and hard spend limits." },
+  { href: "/subscriptions", label: "Subscription", icon: CreditCard, copy: "Plan, tier, and billing portal." },
+];
 
 export default function WorkspacePage() {
   const overview = useApi<any>("/api/v1/workspace/overview");
@@ -21,6 +33,25 @@ export default function WorkspacePage() {
     <Shell>
       <TierGate required="starter" feature="Workspace Settings">
         <PageHeader title="Workspace Settings" subtitle="Models, providers, integrations, and observability config." />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+          {WORKSPACE_SURFACES.map((surface) => {
+            const Icon = surface.icon;
+            return (
+              <Link key={surface.href} href={surface.href} className="card card-hover p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg glass grid place-items-center text-brand-400 shrink-0">
+                  <Icon size={15} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-semibold text-ink-50 truncate">{surface.label}</span>
+                    <ChevronRight size={13} className="ml-auto text-ink-600 shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-ink-500 mt-1 leading-snug">{surface.copy}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="lg:col-span-2">
             <div className="text-sm font-medium mb-3">Sovereign Governance Vertical</div>
