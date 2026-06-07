@@ -22,8 +22,15 @@ export default function VendorListingsPage() {
   }
   async function submit(id: string) {
     if (!confirm("Submit for compliance review?")) return;
-    await api("/api/v1/listings/submit", { body: { listing_id: id } });
-    listings.mutate();
+    setBusy(true); setErr(undefined);
+    try {
+      await api("/api/v1/listings/submit", { body: { listing_id: id } });
+      listings.mutate();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

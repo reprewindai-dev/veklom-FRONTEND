@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import { useApi } from "@/hooks/useApi";
-import { api, getToken } from "@/lib/api";
+import { ApiError, api, getToken } from "@/lib/api";
 import { Button, Skeleton, ErrorBox, SuccessBox, Spinner } from "@/components/ui";
 import { ModuleHeader, SectionCard, Pill, Field, Select, KV } from "@/components/telemetry";
 import Modal from "@/components/Modal";
@@ -70,7 +70,7 @@ function ListingCard({ l, onOpen }: { l: any; onOpen: (l: any) => void }) {
     <button onClick={() => onOpen(l)} className="card card-hover p-4 text-left flex flex-col gap-2.5 group">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-ink-600">
         <span>{catLabel(l.category)}</span>
-        <span className="text-ink-600">Â·</span>
+        <span className="text-ink-600">/</span>
         <span className="text-ink-400">{l.vendor_name}</span>
         <span className="ml-auto flex items-center gap-1 text-brand-400 normal-case tracking-normal">
           <Star size={11} className="fill-brand-400" /> {Number(l.rating || 0).toFixed(1)}
@@ -110,8 +110,8 @@ export default function MarketplacePage() {
   const [showPurchases, setShowPurchases] = useState(false);
   const [showProvider, setShowProvider] = useState(false);
 
-  const all: any[] = Array.isArray(listings.data) ? listings.data : [];
-  const installedIds = new Set((installed.data?.installed || []).map((a: any) => a.listing_id));
+  const all: any[] = useMemo(() => (Array.isArray(listings.data) ? listings.data : []), [listings.data]);
+  const installedIds = useMemo(() => new Set((installed.data?.installed || []).map((a: any) => a.listing_id)), [installed.data]);
 
   const categories = useMemo(() => {
     const set = new Set(all.map((l) => l.category));
@@ -142,12 +142,12 @@ export default function MarketplacePage() {
   return (
     <Shell>
       <ModuleHeader
-        breadcrumb="Workspace Â· Marketplace"
+        breadcrumb="Workspace / Marketplace"
         title="Sovereign-ready assets, governed distribution"
         subtitle="Installable packages with backend adapters, pipeline nodes, policy hooks, audit proof, billing meters, health checks, tests, docs, and clean uninstall."
         pills={
           <>
-            <Pill tone="amber" dot>License-bound Â· Watermarked Â· Signed</Pill>
+            <Pill tone="amber" dot>License-bound / Watermarked / Signed</Pill>
             <Pill tone="neutral">{all.length} listings</Pill>
             <Pill tone="green">{providerCount} verified providers</Pill>
             <Pill tone="violet">INSTALLABLE PACKAGES</Pill>
@@ -174,14 +174,14 @@ export default function MarketplacePage() {
               <div className="flex items-center gap-2 mb-2">
                 <Pill tone="amber"><Sparkles size={11} /> Featured</Pill>
                 <span className="text-[10px] uppercase tracking-wider text-ink-600">{catLabel(l.category)}</span>
-                <span className="text-[10px] uppercase tracking-wider text-ink-400">Â· {l.vendor_name}</span>
+                <span className="text-[10px] uppercase tracking-wider text-ink-400">/ {l.vendor_name}</span>
               </div>
               <h3 className="text-[18px] font-semibold text-ink-50 group-hover:text-brand-400 transition">{l.name}</h3>
               <p className="text-[13px] text-ink-400 mt-1.5 line-clamp-2 max-w-md">{l.description}</p>
               <div className="mt-3"><Badges badges={l.badges} compliance={l.compliance_tags} /></div>
               <div className="flex items-end gap-3 mt-4">
                 <span className="text-[17px] font-semibold text-ink-50">{priceLabel(l)}</span>
-                <span className="text-[11px] text-ink-600">{l.downloads} installs Â· â˜… {Number(l.rating || 0).toFixed(1)}</span>
+                <span className="text-[11px] text-ink-600">{l.downloads} installs / rating {Number(l.rating || 0).toFixed(1)}</span>
                 <span className="ml-auto inline-flex items-center gap-1 text-[12px] text-brand-400 font-medium">View listing <ExternalLink size={12} /></span>
               </div>
             </button>
@@ -192,7 +192,7 @@ export default function MarketplacePage() {
       {/* Search + tabs */}
       <div className="flex items-center gap-2 rounded-xl border border-border bg-bg-900 px-3 h-11 mb-3">
         <Search size={15} className="text-ink-600" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search listings, providers, compliance frameworksâ€¦" className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-600" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search listings, providers, compliance frameworks..." className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-600" />
       </div>
       <div className="flex flex-wrap gap-1.5 mb-4">
         {categories.map((c) => (
@@ -223,9 +223,9 @@ export default function MarketplacePage() {
       {/* Trust footer */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 card p-5">
         {[
-          { icon: <ShieldCheck size={16} />, t: "Governed packaging", d: "Hosted APIs Â· containers Â· CLI Â· SDK Â· signed builds" },
+          { icon: <ShieldCheck size={16} />, t: "Governed packaging", d: "Hosted APIs / containers / CLI / SDK / signed builds" },
           { icon: <BadgeCheck size={16} />, t: "License-bound", d: "Activation, account binding, watermarking, metering, expiry" },
-          { icon: <FileCheck2 size={16} />, t: "Vetted providers", d: "Identity verified Â· signed builds Â· evidence-linked" },
+          { icon: <FileCheck2 size={16} />, t: "Vetted providers", d: "Identity verified / signed builds / evidence-linked" },
           { icon: <Boxes size={16} />, t: "One bill", d: "Marketplace charges roll into your Veklom invoice" },
         ].map((f) => (
           <div key={f.t} className="flex flex-col gap-1.5">
@@ -251,6 +251,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
   const [uninstalling, setUninstalling] = useState(false);
   const [installed2, setInstalled2] = useState(installed);
   const [msg, setMsg] = useState<string>();
+  const [checkout, setCheckout] = useState<any>(null);
   const [downloading, setDownloading] = useState(false);
 
   async function runDemo() {
@@ -262,13 +263,27 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
     finally { setDemoLoading(false); }
   }
   async function install() {
-    setInstalling(true); setMsg(undefined);
+    setInstalling(true); setMsg(undefined); setCheckout(null);
     try {
       const res = await api<any>(`/api/v1/marketplace/listings/${listing.id}/install`, { method: "POST", body: {} });
       setInstalled2(true);
       setMsg(res.message || "Installed to your workspace.");
       onInstalled();
-    } catch (e) { setMsg(`Install error: ${(e as Error).message}`); }
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 402) {
+        const body = e.body as any;
+        setCheckout({
+          checkout_url: body?.checkout_url || body?.url,
+          listing_id: body?.listing_id || listing.id,
+          price: body?.price ?? listing.price,
+          currency: body?.currency || listing.currency || "usd",
+          detail: body?.detail || body?.message || "Payment is required before this asset can be installed.",
+        });
+        setMsg(undefined);
+      } else {
+        setMsg(`Install error: ${(e as Error).message}`);
+      }
+    }
     finally { setInstalling(false); }
   }
   async function uninstall() {
@@ -303,7 +318,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
       onClose={onClose}
       size="xl"
       title={<span className="flex items-center gap-2">{listing.name} {listing.exclusive && <Sparkles size={14} className="text-accent-violet" />}</span>}
-      subtitle={<span>{catLabel(listing.category)} Â· {listing.vendor_name} Â· â˜… {Number(listing.rating || 0).toFixed(1)} Â· {listing.downloads} installs</span>}
+      subtitle={<span>{catLabel(listing.category)} / {listing.vendor_name} / rating {Number(listing.rating || 0).toFixed(1)} / {listing.downloads} installs</span>}
       footer={
         <>
           <span className="text-[15px] font-semibold text-ink-50">{priceLabel(listing)}</span>
@@ -317,7 +332,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
                 <Button variant="ghost" onClick={uninstall} loading={uninstalling}><Trash2 size={14} /> Uninstall</Button>
               </>
             ) : (
-              <Button onClick={install} loading={installing}>{paid ? <>Buy Â· {priceLabel(listing)}</> : <>Install free</>}</Button>
+              <Button onClick={install} loading={installing}>{paid ? <>Buy / {priceLabel(listing)}</> : <>Install free</>}</Button>
             )}
           </div>
         </>
@@ -386,6 +401,28 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
                   <div className="text-[10px] text-ink-600 font-mono">evidence {demo.evidence_id} · proof {demo.proof_hash} · provider {demo.provider}</div>
                 </div>
               )}
+            </div>
+          )}
+
+          {checkout && (
+            <div className="rounded-lg border border-brand-500/40 bg-brand-500/10 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="min-w-0">
+                  <div className="text-[11px] uppercase tracking-wider text-brand-300">Payment required</div>
+                  <p className="mt-1 text-[12.5px] leading-snug text-ink-200">{checkout.detail}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Pill tone="neutral">Listing {checkout.listing_id}</Pill>
+                    <Pill tone="amber">{checkout.currency?.toUpperCase()} {checkout.price}</Pill>
+                  </div>
+                </div>
+                {checkout.checkout_url ? (
+                  <Button className="sm:ml-auto" onClick={() => { window.location.href = checkout.checkout_url; }}>
+                    Open checkout
+                  </Button>
+                ) : (
+                  <Pill tone="amber">Checkout URL missing</Pill>
+                )}
+              </div>
             </div>
           )}
         </div>
