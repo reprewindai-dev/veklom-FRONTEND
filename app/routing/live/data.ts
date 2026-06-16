@@ -426,6 +426,101 @@ def serialize_double(value: float) -> bytes:
         codeSnippet: `sha256_checksum: "a07f...bc93" // SUCCESS`
       }
     ]
+  },
+  {
+    id: 'slo-gate-tier-fallback',
+    name: 'Multi-Tier SLO-Gate Fallback Drill',
+    shortImpact: 'Primary local node breaches latency thresholds; traffic shifts to Groq, then Gemini/OpenAI for reasoning.',
+    immediateImpact: 'The primary local model (Ollama) fails to respond within the required Latency Breach Threshold. Subsequent requests encounter a Tier-1 SLO-Gate trigger, routing to Groq.',
+    mitigationArchitecture: "Veklom's Consensus Router intercepts timeout exceptions and consults the Sovereign Route Policy. Local Ollama nodes are prioritized first. If latency spikes, traffic falls back to high-speed Groq inference. Heavy reasoning tasks are independently gated and routed directly to Gemini or OpenAI.",
+    severity: 'medium',
+    componentAffected: 'LLM Orchestration Gateway',
+    lockType: 'Dynamic Multi-Tier Route Switch',
+    recoveryTtl: 'Tiered Instant Failover',
+    codeReference: `// Active Routing Policy:
+const routingPolicy = {
+  tier1_local: "ollama:llama3",
+  tier2_cloud_fast: "groq:llama-3-8b-instant",
+  tier3_reasoning: ["gemini-1.5-pro", "gpt-4o"],
+  timeoutMs: 350
+};
+
+if (task.needsHeavyReasoning) {
+  return DynamicRouter.route(routingPolicy.tier3_reasoning[0]);
+}
+if (latency > routingPolicy.timeoutMs) {
+  return DynamicRouter.shift(routingPolicy.tier2_cloud_fast);
+}`,
+    parameters: [
+      {
+        id: 'latency-breach-threshold',
+        name: 'Ollama Latency Breach Threshold',
+        type: 'slider',
+        value: 350,
+        min: 100,
+        max: 1000,
+        unit: 'ms',
+        description: 'Maximum permitted response time before the SLO-Gate triggers Groq fallback routing.'
+      },
+      {
+        id: 'heavy-reasoning-confidence',
+        name: 'Gemini/OpenAI Reasoning Threshold',
+        type: 'slider',
+        value: 85,
+        min: 50,
+        max: 100,
+        unit: '%',
+        description: 'Complexity score required to bypass local/Groq nodes and route directly to Heavy Reasoning models.'
+      }
+    ],
+    scenarioSteps: [
+      {
+        id: 1,
+        title: 'Local Ollama Invocation',
+        description: 'Client submits standard orchestration request to the local Ollama node. Gateway initializes latency tracking.',
+        actor: 'API Proxy',
+        status: 'pending',
+        codeSnippet: `Gateway.route({ model: "ollama:llama3", query: req.body })`
+      },
+      {
+        id: 2,
+        title: 'Compute Bottleneck / Network Lag',
+        description: 'Local node experiences heavy queuing. Response time increases drastically beyond baseline measurements.',
+        actor: 'Worker VM',
+        status: 'pending'
+      },
+      {
+        id: 3,
+        title: 'SLO-Gate Breach Detected',
+        description: 'Telemetry engine flags the transaction. The 350ms Latency Breach Threshold is exceeded. Connection is preemptively closed.',
+        actor: 'Audit Logger',
+        status: 'pending'
+      },
+      {
+        id: 4,
+        title: 'Groq Tier-2 Fallback Triggered',
+        description: 'Router evaluates sovereign policy. Groq (Llama 3) is selected as the optimal high-speed cloud fallback.',
+        actor: 'API Proxy',
+        status: 'pending',
+        codeSnippet: `Router.fallbackActivated("groq", context)`
+      },
+      {
+        id: 5,
+        title: 'Heavy Reasoning Evaluation',
+        description: 'A subsequent complex request arrives. The router identifies high cognitive load requirements and bypasses Tier 1 & 2.',
+        actor: 'Worker VM',
+        status: 'pending'
+      },
+      {
+        id: 6,
+        title: 'Gemini/OpenAI Deep Execution',
+        description: 'The complex request is routed directly to Gemini/OpenAI. End-user receives the valid response with maximal reasoning applied.',
+        actor: 'API Proxy',
+        status: 'pending',
+        codeSnippet: `Response 200 OK (Source: gemini-1.5-pro)`
+      }
+    ]
   }
 ];
+
 

@@ -48,12 +48,13 @@ export default function App() {
 
   const onClearLogsAndInject = () => {
     setLogs([
-      `[${new Date().toLocaleTimeString()}] ⚠ DISPATCHER ACTIONS: Initiating Chaos Injection Sweep across all 5 failover matrices...`,
+      `[${new Date().toLocaleTimeString()}] ⚠ DISPATCHER ACTIONS: Initiating Chaos Injection Sweep across all failover matrices...`,
       `[${new Date().toLocaleTimeString()}] [CHAOS-INJECT] Simulating concurrency surges. Loading worker registers...`,
       `[${new Date().toLocaleTimeString()}] [WORKER] Host CPU page-fault threshold breached. Scheduling queue retries.`,
       `[${new Date().toLocaleTimeString()}] [REDIS] Injecting socket latency. Connection pool timeouts triggered.`,
+      `[${new Date().toLocaleTimeString()}] [SLO-GATE] Ollama node breached 350ms threshold. Rerouting traffic to Groq. Heavy reasoning tasks routed to Gemini/OpenAI.`,
       `[${new Date().toLocaleTimeString()}] [SERIALIZATION] Asserting cross-platform double compliance. Checked pack structures.`,
-      `[${new Date().toLocaleTimeString()}] SUMMARY: Chaos completed gracefully. Standard mitigation loops withstood total load. System overall state remain NOMINAL. [Secured]`
+      `[${new Date().toLocaleTimeString()}] SUMMARY: Chaos completed gracefully. Multi-tier routing (Ollama -> Groq -> Gemini/OpenAI) withstood total load. System overall state remain NOMINAL. [Secured]`
     ]);
   };
 
@@ -199,4 +200,5 @@ export default function App() {
     </div>
   );
 }
+
 
