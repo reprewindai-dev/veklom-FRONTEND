@@ -14,7 +14,7 @@ import { Pill } from "./telemetry";
 const GROUP_TITLES: Record<string, string> = {
   overview: "Overview",
   build: "Build",
-  marketplace: "Marketplace",
+  marketplace: "API Benchmarks",
   run: "Run",
   insights: "Insights · Proactive",
   govern: "Govern",
