@@ -101,7 +101,7 @@ export default function BuildReleasePage() {
     setIsBuilding(true);
     
     try {
-      const response = await api("/api/v1/build-release/start", {
+      const buildRun = await api("/api/v1/build-release/start", {
         method: "POST",
         body: JSON.stringify({
           source: {
@@ -110,9 +110,7 @@ export default function BuildReleasePage() {
             branch: "main"
           }
         })
-      });
-
-      const buildRun: BuildRun = await response.json();
+      }) as BuildRun;
       setActiveBuildRun(buildRun);
       mutateBuildRuns();
     } catch (error) {
