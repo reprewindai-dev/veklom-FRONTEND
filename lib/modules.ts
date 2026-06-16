@@ -23,11 +23,7 @@ export const MODULES: ModuleDef[] = [
   { slug: "gpc", label: "Plan Compiler (GPC)", href: "/gpc", group: "build", minTier: "pro", description: "Compile intent into deterministic, policy-checked execution plans.", icon: "GitBranch" },
   { slug: "pipelines", label: "Pipelines", href: "/pipelines", group: "build", minTier: "pro", description: "Visual builder for governed inference chains, tools, routing, and evidence.", icon: "Workflow", sidebar: true },
 
-  { slug: "marketplace", label: "Marketplace", href: "/marketplace", group: "marketplace", minTier: "free", description: "Sovereign-ready assets, distribution, vendor listings, payouts, and installs.", icon: "Store", sidebar: true },
-  { slug: "vendor-listings", label: "My Listings", href: "/vendor/listings", group: "marketplace", minTier: "starter", description: "Submit, review, and manage marketplace listings.", icon: "Tags" },
-  { slug: "vendor-onboarding", label: "Vendor Onboarding", href: "/vendor/onboarding", group: "marketplace", minTier: "starter", description: "Become a marketplace vendor.", icon: "Rocket" },
-  { slug: "vendor-payouts", label: "Payouts", href: "/vendor/payouts", group: "marketplace", minTier: "starter", description: "Stripe Connect payouts and reconciliation.", icon: "Banknote" },
-  { slug: "vendor-stripe", label: "Stripe Connect", href: "/vendor/stripe", group: "marketplace", minTier: "starter", description: "Connect onboarding and vendor status.", icon: "Link2" },
+  { slug: "benchmarks", label: "API Benchmarks", href: "/benchmarks", group: "marketplace", minTier: "starter", description: "Trust leaderboard, MCP schema inspection, Gemini schema compiler, and SLA staking markets.", icon: "Trophy", sidebar: true },
 
   { slug: "operations", label: "Operations", href: "/operations", group: "run", minTier: "free", description: "Deployments, monitoring, and autonomous runtime controls.", icon: "Terminal", sidebar: true },
   { slug: "test-lab", label: "Test Lab", href: "/test-lab", group: "run", minTier: "starter", description: "Agent Arena integration and testing environment.", icon: "FlaskConical", sidebar: true },
