@@ -44,9 +44,9 @@ export function Empty({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-export function ErrorBox({ message }: { message: string }) {
+export function ErrorBox({ message, className }: { message: string; className?: string }) {
   return (
-    <div className="flex items-start gap-2.5 rounded-xl border border-accent-red/40 bg-accent-red/10 px-4 py-3 text-accent-red text-sm">
+    <div className={clsx("flex items-start gap-2.5 rounded-xl border border-accent-red/40 bg-accent-red/10 px-4 py-3 text-accent-red text-sm", className)}>
       <AlertTriangle size={16} className="mt-0.5 shrink-0" />
       <span>{message}</span>
     </div>
