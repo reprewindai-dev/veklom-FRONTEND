@@ -52,6 +52,10 @@ export const metadata: Metadata = {
   // sends X-Robots-Tag: noindex for /control-plane-next, but we set the meta
   // tag too so the preview is never indexed.
   robots: { index: false, follow: false, nocache: true },
+  // Base Network App ID — domain ownership verification for veklom.com
+  other: {
+    "base:app_id": "6a31ef5406f4fa4223585905",
+  },
 };
 
 export const viewport: Viewport = {
