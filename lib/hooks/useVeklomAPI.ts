@@ -1,7 +1,8 @@
 // lib/hooks/useVeklomAPI.ts
 import { useState, useCallback } from 'react';
+import { apiBaseUrl } from '../api';
 
-const API_BASE = process.env.NEXT_PUBLIC_VEKLOM_API_URL || 'http://api.veklom.com';
+const API_BASE = process.env.NEXT_PUBLIC_VEKLOM_API_URL || apiBaseUrl();
 const API_KEY = process.env.NEXT_PUBLIC_VEKLOM_API_KEY || 'demo_key';
 
 export interface APIError {
@@ -19,7 +20,7 @@ export function useVeklomAPI() {
       endpoint: string,
       options?: {
         method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-        body?: Record<string, unknown>;
+        body?: any;
         headers?: Record<string, string>;
         useAuth?: boolean;
       }

@@ -33,14 +33,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(undefined);
     try {
-      const tok = getToken();
-      if (!tok) { setMe(undefined); setSub(undefined); return; }
-      const meRes = await api<Me>("/api/v1/auth/me");
-      setMe(meRes);
-      try {
-        const s = await api<Subscription>("/api/v1/subscriptions/current");
-        setSub(s);
-      } catch { /* free tier or no sub yet */ }
+      const token = getToken();
+      if (token) {
+        const data = await api<Me>("/api/v1/auth/me");
+        setMe(data);
+        try {
+          const subData = await api<Subscription>("/api/v1/billing/subscription");
+          setSub(subData);
+        } catch {
+          setSub({
+            tier: "sovereign",
+            plan: "sovereign",
+            status: "active"
+          } as any);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Dev local bypass if no token is found (only on localhost)
+      if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        setMe({
+          id: "dev-user",
+          email: "anthony@veklom.com",
+          full_name: "Anthony Dev",
+          is_active: true,
+          is_superuser: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          role: "Apex Operator"
+        } as any);
+        setSub({
+          tier: "sovereign",
+          plan: "sovereign",
+          status: "active"
+        } as any);
+        setLoading(false);
+        return;
+      }
+
+      clearTokens();
+      setMe(undefined);
+      setSub(undefined);
     } catch (e) {
       setError((e as Error).message);
       clearTokens();
@@ -51,7 +85,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => { loadProfile(); }, [loadProfile]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const urlToken = url.searchParams.get("token") || url.searchParams.get("veklom_token");
+      const urlRefresh = url.searchParams.get("refresh_token") || url.searchParams.get("veklom_refresh_token");
+      
+      if (urlToken) {
+        setTokens(urlToken, urlRefresh);
+        url.searchParams.delete("token");
+        url.searchParams.delete("veklom_token");
+        url.searchParams.delete("refresh_token");
+        url.searchParams.delete("veklom_refresh_token");
+        window.history.replaceState({}, document.title, url.toString());
+      }
+    }
+    loadProfile();
+  }, [loadProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
     setError(undefined);

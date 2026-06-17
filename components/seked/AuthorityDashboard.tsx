@@ -205,7 +205,7 @@ export default function AuthorityDashboard() {
                   {run.decision && (
                     <div>
                       <span className="text-gray-400">Carbon Value:</span>
-                      <span className="ml-2 text-white">{run.decision.carbon_value}</span>
+                      <span className="ml-2 text-white">{(run.decision as any).carbon_value}</span>
                     </div>
                   )}
                 </div>

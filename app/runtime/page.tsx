@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  Play, RotateCcw, ChevronRight, Lock, Terminal, AlertCircle, CheckCircle,
-  Clock, Shield, Zap, Database, Cpu, Activity, GitFork, Layers, Flame
+  Play, RotateCcw, ChevronRight, Lock, Terminal, CheckCircle,
+  Clock, Shield, Zap, Cpu, Activity, GitFork, Layers, Flame
 } from 'lucide-react';
+import Shell from '@/components/Shell';
+import { Pill } from '@/components/telemetry';
 
 const SCENARIOS = [
-  { id: 'rogue_db', name: 'Rogue Database', description: 'Agent attempts unauthorized database modification', threat_level: 'CRITICAL', color: 'rose' },
-  { id: 'prompt_injection', name: 'Prompt Injection', description: 'Malicious prompt injection attack simulation', threat_level: 'HIGH', color: 'orange' },
-  { id: 'repo_mutation', name: 'Repository Mutation', description: 'Unauthorized code repository changes', threat_level: 'HIGH', color: 'orange' },
-  { id: 'budget_loop', name: 'Budget Loop', description: 'Runaway spending without cost controls', threat_level: 'MEDIUM', color: 'yellow' },
-  { id: 'quarantine', name: 'Quarantine Protocol', description: 'Test containment and isolation procedures', threat_level: 'MEDIUM', color: 'yellow' },
+  { id: 'rogue_db', name: 'Rogue Database', description: 'Agent attempts unauthorized database modification', threat_level: 'CRITICAL' },
+  { id: 'prompt_injection', name: 'Prompt Injection', description: 'Malicious prompt injection attack simulation', threat_level: 'HIGH' },
+  { id: 'repo_mutation', name: 'Repository Mutation', description: 'Unauthorized code repository changes', threat_level: 'HIGH' },
+  { id: 'budget_loop', name: 'Budget Loop', description: 'Runaway spending without cost controls', threat_level: 'MEDIUM' },
+  { id: 'quarantine', name: 'Quarantine Protocol', description: 'Test containment and isolation procedures', threat_level: 'MEDIUM' },
 ];
 
 const PIPELINE_STEPS = [
@@ -32,7 +34,6 @@ const DEEP_LINKS = [
     subtitle: '7-Step Deterministic Pipeline · EAT Token Generation · Cryptographic Evidence',
     icon: Shield,
     badge: 'FULL LAB',
-    color: 'emerald',
   },
   {
     href: '/benchmarks/arena',
@@ -40,7 +41,6 @@ const DEEP_LINKS = [
     subtitle: 'CharacterCreator · Agent Builder · Compliance Scenario Sandbox',
     icon: Zap,
     badge: 'SANDBOX',
-    color: 'violet',
   },
   {
     href: '/routing/live',
@@ -48,7 +48,6 @@ const DEEP_LINKS = [
     subtitle: 'Chaos Injection · Ollama→Groq→Gemini Fallback · Gradient Field Routing',
     icon: Activity,
     badge: 'LIVE',
-    color: 'amber',
   },
 ];
 
@@ -66,7 +65,7 @@ export default function RuntimePage() {
     setEat(null);
 
     for (let i = 1; i <= 7; i++) {
-      await new Promise((r) => setTimeout(r, 480));
+      await new Promise((r) => setTimeout(r, 400));
       setActiveStep(i);
     }
 
@@ -84,26 +83,31 @@ export default function RuntimePage() {
   };
 
   const threatColor: Record<string, string> = {
-    CRITICAL: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
-    HIGH: 'text-orange-400 bg-orange-500/10 border-orange-500/30',
-    MEDIUM: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
+    CRITICAL: 'text-red-400 bg-red-500/10 border-red-500/20',
+    HIGH: 'text-brand-400 bg-brand-500/10 border-brand-500/20',
+    MEDIUM: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <Shell>
+      <div className="space-y-6 animate-fade-up">
 
         {/* Header */}
-        <div className="border-b border-slate-800 pb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-              ● RUNTIME ENFORCEMENT
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-2">
+          <div className="space-y-1">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-ink-600">
+              Workspace · Sovereign Runtime
             </span>
+            <h1 className="text-[28px] font-semibold tracking-tight text-gradient">
+              Runtime Enforcement Hub
+            </h1>
+            <p className="text-sm text-ink-400 max-w-2xl mt-1.5">
+              Veklom's crown jewel. Every agent execution path passes through a 7-step deterministic pipeline to seal replayable proofs before tools execute.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Runtime Enforcement Hub</h1>
-          <p className="text-slate-400 mt-1.5 max-w-2xl">
-            The crown jewel. Every AI action passes through a 7-step deterministic pipeline — governed, compiled, committed, and sealed with cryptographic proof before any tool executes.
-          </p>
+          <div className="shrink-0">
+            <Pill tone="amber" dot>Gateway active</Pill>
+          </div>
         </div>
 
         {/* Deep Links to Full Labs */}
@@ -114,20 +118,20 @@ export default function RuntimePage() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="group bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-xl p-5 transition-all hover:shadow-lg hover:shadow-black/20"
+                className="group card p-5 hover:border-brand-500/40 hover:shadow-brand-500/[0.02] hover:shadow-xl transition-all"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className={`p-2 rounded-lg bg-${link.color}-500/10 border border-${link.color}-500/20`}>
-                    <Icon className={`w-5 h-5 text-${link.color}-400`} />
+                  <div className="p-2 rounded-lg bg-brand-500/10 border border-brand-500/20">
+                    <Icon className="w-5 h-5 text-brand-400" />
                   </div>
-                  <span className={`text-[9px] font-mono font-bold tracking-widest text-${link.color}-400 bg-${link.color}-500/10 border border-${link.color}-500/20 px-2 py-0.5 rounded-full`}>
+                  <span className="text-[9px] font-mono font-bold tracking-widest text-brand-400 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded-full">
                     {link.badge}
                   </span>
                 </div>
-                <h3 className="text-white font-semibold mb-1 group-hover:text-emerald-300 transition">{link.title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{link.subtitle}</p>
-                <div className="flex items-center gap-1 mt-3 text-xs text-slate-500 group-hover:text-slate-300 transition">
-                  Open Full Lab <ChevronRight className="w-3 h-3" />
+                <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-brand-300 transition">{link.title}</h3>
+                <p className="text-xs text-ink-400 leading-relaxed">{link.subtitle}</p>
+                <div className="flex items-center gap-1 mt-3 text-xs text-ink-500 group-hover:text-brand-400 transition font-mono">
+                  Open Lab <ChevronRight className="w-3 h-3" />
                 </div>
               </Link>
             );
@@ -135,31 +139,31 @@ export default function RuntimePage() {
         </div>
 
         {/* Quick Demo */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Scenario Picker */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-            <div className="bg-slate-950 px-5 py-4 border-b border-slate-700 flex items-center gap-2">
-              <Flame className="w-4 h-4 text-orange-400" />
-              <h3 className="text-white font-semibold text-sm">Threat Scenario</h3>
+          <div className="card overflow-hidden">
+            <div className="bg-white/[0.01] px-5 py-4 border-b border-[#242424] flex items-center gap-2">
+              <Flame className="w-4 h-4 text-brand-400" />
+              <h3 className="text-white font-bold text-xs uppercase tracking-wider">Threat Scenario</h3>
             </div>
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-2.5">
               {SCENARIOS.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => { setSelectedScenario(s); reset(); }}
-                  className={`w-full text-left px-4 py-3 rounded-lg border transition ${
+                  className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
                     selectedScenario.id === s.id
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                      : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-slate-500'
+                      ? 'bg-brand-500/10 border-brand-500/30 text-brand-400'
+                      : 'bg-black/30 border-white/5 text-ink-300 hover:border-brand-500/20'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{s.name}</span>
-                    <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${threatColor[s.threat_level]}`}>
+                    <span className="font-semibold text-xs">{s.name}</span>
+                    <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${threatColor[s.threat_level]}`}>
                       {s.threat_level}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">{s.description}</p>
+                  <p className="text-[11px] text-ink-500 mt-1">{s.description}</p>
                 </button>
               ))}
             </div>
@@ -167,14 +171,14 @@ export default function RuntimePage() {
               <button
                 onClick={runDemo}
                 disabled={running}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-semibold rounded-lg transition text-sm flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-brand-500 hover:bg-brand-400 disabled:bg-white/5 disabled:text-ink-500 text-black font-bold uppercase tracking-wider rounded-xl transition text-xs flex items-center justify-center gap-2"
               >
                 <Play className="w-4 h-4" />
                 {running ? 'Enforcing...' : 'Run Pipeline Demo'}
               </button>
               <button
                 onClick={reset}
-                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl transition"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -182,12 +186,12 @@ export default function RuntimePage() {
           </div>
 
           {/* Pipeline Visualizer */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-            <div className="bg-slate-950 px-5 py-4 border-b border-slate-700 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-white font-semibold text-sm">Execution Pipeline — {selectedScenario.name}</h3>
+          <div className="card overflow-hidden">
+            <div className="bg-white/[0.01] px-5 py-4 border-b border-[#242424] flex items-center gap-2">
+              <Layers className="w-4 h-4 text-brand-400" />
+              <h3 className="text-white font-bold text-xs uppercase tracking-wider">Execution Pipeline — {selectedScenario.name}</h3>
             </div>
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-2.5">
               {PIPELINE_STEPS.map((step) => {
                 const Icon = step.icon;
                 const isDone = activeStep >= step.step;
@@ -195,34 +199,34 @@ export default function RuntimePage() {
                 return (
                   <div
                     key={step.step}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all ${
                       isDone
-                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        ? 'bg-brand-500/10 border-brand-500/30'
                         : isActive
-                        ? 'bg-blue-500/10 border-blue-500/30'
-                        : 'bg-slate-800/40 border-slate-700/50'
+                        ? 'bg-white/5 border-brand-400/50'
+                        : 'bg-black/30 border-white/5'
                     }`}
                   >
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                      isDone ? 'bg-emerald-500/20' : isActive ? 'bg-blue-500/20' : 'bg-slate-700'
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
+                      isDone ? 'bg-brand-500/20 border-brand-400/40' : isActive ? 'bg-white/10 border-white/20' : 'bg-black/40 border-white/5'
                     }`}>
                       {isDone ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        <CheckCircle className="w-4 h-4 text-brand-400" />
                       ) : (
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-500'}`} />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-brand-400' : 'text-ink-500'}`} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-mono">STEP {step.step}</span>
-                        <span className={`text-sm font-semibold ${isDone ? 'text-emerald-300' : isActive ? 'text-blue-300' : 'text-slate-400'}`}>
+                        <span className="text-[9px] text-ink-500 font-mono">STEP {step.step}</span>
+                        <span className={`text-xs font-bold ${isDone ? 'text-brand-400' : isActive ? 'text-white' : 'text-ink-300'}`}>
                           {step.name}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 truncate">{step.desc}</p>
+                      <p className="text-[10px] text-ink-500 truncate mt-0.5">{step.desc}</p>
                     </div>
                     {isDone && (
-                      <span className="text-[10px] font-mono text-emerald-500 shrink-0">✓ SEALED</span>
+                      <span className="text-[9px] font-mono text-brand-400 font-bold shrink-0">✓ SEALED</span>
                     )}
                   </div>
                 );
@@ -231,32 +235,32 @@ export default function RuntimePage() {
 
             {/* EAT Token */}
             {eat && (
-              <div className="mx-4 mb-4 p-4 bg-emerald-950/50 border border-emerald-500/30 rounded-lg">
-                <div className="text-[9px] font-mono uppercase tracking-widest text-emerald-400 mb-1">
+              <div className="mx-4 mb-4 p-4 bg-brand-500/[0.04] border border-brand-500/20 rounded-xl">
+                <div className="text-[9px] font-mono uppercase tracking-widest text-brand-400 mb-1 font-bold">
                   Execution Authorization Token Issued
                 </div>
-                <code className="text-emerald-300 font-mono text-sm font-bold">{eat}</code>
-                <p className="text-xs text-emerald-600 mt-1">Pipeline sealed. All 7 steps cryptographically verified.</p>
+                <code className="text-brand-300 font-mono text-xs font-bold break-all select-all">{eat}</code>
+                <p className="text-[10.5px] text-ink-500 mt-1 font-sans">Pipeline sealed. All 7 steps cryptographically verified.</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Footer nav to full experiences */}
-        <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
+        <div className="flex items-center justify-between p-4 bg-white/[0.01] border border-white/5 rounded-xl">
           <div>
-            <p className="text-sm font-semibold text-white">Need the full experience?</p>
-            <p className="text-xs text-slate-400">The Gateway Trust Contract lab includes EAT signing, policy presets, and the full evidence ledger.</p>
+            <p className="text-xs font-semibold text-white">Need the full laboratory experience?</p>
+            <p className="text-[11px] text-ink-400 mt-0.5">The Gateway Trust Contract lab includes EAT signing, policy presets, and the full evidence ledger.</p>
           </div>
           <Link
             href="/benchmarks/runtime-lab"
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
+            className="btn btn-primary text-xs py-2 px-5"
           >
             Open Full Lab <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
 
       </div>
-    </div>
+    </Shell>
   );
 }

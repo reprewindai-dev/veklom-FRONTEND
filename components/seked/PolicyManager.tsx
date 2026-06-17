@@ -9,23 +9,27 @@ import {
   deletePolicy, 
   getPolicies 
 } from "../../lib/seked-api";
-import type { Policy } from "../../types/seked";
+import type { SekedPolicy } from "../../types/seked";
 
 interface PolicyFormData {
   name: string;
-  threshold: number;
-  delay_seconds: number;
+  sigma_threshold: number;
+  ci_threshold: number;
+  si_threshold: number;
 }
 
+const EMPTY_FORM: PolicyFormData = {
+  name: "",
+  sigma_threshold: 1.5,
+  ci_threshold: 0.5,
+  si_threshold: 0.5,
+};
+
 export default function PolicyManager() {
-  const { data: policies, error, mutate } = useSWR<Policy[]>("/policies", getPolicies);
+  const { data: policies, error, mutate } = useSWR<SekedPolicy[]>("/policies", getPolicies);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
-  const [formData, setFormData] = useState<PolicyFormData>({
-    name: "",
-    threshold: 250,
-    delay_seconds: 30,
-  });
+  const [editingPolicy, setEditingPolicy] = useState<SekedPolicy | null>(null);
+  const [formData, setFormData] = useState<PolicyFormData>(EMPTY_FORM);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,22 +38,23 @@ export default function PolicyManager() {
         await updatePolicy(editingPolicy.name, formData);
         setEditingPolicy(null);
       } else {
-        await createPolicy(formData);
+        await createPolicy({ ...formData, action_rules: {} });
         setIsCreating(false);
       }
-      setFormData({ name: "", threshold: 250, delay_seconds: 30 });
+      setFormData(EMPTY_FORM);
       mutate();
     } catch (error) {
       console.error("Failed to save policy:", error);
     }
   };
 
-  const handleEdit = (policy: Policy) => {
+  const handleEdit = (policy: SekedPolicy) => {
     setEditingPolicy(policy);
     setFormData({
       name: policy.name,
-      threshold: policy.threshold,
-      delay_seconds: policy.delay_seconds,
+      sigma_threshold: policy.sigma_threshold,
+      ci_threshold: policy.ci_threshold,
+      si_threshold: policy.si_threshold,
     });
   };
 
@@ -73,7 +78,7 @@ export default function PolicyManager() {
         <h2 className="text-2xl font-bold text-white">Policy Management</h2>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-black font-semibold rounded-lg hover:bg-brand-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Policy
@@ -82,7 +87,7 @@ export default function PolicyManager() {
 
       {/* Policy Form */}
       {(isCreating || editingPolicy) && (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-800">
           <h3 className="text-lg font-semibold text-white mb-4">
             {editingPolicy ? "Edit Policy" : "Create New Policy"}
           </h3>
@@ -95,39 +100,54 @@ export default function PolicyManager() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-black border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
                 disabled={!!editingPolicy}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Carbon Threshold
+                Sigma Threshold (σ)
               </label>
               <input
                 type="number"
-                value={formData.threshold}
-                onChange={(e) => setFormData({ ...formData, threshold: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                step="0.01"
+                value={formData.sigma_threshold}
+                onChange={(e) => setFormData({ ...formData, sigma_threshold: parseFloat(e.target.value) })}
+                className="w-full px-3 py-2 bg-black border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Delay Seconds
+                Clarity Index Threshold (CI)
               </label>
               <input
                 type="number"
-                value={formData.delay_seconds}
-                onChange={(e) => setFormData({ ...formData, delay_seconds: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                step="0.01"
+                value={formData.ci_threshold}
+                onChange={(e) => setFormData({ ...formData, ci_threshold: parseFloat(e.target.value) })}
+                className="w-full px-3 py-2 bg-black border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Stability Index Threshold (SI)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.si_threshold}
+                onChange={(e) => setFormData({ ...formData, si_threshold: parseFloat(e.target.value) })}
+                className="w-full px-3 py-2 bg-black border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-brand-500 text-black font-semibold rounded-lg hover:bg-brand-600 transition-colors"
               >
                 {editingPolicy ? "Update" : "Create"}
               </button>
@@ -136,9 +156,9 @@ export default function PolicyManager() {
                 onClick={() => {
                   setIsCreating(false);
                   setEditingPolicy(null);
-                  setFormData({ name: "", threshold: 250, delay_seconds: 30 });
+                  setFormData(EMPTY_FORM);
                 }}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
@@ -152,19 +172,23 @@ export default function PolicyManager() {
         {policies.map((policy) => (
           <div
             key={policy.name}
-            className="bg-gray-800 rounded-lg p-6 border border-gray-700"
+            className="bg-gray-900/40 rounded-lg p-6 border border-gray-800"
           >
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-white">{policy.name}</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-400">Threshold:</span>
-                    <span className="ml-2 text-white">{policy.threshold}</span>
+                    <span className="text-gray-400">σ:</span>
+                    <span className="ml-2 text-white">{policy.sigma_threshold}</span>
                   </div>
                   <div>
-                    <span className="text-gray-400">Delay:</span>
-                    <span className="ml-2 text-white">{policy.delay_seconds}s</span>
+                    <span className="text-gray-400">CI:</span>
+                    <span className="ml-2 text-white">{policy.ci_threshold}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">SI:</span>
+                    <span className="ml-2 text-white">{policy.si_threshold}</span>
                   </div>
                 </div>
                 {policy.created_at && (
@@ -176,13 +200,13 @@ export default function PolicyManager() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(policy)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(policy.name)}
-                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

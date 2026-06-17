@@ -61,9 +61,16 @@ export default function DeploymentsPage() {
     setGithubLoading(true);
     setGithubError("");
     try {
-      const res = await api<GithubRepo[]>("/api/v1/auth/github/repos").catch(() => null);
-      if (res && Array.isArray(res) && res.length > 0) {
-        setRepos(res);
+      const res = await api<{repos: GithubRepo[]}>("/api/v1/auth/github/repos").catch(() => null);
+      
+      if (res && res.repos && Array.isArray(res.repos)) {
+        if (res.repos.length > 0) {
+          setRepos(res.repos);
+        } else {
+          // Prevent infinite redirect loop when the user has 0 accessible repositories
+          // This happens when an organization has "OAuth app access restrictions" enabled.
+          setGithubError("No accessible repositories found. If your repositories belong to an organization, please ensure the organization owner has approved the Veklom Deploy OAuth app.");
+        }
       } else {
         // If GitHub OAuth is not connected yet, redirect to GitHub login
         window.location.href = "/api/v1/auth/github/login";

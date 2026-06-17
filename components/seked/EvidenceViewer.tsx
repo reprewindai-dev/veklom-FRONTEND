@@ -223,7 +223,7 @@ export default function EvidenceViewer() {
                   </div>
                   <div>
                     <span className="text-gray-400">Carbon Value:</span>
-                    <span className="ml-2 text-white">{proof.carbon_value}</span>
+                    <span className="ml-2 text-white">{(proof as any).carbon_value}</span>
                   </div>
                   <div>
                     <span className="text-gray-400">Policy:</span>

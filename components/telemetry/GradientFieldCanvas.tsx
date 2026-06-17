@@ -25,10 +25,10 @@ export default function GradientFieldCanvas() {
     window.addEventListener('resize', handleResize);
 
     const nodes = [
-      { id: 'ollama', x: 0.2, y: 0.5, label: 'Ollama (Primary)', color: '#10b981' },
-      { id: 'groq', x: 0.5, y: 0.3, label: 'Groq (Fast Fallback)', color: '#06b6d4' },
-      { id: 'gemini', x: 0.8, y: 0.5, label: 'Gemini (Heavy Fallback)', color: '#8b5cf6' },
-      { id: 'openai', x: 0.8, y: 0.7, label: 'OpenAI (Heavy Fallback)', color: '#f59e0b' }
+      { id: 'ollama', x: 0.2, y: 0.5, label: 'Ollama (Primary)', color: '#FFB800' },
+      { id: 'groq', x: 0.5, y: 0.3, label: 'Groq (Fast Fallback)', color: '#FFA000' },
+      { id: 'gemini', x: 0.8, y: 0.5, label: 'Gemini (Heavy Fallback)', color: '#FF8F00' },
+      { id: 'openai', x: 0.8, y: 0.7, label: 'OpenAI (Heavy Fallback)', color: '#FFB800' }
     ];
 
     let time = 0;
@@ -73,7 +73,7 @@ export default function GradientFieldCanvas() {
         ctx.fillStyle = '#ffffff';
         ctx.fill();
         ctx.shadowBlur = 10;
-        ctx.shadowColor = '#ffffff';
+        ctx.shadowColor = '#FFB800';
       };
 
       // Ollama to Groq
@@ -97,7 +97,7 @@ export default function GradientFieldCanvas() {
         
         ctx.beginPath();
         ctx.arc(x, y, 12 + pulse, 0, Math.PI * 2);
-        ctx.fillStyle = `${node.color}33`;
+        ctx.fillStyle = `${node.color}22`;
         ctx.fill();
         
         ctx.beginPath();
@@ -106,8 +106,8 @@ export default function GradientFieldCanvas() {
         ctx.fill();
         
         // Label
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '12px JetBrains Mono, monospace';
+        ctx.fillStyle = '#A0A0A0';
+        ctx.font = '10px JetBrains Mono, monospace';
         ctx.textAlign = 'center';
         ctx.fillText(node.label, x, y + 25);
       });
@@ -123,10 +123,10 @@ export default function GradientFieldCanvas() {
   }, []);
 
   return (
-    <div className="w-full h-64 bg-[#05080f] rounded-xl border border-slate-800/50 relative overflow-hidden mb-8 shadow-[0_0_40px_-15px_rgba(16,185,129,0.1)]">
+    <div className="w-full h-64 bg-black/40 rounded-xl border border-brand-500/20 relative overflow-hidden mb-8 shadow-[0_0_40px_-15px_rgba(255,184,0,0.1)]">
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-xs text-slate-400 font-mono tracking-widest uppercase">Gradient Field Path Optimizer</span>
+        <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+        <span className="text-xs text-ink-400 font-mono tracking-widest uppercase">Gradient Field Path Optimizer</span>
       </div>
       <canvas 
         ref={canvasRef} 

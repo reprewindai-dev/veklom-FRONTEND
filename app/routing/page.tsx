@@ -76,7 +76,7 @@ export default function RoutingPage() {
           breadcrumb="Operations · Routing"
           title="Cost intelligence & routing"
           subtitle="Simulate provider selection, predict cost before you commit, and govern the model stack — Ollama-first with policy-gated cloud burst."
-          pills={<><Pill tone="amber">Ollama primary</Pill><Pill tone="cyan">Groq fallback</Pill><Pill tone="green" dot>Circuit closed</Pill></>}
+          pills={<><Pill tone="amber">Ollama primary</Pill><Pill tone="neutral">Groq fallback</Pill><Pill tone="green" dot>Circuit closed</Pill></>}
         />
 
         {/* Embedded Gradient Field Canvas */}
@@ -101,7 +101,7 @@ export default function RoutingPage() {
             </div>
             {simErr && <div className="mt-3"><ErrorBox message={simErr} /></div>}
             {sim && !simErr && (
-              <div className="mt-4 rounded-xl border border-border bg-white/[0.02] p-4">
+              <div className="mt-4 rounded-xl border border-border bg-white/[0.01] p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <RoutePill route={sim.selected_provider || sim.selected_model} />
                   <span className="text-sm font-semibold">{sim.selected_provider || sim.selected_model || "—"}</span>
@@ -134,7 +134,7 @@ export default function RoutingPage() {
             </div>
             {costErr && <div className="mt-3"><ErrorBox message={costErr} /></div>}
             {cost && !costErr && (
-              <div className="mt-4 rounded-xl border border-border bg-white/[0.02] p-4">
+              <div className="mt-4 rounded-xl border border-border bg-white/[0.01] p-4">
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-semibold tabular-nums text-gradient">{fmtUsd(Number(cost.predicted_cost ?? 0), 6)}</span>
                   {cost.confidence != null && <Pill tone="neutral">{Math.round(Number(cost.confidence) * 100)}% conf</Pill>}
@@ -148,7 +148,7 @@ export default function RoutingPage() {
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="text-[10px] uppercase tracking-wider text-ink-600 mb-1.5">Cheaper alternatives</div>
                     {costAlts.slice(0, 4).map((a, i) => (
-                      <KV key={i} k={a.provider} v={<span>{fmtUsd(Number(a.cost), 6)} {a.savings_percent != null && <span className="text-accent-green">· {a.savings_percent}% off</span>}</span>} />
+                      <KV key={i} k={a.provider} v={<span>{fmtUsd(Number(a.cost), 6)} {a.savings_percent != null && <span className="text-brand-400">· {a.savings_percent}% off</span>}</span>} />
                     ))}
                   </div>
                 )}

@@ -116,3 +116,5 @@ export interface EvidencePack {
   verified_at?: string;
   specification_compliance: boolean;
 }
+
+export type Policy = SekedPolicy;
