@@ -23,8 +23,8 @@ export const MODULES: ModuleDef[] = [
   { slug: "gpc", label: "Plan Compiler", href: "/gpc", group: "build", minTier: "pro", description: "Compile intent into deterministic plans.", icon: "GitBranch", sidebar: false },
 
   // 3. 🧪 Run & Playground
-  { slug: "playground", label: "Playground & Runtime", href: "/playground", group: "run", minTier: "free", description: "Governed inference console with routing, policy, and cost per call.", icon: "FlaskConical", sidebar: true },
-  { slug: "runtime", label: "Runtime", href: "/runtime", group: "run", minTier: "free", description: "Deployments and terminal.", icon: "Terminal", sidebar: false },
+  { slug: "playground", label: "Playground", href: "/playground", group: "run", minTier: "free", description: "Side-by-side model comparison with Markdown rendering, cost prediction, and circuit breaker status.", icon: "FlaskConical", sidebar: true },
+  { slug: "runtime", label: "Runtime Enforcement", href: "/runtime", group: "run", minTier: "free", description: "7-step deterministic execution pipeline with agent builder and cryptographic evidence ledger.", icon: "Terminal", sidebar: true },
   { slug: "deployments", label: "Deployments", href: "/deployments", group: "run", minTier: "pro", description: "BYOS deployment tracking.", icon: "Server", sidebar: false },
   { slug: "routing", label: "Smart Routing", href: "/routing", group: "run", minTier: "pro", description: "Provider routing rules.", icon: "Network", sidebar: false },
   { slug: "autonomous", label: "Autonomous Jobs", href: "/autonomous", group: "run", minTier: "pro", description: "Execute and monitor autonomous runs.", icon: "Bot", sidebar: false },
@@ -36,7 +36,7 @@ export const MODULES: ModuleDef[] = [
 
 
   // 5. ⚖️ Governance & Security
-  { slug: "governance", label: "Governance Vault", href: "/governance", group: "govern", minTier: "sovereign", description: "Audit logs, compliance, privacy, safety, security, and kill-switch controls.", icon: "Scale", sidebar: true },
+  { slug: "governance", label: "Governance & Identity", href: "/governance", group: "govern", minTier: "starter", description: "Operator trust score, rank progression, immutable event ledger, and identity verification.", icon: "Scale", sidebar: true },
   { slug: "audit", label: "Audit Log", href: "/audit", group: "govern", minTier: "pro", description: "Tamper-evident audit trail.", icon: "FileSearch", sidebar: false },
   { slug: "compliance", label: "Compliance", href: "/compliance", group: "govern", minTier: "sovereign", description: "Frameworks and evidence packages.", icon: "ShieldCheck", sidebar: false },
   { slug: "security", label: "Security Center", href: "/security", group: "govern", minTier: "sovereign", description: "Alerts and vault.", icon: "Shield", sidebar: false },

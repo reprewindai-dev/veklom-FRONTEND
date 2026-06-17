@@ -1,210 +1,431 @@
-"use client";
+'use client';
 
-import { useMemo, useRef, useState, useEffect } from "react";
-import Shell from "@/components/Shell";
-import { useApi } from "@/hooks/useApi";
-import { api } from "@/lib/api";
-import { Button, Skeleton, ErrorBox, Spinner } from "@/components/ui";
-import { ModuleHeader, SectionCard, Pill, RoutePill, Field, Select, KV, fmtNum, fmtUsd } from "@/components/telemetry";
-import { Send, Cpu, Zap, ShieldCheck, Trash2, Gauge, Clock } from "lucide-react";
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Copy, Download, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
-type Msg = {
-  role: "user" | "assistant";
-  content: string;
-  provider?: string;
-  model?: string;
-  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
-  latency_ms?: number;
-  cost?: number;
-  error?: boolean;
-};
-
-function modelName(m: any) {
-  return m.name || m.display_name || m.model_name || m.id;
+interface ModelResponse {
+  response: string;
+  model: string;
+  provider: 'ollama' | 'groq';
+  latency_ms: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  cost: string;
+  log_id: string;
 }
-function modelId(m: any) {
-  return m.id || m.model_name || m.name;
+
+interface CircuitBreakerState {
+  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+  failures: number;
+  threshold: number;
+  cooldown_seconds: number;
+}
+
+interface SystemStatus {
+  status: string;
+  circuit_breaker: CircuitBreakerState;
+  llm_ok: boolean;
+  redis_ok: boolean;
+  db_ok: boolean;
 }
 
 export default function PlaygroundPage() {
-  const models = useApi<any>("/api/v1/ai/models");
-  const tools = useApi<any>("/api/v1/playground/tools");
+  const [systemPrompt, setSystemPrompt] = useState('You are a helpful AI assistant.');
+  const [userPrompt, setUserPrompt] = useState('');
+  const [maxTokens, setMaxTokens] = useState(2048);
+  const [temperature, setTemperature] = useState(0.7);
+  const [conversationId, setConversationId] = useState('');
+  const [useMemory, setUseMemory] = useState(true);
 
-  const modelList: any[] = Array.isArray(models.data) ? models.data : models.data?.models || [];
-  const [model, setModel] = useState<string>("");
-  const [input, setInput] = useState("");
-  const [system, setSystem] = useState("");
-  const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string>();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [modelA, setModelA] = useState('ollama');
+  const [modelB, setModelB] = useState('groq');
+  const [responseA, setResponseA] = useState<ModelResponse | null>(null);
+  const [responseB, setResponseB] = useState<ModelResponse | null>(null);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [circuitBreaker, setCircuitBreaker] = useState<CircuitBreakerState | null>(null);
+  const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
+
+  // Fetch circuit breaker status
   useEffect(() => {
-    if (!model && modelList.length) setModel(modelId(modelList[0]));
-  }, [modelList, model]);
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch('http://api.veklom.com/status');
+        const data: SystemStatus = await res.json();
+        setCircuitBreaker(data.circuit_breaker);
+      } catch (err) {
+        console.error('Failed to fetch circuit breaker status:', err);
+      }
+    };
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, busy]);
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const selectedModel = useMemo(() => modelList.find((m) => modelId(m) === model), [modelList, model]);
-  const last = useMemo(() => [...msgs].reverse().find((m) => m.role === "assistant" && !m.error), [msgs]);
-  const totals = useMemo(() => {
-    const calls = msgs.filter((m) => m.role === "assistant" && !m.error).length;
-    const tokens = msgs.reduce((a, m) => a + (m.usage?.total_tokens || 0), 0);
-    const cost = msgs.reduce((a, m) => a + (m.cost || 0), 0);
-    return { calls, tokens, cost };
-  }, [msgs]);
+  // Execute single model
+  const executeModel = async (model: string, isModelA: boolean) => {
+    setError('');
+    setLoading(true);
 
-  async function send() {
-    const message = input.trim();
-    if (!message || busy) return;
-    setErr(undefined);
-    setInput("");
-    setMsgs((m) => [...m, { role: "user", content: message }]);
-    setBusy(true);
+    const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+
     try {
-      const res = await api<any>("/api/v1/playground/inference", {
-        method: "POST",
-        body: { model, message, ...(system.trim() ? { system: system.trim() } : {}) },
+      // Step 1: Predict cost
+      const costRes = await fetch('http://api.veklom.com/api/v1/cost/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operation_type: 'inference',
+          provider: model,
+          input_text: userPrompt,
+          model: model === 'ollama' ? 'qwen2.5:3b' : 'llama-3.1-8b-instant',
+        }),
       });
-      const usage = res.usage || {};
-      const inRate = selectedModel?.cost_per_1k_input ?? 0;
-      const outRate = selectedModel?.cost_per_1k_output ?? inRate;
-      const cost = (usage.prompt_tokens || 0) / 1000 * inRate + (usage.completion_tokens || 0) / 1000 * outRate;
-      setMsgs((m) => [...m, {
-        role: "assistant",
-        content: res.content || "(empty response)",
-        provider: res.provider,
-        model: res.model,
-        usage,
-        latency_ms: res.latency_ms,
-        cost,
-      }]);
-    } catch (e: any) {
-      setMsgs((m) => [...m, { role: "assistant", content: e?.message || "Inference failed", error: true }]);
-      setErr(e?.message);
+      const costData = await costRes.json();
+      const predictedCost = costData.predicted_cost || '0.000000';
+
+      // Step 2: Execute inference
+      const execRes = await fetch('http://api.veklom.com/v1/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': process.env.NEXT_PUBLIC_VEKLOM_API_KEY || 'demo_key',
+        },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          model: model === 'ollama' ? 'qwen2.5:3b' : 'llama-3.1-8b-instant',
+          conversation_id: useMemory && conversationId ? conversationId : undefined,
+          use_memory: useMemory,
+          max_tokens: maxTokens,
+          temperature,
+        }),
+      });
+
+      if (!execRes.ok) {
+        throw new Error(`Execution failed: ${execRes.statusText}`);
+      }
+
+      const execData: ModelResponse = await execRes.json();
+      execData.cost = predictedCost;
+
+      if (isModelA) {
+        setResponseA(execData);
+      } else {
+        setResponseB(execData);
+      }
+    } catch (err) {
+      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
-  }
+  };
+
+  // Run both models simultaneously
+  const runBoth = async () => {
+    await Promise.all([
+      executeModel(modelA, true),
+      executeModel(modelB, false),
+    ]);
+  };
+
+  // Export audit log as JSON
+  const exportAudit = () => {
+    const auditData = {
+      timestamp: new Date().toISOString(),
+      system_prompt: systemPrompt,
+      user_prompt: userPrompt,
+      parameters: { maxTokens, temperature, conversationId, useMemory },
+      responses: {
+        model_a: responseA ? {
+          model: responseA.model,
+          provider: responseA.provider,
+          latency_ms: responseA.latency_ms,
+          tokens: {
+            prompt: responseA.prompt_tokens,
+            completion: responseA.completion_tokens,
+            total: responseA.total_tokens,
+          },
+          cost: responseA.cost,
+          log_id: responseA.log_id,
+        } : null,
+        model_b: responseB ? {
+          model: responseB.model,
+          provider: responseB.provider,
+          latency_ms: responseB.latency_ms,
+          tokens: {
+            prompt: responseB.prompt_tokens,
+            completion: responseB.completion_tokens,
+            total: responseB.total_tokens,
+          },
+          cost: responseB.cost,
+          log_id: responseB.log_id,
+        } : null,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(auditData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit_${new Date().getTime()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <Shell>
-      <ModuleHeader
-        breadcrumb="Operations · Playground"
-        title="Governed inference console"
-        subtitle="Every prompt is scanned by the MCP gateway, routed by policy, metered, and logged — pick a model and watch the routing, tokens, latency, and cost per call."
-        pills={
-          <>
-            <Pill tone="green" dot>MCP gateway active</Pill>
-            <Pill tone="amber">Policy-routed</Pill>
-            <Pill tone="neutral">{modelList.length} models</Pill>
-          </>
-        }
-        actions={<Button variant="ghost" onClick={() => setMsgs([])} disabled={!msgs.length}><Trash2 size={14} /> Clear</Button>}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">🔬 VEKLOM PLAYGROUND</h1>
+          <p className="text-slate-400">Compare AI models side-by-side with real-time cost analysis</p>
+        </div>
 
-      <div className="grid lg:grid-cols-[1fr_300px] gap-4">
-        {/* Console */}
-        <SectionCard label="Console" title={selectedModel ? modelName(selectedModel) : "Inference"} bodyClassName="p-0" className="min-w-0"
-          actions={selectedModel && <RoutePill route={selectedModel.provider === "ollama" ? "hetzner" : "aws"} />}>
-          <div ref={scrollRef} className="h-[44vh] overflow-y-auto scroll-thin px-4 py-3 space-y-3">
-            {msgs.length === 0 && (
-              <div className="h-full grid place-items-center text-center text-ink-500 text-[13px]">
-                <div>
-                  <Cpu size={22} className="mx-auto mb-2 text-ink-600" />
-                  Send a prompt to run governed inference.<br />Routing, tokens, latency, and cost appear per call.
-                </div>
-              </div>
+        {/* Circuit Breaker Banner */}
+        {circuitBreaker && (
+          <div className={`mb-6 p-4 rounded-lg border flex items-center gap-3 ${
+            circuitBreaker.state === 'CLOSED'
+              ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+              : circuitBreaker.state === 'HALF_OPEN'
+              ? 'bg-amber-950 border-amber-500 text-amber-300'
+              : 'bg-red-950 border-red-500 text-red-300'
+          }`}>
+            {circuitBreaker.state === 'CLOSED' ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5" />
             )}
-            {msgs.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                <div className={
-                  m.role === "user"
-                    ? "max-w-[80%] rounded-2xl rounded-br-sm bg-brand-500/15 border border-brand-500/25 px-3.5 py-2.5 text-[13px] text-ink-50"
-                    : m.error
-                      ? "max-w-[85%] rounded-2xl rounded-bl-sm bg-accent-red/10 border border-accent-red/30 px-3.5 py-2.5 text-[13px] text-accent-red"
-                      : "max-w-[85%] rounded-2xl rounded-bl-sm bg-white/[0.03] border border-border px-3.5 py-2.5 text-[13px] text-ink-100"
-                }>
-                  <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
-                  {m.role === "assistant" && !m.error && (
-                    <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-border/60 text-[10px] text-ink-600 font-mono">
-                      <span className="text-brand-400">{m.provider}</span>
-                      <span>· {m.model}</span>
-                      {m.usage && <span>· {fmtNum(m.usage.total_tokens)} tok</span>}
-                      {m.latency_ms != null && <span>· {m.latency_ms}ms</span>}
-                      {m.cost != null && <span>· {fmtUsd(m.cost, 4)}</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            {busy && <div className="flex justify-start"><div className="rounded-2xl bg-white/[0.03] border border-border px-3.5 py-2.5"><Spinner /></div></div>}
+            <div className="flex-1">
+              <p className="font-semibold">Circuit Breaker: {circuitBreaker.state}</p>
+              <p className="text-sm opacity-90">
+                {circuitBreaker.state === 'CLOSED'
+                  ? 'Ollama local inference active ✓'
+                  : circuitBreaker.state === 'OPEN'
+                  ? `Ollama offline. Routing to Groq cloud fallback. Cooldown: ${circuitBreaker.cooldown_seconds}s`
+                  : 'Testing Ollama recovery...'}
+              </p>
+            </div>
           </div>
-          <div className="border-t border-border p-3">
-            {err && <div className="mb-2"><ErrorBox message={err} /></div>}
-            <div className="flex items-end gap-2">
+        )}
+
+        {/* System Prompt Section */}
+        <div className="mb-6 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setIsSystemPromptOpen(!isSystemPromptOpen)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-700 transition"
+          >
+            <span className="font-semibold text-white">System Prompt</span>
+            <ChevronDown
+              className={`w-5 h-5 text-slate-400 transition ${
+                isSystemPromptOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          {isSystemPromptOpen && (
+            <div className="px-6 pb-6 border-t border-slate-700">
               <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Send a governed prompt…  (Enter to run, Shift+Enter for newline)"
-                rows={2}
-                className="input flex-1 resize-none"
-                disabled={!model}
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                className="w-full p-4 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none resize-none"
+                rows={4}
+                placeholder="Enter system prompt..."
               />
-              <Button onClick={send} loading={busy} disabled={!input.trim() || !model}><Send size={14} /> Run</Button>
             </div>
-          </div>
-        </SectionCard>
+          )}
+        </div>
 
-        {/* Config + telemetry rail */}
-        <div className="space-y-4">
-          <SectionCard label="Configuration" title="Model & policy">
-            {models.isLoading ? <Skeleton className="h-10" /> : models.error ? <ErrorBox message="Could not load models." /> : (
-              <div className="space-y-3">
-                <Field label="Model">
-                  <Select value={model} onChange={setModel} options={modelList.map((m) => ({ value: modelId(m), label: modelName(m) }))} />
-                </Field>
-                {selectedModel && (
-                  <div className="card p-3">
-                    <KV k="Provider" v={selectedModel.provider} mono={false} />
-                    {selectedModel.context_window != null && <KV k="Context" v={`${fmtNum(selectedModel.context_window)} tok`} />}
-                    <KV k="In / 1k" v={fmtUsd(selectedModel.cost_per_1k_input ?? 0, 5)} />
-                    {selectedModel.cost_per_1k_output != null && <KV k="Out / 1k" v={fmtUsd(selectedModel.cost_per_1k_output, 5)} />}
+        {/* Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {/* Max Tokens */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <label className="block text-sm font-semibold text-white mb-3">
+              Max Tokens: {maxTokens}
+            </label>
+            <input
+              type="range"
+              min="64"
+              max="4096"
+              value={maxTokens}
+              onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            />
+            <p className="text-xs text-slate-400 mt-2">64 - 4096</p>
+          </div>
+
+          {/* Temperature */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <label className="block text-sm font-semibold text-white mb-3">
+              Temperature: {temperature.toFixed(2)}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={temperature}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            />
+            <p className="text-xs text-slate-400 mt-2">0.0 (deterministic) - 1.0 (creative)</p>
+          </div>
+
+          {/* Conversation Memory */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useMemory}
+                onChange={(e) => setUseMemory(e.target.checked)}
+                className="w-5 h-5"
+              />
+              <span className="font-semibold text-white">Enable Memory</span>
+            </label>
+            {useMemory && (
+              <input
+                type="text"
+                value={conversationId}
+                onChange={(e) => setConversationId(e.target.value)}
+                placeholder="Conversation ID (optional)"
+                className="w-full mt-3 p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none text-sm"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* User Prompt */}
+        <div className="mb-6">
+          <textarea
+            value={userPrompt}
+            onChange={(e) => setUserPrompt(e.target.value)}
+            placeholder="Enter your prompt here..."
+            className="w-full p-4 bg-slate-800 text-white border border-slate-700 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+            rows={6}
+          />
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-950 border border-red-500 text-red-300 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={runBoth}
+            disabled={loading || !userPrompt.trim()}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold rounded-lg transition disabled:cursor-not-allowed"
+          >
+            {loading ? 'Running...' : '▶ Run Both Models'}
+          </button>
+          <button
+            onClick={exportAudit}
+            disabled={!responseA && !responseB}
+            className="px-8 py-3 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white font-semibold rounded-lg transition flex items-center gap-2 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            Export Audit
+          </button>
+        </div>
+
+        {/* Side-by-Side Responses */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Model A */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 bg-slate-900 border-b border-slate-700">
+              <select
+                value={modelA}
+                onChange={(e) => setModelA(e.target.value)}
+                className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded focus:border-blue-500 focus:outline-none"
+              >
+                <option value="ollama">Ollama (Local)</option>
+                <option value="groq">Groq (Cloud)</option>
+              </select>
+            </div>
+            {responseA ? (
+              <div className="p-6">
+                <div className="prose prose-invert max-w-none mb-6 text-slate-300">
+                  <ReactMarkdown>{responseA.response}</ReactMarkdown>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Latency</p>
+                    <p className="text-white font-semibold flex items-center gap-1">
+                      <Clock className="w-4 h-4" /> {responseA.latency_ms}ms
+                    </p>
                   </div>
-                )}
-                <Field label="System prompt (optional)">
-                  <textarea value={system} onChange={(e) => setSystem(e.target.value)} rows={3} className="input resize-none" placeholder="You are a governed assistant…" />
-                </Field>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Tokens</p>
+                    <p className="text-white font-semibold">{responseA.total_tokens}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Cost</p>
+                    <p className="text-white font-semibold">${responseA.cost}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Provider</p>
+                    <p className="text-white font-semibold">{responseA.provider}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-center text-slate-400">
+                Run models to see response
               </div>
             )}
-          </SectionCard>
+          </div>
 
-          <SectionCard label="This session" title="Live meter">
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="text-center"><Zap size={14} className="mx-auto text-brand-400 mb-1" /><div className="text-[15px] font-semibold">{totals.calls}</div><div className="text-[10px] text-ink-600 uppercase tracking-wider">Calls</div></div>
-              <div className="text-center"><Gauge size={14} className="mx-auto text-accent-green mb-1" /><div className="text-[15px] font-semibold">{fmtNum(totals.tokens)}</div><div className="text-[10px] text-ink-600 uppercase tracking-wider">Tokens</div></div>
-              <div className="text-center"><Clock size={14} className="mx-auto text-ink-300 mb-1" /><div className="text-[15px] font-semibold">{last?.latency_ms ?? "—"}<span className="text-[10px]">ms</span></div><div className="text-[10px] text-ink-600 uppercase tracking-wider">Last</div></div>
+          {/* Model B */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 bg-slate-900 border-b border-slate-700">
+              <select
+                value={modelB}
+                onChange={(e) => setModelB(e.target.value)}
+                className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded focus:border-blue-500 focus:outline-none"
+              >
+                <option value="ollama">Ollama (Local)</option>
+                <option value="groq">Groq (Cloud)</option>
+              </select>
             </div>
-            <div className="card p-3">
-              <KV k="Est. session cost" v={fmtUsd(totals.cost, 4)} />
-              <KV k="Last provider" v={last?.provider || "—"} mono={false} />
-              <KV k="Last route" v={last ? (last.provider === "ollama" ? "Hetzner · primary" : "AWS · burst") : "—"} mono={false} />
-            </div>
-            <div className="flex items-start gap-2 mt-3 text-[11px] text-ink-500">
-              <ShieldCheck size={13} className="text-accent-green mt-0.5 shrink-0" />
-              Prompts are sanitized for injection, rate-limited, and written to the audit log before execution.
-            </div>
-            {!tools.isLoading && tools.data?.tools?.length ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {tools.data.tools.slice(0, 6).map((t: any) => <Pill key={t.id || t.name} tone="neutral">{t.name || t.id}</Pill>)}
+            {responseB ? (
+              <div className="p-6">
+                <div className="prose prose-invert max-w-none mb-6 text-slate-300">
+                  <ReactMarkdown>{responseB.response}</ReactMarkdown>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Latency</p>
+                    <p className="text-white font-semibold flex items-center gap-1">
+                      <Clock className="w-4 h-4" /> {responseB.latency_ms}ms
+                    </p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Tokens</p>
+                    <p className="text-white font-semibold">{responseB.total_tokens}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Cost</p>
+                    <p className="text-white font-semibold">${responseB.cost}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Provider</p>
+                    <p className="text-white font-semibold">{responseB.provider}</p>
+                  </div>
+                </div>
               </div>
-            ) : null}
-          </SectionCard>
+            ) : (
+              <div className="p-6 text-center text-slate-400">
+                Run models to see response
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </Shell>
+    </div>
   );
 }
