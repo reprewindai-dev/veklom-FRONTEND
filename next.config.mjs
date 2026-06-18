@@ -21,6 +21,10 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/v1/ledger/:path*",
+        destination: "https://pgl.veklom.com/api/v1/ledger/:path*",
+      },
+      {
         // All /api/* calls from the browser are proxied to the backend.
         // This avoids CORS entirely — the browser always talks to its own origin.
         source: "/api/:path*",
