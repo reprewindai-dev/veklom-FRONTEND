@@ -10,6 +10,8 @@ import {
 } from "@/components/telemetry";
 import { Activity, Cpu, DollarSign, FileCheck2, Gauge, Layers, Sparkles, ShieldCheck, ArrowUpRight, Fingerprint } from "lucide-react";
 import { AuthorityPanel } from "@/components/AuthorityPanel";
+import { ProactiveIntelligence } from "@/components/ProactiveIntelligence";
+
 
 export default function DashboardPage() {
   const overview = useApi<any>("/api/v1/workspace/overview");
@@ -61,6 +63,11 @@ export default function DashboardPage() {
       </div>
 
       {overview.error && <div className="mb-5"><ErrorBox message={overview.error.message} /></div>}
+
+      {/* Proactive Intelligence — §12 Monitoring + §7.3 Budget + §5 CB + §8.3 Security + §13 ML */}
+      <div className="mb-5">
+        <ProactiveIntelligence />
+      </div>
 
       {/* Stat tiles */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-5">

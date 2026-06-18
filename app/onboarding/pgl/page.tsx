@@ -38,17 +38,14 @@ interface PGLStatus {
   mode_display: string;
   has_pgl_profile: boolean;
   requires_onboarding: boolean;
+  workspace_id: string;
   profile: {
-    agent_id: string;
-    agent_name: string;
-    certificate: {
-      id: string;
-      genome_version: string;
-      genome_hash: string;
-      jurisdiction: string;
-    };
-    operator: { id: string; name: string; email: string };
-    workspace: { id: string; name: string };
+    certificate_id: string;
+    actor_id: string;
+    genome_hash: string;
+    status: string;
+    ledger_event_count: number;
+    chain_head: string | null;
   } | null;
 }
 
@@ -92,63 +89,70 @@ export default function PGLOnboardingPage() {
     }
   }, [status.data, router]);
 
+  // IDs returned by each step — passed to subsequent steps
+  const [operatorId, setOperatorId] = useState<string>("");
+  const [certificateId, setCertificateId] = useState<string>("");
+
   const handleNext = async () => {
     setLoading(true);
     setError(undefined);
 
     try {
       if (step === 0) {
-        await api("/api/v1/pgl/bootstrap-operator", {
-          body: { name: operator.name, email: operator.email },
+        // Step 1: Operator Identity — POST /pgl/onboarding/operator-identity
+        await api("/api/v1/pgl/onboarding/operator-identity", {
+          body: { operator_name: operator.name, email: operator.email },
         });
       } else if (step === 1) {
-        await api("/api/v1/pgl/create-workspace-authority", {
-          body: { 
-            name: workspace.name, 
+        // Step 2: Workspace Authority — POST /pgl/onboarding/workspace-authority
+        await api("/api/v1/pgl/onboarding/workspace-authority", {
+          body: {
+            name: workspace.name,
             authority_level: workspace.authority_level,
-            compliance_frameworks: workspace.compliance_frameworks,
-            operator_id: "operator_1" 
+            permissions: workspace.compliance_frameworks,
           },
         });
       } else if (step === 2) {
-        await api("/api/v1/pgl/issue-certificate", {
+        // Step 3: Agent Certificate — POST /pgl/onboarding/agent-certificate
+        const certRes = await api<{ certificate_id: string }>("/api/v1/pgl/onboarding/agent-certificate", {
           body: {
             agent_name: agent.name,
-            operator_id: "operator_1",
-            workspace_id: "workspace_1",
+            agent_type: "autonomous",
+            capabilities: genome.tools,
+            safety_rules: genome.safety_rules,
             jurisdiction: agent.jurisdiction,
             declared_purpose: agent.declared_purpose,
             intended_use: agent.intended_use,
             risk_category: agent.risk_category,
-          },
-        });
-      } else if (step === 3) {
-        await api("/api/v1/pgl/create-genome", {
-          body: {
             tools: genome.tools,
             permissions: genome.permissions,
-            safety_rules: genome.safety_rules,
-            agent_id: "agent_1",
-            workspace_id: "workspace_1"
           },
         });
+        setCertificateId(certRes.certificate_id || "");
+      } else if (step === 3) {
+        // Step 4: Genome Preview — local only, no separate route needed
+        // genome data was already submitted with the certificate in step 3
       } else if (step === 4) {
-        await api("/api/v1/pgl/initialize-ledger", {
-          body: { 
-            workspace_id: "workspace_1",
-            agent_id: "agent_1"
+        // Step 5: Ledger Lineage — POST /pgl/onboarding/ledger-lineage
+        await api("/api/v1/pgl/onboarding/ledger-lineage", {
+          body: {
+            certificate_id: certificateId,
+            genesis_block: "GENESIS",
           },
         });
       } else if (step === 5) {
-        await api("/api/v1/pgl/bind-payment", {
+        // Step 6: Payment Binding — informational only, no backend route
+        // wallet binding is handled by x402 at exec time
+      } else if (step === 6) {
+        // Step 7: First Proof + Complete
+        await api("/api/v1/pgl/onboarding/first-proof", {
           body: {
-            wallet_address: wallet.address,
-            payment_methods: wallet.payment_methods,
-            workspace_id: "workspace_1"
+            certificate_id: certificateId,
+            proof_type: "identity_anchor",
+            payload: { wallet_address: wallet.address },
           },
         });
-      } else if (step === 6) {
-        await api("/api/v1/pgl/complete", { body: {} });
+        await api("/api/v1/pgl/onboarding/complete", { body: {} });
         router.replace("/dashboard");
         return;
       }

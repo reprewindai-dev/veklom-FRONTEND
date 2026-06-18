@@ -83,29 +83,37 @@ export default function GovernancePage() {
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Fetch current operator identity
+  // Fetch current operator identity + real security stats (USER_MANUAL §8.3)
   useEffect(() => {
     const fetchIdentity = async () => {
       try {
-        const data = await api<any>('/api/v1/auth/me');
-        // Map backend user to OperatorIdentity structure
+        const [userData, secStats] = await Promise.all([
+          api<any>('/api/v1/auth/me'),
+          // §8.3: GET /api/v1/security/stats → { security_score, total, open, resolved, critical }
+          api<any>('/api/v1/security/stats').catch(() => null),
+        ]);
+
+        // security_score is 0-100, directly from the manual's documented response shape
+        const secScore = secStats?.security_score ?? 0;
+
         setIdentity({
-          id: data.id || 'op_dev',
-          wallet_address: data.wallet_address || '0x742d35Cc6634C0532925a3b844Bc9e7595f6bEd0',
-          operator_name: data.full_name || 'Anthony Dev',
-          trust_score: data.trust_score || 92,
-          rank: data.role === 'Apex Operator' ? 'Apex' : 'Sovereign',
+          id: userData.id || 'op_dev',
+          wallet_address: userData.wallet_address || '',
+          operator_name: userData.full_name || userData.email || 'Operator',
+          trust_score: secScore,
+          rank: secScore >= 90 ? 'Elite Sovereign' : secScore >= 75 ? 'Sovereign' : secScore >= 50 ? 'Trusted Operator' : 'Operator',
           rank_badge_color: 'bg-brand-500/30',
-          security_level: 'HIGH',
-          events_total: 42,
-          events_critical: 2,
-          events_resolved: 40,
-          joined_at: data.created_at || '2025-06-01T00:00:00Z',
-          verified_at: data.created_at || '2025-06-05T00:00:00Z',
-          verification_status: 'verified',
+          security_level: secScore >= 75 ? 'HIGH' : 'MEDIUM',
+          // §8.3 exact field names from the manual
+          events_total: secStats?.total ?? 0,
+          events_critical: secStats?.critical ?? 0,
+          events_resolved: secStats?.resolved ?? 0,
+          joined_at: userData.created_at || new Date().toISOString(),
+          verified_at: userData.created_at || undefined,
+          verification_status: userData.pgl_id ? 'verified' : 'pending',
         });
 
-        if (data.trust_score >= 98) {
+        if (secScore >= 98) {
           setShowCelebration(true);
           setTimeout(() => setShowCelebration(false), 3000);
         }

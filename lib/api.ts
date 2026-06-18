@@ -58,14 +58,21 @@ export function apiBaseUrl(): string {
   return "";
 }
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 function buildUrl(path: string, query?: RequestOpts["query"]): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const base = apiBaseUrl() || origin;
-  const url = new URL(path.startsWith("http") ? path : `${base}${path}`);
+  // If we are calling our own Next.js server, we must include the basePath so the rewrite rules apply
+  const isSameOrigin = base === origin && !path.startsWith("http");
+  const fullPath = isSameOrigin ? `${BASE_PATH}${path}` : path;
+  
+  const url = new URL(fullPath.startsWith("http") ? fullPath : `${base}${fullPath}`);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
-      if (v === undefined || v === null) continue;
-      url.searchParams.set(k, String(v));
+      if (v !== undefined && v !== null) {
+        url.searchParams.set(k, String(v));
+      }
     }
   }
   return url.toString();
@@ -108,6 +115,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
 function safeJson(t: string) {
   try { return JSON.parse(t); } catch { return t; }
 }
+
 
 // SWR fetcher
 export const fetcher = <T,>(path: string) => api<T>(path);

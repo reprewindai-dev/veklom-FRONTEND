@@ -51,24 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Dev local bypass if no token is found (only on localhost)
-      if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        setMe({
-          id: "dev-user",
-          email: "anthony@veklom.com",
-          full_name: "Anthony Dev",
-          is_active: true,
-          is_superuser: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          role: "Apex Operator"
-        } as any);
-        setSub({
-          tier: "sovereign",
-          plan: "sovereign",
-          status: "active"
-        } as any);
+      // Ensure we clear out state if no token is present so the user gets redirected to /login
+      if (!getToken()) {
         setLoading(false);
+        setMe(undefined);
+        setSub(undefined);
         return;
       }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Shell from "@/components/Shell";
 import { useApi } from "@/hooks/useApi";
 import { Card, PageHeader, Button, Skeleton, ErrorBox } from "@/components/ui";
@@ -61,14 +62,13 @@ export default function AgentsPage() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-white">Agent Registry</h2>
-                  <Button 
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    New Agent
-                  </Button>
-                </div>
+                    <Link href="/agents/deploy">
+                      <Button className="flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        New Agent
+                      </Button>
+                    </Link>
+                  </div>
 
                 {agents.isLoading ? (
                   <div className="space-y-4">
@@ -128,14 +128,16 @@ export default function AgentsPage() {
                     {(!agents.data || agents.data.length === 0) && (
                       <div className="text-center py-12">
                         <Fingerprint className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-400 mb-2">No agents yet</h3>
-                        <p className="text-sm text-gray-500 mb-4">
-                          Create your first agent to get started
+                        <h3 className="text-lg font-medium text-white mb-2">No Production Agents</h3>
+                        <p className="text-sm text-gray-400 mb-6 max-w-md mx-auto">
+                          Create your first production-ready agent using one of our pre-audited templates.
                         </p>
-                        <Button onClick={() => setShowCreateModal(true)}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Create Agent
-                        </Button>
+                        <Link href="/agents/deploy">
+                          <Button className="bg-brand-500 hover:bg-brand-400 text-white border-0">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Deploy New Agent
+                          </Button>
+                        </Link>
                       </div>
                     )}
                   </div>
