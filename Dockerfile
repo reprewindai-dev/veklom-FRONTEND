@@ -43,4 +43,4 @@ EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3002/ || exit 1
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "PORT=3002 node server.js"]
