@@ -53,6 +53,10 @@ export interface RequestOpts {
 export function apiBaseUrl(): string {
   if (API_BASE) return API_BASE;
   if (typeof window !== "undefined") {
+    // If hosted on the standalone Cloudflare Pages domain, point to the live backend
+    if (window.location.hostname === "control.veklom.com") {
+      return "https://api.veklom.com";
+    }
     return window.location.origin;
   }
   return "";
