@@ -41,6 +41,11 @@ npm run build
 
 For visible UI changes, also run the app locally and inspect the affected route. The Asset Spine page must show a readable stage rail, one obvious primary action per stage, inline evidence/context, and no clipped or overlapping text.
 
+## Architecture & Deployment
+
+- **Decoupled Architecture**: This frontend runs entirely independently of the FastAPI backend. Do not attempt to merge it into the backend repo.
+- **Coolify Deployment**: When deploying to Coolify, ensure `NEXT_PUBLIC_API_BASE_URL` is set to `https://api.veklom.com`.
+
 ## Commit And Push
 
 When implementation is requested and verification passes, commit the intended changes and push to `origin/main`.

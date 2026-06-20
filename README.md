@@ -58,14 +58,16 @@ npm run dev
 # open http://localhost:3000
 ```
 
-## GitHub repo
+## Publish and Deploy
 
-The frontend source of truth lives in **`reprewindai-dev/veklom-control-plane`** and is paired with the backend repository **`reprewindai-dev/veklom-byos-backend`**.
+The user-owned target repo is `reprewindai-dev/veklom-control-plane`.
 
-```bash
-git remote -v
-git push origin main
-```
+### Deployment Architecture
+This application is designed to be deployed as a standalone service (via Coolify or Vercel). It does NOT run inside the FastAPI backend.
+
+1. Deploy the `veklom-control-plane` repository to Coolify (using the included `Dockerfile` or Nixpacks).
+2. Set the environment variable `NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com` in your Coolify/Vercel settings.
+3. Configure the backend's CORS (`_CORS_ORIGIN_REGEX`) to allow your frontend domain (e.g. `https://control.veklom.com`).
 
 ## Notes
 

@@ -36,14 +36,17 @@ Cloudflare sits in front of the infrastructure as a **DNS and SSL proxy ONLY**.
 
 ### Coolify Services
 The entire suite runs on Hetzner Server 1 (`5.78.135.11`) via Coolify:
-1. **`veklom-byos-backend`** (Live on Port `8088`)
-   - Domains: `veklom.com`, `api.veklom.com`
-   - **Important:** The frontend IS the backend here. The Next.js control plane is pre-built and served directly by FastAPI. Do not attempt to spin up a separate frontend server on Coolify.
-2. **`cappo-backend`** (Live on Port `8000`)
+1. **`veklom-byos-backend`** (Live on `api.veklom.com`)
+   - The FastAPI backend server. 
+2. **`veklom-control-plane`** (Live on `control.veklom.com`)
+   - **Important:** The frontend and backend are completely decoupled. The Next.js control plane is deployed as a standalone Docker container via Coolify. It is NOT served by FastAPI.
+3. **`cappo-backend`** (Live on Port `8000`)
    - Domain: `cappo.veklom.com`
    - This database (`cappodb`) is completely isolated from the main Veklom backend database.
 
 ---
+
+**RULE 2:** We do NOT use Cloudflare Pages. All traffic routes directly through Cloudflare (DNS Only) to the Hetzner Server via Coolify.
 
 ## 3. Authentication & Access Keys
 
@@ -58,7 +61,7 @@ To prevent credential leakage in this document, all SSH keys, API tokens, and Co
 
 When the user asks you to implement a feature, fix a bug, or check a deployment:
 1. **Verify Context:** Confirm you are in the correct canonical repository (`veklom-byos-backend`, `cappo-backend`, or `veklom-control-plane`).
-2. **Check Cloudflare:** Remember that Cloudflare is a dumb proxy. If a UI update isn't showing, it is either a caching issue or the Coolify deployment failed. It is *not* a Cloudflare Pages issue.
-3. **Frontend Edits:** If editing the `veklom-control-plane` UI, remember that the build artifact (`out/`) must be moved to `veklom-byos-backend/frontend/sovereign-control-node/` for FastAPI to actually serve it to the public internet.
+2. **Check Coolify:** The Next.js app is a separate service on Coolify. If you make code changes here, they must be pushed to GitHub to trigger a Coolify deployment.
+3. **Frontend Edits:** Do NOT attempt to build and copy the `out/` folder into the backend repository. The backend does not serve the Next.js app anymore. Ensure `NEXT_PUBLIC_API_BASE_URL` is configured in Coolify pointing to `https://api.veklom.com`.
 
 **END OF MANIFESTO**
