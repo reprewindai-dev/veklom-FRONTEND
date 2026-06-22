@@ -142,6 +142,8 @@ export default function PipelinesPage() {
   const [running, setRunning] = useState(false);
   const [stageStatus, setStageStatus] = useState<Record<string, string>>({});
   const [runMsg, setRunMsg] = useState<string>();
+  const [gpcIntent, setGpcIntent] = useState("");
+  const [buildingGpc, setBuildingGpc] = useState(false);
 
   const list = unwrapList<any>(pipelines.data);
   const current = list.find((p) => p.id === pid) || list[0];
@@ -303,6 +305,27 @@ export default function PipelinesPage() {
     if (created?.id) setPid(created.id);
   }
 
+  async function buildWithGpc() {
+    const intent = window.prompt("Describe the pipeline you want the AI to build:", "An input that goes to a vector search then is answered by an LLM");
+    if (!intent) return;
+    setBuildingGpc(true);
+    try {
+      const created = await api<any>("/api/v1/gpc/intent-to-plan", { 
+        method: "POST", 
+        body: { intent, provider: "ollama", model: "qwen2.5:3b" } 
+      });
+      await pipelines.mutate();
+      if (created?.id) {
+        setPid(created.id);
+        setPanelTab("library");
+      }
+    } catch (e) {
+      alert("Failed to build pipeline via GPC.");
+    } finally {
+      setBuildingGpc(false);
+    }
+  }
+
   async function applyTemplate(templateId: string) {
     const pipe = await api<any>(`/api/v1/pipelines/${templateId}`);
     await pipelines.mutate();
@@ -363,6 +386,7 @@ export default function PipelinesPage() {
           actions={<>
             <Button variant="ghost" onClick={() => setPanelTab("templates")}><LayoutTemplate size={14} /> Templates</Button>
             <Button variant="ghost" onClick={newPipeline}><Plus size={14} /> New pipeline</Button>
+            <Button onClick={buildWithGpc} loading={buildingGpc}><Rocket size={14} /> GPC Auto-Build</Button>
           </>}
         />
 
