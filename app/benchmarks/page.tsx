@@ -27,6 +27,7 @@ import {
   ConsensusVisualization,
   PGLIdentityLayer,
   MethodologyPanel,
+  StakingProtocol,
 } from "@/components/vnp";
 
 // ============ Staking Types (preserved for Staking tab) ============
@@ -364,69 +365,8 @@ function NexusConsoleInner() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="max-w-5xl"
               >
-                <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl overflow-hidden">
-                  <div className="grid grid-cols-12 gap-4 p-4 border-b border-[#1A1A1A] bg-[#111111] text-[10px] font-mono uppercase tracking-widest text-[#A1A1A6]">
-                    <div className="col-span-4">Protocol Objective</div>
-                    <div className="col-span-2 text-right">Pool Volume</div>
-                    <div className="col-span-3 text-center">Depth (YES / NO)</div>
-                    <div className="col-span-3 text-right">Execution Vector</div>
-                  </div>
-                  
-                  <div className="divide-y divide-[#1A1A1A]">
-                    {markets.map((market) => {
-                      const totalPool = market.poolYes + market.poolNo;
-                      const yesPct = totalPool > 0 ? (market.poolYes / totalPool) * 100 : 50;
-                      
-                      return (
-                        <div key={market.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[#111111] transition-colors">
-                          <div className="col-span-4">
-                            <div className="text-sm text-white font-medium mb-1">{market.title}</div>
-                            <div className="text-[10px] font-mono text-[#A1A1A6]">
-                              Resolution: {new Date(market.resolutionDate).toLocaleDateString()}
-                            </div>
-                          </div>
-                          
-                          <div className="col-span-2 text-right font-mono text-sm text-[#A1A1A6]">
-                            {fmtUSD(market.volume)}
-                          </div>
-                          
-                          <div className="col-span-3">
-                            <div className="h-1.5 w-full bg-[#333333] rounded-full overflow-hidden flex">
-                              <div className="h-full bg-emerald-500" style={{ width: `${yesPct}%` }} />
-                              <div className="h-full bg-rose-500" style={{ width: `${100 - yesPct}%` }} />
-                            </div>
-                            <div className="flex justify-between mt-2 text-[10px] font-mono">
-                              <span className="text-emerald-400">{yesPct.toFixed(1)}%</span>
-                              <span className="text-rose-400">{(100 - yesPct).toFixed(1)}%</span>
-                            </div>
-                          </div>
-                          
-                          <div className="col-span-3 flex justify-end gap-2">
-                            <button className="px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium rounded hover:bg-emerald-500/20 transition-all">
-                              YES @ {(market.yesPrice / 100).toFixed(2)}
-                            </button>
-                            <button className="px-4 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium rounded hover:bg-rose-500/20 transition-all">
-                              NO @ {(market.noPrice / 100).toFixed(2)}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {markets.length === 0 && (
-                    <div className="p-10 text-center text-[#6E6E73]">
-                      <BarChart2 className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm font-medium mb-1">Staking Protocol — Not started</p>
-                      <p className="text-xs text-[#6E6E73] max-w-md mx-auto">
-                        Staking markets activate after VNP scoring achieves high-confidence status across all scored APIs.
-                        The Nexus Protocol must be 100% complete before staking begins.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <StakingProtocol apis={Array.isArray(lbData) ? lbData : []} />
               </motion.div>
             )}
           </AnimatePresence>

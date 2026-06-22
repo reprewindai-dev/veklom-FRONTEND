@@ -10,3 +10,4 @@ export { default as ConsensusVisualization } from "./ConsensusVisualization";
 export { default as PGLIdentityLayer } from "./PGLIdentityLayer";
 export { default as MethodologyPanel } from "./MethodologyPanel";
 export { default as DisputePanel } from "./DisputePanel";
+export { default as StakingProtocol } from "./StakingProtocol";
