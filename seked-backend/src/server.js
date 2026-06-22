@@ -99,7 +99,8 @@ function createSekedFingerprint(state) {
 
 // Validation Middleware
 function validateSekedMeasurement(req, res, next) {
-  const { E, R, C, D, S } = req.body;
+  const measurementSource = req.body.measurement || req.body;
+  const { E, R, C, D, S } = measurementSource;
   
   if ([E, R, C, D, S].some(val => typeof val !== 'number' || val < 0 || val > 9)) {
     return res.status(400).json({ 
@@ -301,6 +302,8 @@ app.delete('/policies/:id', async (req, res) => {
 
 // ExecutionIdentityV1 minting
 function mintExecutionIdentity(runData, sekedState, pglCertificate) {
+  const expiresAt = new Date(Date.now() + (runData.ttl_seconds || 3600) * 1000).toISOString();
+
   const executionIdentity = {
     execution_id: uuidv4(),
     run_id: runData.run_id,
@@ -320,7 +323,7 @@ function mintExecutionIdentity(runData, sekedState, pglCertificate) {
     budget_reserve_cents: runData.budget_reserve_cents || null,
     delegation_depth: runData.delegation_depth || 0,
     ttl_seconds: runData.ttl_seconds || 3600,
-    expires_at: new Date(Date.now() + (runData.ttl_seconds || 3600) * 1000).toISOString(),
+    expires_at: expiresAt,
     scope_json: runData.scope || {},
     human_attestation_hash: runData.human_attestation_hash || null,
     ai_attestation_hash: runData.ai_attestation_hash || null,
@@ -331,7 +334,17 @@ function mintExecutionIdentity(runData, sekedState, pglCertificate) {
     hash: ""
   };
   
-  executionIdentity.hash = createSekedFingerprint(executionIdentity);
+  executionIdentity.hash = createSekedFingerprint({
+    execution_id: executionIdentity.execution_id,
+    run_id: executionIdentity.run_id,
+    workspace_id: executionIdentity.workspace_id,
+    pgl_pre_certificate_id: executionIdentity.pgl_pre_certificate_id,
+    seked_attestation_hash: executionIdentity.seked_attestation_hash,
+    directive: executionIdentity.directive,
+    expires_at: executionIdentity.expires_at,
+    issuer: executionIdentity.issuer
+  });
+
   return executionIdentity;
 }
 
@@ -344,12 +357,13 @@ app.post('/decision', validateSekedMeasurement, async (req, res) => {
     const ratios = calculateSekedRatios(measurement);
     const directive = getDirective(ratios.sigma);
     
+    const updatedMeasurement = { ...measurement, timestamp: new Date().toISOString() };
     const sekedState = await prisma.sekedState.create({
       data: {
-        measurement: { ...measurement, timestamp: new Date().toISOString() },
+        measurement: updatedMeasurement,
         ratios,
         directive,
-        fingerprint: createSekedFingerprint({ measurement, ratios, directive })
+        fingerprint: createSekedFingerprint({ measurement: updatedMeasurement, ratios, directive })
       }
     });
     
@@ -361,24 +375,32 @@ app.post('/decision', validateSekedMeasurement, async (req, res) => {
           { ci_threshold: { lte: ratios.ci } },
           { si_threshold: { lte: ratios.si } }
         ]
+      },
+      orderBy: {
+        sigma_threshold: 'desc'
       }
     });
     
     // Make decision
-    let action = directive.action_type;
-    let delaySeconds = 0;
+    let action = 'HOLD';
+    let delaySeconds = 15;
     
-    if (action === 'EXECUTE') {
-      action = 'RUN';
-    } else if (action === 'RECOVER') {
-      action = 'HOLD';
-      delaySeconds = 30;
-    } else if (action === 'ESCALATE') {
-      action = 'BLOCK';
-      delaySeconds = 0;
+    if (policy && policy.action_rules && policy.action_rules[directive.action_type]) {
+      const rule = policy.action_rules[directive.action_type];
+      action = rule.action || action;
+      delaySeconds = rule.delay_seconds !== undefined ? rule.delay_seconds : delaySeconds;
     } else {
-      action = 'HOLD';
-      delaySeconds = 15;
+      // Fallback
+      if (directive.action_type === 'EXECUTE') {
+        action = 'RUN';
+        delaySeconds = 0;
+      } else if (directive.action_type === 'RECOVER') {
+        action = 'HOLD';
+        delaySeconds = 30;
+      } else if (directive.action_type === 'ESCALATE') {
+        action = 'BLOCK';
+        delaySeconds = 0;
+      }
     }
     
     // Create proof
@@ -393,9 +415,19 @@ app.post('/decision', validateSekedMeasurement, async (req, res) => {
       }
     });
     
+    // Create decision request
+    const decisionRequest = await prisma.decisionRequest.create({
+      data: {
+        job_id,
+        measurement: updatedMeasurement,
+        context
+      }
+    });
+
     // Create decision
     const decision = await prisma.decision.create({
       data: {
+        request_id: decisionRequest.id,
         job_id,
         action,
         delay_seconds: delaySeconds,
@@ -657,9 +689,9 @@ app.get('/agents', async (req, res) => {
 app.post('/agents/:id/state', validateSekedMeasurement, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, performance_metrics } = req.body;
+    const { name, performance_metrics, E, R, C, D, S } = req.body;
     
-    const measurement = { ...req.body, timestamp: new Date().toISOString() };
+    const measurement = { E, R, C, D, S, timestamp: new Date().toISOString() };
     const ratios = calculateSekedRatios(measurement);
     const directive = getDirective(ratios.sigma);
     
