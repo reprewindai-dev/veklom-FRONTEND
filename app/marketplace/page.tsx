@@ -466,6 +466,7 @@ function ListingDetail({ listing, installed, onClose, onInstalled }: { listing: 
 /* ---------------- My purchases ---------------- */
 function PurchasesModal({ installed, all, onClose, onOpen }: { installed: any; all: any[]; onClose: () => void; onOpen: (l: any) => void }) {
   const items = installed.data?.installed || [];
+  const allMap = useMemo(() => new Map(all.map((l) => [l.id, l])), [all]);
   return (
     <Modal open onClose={onClose} title="My purchases" subtitle={`${items.length} installed asset${items.length === 1 ? "" : "s"} in this workspace`}>
       {installed.isLoading ? <Skeleton className="h-32" /> : items.length === 0 ? (
@@ -473,7 +474,7 @@ function PurchasesModal({ installed, all, onClose, onOpen }: { installed: any; a
       ) : (
         <div className="space-y-2">
           {items.map((a: any) => {
-            const full = all.find((l) => l.id === a.listing_id);
+            const full = allMap.get(a.listing_id);
             return (
               <div key={a.id} className="flex items-center gap-3 card p-3">
                 <Boxes size={16} className="text-brand-400 shrink-0" />
