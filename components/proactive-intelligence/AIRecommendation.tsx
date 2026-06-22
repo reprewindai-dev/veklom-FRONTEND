@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { Cpu, ArrowRight } from 'lucide-react';
 import { AiRec } from './types';
 
@@ -16,9 +15,12 @@ export function AIRecommendation({ aiRec }: { aiRec: AiRec }) {
           Best match for your current workload pattern.
         </p>
       </div>
-      <Link href="/routing" className="text-[10px] text-brand-400 hover:text-brand-300 flex items-center gap-1 shrink-0">
+      <button 
+        onClick={() => alert(`Applied Recommendation: Route to ${aiRec.recommended_provider} (${aiRec.recommended_model})`)}
+        className="text-[10px] text-brand-400 hover:text-brand-300 flex items-center gap-1 shrink-0"
+      >
         Apply <ArrowRight size={10} />
-      </Link>
+      </button>
     </div>
   );
 }

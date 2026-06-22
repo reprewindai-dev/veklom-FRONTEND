@@ -14,9 +14,12 @@ import {
   ChevronUp,
   Clock,
   Lock,
+  Activity,
+  Download,
 } from "lucide-react";
 import useSWR from "swr";
 import { api, fetcher } from "@/lib/api";
+import { ethers } from "ethers";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -123,6 +126,58 @@ export default function StakingProtocol({ apis }: StakingProtocolProps) {
       setSelectedMarketId(markets[0].id);
     }
   }, [markets, selectedMarketId]);
+
+  // ---- Wallet Registration ----
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const connectWallet = async () => {
+    if (typeof window.ethereum === "undefined") {
+      alert("Please install MetaMask to connect your wallet.");
+      return;
+    }
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum as any);
+      await provider.send("eth_requestAccounts", []);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      setWalletAddress(address);
+    } catch (err) {
+      console.error("Failed to connect wallet", err);
+    }
+  };
+
+  const registerAsVerifier = async () => {
+    if (!walletAddress) return;
+    setIsRegistering(true);
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum as any);
+      const signer = await provider.getSigner();
+      
+      const message = `Register Veklom Verifier Node\nAddress: ${walletAddress}\nNonce: ${Date.now()}`;
+      const signature = await signer.signMessage(message);
+      
+      const res = await api<{ success: boolean; message?: string }>("/api/v1/benchmarks/staking/register-verifier", {
+        body: {
+          message,
+          signature,
+          asn: "AS12345", // Mock ASN for v1
+          region: "us-east-1"
+        }
+      });
+      
+      if (res.success) {
+        alert("Successfully registered as a Verifier Node!");
+      } else {
+        alert("Registration failed: " + res.message);
+      }
+    } catch (err) {
+      console.error("Failed to register", err);
+      alert("Error during registration.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   const handleStake = useCallback(async () => {
     if (!selectedMarketId || stakePending) return;
