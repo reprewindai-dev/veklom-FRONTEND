@@ -485,7 +485,7 @@ export default function PipelinesPage() {
                           </div>
                           <div className="grid grid-cols-1 gap-1.5">
                             {ns.map((n: any) => {
-                              const isPremium = ["pgl-register", "x402-payment-gate", "audit-signer", "policy-gate", "repo-risk-gate", "evidence-receipt"].includes(n.id);
+                              const isPremium = ["pgl-register", "x402-payment-gate", "audit-signer", "policy-gate", "repo-risk-gate", "evidence-receipt", "capi-invoke", "quantum-terminal"].includes(n.id);
                               return (
                                 <button key={n.id} onClick={() => addNode(cat.id, n)}
                                   className={clsx(
@@ -605,12 +605,12 @@ export default function PipelinesPage() {
                       </div>
                     )}
 
-                    {!nodes.some(n => ["policy-gate", "x402-payment-gate", "pgl-register", "audit-signer", "repo-risk-gate"].includes(n.nodeType)) && (
+                    {!nodes.some(n => ["policy-gate", "x402-payment-gate", "pgl-register", "audit-signer", "repo-risk-gate", "capi-invoke", "quantum-terminal"].includes(n.nodeType)) && (
                       <div className="rounded-lg border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-100 flex items-start gap-2">
                         <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-400" />
                         <div>
                           <span className="font-semibold block text-brand-300">Veklom Edge Recommendation</span>
-                          Maximize your infrastructure! Secure this pipeline by adding a <b>Policy Gate</b>, or anchor the evidence cryptographically using the <b>Audit Signer</b>.
+                          Maximize your infrastructure! Secure this pipeline by adding a <b>Policy Gate</b>, or achieve literal UBC closed-loop sovereignty by connecting a <b>cAPI Node</b> or <b>Quantum Terminal</b>.
                         </div>
                       </div>
                     )}
@@ -695,6 +695,8 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "human-approval") return { status: "pending", approval_id: "", approved_by: "", policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "deploy-endpoint" || nodeType === "deploy-agent") return { policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "lock-engine") return { scope: "pipeline_execution_contract", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "capi-invoke") return { capi_node_id: "capi-edge-1", allow_autonomous_compute: true, policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "quantum-terminal") return { allow_shell: true, enforce_sandbox: false, default_dir: "/data", policy: "sovereign_default", requireEvidence: true };
   if (["agent-node", "supervisor-agent", "critic-agent", "planner-agent"].includes(nodeType)) return {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
