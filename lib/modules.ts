@@ -32,10 +32,11 @@ export const MODULES: ModuleDef[] = [
 
   // 4. 📊 API Benchmarks & Trust Rankings
   { slug: "benchmarks", label: "Nexus Protocol", href: "/benchmarks", group: "marketplace", minTier: "free", description: "VNP-certified API trust leaderboard and SLA staking markets.", icon: "ActivitySquare", sidebar: true },
-  { slug: "benchmarks-pgl", label: "PGL Identity Layer", href: "/benchmarks?tab=trust", group: "marketplace", minTier: "free", description: "PGL Immutable Identity and M2M operations.", icon: "Fingerprint", sidebar: true },
-  { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "marketplace", minTier: "free", description: "API Trust Leaderboard with radar capabilities.", icon: "Shield", sidebar: true },
-  { slug: "benchmarks-staking", label: "Staking Protocol", href: "/benchmarks?tab=staking", group: "marketplace", minTier: "free", description: "Gamified SLA staking markets.", icon: "BarChart2", sidebar: true },
-  { slug: "benchmarks-consensus", label: "Consensus Vector", href: "/benchmarks?tab=consensus", group: "marketplace", minTier: "free", description: "MCPAPI protocol consensus visualization.", icon: "Network", sidebar: true },
+  { slug: "benchmarks-pgl", label: "PGL Identity Layer", href: "/benchmarks?tab=pgl", group: "marketplace", minTier: "free", description: "PGL Immutable Identity and M2M trust operations.", icon: "Fingerprint", sidebar: true },
+  { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "marketplace", minTier: "free", description: "API Trust Leaderboard with 10-dimension scoring.", icon: "Shield", sidebar: true },
+  { slug: "benchmarks-consensus", label: "Consensus Vector", href: "/benchmarks?tab=consensus", group: "marketplace", minTier: "free", description: "Multi-node measurement consensus and epoch history.", icon: "Network", sidebar: true },
+  { slug: "benchmarks-methodology", label: "Methodology", href: "/benchmarks?tab=methodology", group: "marketplace", minTier: "free", description: "VNP scoring methodology, dimensions, and provenance spec.", icon: "BookOpen", sidebar: false },
+  { slug: "benchmarks-staking", label: "Staking Protocol", href: "/benchmarks?tab=staking", group: "marketplace", minTier: "free", description: "SLA staking markets (pending Nexus Protocol completion).", icon: "BarChart2", sidebar: true },
   
   { slug: "benchmarks-arena", label: "Authority Arena", href: "/benchmarks/arena", group: "marketplace", minTier: "free", description: "Interactive agent character creator and consensus pipeline playground.", icon: "Gamepad2", sidebar: false },
   { slug: "benchmarks-discovery", label: "Veklom Discovery", href: "/benchmarks/discovery", group: "marketplace", minTier: "free", description: "x402 payments, ACP agents, Base MCP wallet, ENS resolution, on-chain reputation ledger.", icon: "Globe2", sidebar: false },

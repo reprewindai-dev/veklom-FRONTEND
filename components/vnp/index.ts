@@ -7,3 +7,6 @@ export { default as ScoreCard } from "./ScoreCard";
 export { default as MeasurementFeed } from "./MeasurementFeed";
 export { default as DimensionBreakdown } from "./DimensionBreakdown";
 export { default as ConsensusVisualization } from "./ConsensusVisualization";
+export { default as PGLIdentityLayer } from "./PGLIdentityLayer";
+export { default as MethodologyPanel } from "./MethodologyPanel";
+export { default as DisputePanel } from "./DisputePanel";
