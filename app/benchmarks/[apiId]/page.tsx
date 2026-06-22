@@ -25,6 +25,7 @@ import {
   RegionalBreakdown,
   DimensionBreakdown,
   ProvenanceChain,
+  DisputePanel,
 } from "@/components/vnp";
 
 export default function ApiDetailPage() {
@@ -212,6 +213,12 @@ export default function ApiDetailPage() {
         <section>
           <SectionHeader icon={Lock} label="Cryptographic Provenance" subtitle="Measurement proof chain anchored on Base L2" />
           <ProvenanceChain provenance={vnpScore.provenance} />
+        </section>
+
+        {/* Dispute History */}
+        <section>
+          <SectionHeader icon={AlertTriangle} label="Dispute History" subtitle="3-tier dispute resolution: automated re-measurement, independent review, TSC arbitration" />
+          <DisputePanel score={vnpScore} />
         </section>
       </main>
     </div>

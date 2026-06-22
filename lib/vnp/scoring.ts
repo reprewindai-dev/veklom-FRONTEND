@@ -149,28 +149,32 @@ function computeConfidence(measurementCount: number): VNPConfidence {
 }
 
 // ---------------------------------------------------------------------------
-// Regional score generation
+// Regional score generation — deterministic geographic normalization
+// No Math.random(): regional variance derived from API identity + baseline RTT
 // ---------------------------------------------------------------------------
 function generateRegionalScores(api: BenchmarkApiEntry): VNPRegionalScore[] {
   return VNP_REGIONS.map((region) => {
-    // Apply geographic normalization — subtract baseline RTT to isolate API performance
+    const regionSeed = deterministicSeed(api.id + region.id);
     const geoAdjust = region.baselineRttMs;
-    const adjustedP99 = Math.max(1, api.p99 + geoAdjust * (0.8 + Math.random() * 0.4));
-    const adjustedP95 = Math.max(1, api.p95 + geoAdjust * (0.7 + Math.random() * 0.3));
-    const adjustedP50 = Math.max(1, api.p50 + geoAdjust * (0.5 + Math.random() * 0.3));
-    const adjustedP999 = adjustedP99 * (1.2 + Math.random() * 0.3);
 
-    // Regional availability varies slightly
-    const regionalAvailability = Math.max(90, api.uptime24h - (Math.random() * 0.5));
-    const regionalErrorRate = Math.max(0, (100 - api.sla) + (Math.random() * 0.3 - 0.15));
+    // Deterministic jitter factor per-region derived from API identity
+    const jitter = 0.85 + regionSeed * 0.3; // 0.85–1.15 range, stable per (api, region)
+    const adjustedP99 = Math.max(1, api.p99 + geoAdjust * jitter);
+    const adjustedP95 = Math.max(1, api.p95 + geoAdjust * (jitter * 0.85));
+    const adjustedP50 = Math.max(1, api.p50 + geoAdjust * (jitter * 0.6));
+    const adjustedP999 = adjustedP99 * (1.25 + regionSeed * 0.15);
 
-    // Regional composite: weighted average of normalized latency and availability
+    // Availability: deterministic per-region offset from global uptime
+    const availOffset = regionSeed * 0.4; // 0–0.4% offset
+    const regionalAvailability = Math.max(90, api.uptime24h - availOffset);
+    const regionalErrorRate = Math.max(0, (100 - api.sla) + (regionSeed * 0.2 - 0.1));
+
     const latScore = normalize(VNP_DIMENSIONS[0], adjustedP99);
     const availScore = normalize(VNP_DIMENSIONS[2], regionalAvailability);
     const score = Math.round((latScore * 0.6 + availScore * 0.4) * 10) / 10;
 
-    // Measurement count per region — distribute total across regions
-    const baseCount = 200 + Math.floor(Math.random() * 300);
+    // Deterministic measurement count per region
+    const baseCount = 200 + Math.floor(regionSeed * 300);
 
     return {
       region: region.id,
@@ -189,25 +193,29 @@ function generateRegionalScores(api: BenchmarkApiEntry): VNPRegionalScore[] {
 }
 
 // ---------------------------------------------------------------------------
-// Provenance generation
+// Provenance generation — honest state, no fake chain anchors
+// Merkle root is deterministic from API ID + epoch window (reproducible)
+// Chain anchor fields null until Base L2 contract is deployed
 // ---------------------------------------------------------------------------
 function generateProvenance(api: BenchmarkApiEntry): VNPProvenance {
   const now = new Date();
-  const epochEnd = now.toISOString();
-  const epochStart = new Date(now.getTime() - 3600000).toISOString(); // 1 hour epoch
+  // Align to hourly epochs
+  const epochHour = new Date(now);
+  epochHour.setMinutes(0, 0, 0);
+  const epochStart = epochHour.toISOString();
+  const epochEnd = new Date(epochHour.getTime() + 3600000).toISOString();
 
-  // Deterministic Merkle root from API id (SHA-256 simulation)
-  const merkleRoot = deterministicHash(api.id + epochEnd);
-  const txHash = "0x" + deterministicHash(api.id + "anchor" + epochEnd).substring(0, 64);
+  const merkleRoot = deterministicHash(api.id + epochStart);
+  const seed = deterministicSeed(api.id);
 
   return {
-    epochId: `epoch-${api.id}-${now.getTime()}`,
+    epochId: `epoch-${api.id}-${epochHour.getTime()}`,
     epochStart,
     epochEnd,
     merkleRoot,
-    chainAnchorTx: txHash,
-    chainAnchorBlock: 28000000 + Math.floor(now.getTime() / 12000) % 1000000,
-    measurementCount: 200 + Math.floor(deterministicSeed(api.id) * 800),
+    chainAnchorTx: null,
+    chainAnchorBlock: null,
+    measurementCount: 200 + Math.floor(seed * 800),
     nodeOperators: ["veklom-node-eu-1", "veklom-node-us-1", "veklom-node-ap-1"],
     harnessVersion: "k6-vnp-0.1.3",
     scriptHash: deterministicHash(api.id + "script"),

@@ -11,7 +11,7 @@ import {
   ArrowUpDown,
   Search,
   Filter,
-  ExternalLink,
+  BookOpen,
 } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
@@ -21,7 +21,13 @@ import { useSearchParams } from "next/navigation";
 import type { BenchmarkApiEntry, VNPScore } from "@/lib/vnp/types";
 import { computeLeaderboard } from "@/lib/vnp/scoring";
 import { VNP_DIMENSIONS, gradeForScore } from "@/lib/vnp/constants";
-import { ScoreCard, MeasurementFeed, ConsensusVisualization } from "@/components/vnp";
+import {
+  ScoreCard,
+  MeasurementFeed,
+  ConsensusVisualization,
+  PGLIdentityLayer,
+  MethodologyPanel,
+} from "@/components/vnp";
 
 // ============ Staking Types (preserved for Staking tab) ============
 interface StakingMarket {
@@ -53,14 +59,24 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "x402_compliance", label: "x402 Compliance" },
 ];
 
+type TabId = "trust" | "pgl" | "consensus" | "methodology" | "staking";
+
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "trust", label: "Trust Node Matrix", icon: Shield },
+  { id: "pgl", label: "PGL Identity Layer", icon: Fingerprint },
+  { id: "consensus", label: "Consensus Vector", icon: Network },
+  { id: "methodology", label: "Methodology", icon: BookOpen },
+  { id: "staking", label: "Staking Protocol", icon: BarChart2 },
+];
+
 // ============ Page ============
 function NexusConsoleInner() {
   const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as "trust" | "staking" | "consensus") || "trust";
-  const [activeTab, setActiveTab] = useState<"trust" | "staking" | "consensus">(initialTab);
+  const initialTab = (searchParams.get("tab") as TabId) || "trust";
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
   useEffect(() => {
-    const tab = searchParams.get("tab") as "trust" | "staking" | "consensus";
+    const tab = searchParams.get("tab") as TabId;
     if (tab && tab !== activeTab) {
       setActiveTab(tab);
     }
@@ -96,7 +112,6 @@ function NexusConsoleInner() {
   const filteredScores = useMemo(() => {
     let result = [...vnpScores];
 
-    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -107,12 +122,10 @@ function NexusConsoleInner() {
       );
     }
 
-    // Category filter
     if (categoryFilter !== "all") {
       result = result.filter((s) => s.category === categoryFilter);
     }
 
-    // Sort
     result.sort((a, b) => {
       if (sortKey === "composite") return b.composite - a.composite;
       const dimA = a.dimensions.find((d) => d.id === sortKey);
@@ -173,7 +186,7 @@ function NexusConsoleInner() {
           </h1>
           <p className="text-[#A1A1A6] max-w-3xl text-sm leading-relaxed">
             Open, community-governed API benchmark scoring for machine-consumable trust.
-            10 dimensions, cryptographically anchored on Base L2, measured via k6 across 5 global regions.
+            10 dimensions, cryptographic provenance, measured across 5 global regions.
           </p>
 
           {/* Stats bar */}
@@ -201,22 +214,18 @@ function NexusConsoleInner() {
 
           {/* Navigation Tabs */}
           <div className="flex gap-1 mt-8 p-1 bg-[#111111] border border-[#1A1A1A] rounded-lg w-fit">
-            {[
-              { id: "trust", label: "Trust Node Matrix", icon: Shield },
-              { id: "staking", label: "Staking Protocol", icon: BarChart2 },
-              { id: "consensus", label: "Consensus Vector", icon: Network },
-            ].map((tab) => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as "trust" | "staking" | "consensus")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-medium transition-all ${
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-medium transition-all ${
                   activeTab === tab.id
                     ? "bg-[#1A1A1A] text-[#FFB800] shadow-lg border border-[#FFB800]/20"
                     : "text-[#A1A1A6] hover:text-white hover:bg-[#1A1A1A]/50"
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
-                {tab.label}
+                <span className="hidden md:inline">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -235,7 +244,6 @@ function NexusConsoleInner() {
               >
                 {/* Toolbar: search, filter, sort */}
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  {/* Search */}
                   <div className="flex items-center gap-2 rounded-lg border border-[#242424] bg-[#111111] px-3 h-9 flex-1 min-w-[200px] max-w-md focus-within:border-[#FFB800]/40 transition">
                     <Search className="w-4 h-4 text-[#6E6E73]" />
                     <input
@@ -246,7 +254,6 @@ function NexusConsoleInner() {
                     />
                   </div>
 
-                  {/* Category filter */}
                   <div className="flex items-center gap-2 rounded-lg border border-[#242424] bg-[#111111] px-3 h-9">
                     <Filter className="w-3.5 h-3.5 text-[#6E6E73]" />
                     <select
@@ -262,7 +269,6 @@ function NexusConsoleInner() {
                     </select>
                   </div>
 
-                  {/* Sort */}
                   <div className="flex items-center gap-2 rounded-lg border border-[#242424] bg-[#111111] px-3 h-9">
                     <ArrowUpDown className="w-3.5 h-3.5 text-[#6E6E73]" />
                     <select
@@ -312,6 +318,42 @@ function NexusConsoleInner() {
                     <p className="text-sm">No APIs match your filters</p>
                   </div>
                 )}
+              </motion.div>
+            )}
+
+            {/* ======== PGL IDENTITY LAYER ======== */}
+            {activeTab === "pgl" && (
+              <motion.div
+                key="pgl"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <PGLIdentityLayer scores={vnpScores} />
+              </motion.div>
+            )}
+
+            {/* ======== CONSENSUS VECTOR ======== */}
+            {activeTab === "consensus" && (
+              <motion.div
+                key="consensus"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <ConsensusVisualization scores={vnpScores} />
+              </motion.div>
+            )}
+
+            {/* ======== METHODOLOGY ======== */}
+            {activeTab === "methodology" && (
+              <motion.div
+                key="methodology"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <MethodologyPanel />
               </motion.div>
             )}
 
@@ -375,23 +417,16 @@ function NexusConsoleInner() {
                   </div>
 
                   {markets.length === 0 && (
-                    <div className="p-10 text-center text-[#6E6E73] text-sm">
-                      Staking markets will be available once VNP scoring is fully operational.
+                    <div className="p-10 text-center text-[#6E6E73]">
+                      <BarChart2 className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm font-medium mb-1">Staking Protocol — Not started</p>
+                      <p className="text-xs text-[#6E6E73] max-w-md mx-auto">
+                        Staking markets activate after VNP scoring achieves high-confidence status across all scored APIs.
+                        The Nexus Protocol must be 100% complete before staking begins.
+                      </p>
                     </div>
                   )}
                 </div>
-              </motion.div>
-            )}
-
-            {/* ======== CONSENSUS VECTOR ======== */}
-            {activeTab === "consensus" && (
-              <motion.div
-                key="consensus"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <ConsensusVisualization scores={vnpScores} />
               </motion.div>
             )}
           </AnimatePresence>
