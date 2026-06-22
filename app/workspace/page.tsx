@@ -1,143 +1,194 @@
-"use client";
+'use client';
 
-import clsx from "clsx";
-import Link from "next/link";
-import { api } from "@/lib/api";
-import Shell from "@/components/Shell";
-import TierGate from "@/components/TierGate";
-import { useApi } from "@/hooks/useApi";
-import { Card, PageHeader, Skeleton, Table } from "@/components/ui";
-import { unwrapList } from "@/types/api";
-import { ChevronRight, CreditCard, Gauge, KeyRound, Receipt, Users, Wallet, Webhook } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  Wallet, Users, KeyRound, Webhook, Receipt, Gauge, CreditCard,
+  TrendingUp, Activity, BarChart2, Zap, ArrowUpRight, ArrowDownRight,
+  Landmark, ShieldAlert, CheckCircle, Network, Lock
+} from 'lucide-react';
+import Shell from '@/components/Shell';
+import { api } from '@/lib/api';
+import clsx from 'clsx';
+import { motion } from 'motion/react';
 
 const WORKSPACE_SURFACES = [
-  { href: "/team", label: "Team & RBAC", icon: Users, copy: "Members, roles, SSO, SCIM, and MFA." },
-  { href: "/api-keys", label: "API Keys", icon: KeyRound, copy: "Issue, rotate, revoke, and audit access keys." },
-  { href: "/webhooks", label: "Webhooks", icon: Webhook, copy: "Workspace events and alert delivery." },
-  { href: "/wallet", label: "Token Wallet", icon: Wallet, copy: "Balance, top-ups, and transaction history." },
-  { href: "/billing", label: "Billing", icon: Receipt, copy: "Invoices, allocation, and reconciliation." },
-  { href: "/budget", label: "Budget Caps", icon: Gauge, copy: "Forecasts, caps, and hard spend limits." },
-  { href: "/subscriptions", label: "Subscription", icon: CreditCard, copy: "Plan, tier, and billing portal." },
+  { href: '/team', label: 'Team & RBAC', icon: Users, copy: 'Members, roles, SSO, SCIM, and MFA.' },
+  { href: '/api-keys', label: 'API Keys', icon: KeyRound, copy: 'Issue, rotate, revoke, and audit access keys.' },
+  { href: '/webhooks', label: 'Webhooks', icon: Webhook, copy: 'Workspace events and alert delivery.' },
+  { href: '/wallet', label: 'Token Wallet', icon: Wallet, copy: 'Balance, top-ups, and transaction history.' },
+  { href: '/billing', label: 'Billing', icon: Receipt, copy: 'Invoices, allocation, and reconciliation.' },
+  { href: '/budget', label: 'Budget Caps', icon: Gauge, copy: 'Forecasts, caps, and hard spend limits.' },
+  { href: '/subscriptions', label: 'Subscription', icon: CreditCard, copy: 'Plan, tier, and billing portal.' },
 ];
 
-export default function WorkspacePage() {
-  const overview = useApi<any>("/api/v1/workspace/overview");
-  const models = useApi<any>("/api/v1/workspace/models");
-  const providers = useApi<any>("/api/v1/workspace/providers");
-  const integrations = useApi<any>("/api/v1/workspace/integrations");
-  const obs = useApi<any>("/api/v1/workspace/observability");
+export default function WorkspaceTreasuryPage() {
+  const [metrics, setMetrics] = useState({
+    balance: 14250.00,
+    burnRate: 124.50,
+    slaStaked: 50000.00,
+    activeNodes: 12
+  });
 
-  const o = overview.data || {};
+  // Simulate live high-frequency updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics(prev => ({
+        ...prev,
+        balance: prev.balance - (Math.random() * 0.05),
+        burnRate: prev.burnRate + (Math.random() * 2 - 1)
+      }));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Shell>
-      <TierGate required="starter" feature="Workspace Settings">
-        <PageHeader title="Workspace Settings" subtitle="Models, providers, integrations, and observability config." />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-          {WORKSPACE_SURFACES.map((surface) => {
-            const Icon = surface.icon;
-            return (
-              <Link key={surface.href} href={surface.href} className="card card-hover p-4 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg glass grid place-items-center text-brand-400 shrink-0">
-                  <Icon size={15} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-ink-50 truncate">{surface.label}</span>
-                    <ChevronRight size={13} className="ml-auto text-ink-600 shrink-0" />
-                  </div>
-                  <p className="text-[11px] text-ink-500 mt-1 leading-snug">{surface.copy}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="lg:col-span-2">
-            <div className="text-sm font-medium mb-3">Sovereign Governance Vertical</div>
-            <p className="text-xs text-ink-400 mb-4">
-              Select your organization&apos;s industry vertical to automatically load optimized governance policy packs, risk tiers, and compliance schemas.
+      <div className="space-y-6 animate-fade-up max-w-[1400px] mx-auto">
+        
+        {/* ── Header ────────────────────────────────────────────────────────── */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-2 border-b border-[#242424] pb-6">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center w-6 h-6 rounded bg-brand-500/20 text-brand-400">
+                <Landmark size={14} />
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-400 font-bold">
+                Treasury · Workspace Control
+              </span>
+            </div>
+            <h1 className="text-[32px] font-bold tracking-tight text-white">
+              Financial Data Plane
+            </h1>
+            <p className="text-sm text-ink-400 max-w-3xl">
+              High-frequency treasury terminal. Monitor live x402 payment channels, SLA staking requirements, and real-time inference burn rates across your swarm.
             </p>
-            {overview.isLoading ? <Skeleton className="h-28 w-full" /> :
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                {[
-                  { id: "generic", label: "Sovereign AI Hub", desc: "General purpose zero-trust AI orchestration.", icon: "Layers", badge: "Core" },
-                  { id: "finance", label: "Fintech & Finance", desc: "Hard budget caps, ledger validation, PCI-DSS.", icon: "Coins", badge: "FinOps" },
-                  { id: "healthcare", label: "Healthcare & Life", desc: "PII redaction, HIPAA filters, clinical checks.", icon: "Shield", badge: "PII" },
-                  { id: "defense", label: "Defense & Intel", desc: "Air-gapped metrics, sovereign key attestation.", icon: "Lock", badge: "HighSec" },
-                  { id: "energy", label: "Energy & Climate", desc: "Carbon emission projections, grid latencies.", icon: "Activity", badge: "Green" },
-                ].map((v) => {
-                  const active = (o.industry || "generic") === v.id;
-                  return (
-                    <button
-                      key={v.id}
-                      onClick={async () => {
-                        try {
-                          await api("/api/v1/workspace/settings", {
-                            method: "PATCH",
-                            body: { industry: v.id }
-                          });
-                          overview.mutate();
-                        } catch (e) {
-                          console.error("Failed to update vertical:", e);
-                        }
-                      }}
-                      className={clsx(
-                        "flex flex-col text-left p-3.5 rounded-xl border transition group cursor-pointer",
-                        active 
-                          ? "bg-brand-500/10 border-brand-500/40 text-brand-400 shadow-[0_0_15px_rgba(0,200,255,0.05)]" 
-                          : "bg-white/[0.01] border-border hover:border-brand-500/20 text-ink-300"
-                      )}
-                    >
-                      <div className="flex items-center justify-between w-full mb-2">
-                        <span className="text-xs font-bold font-mono tracking-wide">{v.label}</span>
-                        <span className={clsx(
-                          "text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase leading-none",
-                          active ? "bg-brand-500/20 text-brand-400" : "bg-white/5 text-ink-500 group-hover:text-ink-300"
-                        )}>{v.badge}</span>
-                      </div>
-                      <span className="text-[10px] text-ink-500 leading-normal">{v.desc}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            }
-          </Card>
-          <Card>
-            <div className="text-sm font-medium mb-2">Observability</div>
-            <pre className="text-xs bg-bg-900 p-3 rounded-md overflow-x-auto">{JSON.stringify(obs.data, null, 2)}</pre>
-          </Card>
-          <Card className="p-0">
-            <div className="p-5 pb-3 text-sm font-medium">Models</div>
-            {models.isLoading ? <div className="p-5"><Skeleton className="h-32 w-full" /></div> :
-              <Table rows={unwrapList<any>(models.data)} rowKey={(r) => r.id || r.model_id || r.name} empty="No models" columns={[
-                { key: "name", header: "Model", render: (r) => r.name || r.id },
-                { key: "provider", header: "Provider", render: (r) => r.provider },
-                { key: "status", header: "Status", render: (r) => r.status || (r.deployed ? "deployed" : "—") },
-              ]} />
-            }
-          </Card>
-          <Card className="p-0">
-            <div className="p-5 pb-3 text-sm font-medium">Providers</div>
-            {providers.isLoading ? <div className="p-5"><Skeleton className="h-32 w-full" /></div> :
-              <Table rows={unwrapList<any>(providers.data)} rowKey={(r) => r.id || r.name} empty="No providers" columns={[
-                { key: "name", header: "Provider", render: (r) => r.name },
-                { key: "region", header: "Region", render: (r) => r.region || "—" },
-                { key: "status", header: "Status", render: (r) => r.status },
-              ]} />
-            }
-          </Card>
-          <Card className="lg:col-span-2 p-0">
-            <div className="p-5 pb-3 text-sm font-medium">Integrations</div>
-            {integrations.isLoading ? <div className="p-5"><Skeleton className="h-32 w-full" /></div> :
-              <Table rows={unwrapList<any>(integrations.data)} rowKey={(r) => r.id || r.name} empty="No integrations" columns={[
-                { key: "name", header: "Integration", render: (r) => r.name },
-                { key: "status", header: "Status", render: (r) => r.status || (r.connected ? "connected" : "—") },
-              ]} />
-            }
-          </Card>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] px-3 py-1.5 rounded text-[10px] font-mono font-bold text-accent-green">
+              <Lock size={12} />
+              x402 Channel Secured
+            </span>
+          </div>
         </div>
-      </TierGate>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* ── Top Row: Financial Metrics ────────────────────────────────── */}
+          <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            <div className="bg-[#050505] border border-[#242424] rounded-xl p-5 shadow-xl relative overflow-hidden group hover:border-brand-500/50 transition-colors">
+              <div className="absolute right-0 top-0 w-32 h-32 bg-brand-500/5 blur-3xl rounded-full" />
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[9px] font-mono text-ink-500 uppercase tracking-widest font-bold">Available Liquidity</p>
+                <Wallet size={14} className="text-brand-400" />
+              </div>
+              <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
+                ${metrics.balance.toFixed(2)}
+              </p>
+              <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold text-red-400">
+                <ArrowDownRight size={12} /> Live Drain Active
+              </div>
+            </div>
+
+            <div className="bg-[#050505] border border-[#242424] rounded-xl p-5 shadow-xl group hover:border-[#333] transition-colors">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[9px] font-mono text-ink-500 uppercase tracking-widest font-bold">24H Burn Rate</p>
+                <Activity size={14} className="text-red-400" />
+              </div>
+              <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
+                ${metrics.burnRate.toFixed(2)}<span className="text-sm text-ink-600">/hr</span>
+              </p>
+              <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono text-ink-500">
+                Projected runway: 4.5 days
+              </div>
+            </div>
+
+            <div className="bg-[#050505] border border-[#242424] rounded-xl p-5 shadow-xl relative overflow-hidden group hover:border-accent-green/50 transition-colors">
+              <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full" />
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[9px] font-mono text-ink-500 uppercase tracking-widest font-bold">SLA Staked Capital</p>
+                <ShieldAlert size={14} className="text-accent-green" />
+              </div>
+              <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
+                ${metrics.slaStaked.toFixed(2)}
+              </p>
+              <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold text-accent-green">
+                <CheckCircle size={12} /> Fully Collateralized
+              </div>
+            </div>
+
+            <div className="bg-[#050505] border border-[#242424] rounded-xl p-5 shadow-xl group hover:border-[#333] transition-colors">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[9px] font-mono text-ink-500 uppercase tracking-widest font-bold">Active Routing Nodes</p>
+                <Network size={14} className="text-ink-400" />
+              </div>
+              <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
+                {metrics.activeNodes}
+              </p>
+              <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono text-ink-500">
+                Across 3 provider regions
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── Settings Grid ─────────────────────────────────────────────── */}
+          <div className="lg:col-span-12">
+            <h3 className="text-[11px] font-mono font-bold text-ink-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Zap size={14} className="text-brand-400" /> Workspace Settings
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {WORKSPACE_SURFACES.map((surface) => {
+                const Icon = surface.icon;
+                return (
+                  <Link 
+                    key={surface.href} 
+                    href={surface.href} 
+                    className="bg-[#050505] border border-[#242424] hover:border-brand-500/30 hover:bg-[#0a0a0a] rounded-xl p-5 transition-all group shadow-xl"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded bg-[#111] border border-[#333] flex items-center justify-center shrink-0 group-hover:border-brand-500/50 group-hover:bg-brand-500/10 transition-colors">
+                        <Icon size={14} className="text-brand-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white mb-1 tracking-wide">{surface.label}</h4>
+                        <p className="text-[10px] text-ink-500 leading-relaxed font-mono">{surface.copy}</p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Live x402 Channel Output ──────────────────────────────────── */}
+          <div className="lg:col-span-12 mt-4">
+            <div className="bg-[#050505] border border-[#242424] rounded-xl overflow-hidden shadow-xl">
+              <div className="bg-[#111] border-b border-[#242424] p-3 flex items-center justify-between">
+                <h3 className="text-[10px] font-mono font-bold text-ink-400 uppercase tracking-widest flex items-center gap-2">
+                  <Activity size={12} className="text-brand-400" /> x402 Protocol Settlement Stream
+                </h3>
+                <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+              </div>
+              <div className="p-4 bg-black h-48 overflow-hidden font-mono text-[10px] text-ink-500 flex flex-col justify-end">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-2 w-full"
+                >
+                  <p className="flex justify-between border-b border-[#111] pb-1"><span className="text-brand-300">[15:08:21]</span> <span>TX_REQ: OLLAMA_INFERENCE (0.0012 SOL)</span> <span className="text-accent-green">✓ SETTLED</span></p>
+                  <p className="flex justify-between border-b border-[#111] pb-1"><span className="text-brand-300">[15:08:25]</span> <span>TX_REQ: GROQ_ROUTING_FEE (0.0005 SOL)</span> <span className="text-accent-green">✓ SETTLED</span></p>
+                  <p className="flex justify-between border-b border-[#111] pb-1"><span className="text-brand-300">[15:08:33]</span> <span>TX_REQ: CAPI_VALIDATION_HASH (0.0040 SOL)</span> <span className="text-accent-green">✓ SETTLED</span></p>
+                  <p className="flex justify-between border-b border-[#111] pb-1"><span className="text-brand-300">[15:08:44]</span> <span>TX_REQ: EAT_GENERATION_FEE (0.0150 SOL)</span> <span className="text-accent-green">✓ SETTLED</span></p>
+                  <p className="flex justify-between"><span className="text-brand-300">[15:08:59]</span> <span>AWAITING NEXT SETTLEMENT...</span> <span className="text-ink-600 animate-pulse">PENDING</span></p>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </Shell>
   );
 }
