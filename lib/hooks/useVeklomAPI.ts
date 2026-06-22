@@ -16,11 +16,11 @@ export function useVeklomAPI() {
   const [error, setError] = useState<APIError | null>(null);
 
   const request = useCallback(
-    async <T,>(
+    async <T, B = unknown>(
       endpoint: string,
       options?: {
         method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-        body?: any;
+        body?: B;
         headers?: Record<string, string>;
         useAuth?: boolean;
       }
