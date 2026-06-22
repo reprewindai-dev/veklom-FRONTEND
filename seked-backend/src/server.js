@@ -7,8 +7,10 @@ const compression = require('compression');
 require('dotenv').config();
 
 const { PrismaClient } = require('@prisma/client');
-const { createHash } = require('crypto');
+const { createHash, createHmac } = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
+const Joi = require('joi');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -48,6 +50,26 @@ const limiter = rateLimit({
   message: { error: 'Too many requests from this IP' }
 });
 app.use('/', limiter);
+
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.status(401).json({ error: 'Unauthorized: No token provided' });
+
+  if (!process.env.JWT_SECRET) {
+    console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+    return res.status(500).json({ error: 'Internal Server Error: Missing authentication configuration' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    req.user = user;
+    next();
+  });
+}
+
 
 // SEKED v1.0 Constants
 const SEKED_SPECIFICATION_VERSION = "1.0";
@@ -115,6 +137,36 @@ function getDirective(ratio) {
 function createSekedFingerprint(state) {
   const stateString = JSON.stringify(state);
   return createHash('sha256').update(stateString).digest('hex');
+}
+
+function generateIdentitySignature(identity) {
+  const secret = process.env.SEKED_SIGNATURE_SECRET || process.env.JWT_SECRET || 'seked-dev-secret-key';
+
+  if (process.env.NODE_ENV === 'production' && !process.env.SEKED_SIGNATURE_SECRET && !process.env.JWT_SECRET) {
+    throw new Error('Missing SEKED_SIGNATURE_SECRET or JWT_SECRET environment variable in production');
+  }
+
+  // Create a copy to avoid mutating the original
+  const signablePayload = { ...identity };
+
+  // Remove fields that shouldn't be part of the signature calculation
+  delete signablePayload.signature;
+  delete signablePayload.hash;
+
+  // Sort keys for consistent stringification
+  const sortedPayload = {};
+  Object.keys(signablePayload).sort().forEach(key => {
+    // Handle Dates properly
+    if (signablePayload[key] instanceof Date) {
+      sortedPayload[key] = signablePayload[key].toISOString();
+    } else {
+      sortedPayload[key] = signablePayload[key];
+    }
+  });
+
+  return createHmac('sha256', secret)
+    .update(JSON.stringify(sortedPayload))
+    .digest('hex');
 }
 
 // Validation Middleware
@@ -240,7 +292,21 @@ app.post('/verify', async (req, res) => {
 });
 
 // Policy Management
-app.get('/policies', async (req, res) => {
+const policySchema = Joi.object({
+  name: Joi.string().required(),
+  sigma_threshold: Joi.number().required(),
+  ci_threshold: Joi.number().required(),
+  si_threshold: Joi.number().required(),
+  action_rules: Joi.object().pattern(
+    Joi.string(),
+    Joi.object({
+      action: Joi.string().valid('RUN', 'HOLD', 'BLOCK', 'RECOVER').required(),
+      delay_seconds: Joi.number().integer().min(0).required()
+    })
+  ).required()
+});
+
+app.get('/policies', authenticateToken, async (req, res) => {
   try {
     const policies = await prisma.policy.findMany({
       orderBy: { created_at: 'desc' }
@@ -251,9 +317,14 @@ app.get('/policies', async (req, res) => {
   }
 });
 
-app.post('/policies', async (req, res) => {
+app.post('/policies', authenticateToken, async (req, res) => {
   try {
-    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = req.body;
+    const { error, value } = policySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = value;
     
     const policy = await prisma.policy.create({
       data: {
@@ -271,7 +342,7 @@ app.post('/policies', async (req, res) => {
   }
 });
 
-app.get('/policies/:id', async (req, res) => {
+app.get('/policies/:id', authenticateToken, async (req, res) => {
   try {
     const policy = await prisma.policy.findUnique({
       where: { id: req.params.id }
@@ -287,9 +358,14 @@ app.get('/policies/:id', async (req, res) => {
   }
 });
 
-app.put('/policies/:id', async (req, res) => {
+app.put('/policies/:id', authenticateToken, async (req, res) => {
   try {
-    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = req.body;
+    const { error, value } = policySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = value;
     
     const policy = await prisma.policy.update({
       where: { id: req.params.id },
@@ -308,7 +384,7 @@ app.put('/policies/:id', async (req, res) => {
   }
 });
 
-app.delete('/policies/:id', async (req, res) => {
+app.delete('/policies/:id', authenticateToken, async (req, res) => {
   try {
     await prisma.policy.delete({
       where: { id: req.params.id }
@@ -350,10 +426,11 @@ function mintExecutionIdentity(runData, sekedState, pglCertificate) {
     execution_attestation_hash: null,
     issuer: "seked-control-plane",
     issued_at: new Date().toISOString(),
-    signature: "signed-by-seked", // In production, use actual cryptographic signing
+    signature: "",
     hash: ""
   };
   
+  executionIdentity.signature = generateIdentitySignature(executionIdentity);
   executionIdentity.hash = createSekedFingerprint({
     execution_id: executionIdentity.execution_id,
     run_id: executionIdentity.run_id,
@@ -362,9 +439,9 @@ function mintExecutionIdentity(runData, sekedState, pglCertificate) {
     seked_attestation_hash: executionIdentity.seked_attestation_hash,
     directive: executionIdentity.directive,
     expires_at: executionIdentity.expires_at,
-    issuer: executionIdentity.issuer
+    issuer: executionIdentity.issuer,
+    signature: executionIdentity.signature
   });
-
   return executionIdentity;
 }
 
@@ -608,6 +685,19 @@ app.post('/mcp-gateway/validate', async (req, res) => {
       });
     }
     
+    // Verify signature
+    const expectedSignature = generateIdentitySignature(identity);
+    const signatureBuffer = Buffer.from(identity.signature || '', 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (signatureBuffer.length !== expectedBuffer.length || !require('crypto').timingSafeEqual(signatureBuffer, expectedBuffer)) {
+      return res.status(403).json({
+        error: "INVALID_SIGNATURE",
+        detail: "ExecutionIdentityV1 signature verification failed",
+        law0: true
+      });
+    }
+
     // Check scope coverage
     const scope = identity.scope_json;
     if (scope.allowed_tools && !scope.allowed_tools.includes(tool_name)) {
@@ -756,6 +846,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// Export app before start
+module.exports = app;
+
 // Start server
 if (require.main === module) {
   app.listen(PORT, () => {
@@ -769,5 +862,3 @@ process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
-
-module.exports = app;
