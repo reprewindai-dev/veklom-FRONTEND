@@ -15,7 +15,8 @@ const GROUP_TITLES: Record<string, string> = {
   overview: "Network",
   build: "Build",
   run: "Run",
-  marketplace: "Veklom Nexus",
+  nexus: "Veklom Nexus",
+  ecosystem: "Staking & Protocol",
   govern: "Zero-Trust",
   workspace: "Treasury",
   admin: "Global",
@@ -150,7 +151,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   if (!me) return null;
 
   const groups = modulesByGroup();
-  const orderedGroups: Array<keyof typeof groups> = ["overview", "build", "marketplace", "run", "insights", "govern", "workspace", "admin"];
+  const orderedGroups: Array<keyof typeof groups> = ["overview", "build", "run", "nexus", "ecosystem", "insights", "govern", "workspace", "admin"];
 
   return (
     <div className="min-h-screen flex">

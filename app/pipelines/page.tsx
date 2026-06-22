@@ -720,7 +720,7 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
     system_prompt: "You are a governed Veklom ReAct agent. Use approved tools only and return enterprise-ready output.",
-    tools_allowed: ["marketplace_tool"],
+    tools_allowed: ["nexus_tool"],
     blocked_tools: ["code_executor"],
     max_iterations: 3,
     timeout_seconds: 45,
@@ -739,7 +739,7 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
     requireEvidence: true,
   };
   if (nodeType === "lc-memory") return { policy: "inherit", requireEvidence: true };
-  if (nodeType === "lc-toolnode") return { tools_allowed: ["marketplace_tool"], policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "lc-toolnode") return { tools_allowed: ["nexus_tool"], policy: "tool_allowlist", requireEvidence: true };
   if (nodeType === "lc-retrievalqa") return {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
@@ -793,7 +793,7 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "http-call") return { method: "GET", url: "", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 2000 };
   if (nodeType === "web-search") return { query: "", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 3000 };
   if (nodeType === "sql-query") return { query: "select 1 as ok", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 2000 };
-  if (nodeType === "marketplace-tool") return { query: "governance", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 1200 };
+  if (nodeType === "nexus-tool") return { query: "governance", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 1200 };
   if (catId === "tools") return { policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 2000 };
   return { policy: "inherit", requireEvidence: true };
 }
@@ -857,7 +857,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
   const isModelBacked = isLangChainAgent || isAgentModel || node.nodeType === "lc-retrievalqa" || node.nodeType.startsWith("llm-") || node.nodeType.startsWith("embed-");
   const acceptsText = ["input", "doc-loader", "file-read"].includes(node.nodeType);
   const acceptsUrl = ["doc-loader", "file-read", "http-call", "custom-http", "webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event", "qdrant", "weaviate"].includes(node.nodeType);
-  const acceptsQuery = ["web-search", "sql-query", "marketplace-tool", "reranker", "hybrid-search"].includes(node.nodeType);
+  const acceptsQuery = ["web-search", "sql-query", "nexus-tool", "reranker", "hybrid-search"].includes(node.nodeType);
   const acceptsHttp = ["http-call", "custom-http", "webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event"].includes(node.nodeType);
   const isVectorStore = ["pgvector", "qdrant", "weaviate"].includes(node.nodeType);
   const isRoutingConfig = ["cost-router", "fallback", "load-balancer", "classifier", "semantic-router"].includes(node.nodeType);
@@ -1237,7 +1237,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
             <div>
               <span className="text-[10px] uppercase tracking-wider text-ink-600">Allowed tools</span>
               <div className="grid grid-cols-2 gap-1.5 mt-1">
-                {["web_search", "http_request", "sql_query", "file_reader", "marketplace_tool", "code_executor"].map((tool) => (
+                {["web_search", "http_request", "sql_query", "file_reader", "nexus_tool", "code_executor"].map((tool) => (
                   <label key={tool} className="flex items-center gap-2 rounded-md border border-border bg-bg-900 px-2 py-1.5 text-[10px] text-ink-300">
                     <input type="checkbox" checked={allowedTools.includes(tool)} onChange={() => toggleTool(tool)} />
                     <span className="truncate">{tool}</span>
@@ -1248,7 +1248,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
             <div>
               <span className="text-[10px] uppercase tracking-wider text-ink-600">Blocked tools</span>
               <div className="grid grid-cols-2 gap-1.5 mt-1">
-                {["web_search", "http_request", "sql_query", "file_reader", "marketplace_tool", "code_executor"].map((tool) => (
+                {["web_search", "http_request", "sql_query", "file_reader", "nexus_tool", "code_executor"].map((tool) => (
                   <label key={tool} className="flex items-center gap-2 rounded-md border border-border bg-bg-900 px-2 py-1.5 text-[10px] text-ink-300">
                     <input type="checkbox" checked={blockedTools.includes(tool)} onChange={() => toggleBlockedTool(tool)} />
                     <span className="truncate">{tool}</span>
