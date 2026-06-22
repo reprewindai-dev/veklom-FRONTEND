@@ -13,8 +13,11 @@ export default function ConsoleTerminal({ logs, onClear }: ConsoleTerminalProps)
   const [copied, setCopied] = React.useState(false);
 
   useEffect(() => {
-    // Scroll to bottom whenever logs update
-    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll the container to the bottom instead of using scrollIntoView, which scrolls the entire page
+    if (terminalEndRef.current && terminalEndRef.current.parentElement) {
+      const container = terminalEndRef.current.parentElement;
+      container.scrollTop = container.scrollHeight;
+    }
   }, [logs]);
 
   const handleCopyLogs = () => {

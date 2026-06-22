@@ -137,8 +137,9 @@ export default function App() {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (logsEndRef.current && logsEndRef.current.parentElement) {
+      const container = logsEndRef.current.parentElement;
+      container.scrollTop = container.scrollHeight;
     }
   }, [simulationLogs, activeStepIndex, isSimulating]);
 
