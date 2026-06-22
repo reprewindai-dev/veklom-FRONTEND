@@ -9,6 +9,7 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const { createHash, createHmac } = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -48,6 +49,26 @@ const limiter = rateLimit({
   message: { error: 'Too many requests from this IP' }
 });
 app.use('/', limiter);
+
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.status(401).json({ error: 'Unauthorized: No token provided' });
+
+  if (!process.env.JWT_SECRET) {
+    console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+    return res.status(500).json({ error: 'Internal Server Error: Missing authentication configuration' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    req.user = user;
+    next();
+  });
+}
+
 
 // SEKED v1.0 Constants
 const SEKED_SPECIFICATION_VERSION = "1.0";
@@ -270,7 +291,7 @@ app.post('/verify', async (req, res) => {
 });
 
 // Policy Management
-app.get('/policies', async (req, res) => {
+app.get('/policies', authenticateToken, async (req, res) => {
   try {
     const policies = await prisma.policy.findMany({
       orderBy: { created_at: 'desc' }
@@ -281,7 +302,7 @@ app.get('/policies', async (req, res) => {
   }
 });
 
-app.post('/policies', async (req, res) => {
+app.post('/policies', authenticateToken, async (req, res) => {
   try {
     const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = req.body;
     
@@ -301,7 +322,7 @@ app.post('/policies', async (req, res) => {
   }
 });
 
-app.get('/policies/:id', async (req, res) => {
+app.get('/policies/:id', authenticateToken, async (req, res) => {
   try {
     const policy = await prisma.policy.findUnique({
       where: { id: req.params.id }
@@ -317,7 +338,7 @@ app.get('/policies/:id', async (req, res) => {
   }
 });
 
-app.put('/policies/:id', async (req, res) => {
+app.put('/policies/:id', authenticateToken, async (req, res) => {
   try {
     const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = req.body;
     
@@ -338,7 +359,7 @@ app.put('/policies/:id', async (req, res) => {
   }
 });
 
-app.delete('/policies/:id', async (req, res) => {
+app.delete('/policies/:id', authenticateToken, async (req, res) => {
   try {
     await prisma.policy.delete({
       where: { id: req.params.id }
