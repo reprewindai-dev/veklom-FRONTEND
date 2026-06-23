@@ -1,13 +1,16 @@
-// Tier model — mapped from the Veklom build plan (Free / Starter / Pro / Sovereign / Enterprise).
-// Used to gate modules in the Control Plane.
+// Tier model — mapped from the Veklom build plan.
+// Now expanded to include Machine API tiers (bronze/medium/good).
 
-export type Tier = "free" | "starter" | "pro" | "sovereign" | "enterprise";
+export type Tier = "free" | "starter" | "pro" | "sovereign" | "enterprise" | "bronze" | "medium" | "good";
 
 export const TIER_RANK: Record<Tier, number> = {
   free: 0,
   starter: 1,
+  bronze: 1,
   pro: 2,
+  medium: 2,
   sovereign: 3,
+  good: 3,
   enterprise: 4,
 };
 
@@ -17,6 +20,9 @@ export const TIER_LABEL: Record<Tier, string> = {
   pro: "Pro",
   sovereign: "Sovereign",
   enterprise: "Enterprise",
+  bronze: "Bronze API",
+  medium: "Medium API",
+  good: "Good API",
 };
 
 export const TIER_PRICE: Record<Tier, string> = {
@@ -25,6 +31,9 @@ export const TIER_PRICE: Record<Tier, string> = {
   pro: "$18K",
   sovereign: "Custom",
   enterprise: "$45K",
+  bronze: "$0.001 USDC",
+  medium: "$0.05 USDC",
+  good: "$0.25 USDC",
 };
 
 export function meetsTier(current: Tier | undefined, required: Tier): boolean {
@@ -38,5 +47,9 @@ export function normalizeTier(raw: unknown): Tier {
   if (s.includes("sovereign")) return "sovereign";
   if (s.includes("pro")) return "pro";
   if (s.includes("starter") || s.includes("basic")) return "starter";
+  if (s.includes("bronze")) return "bronze";
+  if (s.includes("medium")) return "medium";
+  if (s.includes("good")) return "good";
   return "free";
 }
+
