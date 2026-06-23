@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Shield, Globe, Zap, Server, Activity, Database, Key } from "lucide-react";
+import { ArrowRight, Shield, Globe, Zap, Server, Activity, Database, Key, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import InteractiveLandingTerminal from "@/components/terminal/InteractiveLandingTerminal";
 import NetworkTopologyPanel from "@/components/vnp/NetworkTopologyPanel";
@@ -133,8 +134,8 @@ export default function Home() {
                    </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -172,17 +173,67 @@ export default function Home() {
               <div className="absolute -inset-4 bg-gradient-to-r from-violet-500/20 to-transparent blur-2xl opacity-50 rounded-3xl -z-10" />
               <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0F0F13] shadow-2xl">
                 <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-mono text-gray-400">LIVE DATA FEED: api.veklom.com/v1/x402/staking/state</span>
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                  </div>
+                  <div className="ml-4 text-xs font-mono text-gray-500 flex items-center gap-2">
+                    <Lock className="w-3 h-3" />
+                    x402-protocol.ts
+                  </div>
                 </div>
-                <div className="h-[500px] overflow-hidden p-6 relative">
-                   <div className="transform scale-[0.85] origin-top-left w-[117%] h-[117%] pointer-events-none">
-                     <StakingProtocol />
-                   </div>
+                <div className="p-6">
+                  <StakingProtocol />
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Value Scroll Section 3: The Lifecycle Infographic */}
+      <section className="py-24 relative overflow-hidden bg-[#0A0A0A]">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="flex flex-col items-center"
+          >
+            <motion.div variants={fadeUpVariants} className="text-center max-w-3xl mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6">
+                <Activity className="w-4 h-4" />
+                Lifecycle Governance
+              </div>
+              <h2 className="text-4xl font-bold mb-6">From Chaos to Control.</h2>
+              <p className="text-gray-400 text-lg leading-relaxed">
+                Ungoverned agents hallucinate, overspend, and create liabilities. 
+                Veklom introduces a deterministic lifecycle—from policy-checked execution via SEKED, 
+                to immutable Identity Ledgers (PGL), down to atomic USDC micro-payments (x402).
+              </p>
+            </motion.div>
+
+            <motion.div 
+              variants={fadeUpVariants} 
+              className="relative w-full max-w-5xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#111]"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent opacity-20 pointer-events-none z-10" />
+              
+              {/* Note to user: place image in public/images/lifecycle-infographic.jpg */}
+              <div className="relative aspect-[16/9] w-full group">
+                <Image 
+                  src="/images/lifecycle-infographic.jpg" 
+                  alt="Veklom Agent Lifecycle: From Chaos to Control" 
+                  fill
+                  className="object-contain bg-[#e6eff2] transition-transform duration-700 group-hover:scale-[1.02]"
+                  sizes="(max-width: 1280px) 100vw, 1280px"
+                  priority
+                />
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
