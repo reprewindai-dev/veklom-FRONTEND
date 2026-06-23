@@ -208,7 +208,7 @@ export default function InteractiveLandingTerminal() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
