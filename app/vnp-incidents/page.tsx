@@ -28,8 +28,10 @@ import {
   Settings,
   MoreVertical,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert
 } from "lucide-react";
+import IncidentReviewPanel from "@/components/vnp/IncidentReviewPanel";
 
 interface ComplianceFramework {
   id: string;
@@ -62,14 +64,15 @@ interface SecurityAlert {
   category: string;
 }
 
-export default function TrustCenterPage() {
+export default function VnpIncidentsPage() {
   const frameworks = useApi<ComplianceFramework[]>("/api/v1/trust-center/frameworks");
   const audits = useApi<AuditEntry[]>("/api/v1/trust-center/audits");
   const alerts = useApi<SecurityAlert[]>("/api/v1/trust-center/alerts");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("incidents");
   const [searchTerm, setSearchTerm] = useState("");
 
   const tabs = [
+    { id: "incidents", label: "Incidents & Slashing", icon: ShieldAlert },
     { id: "overview", label: "Overview", icon: Scale },
     { id: "compliance", label: "Compliance", icon: ShieldCheck },
     { id: "audit", label: "Audit Trail", icon: FileSearch },
@@ -472,6 +475,11 @@ export default function TrustCenterPage() {
                   </div>
                 </div>
               </Card>
+            )}
+
+            {/* Incidents & Slashing Tab */}
+            {activeTab === "incidents" && (
+              <IncidentReviewPanel />
             )}
           </div>
 
