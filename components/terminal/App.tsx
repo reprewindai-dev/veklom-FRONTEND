@@ -144,7 +144,7 @@ export default function App() {
           </div>
           <div className="text-xs font-mono tabular-nums text-white/70">{currentTime}</div>
           <div className="ml-4">
-            {/* @ts-expect-error - Web Component typing */}
+            {/* @ts-ignore - Web Component typing */}
             <appkit-button />
           </div>
         </div>
