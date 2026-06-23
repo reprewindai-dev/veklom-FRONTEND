@@ -80,7 +80,7 @@ interface StakingProtocolProps {
 export default function StakingProtocol({ apis }: StakingProtocolProps) {
   // ---- Markets ----
   const { data: marketData, mutate: mutateMarkets } = useSWR<StakingMarket[]>(
-    "/api/v1/benchmarks/staking/markets",
+    "/api/v1/x402/staking/markets",
     fetcher,
     { refreshInterval: 10000 },
   );
@@ -88,7 +88,7 @@ export default function StakingProtocol({ apis }: StakingProtocolProps) {
 
   // ---- Backend State ----
   const { data: stateData } = useSWR<any>(
-    "/api/v1/benchmarks/staking/state",
+    "/api/v1/x402/staking/state",
     fetcher,
     { refreshInterval: 10000 },
   );
@@ -157,7 +157,7 @@ export default function StakingProtocol({ apis }: StakingProtocolProps) {
       const message = `Register Veklom Verifier Node\nAddress: ${walletAddress}\nNonce: ${Date.now()}`;
       const signature = await signer.signMessage(message);
       
-      const res = await api<{ success: boolean; message?: string }>("/api/v1/benchmarks/staking/register-verifier", {
+      const res = await api<{ success: boolean; message?: string }>("/api/v1/x402/staking/register-verifier", {
         body: {
           message,
           signature,
@@ -190,7 +190,7 @@ export default function StakingProtocol({ apis }: StakingProtocolProps) {
     setStakeResult(null);
     try {
       const res = await api<{ success: boolean; new_balance: number; volume: number; yesPrice: number; noPrice: number }>(
-        "/api/v1/benchmarks/staking/stake",
+        "/api/v1/x402/staking/stake",
         { body: { market_id: selectedMarketId, outcome: stakeOutcome, amount } },
       );
       setStakeResult({ ok: true, msg: `Staked $${amount.toFixed(2)} on ${stakeOutcome}. New balance: $${res.new_balance.toFixed(2)}` });

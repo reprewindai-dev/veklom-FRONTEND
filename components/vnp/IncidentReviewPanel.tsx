@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
+import { fetcher, api } from "@/lib/api";
 import { ShieldAlert, Fingerprint, Coins, ShieldCheck, Scale, AlertTriangle, ArrowRight, Activity, Clock, CheckCircle2 } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 
@@ -15,26 +17,14 @@ interface Incident {
 }
 
 export default function IncidentReviewPanel() {
-  const [incidents, setIncidents] = useState<Incident[]>([
-    {
-      id: "inc_01HXZ...",
-      apiName: "OpenAI GPT-4 Turbo",
-      region: "us-east-1",
-      uptime: 94.2,
-      slashAmount: 50.00,
-      status: "open",
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    },
-    {
-      id: "inc_02JBC...",
-      apiName: "Anthropic Claude 3",
-      region: "eu-west-1",
-      uptime: 98.9,
-      slashAmount: 50.00,
-      status: "challenged",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+  const { data: incidentsData, mutate: mutateIncidents } = useSWR<Incident[]>("/api/v1/incidents/", fetcher, { refreshInterval: 10000 });
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+
+  useEffect(() => {
+    if (incidentsData) {
+      setIncidents(incidentsData);
     }
-  ]);
+  }, [incidentsData]);
 
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [challengeState, setChallengeState] = useState<"idle" | "voting" | "completed">("idle");
@@ -63,11 +53,18 @@ export default function IncidentReviewPanel() {
     }
   }, [challengeState]);
 
-  const handleChallenge = () => {
+  const handleChallenge = async () => {
+    if (!selectedIncident) return;
     setChallengeState("voting");
     setVotes({ uphold: 0, reject: 0 });
+    
+    try {
+      await api(`/api/v1/incidents/${selectedIncident.id}/challenge`, { method: "POST", body: { reason: "Disputed SLA" } });
+      mutateIncidents();
+    } catch (e) {}
+
     setIncidents(incidents.map(inc => 
-      inc.id === selectedIncident?.id ? { ...inc, status: "challenged" } : inc
+      inc.id === selectedIncident.id ? { ...inc, status: "challenged" } : inc
     ));
   };
 
