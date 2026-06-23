@@ -18,12 +18,16 @@ import {
   Shield,
   FileCheck,
   AlertTriangle,
-  Radio
+  Radio,
+  Bell
 } from "lucide-react";
 
 import { ApiState, AlertConfig, AlertLog, AuditLog } from "@/components/vnp/types";
 import BenchmarkPanel from "@/components/vnp/BenchmarkPanel";
 import K8sAutoscalingPanel from "@/components/vnp/K8sAutoscalingPanel";
+import RBACPanel from "@/components/vnp/RBACPanel";
+import TopologyPanel from "@/components/vnp/TopologyPanel";
+import StakesPanel from "@/components/vnp/StakesPanel";
 import SpecPanel from "@/components/vnp/SpecPanel";
 import AlertPanel from "@/components/vnp/AlertPanel";
 import RbacPanel from "@/components/vnp/RbacPanel";
@@ -31,7 +35,7 @@ import AiAdvisorPanel from "@/components/vnp/AiAdvisorPanel";
 import NetworkTopologyPanel from "@/components/vnp/NetworkTopologyPanel";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"benchmark" | "k8s" | "spec" | "rbac" | "alerts" | "advisor" | "topology">("topology");
+  const [activeTab, setActiveTab] = useState<"benchmark" | "k8s" | "spec" | "rbac" | "alerts" | "advisor" | "topology" | "stakes">("topology");
   
   // States loaded from backend REST Endpoints
   const [apis, setApis] = useState<ApiState[]>([]);
@@ -453,8 +457,8 @@ export default function App() {
                     : "bg-transparent border-transparent text-slate-400 hover:bg-slate-950/50 hover:text-white"
                 }`}
               >
-                <BellRing className="w-4 h-4 text-emerald-400" />
-                <span>Methodology</span>
+                <Bell className="w-4 h-4 text-emerald-400" />
+                <span>Parametric SLAs</span>
               </button>
 
               <button
@@ -479,6 +483,18 @@ export default function App() {
               >
                 <Cpu className="w-4 h-4 text-emerald-400" />
                 <span>AI Consult</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("stakes")}
+                className={`flex-1 min-w-[130px] flex items-center justify-center gap-2 p-3.5 rounded-xl font-extrabold transition-all border cursor-pointer select-none ${
+                  activeTab === "stakes"
+                    ? "bg-[#101622] border-emerald-500/50 text-emerald-400 shadow-md"
+                    : "bg-transparent border-transparent text-slate-400 hover:bg-slate-950/50 hover:text-white"
+                }`}
+              >
+                <Zap className="w-4 h-4 text-emerald-400" />
+                <span>Stakes Engine</span>
               </button>
             </div>
 
@@ -532,6 +548,8 @@ export default function App() {
                     )}
 
                     {activeTab === "advisor" && <AiAdvisorPanel />}
+                    
+                    {activeTab === "stakes" && <StakesPanel />}
                   </motion.div>
                 </AnimatePresence>
               )}

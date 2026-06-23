@@ -7,7 +7,7 @@ import {
   Database, GitBranch, Swords, Send, User, Bot
 } from 'lucide-react';
 import Shell from '@/components/Shell';
-import { api, duelApi } from '@/lib/api';
+import { api, duelApi, apiUrl, getToken } from '@/lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import clsx from 'clsx';
 
@@ -43,6 +43,7 @@ export default function SwarmAssemblyMatrix() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [vnpMicroStaking, setVnpMicroStaking] = useState(false);
 
   // Agents
   const [agent1Theme, setAgent1Theme] = useState('Crypto Native Maxy');
@@ -94,16 +95,49 @@ export default function SwarmAssemblyMatrix() {
     setTopic('');
 
     try {
-      // Route to Main API
-      const execData = await api<any>('/api/v1/exec', {
-        method: 'POST',
-        body: { prompt: topic, model: 'llama-3.1-8b-instant', use_memory: false, max_tokens: 1024, temperature: 0.2 },
-      });
+      // Construct standard payload
+      const payload = { prompt: topic, model: 'llama-3.1-8b-instant', use_memory: false, max_tokens: 1024, temperature: 0.2 };
+      
+      let replyText = 'No response generated.';
+      let vnpResultText = '';
+      
+      if (vnpMicroStaking) {
+        // Direct fetch to read headers
+        const tok = getToken();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (tok) headers['Authorization'] = `Bearer ${tok}`;
+        headers['X-VNP-Stake'] = '0.001';
+        
+        const res = await fetch(apiUrl('/api/v1/exec'), {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.error || 'Execution Failed');
+        
+        replyText = data.response;
+        const stakeResult = res.headers.get('X-VNP-Stake-Result');
+        const latencyMs = res.headers.get('X-VNP-Latency-Ms');
+        if (stakeResult) {
+          vnpResultText = `\n\n[VNP Stakes Engine] Latency: ${latencyMs}ms | Result: ${stakeResult.toUpperCase()} | Micro-stake: 0.001 USDC`;
+        }
+      } else {
+        // Route to Main API normally
+        const execData = await api<any>('/api/v1/exec', {
+          method: 'POST',
+          body: payload,
+        });
+        replyText = execData.response || 'No response generated.';
+      }
+      
+      const finalReply = replyText + vnpResultText;
       
       const agentMsgId = (Date.now() + 1).toString();
       const agentMsg: ChatMessage = { id: agentMsgId, role: 'system', content: '', timestamp: new Date().toLocaleTimeString() };
       setMessages(prev => [...prev, agentMsg]);
-      startStreaming(agentMsgId, execData.response || 'No response generated.');
+      startStreaming(agentMsgId, finalReply);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Execution Failed');
@@ -243,6 +277,25 @@ export default function SwarmAssemblyMatrix() {
                   <span className="flex items-center gap-1 text-[9px] font-mono font-bold text-accent-green px-2 py-1 bg-emerald-500/10 rounded">
                     <Check size={10} /> WIRED
                   </span>
+                </div>
+              </div>
+            </div>
+
+            {/* VNP Stakes Engine Config */}
+            <div className="bg-[#0a0a0a] border border-[#242424] rounded-xl p-5 shadow-xl shrink-0">
+              <h3 className="text-[11px] font-mono font-bold text-ink-300 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <ShieldCheck size={14} className="text-brand-400" /> VNP Stakes Engine
+              </h3>
+              <div 
+                className="flex items-center justify-between p-3 bg-[#111] border border-brand-500/20 rounded-lg cursor-pointer" 
+                onClick={() => setVnpMicroStaking(!vnpMicroStaking)}
+              >
+                <div>
+                  <p className="text-[10px] font-mono font-bold text-white mb-0.5">Enable VNP Micro-Staking</p>
+                  <p className="text-[9px] font-mono text-ink-500">Inject X-VNP-Stake headers</p>
+                </div>
+                <div className={clsx("w-8 h-4 rounded-full transition-colors relative", vnpMicroStaking ? "bg-brand-500" : "bg-[#333]")}>
+                  <div className={clsx("absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all", vnpMicroStaking ? "left-4" : "left-0.5")} />
                 </div>
               </div>
             </div>
