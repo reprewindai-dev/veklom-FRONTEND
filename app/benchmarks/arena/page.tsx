@@ -42,7 +42,7 @@ import { Agent, PipelineStep, WorkflowType, StepLog, PresetTemplate } from "@/li
 import { PRESET_TEMPLATES } from "@/lib/benchmarks/templates";
 import CharacterCreator from "@/components/benchmarks/CharacterCreator";
 import AuthorityScenarios from "@/components/benchmarks/AuthorityScenarios";
-import { duelApi } from "@/lib/api";
+import { api, duelApi } from "@/lib/api";
 import Shell from "@/components/Shell";
 
 // Default Agents list if no template is loaded
@@ -209,16 +209,14 @@ export default function App() {
 
         const start = Date.now();
         // Call the real cAPI execution endpoint (the MCP governed layer)
-        const res = await fetch("https://mcpapi.vercel.app/api/request", {
+        const res = await api("/api/v1/capi/execute", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
           body: JSON.stringify({
             agent_id: currentAgent.name.includes("Writer") ? "agent-scout" : "agent-atlas",
-            capability_id: "cap-summarize",
+            pgl_id: "PGL-SYSTEM",
+            target_protocol: "cap-summarize",
             action: "execute",
-            input: {
+            payload: {
               prompt: prompt,
               model: currentAgent.model || "gemini-3.5-flash",
               temperature: currentAgent.temperature || 0.7
@@ -226,13 +224,15 @@ export default function App() {
           })
         });
 
+        const data = await res.json();
         if (!res.ok) {
-          throw new Error(`Execution failed: ${res.statusText}`);
+          throw new Error(`Execution failed: ${data.detail?.message || res.statusText}`);
         }
 
-        const data = await res.json();
-        const duration = Date.now() - start;
-        const output = data.verdict?.proof ? JSON.stringify(data.verdict.proof.hash) + "\\n" + (data.output?.response || "Executed via cAPI") : JSON.stringify(data);
+        const duration = data.result?.real_execution?.latency_ms || Date.now() - start;
+        const output = data.status === "EXECUTED" 
+          ? `[EVIDENCE SEALED: ${data.evidence_chain_id}]\nExecuted internally via cAPI (${duration}ms)` 
+          : JSON.stringify(data);
 
         const logEntry: StepLog = {
           id: `log-${Date.now()}-${i}`,
