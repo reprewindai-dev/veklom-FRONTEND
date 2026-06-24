@@ -136,8 +136,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // BYPASS for local dev
-    // if (!loading && !me) router.replace("/login");
+    if (!loading && !me) router.replace("/login");
   }, [loading, me, router]);
 
   if (loading) {
@@ -149,8 +148,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  // BYPASS: Provide mock user
-  const activeUser = me || { email: "demo@veklom.local", is_superuser: true, org_name: "Demo" };
+
+  if (!me) return null; // redirect in-flight
+
+  const activeUser = me;
 
   const groups = modulesByGroup();
   const orderedGroups: Array<keyof typeof groups> = ["overview", "build", "run", "nexus", "ecosystem", "insights", "govern", "workspace", "admin"];
