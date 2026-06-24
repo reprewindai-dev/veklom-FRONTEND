@@ -15,9 +15,10 @@ const nextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
-  env: {
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.veklom.com",
-  },
+  // IMPORTANT: Do NOT set NEXT_PUBLIC_API_BASE_URL here.
+  // It must remain empty so the browser uses same-origin /api/* paths.
+  // The rewrites() block below proxies those to BACKEND_URL server-side.
+  // Setting it to https://api.veklom.com causes CORS errors on authenticated requests.
   async rewrites() {
     return [
       {

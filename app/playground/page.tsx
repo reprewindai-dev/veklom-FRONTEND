@@ -95,41 +95,53 @@ export default function SwarmAssemblyMatrix() {
     setTopic('');
 
     try {
-      // Construct standard payload
-      const payload = { prompt: topic, model: 'llama-3.1-8b-instant', use_memory: false, max_tokens: 1024, temperature: 0.2 };
-      
       let replyText = 'No response generated.';
       let vnpResultText = '';
       
       if (vnpMicroStaking) {
-        // Direct fetch to read headers
+        // Direct fetch to read VNP stake headers from response
         const tok = getToken();
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (tok) headers['Authorization'] = `Bearer ${tok}`;
         headers['X-VNP-Stake'] = '0.001';
         
-        const res = await fetch(apiUrl('/api/v1/exec'), {
+        const res = await fetch(apiUrl('/api/v1/ai/chat'), {
           method: 'POST',
           headers,
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: userMsg.content }],
+            model: 'llama3.2:latest',
+            temperature: 0.2,
+            session_id: `capi_${Date.now()}`,
+          })
         });
         
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || data.error || 'Execution Failed');
         
-        replyText = data.response;
+        replyText = data.response_text || data.response || 'No response generated.';
         const stakeResult = res.headers.get('X-VNP-Stake-Result');
-        const latencyMs = res.headers.get('X-VNP-Latency-Ms');
+        const latencyMs = res.headers.get('X-VNP-Latency-Ms') || data.latency_ms;
         if (stakeResult) {
           vnpResultText = `\n\n[VNP Stakes Engine] Latency: ${latencyMs}ms | Result: ${stakeResult.toUpperCase()} | Micro-stake: 0.001 USDC`;
+        } else if (data.latency_ms) {
+          vnpResultText = `\n\n[VNP Stakes Engine] Latency: ${data.latency_ms}ms | Provider: ${data.provider} | Model: ${data.model}`;
         }
       } else {
-        // Route to Main API normally
-        const execData = await api<any>('/api/v1/exec', {
+        // Route through /api/v1/ai/chat — wired to Ollama on Node 2 (10.0.1.1:11434)
+        const chatData = await api<any>('/api/v1/ai/chat', {
           method: 'POST',
-          body: payload,
+          body: {
+            messages: [{ role: 'user', content: userMsg.content }],
+            model: 'llama3.2:latest',
+            temperature: 0.2,
+            session_id: `capi_${Date.now()}`,
+          },
         });
-        replyText = execData.response || 'No response generated.';
+        replyText = chatData.response_text || chatData.response || 'No response generated.';
+        if (chatData.latency_ms) {
+          vnpResultText = `\n\n[CAPI Node] Latency: ${chatData.latency_ms}ms | Provider: ${chatData.provider} | Model: ${chatData.model}`;
+        }
       }
       
       const finalReply = replyText + vnpResultText;
@@ -155,35 +167,51 @@ export default function SwarmAssemblyMatrix() {
     setMessages(prev => [...prev, userMsg]);
     
     try {
-      // We ping the duel API to generate the next turn. 
-      // If the backend has a /api/chat route, we use it. We'll simulate a multi-step debate here by chaining.
-      const payload = {
-        messages: [{ role: 'user', content: topic }],
-        agent1Params: { theme: agent1Theme },
-        agent2Params: { theme: agent2Theme },
-      };
+      // Agent 1 fires first — pro-argument for their theme
+      const agent1Prompt = `You are ${agent1Theme}. Give a sharp, confident 3-sentence opening argument about: "${topic}". Stay fully in character.`;
+      
+      let agent1Reply = '';
+      let agent2Reply = '';
 
-      // Try hitting the Vercel Edge API
-      let replyText = '';
-      try {
-        const response = await duelApi<any>('/api/chat', {
-          method: 'POST',
-          body: payload
-        });
-        replyText = response.response || response.message || response.content || JSON.stringify(response);
-      } catch (duelErr) {
-        // Fallback to main API if Duel API is unreachable/unstructured
-        const fallback = await api<any>('/api/v1/exec', {
-          method: 'POST',
-          body: { prompt: `Simulate a debate between ${agent1Theme} and ${agent2Theme} about ${topic}. Provide Agent 1's opening argument.`, model: 'llama-3.1-8b-instant', max_tokens: 500 }
-        });
-        replyText = fallback.response;
-      }
+      // Agent 1 call — hits Ollama on Node 2 via /api/v1/ai/chat
+      const sessionId = `duel_${Date.now()}`;
+      const agent1Res = await api<any>('/api/v1/ai/chat', {
+        method: 'POST',
+        body: {
+          messages: [{ role: 'user', content: agent1Prompt }],
+          model: 'llama3.2:latest',
+          temperature: 0.8,
+          session_id: `${sessionId}_agent1`,
+        },
+      });
+      agent1Reply = agent1Res.response_text || agent1Res.response || 'No response.';
 
-      const agentMsgId = (Date.now() + 1).toString();
-      const agentMsg: ChatMessage = { id: agentMsgId, role: 'agent1', content: '', timestamp: new Date().toLocaleTimeString() };
-      setMessages(prev => [...prev, agentMsg]);
-      startStreaming(agentMsgId, replyText);
+      // Display agent 1 response with streaming
+      const agent1MsgId = (Date.now() + 1).toString();
+      const agent1Msg: ChatMessage = { id: agent1MsgId, role: 'agent1', content: '', timestamp: new Date().toLocaleTimeString() };
+      setMessages(prev => [...prev, agent1Msg]);
+      await new Promise<void>(resolve => {
+        startStreaming(agent1MsgId, agent1Reply + `\n\n[${agent1Res.provider || 'ollama'} · ${agent1Res.latency_ms || '?'}ms]`);
+        setTimeout(resolve, Math.max(500, (agent1Reply.split(' ').length * 25) + 200));
+      });
+
+      // Agent 2 rebuttal — counter-argument
+      const agent2Prompt = `You are ${agent2Theme}. Rebut this argument in 3 sharp sentences: "${agent1Reply}". Stay fully in character as a ${agent2Theme}.`;
+      const agent2Res = await api<any>('/api/v1/ai/chat', {
+        method: 'POST',
+        body: {
+          messages: [{ role: 'user', content: agent2Prompt }],
+          model: 'llama3.2:latest',
+          temperature: 0.8,
+          session_id: `${sessionId}_agent2`,
+        },
+      });
+      agent2Reply = agent2Res.response_text || agent2Res.response || 'No response.';
+
+      const agent2MsgId = (Date.now() + 2).toString();
+      const agent2Msg: ChatMessage = { id: agent2MsgId, role: 'agent2', content: '', timestamp: new Date().toLocaleTimeString() };
+      setMessages(prev => [...prev, agent2Msg]);
+      startStreaming(agent2MsgId, agent2Reply + `\n\n[${agent2Res.provider || 'ollama'} · ${agent2Res.latency_ms || '?'}ms]`);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Duel Execution Failed');
