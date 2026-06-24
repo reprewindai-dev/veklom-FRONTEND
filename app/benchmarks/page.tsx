@@ -86,31 +86,44 @@ interface BenchApi {
   status: string;
 }
 
-interface StakingMarket {
-  id: string;
-  title: string;
-  category: string;
-  yesPrice: number;
-  noPrice: number;
-  volume: number;
-  poolYes: number;
-  poolNo: number;
-  resolutionDate: string;
-  targetApi: string;
-  resolved: boolean;
-  outcome?: string | null;
-}
+import { ApiState, AlertConfig, AlertLog, AuditLog } from "@/components/vnp/types";
+import BenchmarkPanel from "@/components/vnp/BenchmarkPanel";
+import K8sAutoscalingPanel from "@/components/vnp/K8sAutoscalingPanel";
+import RBACPanel from "@/components/vnp/RBACPanel";
+import TopologyPanel from "@/components/vnp/TopologyPanel";
+import StakesPanel from "@/components/vnp/StakesPanel";
+import SpecPanel from "@/components/vnp/SpecPanel";
+import AlertPanel from "@/components/vnp/AlertPanel";
+import RbacPanel from "@/components/vnp/RbacPanel";
+import AiAdvisorPanel from "@/components/vnp/AiAdvisorPanel";
+import NetworkTopologyPanel from "@/components/vnp/NetworkTopologyPanel";
 
-// ============ Utilities ============
-const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(n)));
+export default function App() {
+  const [activeTab, setActiveTab] = useState<"benchmark" | "k8s" | "spec" | "rbac" | "alerts" | "advisor" | "topology" | "stakes">("topology");
+  
+  // States loaded from backend REST Endpoints
+  const [apis, setApis] = useState<ApiState[]>([]);
+  const [trustBeacon, setTrustBeacon] = useState("");
+  const [blockAnchored, setBlockAnchored] = useState(0);
+  const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
+  const [alertLogs, setAlertLogs] = useState<AlertLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  
+  // Front-end UI overlay state (e.g. alerts flash box)
+  const [criticalToast, setCriticalToast] = useState<string | null>(null);
 
-function pillarsFor(a: BenchApi) {
-  const security = clamp(a.govScore);
-  const performance = clamp(a.devScore);
-  const compliance = clamp(70 + (4 - a.sovereignTier) * 7 + (a.complianceLabels?.length ?? 0) * 3);
-  const trust = Math.round(((security + performance + compliance) / 3) * 10);
-  return { security, performance, compliance, trust };
-}
+  // States for Left Sidebar Real-Time Telemetry Stream
+  const [liveFeedLogs, setLiveFeedLogs] = useState<Array<{ id: string; type: "MEASUREMENT" | "ANCHOR" | "SCORE UPDATE"; text: string }>>([
+    { id: "37c5b55e37c5d44d", type: "MEASUREMENT", text: "[US-E] GPT-4o - p99: 148.7ms, avail: 99.60%, err: 0.13%" },
+    { id: "0eecaf0c0fec901d", type: "MEASUREMENT", text: "[AP-NE] Llama 3 70B (Groq) - p99: 237.9ms, avail: 99.62%, err: 0.13%" },
+    { id: "25abe96a25ac0859", type: "ANCHOR", text: "[Epoch] epoch-anthropic-1782183600000 - root: 25abe96a25ac... (811 records)" },
+    { id: "780abaf780a9c06c", type: "SCORE UPDATE", text: "[VNP] Sovereign Authority Runtime - AA 89.3, 38,063 measurements, ±0.1" },
+    { id: "38be7df838be5f09", type: "MEASUREMENT", text: "[US-W] Financial Data Plane (VFDP) - p99: 73.3ms, avail: 99.93%, err: 0.00%" },
+    { id: "6043d1316043f07d", type: "MEASUREMENT", text: "[US-E] Sovereign Operator Registry - p99: 45.0ms, avail: 99.67%, err: 0.07%" },
+    { id: "49aeef8949aeef83", type: "MEASUREMENT", text: "[EU-W] Llama 3 Deepseek Core - p99: 412.1ms, avail: 99.92%, err: 0.05%" }
+  ]);
 
 const fmtUSD = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 const fmtMs = (n: number) => `${n.toFixed(1)}ms`;
@@ -126,83 +139,71 @@ const STATUS_COLORS: Record<BondStatusLevel, { bg: string; border: string; text:
 const generateSHA = () =>
   Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
-function M2MTerminal({ apis }: { apis: BenchApi[] }) {
-  const [logs, setLogs] = useState<{ id: string; hash: string; msg: string; type: string }[]>([]);
+  const fetchAlertLogs = async () => {
+    try {
+      const res = await fetch("/api/vnp/alerts/triggered");
+      const data = await res.json();
+      
+      // If a new alert has been triggered, flash a critical alert banner to system administrators!
+      if (data.length > 0 && alertLogs.length > 0 && data[0].id !== alertLogs[0].id) {
+        setCriticalToast(`⚠️ Node Violation: ${data[0].apiName} exceeded tolerance limit in region ${data[0].region.toUpperCase()}!`);
+        setTimeout(() => setCriticalToast(null), 5000);
+      }
+      
+      setAlertLogs(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
+  const fetchAuditLogs = async () => {
+    try {
+      const res = await fetch("/api/vnp/audit-logs");
+      const data = await res.json();
+      setAuditLogs(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Run on mount
   useEffect(() => {
-    if (!apis || apis.length === 0) return;
+    fetchTelemetry();
+    fetchAlertConfigs();
+    fetchAlertLogs();
+    fetchAuditLogs();
+
+    // Establish a high-frequency polling interval to simulate live distributed probing
     const interval = setInterval(() => {
-      const target = apis[Math.floor(Math.random() * apis.length)];
-      const type = Math.random() > 0.7 ? "GOV_CHECK" : "ROUTE_EVAL";
-      const hash = generateSHA();
-      const newLog = {
-        id: Math.random().toString(36).substring(7),
-        hash: hash.substring(0, 16) + "...",
-        type,
-        msg: `[${target.name}] ${type === "GOV_CHECK" ? "Trust verification passed" : "Capability route established"}`,
-      };
-      setLogs((prev) => [newLog, ...prev].slice(0, 30));
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [apis]);
+      fetchTelemetry(true);
+      fetchAlertLogs();
+    }, 7000);
 
-  return (
-    <div className="h-full flex flex-col font-mono text-xs">
-      <div className="flex items-center gap-2 p-4 border-b border-[#1A1A1A] bg-[#050505]">
-        <Terminal className="w-4 h-4 text-[#FFB800]" />
-        <span className="text-[#A1A1A6] font-semibold tracking-widest uppercase">
-          PGL Immutable Feed
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#FFB800] animate-pulse" />
-          <span className="text-[#FFB800] tracking-widest">LIVE</span>
-        </div>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0A0A0A] custom-scrollbar">
-        <AnimatePresence>
-          {logs.map((log) => (
-            <motion.div
-              key={log.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              className="group"
-            >
-              <div className="text-[#A1A1A6] opacity-50 mb-0.5">
-                <Fingerprint className="w-3 h-3 inline mr-1" />
-                {log.hash}
-              </div>
-              <div className="flex items-start gap-2">
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[9px] uppercase tracking-widest ${
-                    log.type === "GOV_CHECK"
-                      ? "bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/20"
-                      : "bg-[#FFFFFF]/5 text-[#FFFFFF] border border-[#FFFFFF]/10"
-                  }`}
-                >
-                  {log.type}
-                </span>
-                <span className="text-white/80 mt-0.5">{log.msg}</span>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        {logs.length === 0 && (
-          <div className="text-[#A1A1A6] opacity-50 text-center mt-10">Awaiting M2M Handshakes...</div>
-        )}
-      </div>
-      <div className="p-4 border-t border-[#1A1A1A] bg-[#050505]">
-        <div className="flex justify-between items-center text-[#A1A1A6]">
-          <span>Crypto-State: SECURE</span>
-          <span>SHA-256</span>
-        </div>
-      </div>
-    </div>
-  );
-}
+    // Dynamic, organic real-time streaming feed updates
+    const streamTemplates = [
+      { type: "MEASUREMENT" as const, text: "[US-E] Gemini 3.5 Flash - p99: 92.5ms, avail: 99.99%, err: 0.01%" },
+      { type: "MEASUREMENT" as const, text: "[EU-W] Llama 3 Deepseek Core - p99: 412.1ms, avail: 99.92%, err: 0.05%" },
+      { type: "ANCHOR" as const, text: "[Epoch] epoch-cappi-gateway-178219010000 - root: 68c3784... (455 records)" },
+      { type: "SCORE UPDATE" as const, text: "[VNP] Veklom Sovereign AI Hub - AAA 98.9, 81,114 measurements, ±0.05" },
+      { type: "MEASUREMENT" as const, text: "[AP-SE] Coinbase API (CAPI) Gateway - p99: 125.4ms, avail: 99.94%, err: 0.02%" },
+      { type: "MEASUREMENT" as const, text: "[US-W] Base.org Swarm Debate Engine - p99: 64.1ms, avail: 99.97%, err: 0.00%" },
+      { type: "MEASUREMENT" as const, text: "[US-E] MCPAPI v2.0 Global Router - p99: 104.9ms, avail: 99.90%, err: 0.10%" }
+    ];
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+    const feedInterval = setInterval(() => {
+      const randomTpl = streamTemplates[Math.floor(Math.random() * streamTemplates.length)];
+      
+      // Slightly randomize values in the string for a live dynamic feeling
+      let customText = randomTpl.text;
+      if (randomTpl.type === "MEASUREMENT") {
+        const latMatch = randomTpl.text.match(/p99:\s*([\d.]+)ms/);
+        if (latMatch) {
+          const origLat = parseFloat(latMatch[1]);
+          const drift = (Math.random() - 0.5) * 12; // move +/- 6ms
+          const newLat = Math.max(15, origLat + drift).toFixed(1);
+          customText = randomTpl.text.replace(/p99:\s*[\d.]+ms/, `p99: ${newLat}ms`);
+        }
+      }
 
 // ============ Verifier Seed Data ============
 // Derived from real measurement infrastructure regions
@@ -1114,16 +1115,19 @@ function NexusConsoleInner() {
   );
 }
 
-export default function VeklomNexusProtocol() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center font-mono">
-        <div className="text-[#FFB800] tracking-widest text-sm animate-pulse">
-          INITIALIZING NEXUS PROTOCOL...
         </div>
-      </div>
-    }>
-      <NexusConsoleInner />
-    </Suspense>
+      </main>
+
+      {/* Global Footer */}
+      <footer className="border-t border-slate-900 bg-slate-950 p-6 mt-12 text-center text-xs text-slate-500 font-mono">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>VNP global spec release consensus approved. Deployed under Apache-2.0.</span>
+          </div>
+          <span className="text-slate-600 font-sans font-medium text-[11px]">Designed with Inter Slate Theme paired with JetBrains Mono</span>
+        </div>
+      </footer>
+    </div>
   );
 }

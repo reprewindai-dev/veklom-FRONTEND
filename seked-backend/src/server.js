@@ -7,8 +7,10 @@ const compression = require('compression');
 require('dotenv').config();
 
 const { PrismaClient } = require('@prisma/client');
-const { createHash } = require('crypto');
+const { createHash, createHmac } = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
+const Joi = require('joi');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -16,7 +18,27 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS Configuration
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000'];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined'));
@@ -27,7 +49,27 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: { error: 'Too many requests from this IP' }
 });
-app.use('/api/', limiter);
+app.use('/', limiter);
+
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.status(401).json({ error: 'Unauthorized: No token provided' });
+
+  if (!process.env.JWT_SECRET) {
+    console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+    return res.status(500).json({ error: 'Internal Server Error: Missing authentication configuration' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    req.user = user;
+    next();
+  });
+}
+
 
 // SEKED v1.0 Constants
 const SEKED_SPECIFICATION_VERSION = "1.0";
@@ -97,9 +139,40 @@ function createSekedFingerprint(state) {
   return createHash('sha256').update(stateString).digest('hex');
 }
 
+function generateIdentitySignature(identity) {
+  const secret = process.env.SEKED_SIGNATURE_SECRET || process.env.JWT_SECRET || 'seked-dev-secret-key';
+
+  if (process.env.NODE_ENV === 'production' && !process.env.SEKED_SIGNATURE_SECRET && !process.env.JWT_SECRET) {
+    throw new Error('Missing SEKED_SIGNATURE_SECRET or JWT_SECRET environment variable in production');
+  }
+
+  // Create a copy to avoid mutating the original
+  const signablePayload = { ...identity };
+
+  // Remove fields that shouldn't be part of the signature calculation
+  delete signablePayload.signature;
+  delete signablePayload.hash;
+
+  // Sort keys for consistent stringification
+  const sortedPayload = {};
+  Object.keys(signablePayload).sort().forEach(key => {
+    // Handle Dates properly
+    if (signablePayload[key] instanceof Date) {
+      sortedPayload[key] = signablePayload[key].toISOString();
+    } else {
+      sortedPayload[key] = signablePayload[key];
+    }
+  });
+
+  return createHmac('sha256', secret)
+    .update(JSON.stringify(sortedPayload))
+    .digest('hex');
+}
+
 // Validation Middleware
 function validateSekedMeasurement(req, res, next) {
-  const { E, R, C, D, S } = req.body;
+  const measurementSource = req.body.measurement || req.body;
+  const { E, R, C, D, S } = measurementSource;
   
   if ([E, R, C, D, S].some(val => typeof val !== 'number' || val < 0 || val > 9)) {
     return res.status(400).json({ 
@@ -219,7 +292,21 @@ app.post('/verify', async (req, res) => {
 });
 
 // Policy Management
-app.get('/policies', async (req, res) => {
+const policySchema = Joi.object({
+  name: Joi.string().required(),
+  sigma_threshold: Joi.number().required(),
+  ci_threshold: Joi.number().required(),
+  si_threshold: Joi.number().required(),
+  action_rules: Joi.object().pattern(
+    Joi.string(),
+    Joi.object({
+      action: Joi.string().valid('RUN', 'HOLD', 'BLOCK', 'RECOVER').required(),
+      delay_seconds: Joi.number().integer().min(0).required()
+    })
+  ).required()
+});
+
+app.get('/policies', authenticateToken, async (req, res) => {
   try {
     const policies = await prisma.policy.findMany({
       orderBy: { created_at: 'desc' }
@@ -230,9 +317,14 @@ app.get('/policies', async (req, res) => {
   }
 });
 
-app.post('/policies', async (req, res) => {
+app.post('/policies', authenticateToken, async (req, res) => {
   try {
-    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = req.body;
+    const { error, value } = policySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = value;
     
     const policy = await prisma.policy.create({
       data: {
@@ -250,7 +342,7 @@ app.post('/policies', async (req, res) => {
   }
 });
 
-app.get('/policies/:id', async (req, res) => {
+app.get('/policies/:id', authenticateToken, async (req, res) => {
   try {
     const policy = await prisma.policy.findUnique({
       where: { id: req.params.id }
@@ -266,9 +358,14 @@ app.get('/policies/:id', async (req, res) => {
   }
 });
 
-app.put('/policies/:id', async (req, res) => {
+app.put('/policies/:id', authenticateToken, async (req, res) => {
   try {
-    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = req.body;
+    const { error, value } = policySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { name, sigma_threshold, ci_threshold, si_threshold, action_rules } = value;
     
     const policy = await prisma.policy.update({
       where: { id: req.params.id },
@@ -287,7 +384,7 @@ app.put('/policies/:id', async (req, res) => {
   }
 });
 
-app.delete('/policies/:id', async (req, res) => {
+app.delete('/policies/:id', authenticateToken, async (req, res) => {
   try {
     await prisma.policy.delete({
       where: { id: req.params.id }
@@ -301,6 +398,8 @@ app.delete('/policies/:id', async (req, res) => {
 
 // ExecutionIdentityV1 minting
 function mintExecutionIdentity(runData, sekedState, pglCertificate) {
+  const expiresAt = new Date(Date.now() + (runData.ttl_seconds || 3600) * 1000).toISOString();
+
   const executionIdentity = {
     execution_id: uuidv4(),
     run_id: runData.run_id,
@@ -320,18 +419,29 @@ function mintExecutionIdentity(runData, sekedState, pglCertificate) {
     budget_reserve_cents: runData.budget_reserve_cents || null,
     delegation_depth: runData.delegation_depth || 0,
     ttl_seconds: runData.ttl_seconds || 3600,
-    expires_at: new Date(Date.now() + (runData.ttl_seconds || 3600) * 1000).toISOString(),
+    expires_at: expiresAt,
     scope_json: runData.scope || {},
     human_attestation_hash: runData.human_attestation_hash || null,
     ai_attestation_hash: runData.ai_attestation_hash || null,
     execution_attestation_hash: null,
     issuer: "seked-control-plane",
     issued_at: new Date().toISOString(),
-    signature: "signed-by-seked", // In production, use actual cryptographic signing
+    signature: "",
     hash: ""
   };
   
-  executionIdentity.hash = createSekedFingerprint(executionIdentity);
+  executionIdentity.signature = generateIdentitySignature(executionIdentity);
+  executionIdentity.hash = createSekedFingerprint({
+    execution_id: executionIdentity.execution_id,
+    run_id: executionIdentity.run_id,
+    workspace_id: executionIdentity.workspace_id,
+    pgl_pre_certificate_id: executionIdentity.pgl_pre_certificate_id,
+    seked_attestation_hash: executionIdentity.seked_attestation_hash,
+    directive: executionIdentity.directive,
+    expires_at: executionIdentity.expires_at,
+    issuer: executionIdentity.issuer,
+    signature: executionIdentity.signature
+  });
   return executionIdentity;
 }
 
@@ -344,12 +454,13 @@ app.post('/decision', validateSekedMeasurement, async (req, res) => {
     const ratios = calculateSekedRatios(measurement);
     const directive = getDirective(ratios.sigma);
     
+    const updatedMeasurement = { ...measurement, timestamp: new Date().toISOString() };
     const sekedState = await prisma.sekedState.create({
       data: {
-        measurement: { ...measurement, timestamp: new Date().toISOString() },
+        measurement: updatedMeasurement,
         ratios,
         directive,
-        fingerprint: createSekedFingerprint({ measurement, ratios, directive })
+        fingerprint: createSekedFingerprint({ measurement: updatedMeasurement, ratios, directive })
       }
     });
     
@@ -361,24 +472,32 @@ app.post('/decision', validateSekedMeasurement, async (req, res) => {
           { ci_threshold: { lte: ratios.ci } },
           { si_threshold: { lte: ratios.si } }
         ]
+      },
+      orderBy: {
+        sigma_threshold: 'desc'
       }
     });
     
     // Make decision
-    let action = directive.action_type;
-    let delaySeconds = 0;
+    let action = 'HOLD';
+    let delaySeconds = 15;
     
-    if (action === 'EXECUTE') {
-      action = 'RUN';
-    } else if (action === 'RECOVER') {
-      action = 'HOLD';
-      delaySeconds = 30;
-    } else if (action === 'ESCALATE') {
-      action = 'BLOCK';
-      delaySeconds = 0;
+    if (policy && policy.action_rules && policy.action_rules[directive.action_type]) {
+      const rule = policy.action_rules[directive.action_type];
+      action = rule.action || action;
+      delaySeconds = rule.delay_seconds !== undefined ? rule.delay_seconds : delaySeconds;
     } else {
-      action = 'HOLD';
-      delaySeconds = 15;
+      // Fallback
+      if (directive.action_type === 'EXECUTE') {
+        action = 'RUN';
+        delaySeconds = 0;
+      } else if (directive.action_type === 'RECOVER') {
+        action = 'HOLD';
+        delaySeconds = 30;
+      } else if (directive.action_type === 'ESCALATE') {
+        action = 'BLOCK';
+        delaySeconds = 0;
+      }
     }
     
     // Create proof
@@ -393,9 +512,19 @@ app.post('/decision', validateSekedMeasurement, async (req, res) => {
       }
     });
     
+    // Create decision request
+    const decisionRequest = await prisma.decisionRequest.create({
+      data: {
+        job_id,
+        measurement: updatedMeasurement,
+        context
+      }
+    });
+
     // Create decision
     const decision = await prisma.decision.create({
       data: {
+        request_id: decisionRequest.id,
         job_id,
         action,
         delay_seconds: delaySeconds,
@@ -556,6 +685,19 @@ app.post('/mcp-gateway/validate', async (req, res) => {
       });
     }
     
+    // Verify signature
+    const expectedSignature = generateIdentitySignature(identity);
+    const signatureBuffer = Buffer.from(identity.signature || '', 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (signatureBuffer.length !== expectedBuffer.length || !require('crypto').timingSafeEqual(signatureBuffer, expectedBuffer)) {
+      return res.status(403).json({
+        error: "INVALID_SIGNATURE",
+        detail: "ExecutionIdentityV1 signature verification failed",
+        law0: true
+      });
+    }
+
     // Check scope coverage
     const scope = identity.scope_json;
     if (scope.allowed_tools && !scope.allowed_tools.includes(tool_name)) {
@@ -657,9 +799,9 @@ app.get('/agents', async (req, res) => {
 app.post('/agents/:id/state', validateSekedMeasurement, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, performance_metrics } = req.body;
+    const { name, performance_metrics, E, R, C, D, S } = req.body;
     
-    const measurement = { ...req.body, timestamp: new Date().toISOString() };
+    const measurement = { E, R, C, D, S, timestamp: new Date().toISOString() };
     const ratios = calculateSekedRatios(measurement);
     const directive = getDirective(ratios.sigma);
     
@@ -704,16 +846,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// Export app before start
+module.exports = app;
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`SEKED Control Plane running on port ${PORT}`);
-  console.log(`SEKED v1.0 Specification - Fingerprint: ${SEKED_CANONICAL_FINGERPRINT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`SEKED Control Plane running on port ${PORT}`);
+    console.log(`SEKED v1.0 Specification - Fingerprint: ${SEKED_CANONICAL_FINGERPRINT}`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
-
-module.exports = app;

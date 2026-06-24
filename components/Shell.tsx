@@ -15,7 +15,8 @@ const GROUP_TITLES: Record<string, string> = {
   overview: "Network",
   build: "Build",
   run: "Run",
-  marketplace: "Veklom Nexus",
+  nexus: "Veklom Nexus",
+  ecosystem: "Staking & Protocol",
   govern: "Zero-Trust",
   workspace: "Treasury",
   admin: "Global",
@@ -142,15 +143,18 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen grid place-items-center">
         <div className="flex items-center gap-3 text-ink-400 text-sm">
-          <span className="spinner" /> Loading your control plane…
+          <span className="spinner" /> Loading your control plane...
         </div>
       </div>
     );
   }
-  if (!me) return null;
+
+  if (!me) return null; // redirect in-flight
+
+  const activeUser = me;
 
   const groups = modulesByGroup();
-  const orderedGroups: Array<keyof typeof groups> = ["overview", "build", "marketplace", "run", "insights", "govern", "workspace", "admin"];
+  const orderedGroups: Array<keyof typeof groups> = ["overview", "build", "run", "nexus", "ecosystem", "insights", "govern", "workspace", "admin"];
 
   return (
     <div className="min-h-screen flex">
@@ -165,7 +169,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 overflow-y-auto scroll-thin space-y-5 pr-1">
           {orderedGroups.map((g) => {
             if (!groups[g]) return null;
-            if (g === "admin" && !me.is_superuser) return null;
+            if (g === "admin" && !activeUser.is_superuser) return null;
             return (
               <div key={g}>
                 <div className="px-2 text-[9px] uppercase tracking-[0.18em] text-ink-600 mb-1.5 font-semibold">
@@ -229,7 +233,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-20 h-14 border-b border-border glass flex items-center px-4 gap-3">
           {/* Env chips */}
           <div className="hidden md:flex items-center gap-1.5">
-            <EnvChip>{(me.org_name || me.org_id || (me.email || "").split("@")[0] || "workspace").toUpperCase()}</EnvChip>
+            <EnvChip>{(activeUser.org_name || activeUser.org_id || (activeUser.email || "").split("@")[0] || "workspace").toUpperCase()}</EnvChip>
             <EnvChip>EU · SOVEREIGN</EnvChip>
           </div>
 
@@ -248,9 +252,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <span className="w-px h-5 bg-border hidden sm:block" />
             <div className="hidden sm:flex items-center gap-2 min-w-0">
               <div className="w-7 h-7 rounded-full bg-brand-500/15 border border-brand-500/30 grid place-items-center text-[11px] font-bold text-brand-400 shrink-0">
-                {(me.email || "?").charAt(0).toUpperCase()}
+                {(activeUser.email || "?").charAt(0).toUpperCase()}
               </div>
-              <span className="text-xs text-ink-300 truncate max-w-[140px]">{me.email}</span>
+              <span className="text-xs text-ink-300 truncate max-w-[140px]">{activeUser.email}</span>
             </div>
             <button
               onClick={logout}

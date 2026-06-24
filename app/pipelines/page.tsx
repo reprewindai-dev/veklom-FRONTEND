@@ -11,10 +11,10 @@ import { Button, Skeleton, Table } from "@/components/ui";
 import { ModuleHeader, SectionCard, Pill, RoutePill } from "@/components/telemetry";
 import PipelineCanvas, { PNode, PEdge, CAT_COLOR } from "@/components/PipelineCanvas";
 import { unwrapList } from "@/types/api";
-import { Play, Rocket, Plus, Save, Search, Cpu, Settings2, History, Library, ShieldCheck, LayoutTemplate, AlertTriangle } from "lucide-react";
+import { Play, Rocket, Plus, Save, Search, Cpu, Settings2, History, Library, ShieldCheck, LayoutTemplate, AlertTriangle, Bot, Sparkles } from "lucide-react";
 
 const RUN_STAGES = ["Source", "Build", "Validate", "Test", "Stage", "Gate", "Deploy"];
-type PanelTab = "library" | "inspector" | "templates" | "runs";
+type PanelTab = "library" | "inspector" | "templates" | "runs" | "copilot";
 type CatalogCertification = {
   status?: string;
   adapter?: string;
@@ -142,6 +142,8 @@ export default function PipelinesPage() {
   const [running, setRunning] = useState(false);
   const [stageStatus, setStageStatus] = useState<Record<string, string>>({});
   const [runMsg, setRunMsg] = useState<string>();
+  const [gpcIntent, setGpcIntent] = useState("");
+  const [buildingGpc, setBuildingGpc] = useState(false);
 
   const list = unwrapList<any>(pipelines.data);
   const current = list.find((p) => p.id === pid) || list[0];
@@ -255,10 +257,19 @@ export default function PipelinesPage() {
         const parts = buf.split("\n\n");
         buf = parts.pop() || "";
         for (const part of parts) {
-          const line = part.split("\n").find((l) => l.startsWith("data:"));
-          if (!line) continue;
+          let dataIdx = part.indexOf("\ndata:");
+          if (dataIdx !== -1) {
+            dataIdx += 1;
+          } else if (part.startsWith("data:")) {
+            dataIdx = 0;
+          }
+          if (dataIdx === -1) continue;
+
+          const endIdx = part.indexOf("\n", dataIdx);
+          const dataStr = endIdx === -1 ? part.slice(dataIdx + 5) : part.slice(dataIdx + 5, endIdx);
+
           let ev: any;
-          try { ev = JSON.parse(line.slice(5).trim()); } catch { continue; }
+          try { ev = JSON.parse(dataStr.trim()); } catch { continue; }
           if (ev.stage) setStageStatus((s) => ({ ...s, [ev.stage]: ev.type === "step.completed" ? "completed" : "running" }));
           if (ev.type === "run.completed") {
             setStageStatus(Object.fromEntries(RUN_STAGES.map((s) => [s, "completed"])));
@@ -292,6 +303,27 @@ export default function PipelinesPage() {
     const created = await api<any>("/api/v1/pipelines", { method: "POST", body: { name, template: "Custom", vectorStore: "pgvector" } });
     await pipelines.mutate();
     if (created?.id) setPid(created.id);
+  }
+
+  async function buildWithGpc() {
+    const intent = window.prompt("Describe the pipeline you want the AI to build:", "An input that goes to a vector search then is answered by an LLM");
+    if (!intent) return;
+    setBuildingGpc(true);
+    try {
+      const created = await api<any>("/api/v1/gpc/intent-to-plan", { 
+        method: "POST", 
+        body: { intent, provider: "ollama", model: "qwen2.5:3b" } 
+      });
+      await pipelines.mutate();
+      if (created?.id) {
+        setPid(created.id);
+        setPanelTab("library");
+      }
+    } catch (e) {
+      alert("Failed to build pipeline via GPC.");
+    } finally {
+      setBuildingGpc(false);
+    }
   }
 
   async function applyTemplate(templateId: string) {
@@ -354,6 +386,7 @@ export default function PipelinesPage() {
           actions={<>
             <Button variant="ghost" onClick={() => setPanelTab("templates")}><LayoutTemplate size={14} /> Templates</Button>
             <Button variant="ghost" onClick={newPipeline}><Plus size={14} /> New pipeline</Button>
+            <Button onClick={buildWithGpc} loading={buildingGpc}><Rocket size={14} /> GPC Auto-Build</Button>
           </>}
         />
 
@@ -424,9 +457,10 @@ export default function PipelinesPage() {
 
           {/* Node palette / inspector */}
           <SectionCard label="Library" title="Nodes" className="self-start">
-            <div className="grid grid-cols-4 gap-1 mb-3 rounded-lg border border-border bg-bg-900 p-1">
+            <div className="grid grid-cols-5 gap-1 mb-3 rounded-lg border border-border bg-bg-900 p-1">
               <PanelTabButton active={panelTab === "library"} onClick={() => setPanelTab("library")} title="Library"><Library size={13} /></PanelTabButton>
               <PanelTabButton active={panelTab === "inspector"} onClick={() => setPanelTab("inspector")} title="Inspector"><Settings2 size={13} /></PanelTabButton>
+              <PanelTabButton active={panelTab === "copilot"} onClick={() => setPanelTab("copilot")} title="Copilot"><Bot size={13} /></PanelTabButton>
               <PanelTabButton active={panelTab === "templates"} onClick={() => setPanelTab("templates")} title="Templates"><LayoutTemplate size={13} /></PanelTabButton>
               <PanelTabButton active={panelTab === "runs"} onClick={() => setPanelTab("runs")} title="Runs"><History size={13} /></PanelTabButton>
             </div>
@@ -450,25 +484,32 @@ export default function PipelinesPage() {
                             <span className="text-[10px] uppercase tracking-wider text-ink-600 font-semibold">{cat.label}</span>
                           </div>
                           <div className="grid grid-cols-1 gap-1.5">
-                            {ns.map((n: any) => (
-                              <button key={n.id} onClick={() => addNode(cat.id, n)}
-                                className="group flex items-center gap-2 rounded-lg border border-border bg-white/[0.02] hover:border-ink-600 hover:bg-white/[0.04] px-2.5 py-1.5 text-left transition">
-                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: CAT_COLOR[cat.id] || CAT_COLOR.input }} />
-                                <span className="min-w-0">
-                                  <span className="flex items-center gap-1.5 text-[12px] text-ink-50">
-                                    <span className="truncate">{n.name}</span>
-                                    <span className={clsx(
-                                      "rounded border px-1 py-0.5 text-[8px] uppercase leading-none shrink-0",
-                                      n.certification?.status === "real" ? "border-accent-green/30 bg-accent-green/10 text-accent-green"
-                                      : n.certification?.status === "unsafe" ? "border-accent-red/30 bg-accent-red/10 text-accent-red"
-                                      : "border-brand-500/30 bg-brand-500/10 text-brand-400"
-                                    )}>{n.certification?.status || "real"}</span>
+                            {ns.map((n: any) => {
+                              const isPremium = ["pgl-register", "x402-payment-gate", "audit-signer", "policy-gate", "repo-risk-gate", "evidence-receipt", "capi-invoke", "quantum-terminal"].includes(n.id);
+                              return (
+                                <button key={n.id} onClick={() => addNode(cat.id, n)}
+                                  className={clsx(
+                                    "group flex items-center gap-2 rounded-lg border bg-white/[0.02] px-2.5 py-1.5 text-left transition",
+                                    isPremium ? "border-brand-500/50 hover:bg-brand-500/10 hover:border-brand-400" : "border-border hover:border-ink-600 hover:bg-white/[0.04]"
+                                  )}>
+                                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: CAT_COLOR[cat.id] || CAT_COLOR.input }} />
+                                  <span className="min-w-0 flex-1">
+                                    <span className="flex items-center gap-1.5 text-[12px] text-ink-50">
+                                      <span className="truncate">{n.name}</span>
+                                      {isPremium && <Sparkles size={10} className="text-brand-400 shrink-0" />}
+                                      <span className={clsx(
+                                        "rounded border px-1 py-0.5 text-[8px] uppercase leading-none shrink-0 ml-auto",
+                                        n.certification?.status === "real" ? "border-accent-green/30 bg-accent-green/10 text-accent-green"
+                                        : n.certification?.status === "unsafe" ? "border-accent-red/30 bg-accent-red/10 text-accent-red"
+                                        : "border-brand-500/30 bg-brand-500/10 text-brand-400"
+                                      )}>{n.certification?.status || "real"}</span>
+                                    </span>
+                                    <span className="block text-[10px] text-ink-600 truncate">{n.description}</span>
                                   </span>
-                                  <span className="block text-[10px] text-ink-600 truncate">{n.description}</span>
-                                </span>
-                                <Plus size={12} className="ml-auto text-ink-600 group-hover:text-brand-400 shrink-0" />
-                              </button>
-                            ))}
+                                  <Plus size={12} className={clsx("shrink-0", isPremium ? "text-brand-400" : "text-ink-600 group-hover:text-brand-400")} />
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -524,6 +565,67 @@ export default function PipelinesPage() {
                   )) : (
                     <div className="rounded-lg border border-border bg-white/[0.02] p-3 text-xs text-ink-500">No runs recorded for this pipeline yet.</div>
                   )}
+              </div>
+            )}
+
+            {panelTab === "copilot" && (
+              <div className="space-y-3 max-h-[520px] overflow-y-auto scroll-thin pr-1">
+                <div className="flex items-center gap-2 px-1 mb-2">
+                  <Bot size={16} className="text-brand-400" />
+                  <span className="text-sm font-semibold text-brand-400">Insight Copilot</span>
+                </div>
+                
+                {nodes.length === 0 ? (
+                  <div className="rounded-lg border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-100 flex items-start gap-2">
+                    <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-400" />
+                    <div>
+                      <span className="font-semibold block text-brand-300">Start Building</span>
+                      Drag an <b>Input</b> node from the Library to begin constructing your pipeline.
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {!nodes.some(n => n.cat === "input") && (
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-start gap-2">
+                        <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-400" />
+                        <div>
+                          <span className="font-semibold block text-amber-400">Missing Input</span>
+                          Your pipeline requires an initial data source. Add an <b>Input</b> or <b>Document Loader</b> node.
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!nodes.some(n => n.cat === "output") && (
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-start gap-2">
+                        <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-400" />
+                        <div>
+                          <span className="font-semibold block text-amber-400">Missing Output</span>
+                          Your pipeline has no designated output. Consider adding a <b>JSON Formatter</b> or an <b>Audit Logger</b>.
+                        </div>
+                      </div>
+                    )}
+
+                    {!nodes.some(n => ["policy-gate", "x402-payment-gate", "pgl-register", "audit-signer", "repo-risk-gate", "capi-invoke", "quantum-terminal"].includes(n.nodeType)) && (
+                      <div className="rounded-lg border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-100 flex items-start gap-2">
+                        <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-400" />
+                        <div>
+                          <span className="font-semibold block text-brand-300">Veklom Edge Recommendation</span>
+                          Maximize your infrastructure! Secure this pipeline by adding a <b>Policy Gate</b>, or achieve literal UBC closed-loop sovereignty by connecting a <b>cAPI Node</b> or <b>Quantum Terminal</b>.
+                        </div>
+                      </div>
+                    )}
+
+                    {nodes.some(n => n.cat === "input") && nodes.some(n => n.cat === "output") && (
+                      <div className="rounded-lg border border-accent-green/30 bg-accent-green/10 p-3 text-xs text-accent-green flex items-start gap-2">
+                        <ShieldCheck size={14} className="mt-0.5 shrink-0" />
+                        <div>
+                          <span className="font-semibold block">End-to-End Ready</span>
+                          Your pipeline has clear inputs and outputs. You can deploy it to production when ready.
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </SectionCard>
@@ -593,6 +695,8 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "human-approval") return { status: "pending", approval_id: "", approved_by: "", policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "deploy-endpoint" || nodeType === "deploy-agent") return { policy: "sovereign_default", requireEvidence: true };
   if (nodeType === "lock-engine") return { scope: "pipeline_execution_contract", policy: "sovereign_default", requireEvidence: true };
+  if (nodeType === "capi-invoke") return { capi_node_id: "capi-edge-1", allow_autonomous_compute: true, policy: "sovereign_default", requireEvidence: true } as any;
+  if (nodeType === "quantum-terminal") return { allow_shell: true, enforce_sandbox: false, default_dir: "/data", policy: "sovereign_default", requireEvidence: true } as any;
   if (["agent-node", "supervisor-agent", "critic-agent", "planner-agent"].includes(nodeType)) return {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
@@ -616,7 +720,7 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
     system_prompt: "You are a governed Veklom ReAct agent. Use approved tools only and return enterprise-ready output.",
-    tools_allowed: ["marketplace_tool"],
+    tools_allowed: ["nexus_tool"],
     blocked_tools: ["code_executor"],
     max_iterations: 3,
     timeout_seconds: 45,
@@ -635,7 +739,7 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
     requireEvidence: true,
   };
   if (nodeType === "lc-memory") return { policy: "inherit", requireEvidence: true };
-  if (nodeType === "lc-toolnode") return { tools_allowed: ["marketplace_tool"], policy: "tool_allowlist", requireEvidence: true };
+  if (nodeType === "lc-toolnode") return { tools_allowed: ["nexus_tool"], policy: "tool_allowlist", requireEvidence: true };
   if (nodeType === "lc-retrievalqa") return {
     model_provider: "ollama",
     model_name: "qwen2.5:3b",
@@ -689,7 +793,7 @@ function defaultNodeConfig(catId: string, nodeType: string): NodeConfig {
   if (nodeType === "http-call") return { method: "GET", url: "", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 2000 };
   if (nodeType === "web-search") return { query: "", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 3000 };
   if (nodeType === "sql-query") return { query: "select 1 as ok", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 2000 };
-  if (nodeType === "marketplace-tool") return { query: "governance", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 1200 };
+  if (nodeType === "nexus-tool") return { query: "governance", policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 1200 };
   if (catId === "tools") return { policy: "tool_allowlist", requireEvidence: true, maxLatencyMs: 2000 };
   return { policy: "inherit", requireEvidence: true };
 }
@@ -753,7 +857,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
   const isModelBacked = isLangChainAgent || isAgentModel || node.nodeType === "lc-retrievalqa" || node.nodeType.startsWith("llm-") || node.nodeType.startsWith("embed-");
   const acceptsText = ["input", "doc-loader", "file-read"].includes(node.nodeType);
   const acceptsUrl = ["doc-loader", "file-read", "http-call", "custom-http", "webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event", "qdrant", "weaviate"].includes(node.nodeType);
-  const acceptsQuery = ["web-search", "sql-query", "marketplace-tool", "reranker", "hybrid-search"].includes(node.nodeType);
+  const acceptsQuery = ["web-search", "sql-query", "nexus-tool", "reranker", "hybrid-search"].includes(node.nodeType);
   const acceptsHttp = ["http-call", "custom-http", "webhook", "webhook-output", "email-send", "slack-send", "discord-send", "github-action", "jira-action", "pagerduty-event", "stripe-event"].includes(node.nodeType);
   const isVectorStore = ["pgvector", "qdrant", "weaviate"].includes(node.nodeType);
   const isRoutingConfig = ["cost-router", "fallback", "load-balancer", "classifier", "semantic-router"].includes(node.nodeType);
@@ -868,7 +972,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
               </Control>
             </div>
             <Control label="Auth token">
-              <input className="input h-8 text-xs" type="password" value={config.auth_token || ""} onChange={(e) => onChange({ auth_token: e.target.value })} placeholder="Bearer token" />
+              <input className="input h-8 text-xs" type="password" value={config.auth_token || ""} onChange={(e) => onChange({ auth_token: e.target.value })} placeholder="Enter auth token" />
             </Control>
             <JsonConfigControl label="Headers" field="headers" value={config.headers || {}} onChange={onChange} />
             <JsonConfigControl label="Payload template" field="payload_template" value={config.payload_template || { result: "$.result", audit_hash: "$.audit_hash", cost: "$.cost" }} onChange={onChange} />
@@ -1133,7 +1237,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
             <div>
               <span className="text-[10px] uppercase tracking-wider text-ink-600">Allowed tools</span>
               <div className="grid grid-cols-2 gap-1.5 mt-1">
-                {["web_search", "http_request", "sql_query", "file_reader", "marketplace_tool", "code_executor"].map((tool) => (
+                {["web_search", "http_request", "sql_query", "file_reader", "nexus_tool", "code_executor"].map((tool) => (
                   <label key={tool} className="flex items-center gap-2 rounded-md border border-border bg-bg-900 px-2 py-1.5 text-[10px] text-ink-300">
                     <input type="checkbox" checked={allowedTools.includes(tool)} onChange={() => toggleTool(tool)} />
                     <span className="truncate">{tool}</span>
@@ -1144,7 +1248,7 @@ function NodeInspector({ node, config, onChange }: { node: PNode; config: NodeCo
             <div>
               <span className="text-[10px] uppercase tracking-wider text-ink-600">Blocked tools</span>
               <div className="grid grid-cols-2 gap-1.5 mt-1">
-                {["web_search", "http_request", "sql_query", "file_reader", "marketplace_tool", "code_executor"].map((tool) => (
+                {["web_search", "http_request", "sql_query", "file_reader", "nexus_tool", "code_executor"].map((tool) => (
                   <label key={tool} className="flex items-center gap-2 rounded-md border border-border bg-bg-900 px-2 py-1.5 text-[10px] text-ink-300">
                     <input type="checkbox" checked={blockedTools.includes(tool)} onChange={() => toggleBlockedTool(tool)} />
                     <span className="truncate">{tool}</span>
