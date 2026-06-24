@@ -2,7 +2,6 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Shield, Globe, Zap, Server, Activity, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import InteractiveLandingTerminal from "@/components/terminal/InteractiveLandingTerminal";
@@ -20,7 +19,6 @@ const staggerContainer = {
 };
 
 export default function Home() {
-  const router = useRouter();
 
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden selection:bg-blue-500/30">
