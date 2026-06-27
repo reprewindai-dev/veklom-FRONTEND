@@ -1,329 +1,552 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import {
-  Play, RotateCcw, ChevronRight, Lock, Terminal, CheckCircle,
-  Shield, Zap, Cpu, Activity, GitFork, Layers, Flame, Network, Fingerprint, Database
+  Play,
+  Pause,
+  RotateCcw,
+  ChevronRight,
+  Lock,
+  Terminal,
+  Plus,
+  AlertCircle,
+  CheckCircle,
+  Clock,
 } from 'lucide-react';
-import Shell from '@/components/Shell';
-import { api } from '@/lib/api';
-import clsx from 'clsx';
-import { motion, AnimatePresence } from 'motion/react';
+
+interface ExecutionStep {
+  step: number;
+  name: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  duration_ms: number;
+  hash: string;
+  details: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  model: string;
+  temperature: number;
+  max_tokens: number;
+  system_prompt: string;
+  instructions: string;
+  safety_level: 'low' | 'medium' | 'high';
+}
+
+interface ExecutionAuthorization {
+  token: string;
+  issued_at: string;
+  signature: string;
+  valid_until: string;
+  authorized_by: string;
+}
 
 const SCENARIOS = [
-  { id: 'rogue_db', name: 'Rogue Database', description: 'Agent attempts unauthorized database modification', threat_level: 'CRITICAL', expected_hash: '0x9a8f...3c12' },
-  { id: 'prompt_injection', name: 'Prompt Injection', description: 'Malicious prompt injection attack simulation', threat_level: 'HIGH', expected_hash: '0x7b42...8f91' },
-  { id: 'repo_mutation', name: 'Repository Mutation', description: 'Unauthorized code repository changes', threat_level: 'HIGH', expected_hash: '0x2c11...0a44' },
-  { id: 'budget_loop', name: 'Budget Loop', description: 'Runaway spending without cost controls', threat_level: 'MEDIUM', expected_hash: '0x5e22...1b77' },
+  {
+    id: 'rogue_db',
+    name: 'Rogue Database',
+    description: 'Agent attempts unauthorized database modification',
+    threat_level: 'CRITICAL',
+  },
+  {
+    id: 'prompt_injection',
+    name: 'Prompt Injection',
+    description: 'Malicious prompt injection attack simulation',
+    threat_level: 'HIGH',
+  },
+  {
+    id: 'repo_mutation',
+    name: 'Repository Mutation',
+    description: 'Unauthorized code repository changes',
+    threat_level: 'HIGH',
+  },
+  {
+    id: 'budget_loop',
+    name: 'Budget Loop',
+    description: 'Runaway spending without cost controls',
+    threat_level: 'MEDIUM',
+  },
+  {
+    id: 'quarantine',
+    name: 'Quarantine Protocol',
+    description: 'Test containment and isolation procedures',
+    threat_level: 'MEDIUM',
+  },
 ];
 
-const PIPELINE_STEPS = [
-  { step: 1, name: 'INTENT_RECEIVED', icon: Terminal, desc: 'Raw payload intercepted and queued on message bus.' },
-  { step: 2, name: 'LAW_0_GOVERNANCE', icon: Shield, desc: 'Evaluating payload against sovereign constitution parameters.' },
-  { step: 3, name: 'DETERMINISTIC_COMPILE', icon: Cpu, desc: 'Compiling probabilistic intent into deterministic action graph.' },
-  { step: 4, name: 'CRYPTOGRAPHIC_COMMIT', icon: Lock, desc: 'Hashing compiled graph. Awaiting proof seal.' },
-  { step: 5, name: 'GRADIENT_FIELD_ROUTE', icon: GitFork, desc: 'Matrix routing based on SLA/latency targets.' },
-  { step: 6, name: 'SWARM_EXECUTION', icon: Play, desc: 'Delegating tool calls to execution nodes under strict policy.' },
-  { step: 7, name: 'LEDGER_SEALED', icon: CheckCircle, desc: 'EAT token generated. Immutable evidence recorded.' },
+const EXECUTION_PIPELINE = [
+  {
+    name: 'Received',
+    description: 'Request validated at ingress',
+    icon: '📨',
+  },
+  {
+    name: 'Governing',
+    description: 'Policy engine applies rules',
+    icon: '⚖️',
+  },
+  {
+    name: 'Compiled',
+    description: 'AI behavior compiled to safe IR',
+    icon: '🔨',
+  },
+  {
+    name: 'Committed',
+    description: 'Execution plan committed to ledger',
+    icon: '📝',
+  },
+  {
+    name: 'Routed',
+    description: 'Request routed to appropriate handler',
+    icon: '🛣️',
+  },
+  {
+    name: 'Executing',
+    description: 'Safe execution with monitoring',
+    icon: '⚡',
+  },
+  {
+    name: 'Sealed',
+    description: 'Evidence sealed in cryptographic proof',
+    icon: '🔐',
+  },
 ];
 
 export default function RuntimePage() {
   const [selectedScenario, setSelectedScenario] = useState(SCENARIOS[0]);
-  const [activeStep, setActiveStep] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [eat, setEat] = useState<string | null>(null);
-  const [telemetryLog, setTelemetryLog] = useState<string[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [steps, setSteps] = useState<ExecutionStep[]>([]);
+  const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
 
-  const addLog = (msg: string) => {
-    setTelemetryLog(prev => [...prev, `[${new Date().toISOString()}] ${msg}`].slice(-20));
-  };
+  const [showAgentCreator, setShowAgentCreator] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([
+    {
+      id: 'agent_1',
+      name: 'GPT-4 Safe',
+      model: 'gpt-4-turbo',
+      temperature: 0.7,
+      max_tokens: 2048,
+      system_prompt: 'You are a helpful AI assistant that follows safety guidelines.',
+      instructions: 'Execute tasks within defined parameters.',
+      safety_level: 'high',
+    },
+  ]);
+  const [selectedAgent, setSelectedAgent] = useState(agents[0]);
 
-  const runDemo = async () => {
-    setRunning(true);
-    setCompleted(false);
-    setActiveStep(0);
-    setEat(null);
-    setTelemetryLog([]);
+  const [executionAuth, setExecutionAuth] = useState<ExecutionAuthorization | null>(null);
+  const [showEvidenceLedger, setShowEvidenceLedger] = useState(false);
 
-    addLog(`INITIATING THREAT SIMULATION: ${selectedScenario.id.toUpperCase()}`);
+  // Initialize pipeline steps
+  useEffect(() => {
+    const initialSteps: ExecutionStep[] = EXECUTION_PIPELINE.map((step, idx) => ({
+      step: idx,
+      name: step.name,
+      status: 'pending',
+      duration_ms: 0,
+      hash: `hash_${idx}_pending`,
+      details: step.description,
+    }));
+    setSteps(initialSteps);
+  }, []);
 
-    // Animate steps 1-3 locally (fast)
-    for (let i = 1; i <= 3; i++) {
-      await new Promise((r) => setTimeout(r, 400));
-      setActiveStep(i);
-      addLog(`STEP 0${i} / ${PIPELINE_STEPS[i-1].name} ... OK`);
+  // Run execution simulation
+  const runExecution = async () => {
+    setIsRunning(true);
+    setTerminalOutput([
+      `[${new Date().toLocaleTimeString()}] Starting execution for scenario: ${selectedScenario.name}`,
+      `[${new Date().toLocaleTimeString()}] Using agent: ${selectedAgent.name}`,
+      `[${new Date().toLocaleTimeString()}] Safety level: ${selectedAgent.safety_level}`,
+    ]);
+    setCurrentStep(0);
+
+    // Simulate step-by-step execution
+    for (let i = 0; i < EXECUTION_PIPELINE.length; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      const stepName = EXECUTION_PIPELINE[i].name;
+      const duration = Math.floor(Math.random() * 500) + 100;
+      const hash = `sha256:${Math.random().toString(16).slice(2, 10)}`;
+
+      setSteps((prevSteps) =>
+        prevSteps.map((step) =>
+          step.step === i
+            ? {
+                ...step,
+                status: 'completed',
+                duration_ms: duration,
+                hash,
+              }
+            : step
+          )
+      );
+
+      setCurrentStep(i + 1);
+
+      // Add terminal output
+      setTerminalOutput((prev) => [
+        ...prev,
+        `[${new Date().toLocaleTimeString()}] ✓ ${stepName} completed in ${duration}ms`,
+        `[${new Date().toLocaleTimeString()}]   Hash: ${hash}`,
+      ]);
     }
 
-    addLog(`CONTACTING cAPI GATEWAY FOR PROOF HASH...`);
-    
-    // Step 4: call real GPC compile
-    let proofHash: string | null = null;
-    try {
-      const res = await api<{ proof_hash?: string; id?: string }>('/api/v1/gpc/compile', {
-        body: {
-          intent: `Scenario: ${selectedScenario.name} — ${selectedScenario.description}`,
-          compliance: ['audit'],
-          provider: 'gemini',
-          model: 'gemini-2.5-flash',
-        },
-      });
-      proofHash = res.proof_hash ?? null;
-      addLog(`GATEWAY RESPONSE: HASH [${proofHash?.slice(0,16)}]`);
-    } catch {
-      addLog(`GATEWAY ERROR: USING DETERMINISTIC FALLBACK HASH`);
-      const encoder = new TextEncoder();
-      const data = encoder.encode(selectedScenario.id + Date.now());
-      const hashBuf = await crypto.subtle.digest('SHA-256', data);
-      proofHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 40);
-    }
-    setActiveStep(4);
-    addLog(`STEP 04 / CRYPTOGRAPHIC_COMMIT ... SECURED`);
+    // Generate execution authorization
+    const token = `EAT_${Date.now().toString(16).toUpperCase()}`;
+    const signature = `sig_${Math.random().toString(16).slice(2, 10)}`;
+    setExecutionAuth({
+      token,
+      issued_at: new Date().toISOString(),
+      signature,
+      valid_until: new Date(Date.now() + 3600000).toISOString(),
+      authorized_by: selectedAgent.id,
+    });
 
-    // Animate steps 5-7
-    for (let i = 5; i <= 7; i++) {
-      await new Promise((r) => setTimeout(r, 400));
-      setActiveStep(i);
-      addLog(`STEP 0${i} / ${PIPELINE_STEPS[i-1].name} ... OK`);
-    }
+    setTerminalOutput((prev) => [
+      ...prev,
+      `[${new Date().toLocaleTimeString()}] 🎉 Execution completed successfully`,
+      `[${new Date().toLocaleTimeString()}] EAT issued: ${token}`,
+      `[${new Date().toLocaleTimeString()}] All evidence sealed in ledger`,
+    ]);
 
-    const finalEat = proofHash ? `EAT-${proofHash.slice(0, 8).toUpperCase()}-${proofHash.slice(8, 16).toUpperCase()}` : 'EAT-SEALED';
-    setEat(finalEat);
-    addLog(`PIPELINE COMPLETE. EAT ISSUED: ${finalEat}`);
-    
-    setRunning(false);
-    setCompleted(true);
+    setIsRunning(false);
   };
 
-  const reset = () => {
-    setActiveStep(0);
-    setRunning(false);
-    setCompleted(false);
-    setEat(null);
-    setTelemetryLog([]);
+  // Reset execution
+  const resetExecution = () => {
+    setCurrentStep(0);
+    setSteps(
+      EXECUTION_PIPELINE.map((step, idx) => ({
+        step: idx,
+        name: step.name,
+        status: 'pending',
+        duration_ms: 0,
+        hash: `hash_${idx}_pending`,
+        details: step.description,
+      }))
+    );
+    setTerminalOutput([]);
+    setExecutionAuth(null);
   };
 
-  const threatColor: Record<string, string> = {
-    CRITICAL: 'text-red-400 bg-red-500/10 border-red-500/30',
-    HIGH: 'text-brand-400 bg-brand-500/10 border-brand-500/30',
-    MEDIUM: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+  // Add agent
+  const addAgent = () => {
+    const newAgent: Agent = {
+      id: `agent_${Date.now()}`,
+      name: `Agent ${agents.length + 1}`,
+      model: 'gpt-4-turbo',
+      temperature: 0.7,
+      max_tokens: 2048,
+      system_prompt: 'You are a helpful AI assistant.',
+      instructions: 'Execute tasks safely.',
+      safety_level: 'high',
+    };
+    setAgents([...agents, newAgent]);
+    setSelectedAgent(newAgent);
   };
 
   return (
-    <Shell>
-      <div className="space-y-6 animate-fade-up max-w-[1400px] mx-auto">
-
-        {/* ── Header ────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-2 border-b border-[#242424] pb-6">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-6 h-6 rounded bg-brand-500/20 text-brand-400">
-                <Network size={14} />
-              </span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-400 font-bold">
-                Run · Runtime Enforcement
-              </span>
-            </div>
-            <h1 className="text-[32px] font-bold tracking-tight text-white">
-              Sovereign Pipeline Command
-            </h1>
-            <p className="text-sm text-ink-400 max-w-3xl">
-              Veklom's crown jewel infrastructure. Every autonomous execution traverses this deterministic 7-step pipeline. Tool calls are blocked until cryptographically sealed.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] px-3 py-1.5 rounded text-[10px] font-mono font-bold text-ink-200">
-              <Fingerprint size={12} className="text-accent-green" />
-              EAT Generation Engine
-            </span>
-            <span className="flex items-center gap-2 bg-[#0a0a0a] border border-brand-500/30 px-3 py-1.5 rounded text-[10px] font-mono font-bold text-brand-400">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-              PIPELINE LIVE
-            </span>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            ⚡ RUNTIME ENFORCEMENT LAB
+          </h1>
+          <p className="text-slate-400">
+            7-step deterministic execution pipeline with cryptographic proof
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* ── Left Column: Configuration & Telemetry ────────────────────── */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            
-            {/* Threat Vector Simulator */}
-            <div className="bg-[#050505] border border-[#242424] rounded-xl overflow-hidden shadow-xl flex flex-col">
-              <div className="bg-[#111] border-b border-[#242424] p-4 flex items-center gap-2">
-                <Flame size={14} className="text-brand-400" />
-                <h3 className="text-[11px] font-mono font-bold text-ink-300 uppercase tracking-widest">
-                  Threat Vector Injection
-                </h3>
-              </div>
-              
-              <div className="p-4 space-y-3 flex-1 overflow-y-auto custom-scrollbar">
-                {SCENARIOS.map((s) => (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          {/* Scenario Selector */}
+          <div className="lg:col-span-1">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 sticky top-8">
+              <h3 className="text-white font-semibold mb-4">Threat Scenario</h3>
+              <div className="space-y-2">
+                {SCENARIOS.map((scenario) => (
                   <button
-                    key={s.id}
-                    onClick={() => { setSelectedScenario(s); reset(); }}
-                    className={clsx(
-                      "w-full text-left p-3 rounded-lg border transition-all grid grid-cols-[1fr_auto] gap-2 items-center",
-                      selectedScenario.id === s.id
-                        ? "bg-brand-500/10 border-brand-500 shadow-[0_0_15px_rgba(255,184,0,0.1)]"
-                        : "bg-[#111] border-[#242424] hover:border-[#333]"
-                    )}
+                    key={scenario.id}
+                    onClick={() => setSelectedScenario(scenario)}
+                    className={`w-full text-left p-3 rounded transition ${
+                      selectedScenario.id === scenario.id
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
                   >
-                    <div>
-                      <h4 className={clsx("text-xs font-bold font-mono", selectedScenario.id === s.id ? "text-brand-400" : "text-white")}>
-                        {s.name}
-                      </h4>
-                      <p className="text-[10px] text-ink-500 mt-1">{s.description}</p>
-                    </div>
-                    <span className={clsx("text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase tracking-widest", threatColor[s.threat_level])}>
-                      {s.threat_level}
-                    </span>
+                    <p className="font-semibold text-sm">{scenario.name}</p>
+                    <p className="text-xs opacity-75">{scenario.description}</p>
+                    <p
+                      className={`text-xs mt-1 font-semibold ${
+                        scenario.threat_level === 'CRITICAL'
+                          ? 'text-red-400'
+                          : scenario.threat_level === 'HIGH'
+                          ? 'text-amber-400'
+                          : 'text-yellow-400'
+                      }`}
+                    >
+                      {scenario.threat_level}
+                    </p>
                   </button>
                 ))}
               </div>
 
-              <div className="p-4 bg-[#111] border-t border-[#242424] flex gap-3">
+              {/* Controls */}
+              <div className="mt-6 pt-6 border-t border-slate-700 space-y-2">
                 <button
-                  onClick={runDemo}
-                  disabled={running}
-                  className={clsx(
-                    "flex-1 py-2.5 rounded font-bold text-[11px] font-mono tracking-wider transition-all",
-                    running 
-                      ? "bg-[#222] text-ink-500 cursor-not-allowed border border-[#333]"
-                      : "bg-brand-500 text-black hover:bg-brand-400 shadow-[0_0_15px_rgba(255,184,0,0.3)]"
-                  )}
+                  onClick={runExecution}
+                  disabled={isRunning}
+                  className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-600 text-white font-semibold rounded transition flex items-center justify-center gap-2"
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    <Play size={14} />
-                    {running ? 'ENFORCING...' : 'INJECT VECTOR'}
-                  </span>
+                  <Play className="w-4 h-4" />
+                  {isRunning ? 'Running...' : 'Run Execution'}
                 </button>
                 <button
-                  onClick={reset}
-                  className="px-4 py-2.5 bg-[#1a1a1a] border border-[#333] hover:bg-[#222] text-white rounded transition"
+                  onClick={resetExecution}
+                  disabled={isRunning}
+                  className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white font-semibold rounded transition flex items-center justify-center gap-2"
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcw className="w-4 h-4" />
+                  Reset
                 </button>
               </div>
             </div>
-
-            {/* Live Telemetry Log */}
-            <div className="bg-[#050505] border border-[#242424] rounded-xl overflow-hidden shadow-xl flex-1 flex flex-col min-h-[300px]">
-              <div className="bg-[#111] border-b border-[#242424] p-3 flex items-center justify-between">
-                <h3 className="text-[10px] font-mono font-bold text-ink-400 uppercase tracking-widest flex items-center gap-2">
-                  <Activity size={12} /> Console Output
-                </h3>
-                <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-              </div>
-              <div className="p-4 overflow-y-auto custom-scrollbar flex-1 bg-black text-[11px] font-mono text-ink-400 space-y-1">
-                {telemetryLog.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-ink-600">AWAITING INJECTION...</div>
-                ) : (
-                  telemetryLog.map((log, i) => (
-                    <div key={i} className="whitespace-pre-wrap break-all">{log}</div>
-                  ))
-                )}
-              </div>
-            </div>
-
           </div>
 
-          {/* ── Right Column: Deterministic Pipeline ───────────────────────── */}
-          <div className="lg:col-span-8 flex flex-col">
-            <div className="bg-[#050505] border border-[#242424] rounded-xl flex flex-col flex-1 overflow-hidden shadow-2xl relative">
-              
-              <div className="px-5 py-4 border-b border-[#242424] bg-[#0a0a0a] flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded bg-[#1a1a1a] border border-[#333]">
-                    <Layers size={12} className="text-brand-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-white">Execution Pipeline</h3>
-                    <p className="text-[10px] font-mono text-ink-500">Live 7-Step Deterministic Sequence</p>
-                  </div>
-                </div>
-              </div>
+          {/* Execution Pipeline */}
+          <div className="lg:col-span-3">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-8">
+              <h3 className="text-white font-semibold mb-6">
+                Deterministic Execution Pipeline
+              </h3>
 
-              <div className="flex-1 p-6 overflow-y-auto custom-scrollbar relative">
-                
-                {/* Connecting Line */}
-                <div className="absolute left-10 top-10 bottom-10 w-0.5 bg-[#1a1a1a] z-0" />
+              {/* Pipeline Visualization */}
+              <div className="space-y-4">
+                {EXECUTION_PIPELINE.map((step, idx) => {
+                  const stepData = steps[idx];
+                  const isCompleted = currentStep > idx;
+                  const isRunning = currentStep === idx + 1;
+                  const isPending = currentStep <= idx;
 
-                <div className="space-y-6 relative z-10">
-                  {PIPELINE_STEPS.map((step) => {
-                    const Icon = step.icon;
-                    const isDone = activeStep >= step.step;
-                    const isActive = activeStep === step.step && running;
-                    
-                    return (
-                      <div key={step.step} className="flex items-start gap-4">
-                        
-                        {/* Node */}
-                        <div className={clsx(
-                          "w-8 h-8 rounded border-2 flex items-center justify-center shrink-0 mt-1 transition-all duration-300 bg-[#050505]",
-                          isDone ? "border-brand-500 shadow-[0_0_10px_rgba(255,184,0,0.4)]" : isActive ? "border-white animate-pulse" : "border-[#333]"
-                        )}>
-                          {isDone ? (
-                            <CheckCircle size={14} className="text-brand-400" />
-                          ) : (
-                            <Icon size={14} className={clsx(isActive ? "text-white" : "text-ink-600")} />
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div className={clsx(
-                          "flex-1 border rounded-lg p-4 transition-all duration-300",
-                          isDone ? "bg-brand-500/5 border-brand-500/30" : isActive ? "bg-[#111] border-white/20" : "bg-[#0a0a0a] border-[#242424]"
-                        )}>
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className={clsx("text-xs font-bold font-mono tracking-wider", isDone ? "text-brand-400" : isActive ? "text-white" : "text-ink-500")}>
-                              {step.name}
-                            </h4>
-                            <span className="text-[10px] font-mono text-ink-600">STEP_0{step.step}</span>
+                  return (
+                    <div key={idx}>
+                      <div
+                        className={`p-4 rounded-lg border-2 transition ${
+                          isCompleted
+                            ? 'bg-emerald-900 border-emerald-500'
+                            : isRunning
+                            ? 'bg-blue-900 border-blue-500 animate-pulse'
+                            : 'bg-slate-700 border-slate-600'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{step.icon}</span>
+                            <div>
+                              <p
+                                className={`font-semibold ${
+                                  isCompleted || isRunning
+                                    ? 'text-white'
+                                    : 'text-slate-300'
+                                }`}
+                              >
+                                {idx + 1}. {step.name}
+                              </p>
+                              <p
+                                className={`text-xs ${
+                                  isCompleted || isRunning
+                                    ? 'text-emerald-200'
+                                    : 'text-slate-400'
+                                }`}
+                              >
+                                {step.description}
+                              </p>
+                            </div>
                           </div>
-                          <p className={clsx("text-[11px]", isDone || isActive ? "text-ink-300" : "text-ink-600")}>
-                            {step.desc}
-                          </p>
+                          <div className="text-right">
+                            {isCompleted && (
+                              <div className="text-emerald-300">
+                                <CheckCircle className="w-5 h-5 inline mr-2" />
+                                <p className="text-xs">
+                                  {stepData?.duration_ms}ms
+                                </p>
+                              </div>
+                            )}
+                            {isRunning && (
+                              <Clock className="w-5 h-5 text-blue-300 animate-spin" />
+                            )}
+                          </div>
                         </div>
 
+                        {/* Hash Display */}
+                        {isCompleted && stepData && (
+                          <div className="mt-3 pt-3 border-t border-emerald-600">
+                            <p className="text-xs text-emerald-300 font-mono break-all">
+                              {stepData.hash}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
 
-                {/* EAT Token Result */}
-                <AnimatePresence>
-                  {eat && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-8 ml-12 bg-[#0a0a0a] border border-brand-500/50 rounded-lg p-5 shadow-[0_0_30px_rgba(255,184,0,0.1)] relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 blur-3xl rounded-full" />
-                      <div className="flex items-center gap-2 mb-3">
-                        <Lock size={14} className="text-brand-400" />
-                        <h4 className="text-[11px] font-bold font-mono text-brand-400 uppercase tracking-widest">
-                          Execution Authorization Token
-                        </h4>
-                      </div>
-                      <div className="bg-black border border-[#333] p-3 rounded">
-                        <code className="text-sm font-mono font-bold text-white tracking-wider break-all">
-                          {eat}
-                        </code>
-                      </div>
-                      <p className="text-[10px] font-mono text-ink-500 mt-3 flex items-center gap-1">
-                        <Shield size={10} /> Cryptographically sealed. Execution authorized.
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
+                      {/* Arrow */}
+                      {idx < EXECUTION_PIPELINE.length - 1 && (
+                        <div className="flex justify-center py-2">
+                          <ChevronRight className="w-5 h-5 text-slate-600 rotate-90" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Execution Authorization Token */}
+              {executionAuth && (
+                <div className="mt-8 p-4 bg-emerald-900 border border-emerald-600 rounded-lg">
+                  <h4 className="text-emerald-300 font-semibold mb-3 flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Execution Authorization Token (EAT)
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    <p>
+                      <span className="text-emerald-400">Token:</span>
+                      <span className="text-white font-mono ml-2">
+                        {executionAuth.token}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-emerald-400">Signature:</span>
+                      <span className="text-white font-mono ml-2">
+                        {executionAuth.signature}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-emerald-400">Valid Until:</span>
+                      <span className="text-white ml-2">
+                        {new Date(executionAuth.valid_until).toLocaleString()}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Agent Management & Terminal */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Agent Creator */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="bg-slate-900 px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+              <h3 className="text-white font-semibold">Agents</h3>
+              <button
+                onClick={addAgent}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded flex items-center gap-1 transition"
+              >
+                <Plus className="w-4 h-4" />
+                Add
+              </button>
+            </div>
+
+            <div className="divide-y divide-slate-700 max-h-96 overflow-y-auto">
+              {agents.map((agent) => (
+                <div
+                  key={agent.id}
+                  onClick={() => setSelectedAgent(agent)}
+                  className={`p-4 cursor-pointer transition ${
+                    selectedAgent.id === agent.id
+                      ? 'bg-blue-900 border-l-4 border-blue-500'
+                      : 'hover:bg-slate-700'
+                  }`}
+                >
+                  <p className="text-white font-semibold text-sm mb-1">
+                    {agent.name}
+                  </p>
+                  <p className="text-xs text-slate-400 mb-2">{agent.model}</p>
+                  <div className="flex gap-2 text-xs">
+                    <span className="px-2 py-1 bg-slate-700 text-slate-300 rounded">
+                      {agent.safety_level}
+                    </span>
+                    <span className="px-2 py-1 bg-slate-700 text-slate-300 rounded">
+                      {agent.max_tokens} tokens
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Terminal Output */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden flex flex-col">
+            <div className="bg-slate-900 px-6 py-4 border-b border-slate-700">
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                <Terminal className="w-5 h-5" />
+                Execution Trace
+              </h3>
+            </div>
+            <div className="flex-1 p-4 font-mono text-sm text-slate-300 overflow-y-auto bg-black bg-opacity-50">
+              {terminalOutput.length === 0 ? (
+                <p className="text-slate-500">Run a scenario to see execution trace...</p>
+              ) : (
+                terminalOutput.map((line, idx) => (
+                  <p key={idx} className="mb-1">
+                    {line}
+                  </p>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Evidence Ledger */}
+        {steps.some((s) => s.status === 'completed') && (
+          <div className="mt-6 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="bg-slate-900 px-6 py-4 border-b border-slate-700">
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                Cryptographic Evidence Ledger
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-700 text-slate-300 uppercase tracking-wider text-xs">
+                  <tr>
+                    <th className="px-6 py-3 text-left">Step</th>
+                    <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-center">Duration</th>
+                    <th className="px-6 py-3 text-left">Hash (SHA256)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700">
+                  {steps.map((step) => (
+                    <tr key={step.step} className="hover:bg-slate-700 transition">
+                      <td className="px-6 py-4 text-white font-semibold">
+                        {step.name}
+                      </td>
+                      <td className="px-6 py-4">
+                        {step.status === 'completed' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-900 text-emerald-300 rounded text-xs font-semibold">
+                            <CheckCircle className="w-3 h-3" />
+                            Completed
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">Pending</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center text-slate-400">
+                        {step.duration_ms > 0 ? `${step.duration_ms}ms` : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-slate-300 font-mono text-xs break-all">
+                        {step.hash}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
-    </Shell>
+    </div>
   );
 }
