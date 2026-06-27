@@ -6,9 +6,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { apiId: string } }
+  { params }: { params: Promise<{ apiId: string }> }
 ) {
-  const { apiId } = params;
+  const { apiId } = await params;
 
   try {
     const res = await fetch(`${API_BASE}/api/v1/benchmarks/leaderboard`, {

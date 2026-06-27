@@ -31,9 +31,9 @@ function renderBadgeSvg(
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { apiId: string } }
+  { params }: { params: Promise<{ apiId: string }> }
 ) {
-  const { apiId } = params;
+  const { apiId } = await params;
 
   try {
     const res = await fetch(`${API_BASE}/api/v1/benchmarks/leaderboard`, {
