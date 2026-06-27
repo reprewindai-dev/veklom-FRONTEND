@@ -7,6 +7,23 @@ import { useApi } from "@/hooks/useApi";
 import { api } from "@/lib/api";
 import { Button, ErrorBox } from "@/components/ui";
 import { motion, AnimatePresence } from "motion/react";
+import dynamic from "next/dynamic";
+
+const StakingProtocol = dynamic(
+  () => import("@/components/vnp/StakingProtocol"),
+  { ssr: false }
+);
+
+const PGLIdentityLayer = dynamic(
+  () => import("@/components/vnp/PGLIdentityLayer"),
+  { ssr: false }
+);
+
+import type { BenchmarkApiEntry } from "@/lib/vnp/types";
+import { computeLeaderboard } from "@/lib/vnp/scoring";
+import { useMemo } from "react";
+
+
 import {
   Radar,
   RadarChart,
@@ -30,6 +47,7 @@ import {
   Globe,
   Database,
   Lock,
+  Zap,
 } from "lucide-react";
 
 const STEPS = [
@@ -88,11 +106,19 @@ export default function PGLOnboardingPage() {
     payment_methods: [] as string[],
   });
   const [mode, setMode] = useState<string>("local-dev");
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"pgl" | "x402">("pgl");
+  const leaderboard = useApi<BenchmarkApiEntry[]>("/api/v1/benchmarks/leaderboard");
+  const scores = useMemo(() => {
+    if (!leaderboard.data) return [];
+    return computeLeaderboard(leaderboard.data);
+  }, [leaderboard.data]);
+
 
   useEffect(() => {
     if (status.data?.mode) setMode(status.data.mode);
-    if (status.data?.has_pgl_profile) router.replace("/dashboard");
-  }, [status.data, router]);
+    if (status.data?.has_pgl_profile && !onboardingCompleted) router.replace("/dashboard");
+  }, [status.data, router, onboardingCompleted]);
 
   const [operatorId, setOperatorId] = useState<string>("");
   const [certificateId, setCertificateId] = useState<string>("");
@@ -150,7 +176,7 @@ export default function PGLOnboardingPage() {
           },
         });
         await api("/api/v1/pgl/onboarding/complete", { body: {} });
-        router.replace("/dashboard");
+        setOnboardingCompleted(true);
         return;
       }
       setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -170,6 +196,171 @@ export default function PGLOnboardingPage() {
       </div>
     );
   }
+
+  if (onboardingCompleted) {
+    return (
+      <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans overflow-y-auto">
+        {/* PREMIUM VNP TELEMETRY HEADER */}
+        <header className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-white">
+                Sovereign Node VNP-702 Online
+              </h2>
+              <p className="text-[10px] font-mono text-emerald-400/80 uppercase">
+                Telemetry & SLA Performance Monitoring Active
+              </p>
+            </div>
+          </div>
+
+          {/* TAB SELECTOR */}
+          <div className="flex bg-black/40 border border-white/5 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab("pgl")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                activeTab === "pgl"
+                  ? "bg-brand-500/20 text-brand-400 border border-brand-500/30"
+                  : "text-ink-400 hover:text-ink-200"
+              }`}
+            >
+              1. LEDGER VALIDATION (PGL)
+            </button>
+            <button
+              onClick={() => setActiveTab("x402")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                activeTab === "x402"
+                  ? "bg-brand-500/20 text-brand-400 border border-brand-500/30"
+                  : "text-ink-400 hover:text-ink-200"
+              }`}
+            >
+              2. SLA STAKING MARKETS (x402)
+            </button>
+          </div>
+
+          <button
+            onClick={() => router.replace("/dashboard")}
+            className="bg-brand-500 hover:bg-brand-400 text-bg-900 font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all text-xs font-mono"
+          >
+            Enter Sovereign Workspace <ChevronRight className="w-4 h-4" />
+          </button>
+        </header>
+
+        {/* METRICS & TELEMETRY SUB-GRID */}
+        <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8 space-y-8">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-transparent" />
+              <div>
+                <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest font-mono block mb-1">
+                  Operator Identity
+                </span>
+                <h3 className="text-xl font-medium mb-1">{operator.name || "Jane Doe"}</h3>
+                <p className="text-xs text-ink-400 font-mono">{operator.email}</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
+                <span className="text-ink-400">Jurisdiction</span>
+                <span className="font-mono text-white">{agent.jurisdiction}</span>
+              </div>
+            </div>
+
+            <div className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-transparent" />
+              <div>
+                <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-widest font-mono block mb-1">
+                  Workspace Authority
+                </span>
+                <h3 className="text-xl font-medium mb-1">{workspace.name || "Alpha Core"}</h3>
+                <p className="text-xs text-ink-400 font-mono capitalize">Level: {workspace.authority_level}</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
+                <span className="text-ink-400">Frameworks</span>
+                <span className="font-mono text-white">
+                  {workspace.compliance_frameworks.join(", ") || "None"}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-transparent" />
+              <div>
+                <span className="text-[10px] font-semibold text-brand-400 uppercase tracking-widest font-mono block mb-1">
+                  Agent Certificate
+                </span>
+                <h3 className="text-xl font-medium mb-1 truncate">{agent.name || "Nexus-1"}</h3>
+                <p className="text-xs text-ink-400 font-mono truncate">ID: {certificateId || "Pending"}</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
+                <span className="text-ink-400">SLA Status</span>
+                <span className="font-mono text-emerald-400">Secured via VNP</span>
+              </div>
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeTab === "pgl" ? (
+              <motion.div
+                key="pgl"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6 animate-fade-in"
+              >
+                <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
+                  <div className="p-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Fingerprint className="text-brand-400 w-4 h-4" />
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-ink-300">
+                        Genome Ledger (PGL) — Identity & Attestation Verification Swarm
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-brand-400/80 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded-full">
+                      Ledger State: Active
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <PGLIdentityLayer scores={scores} />
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="x402"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6 animate-fade-in"
+              >
+                <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
+                  <div className="p-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap className="text-brand-400 w-4 h-4" />
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-ink-300">
+                        x402 SLA Staking Protocol & Performance Ledger
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      Real-Time Stream
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <StakingProtocol />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+      </div>
+    );
+  }
+
+
 
   const activeStep = STEPS[step];
   const Icon = activeStep.icon;
