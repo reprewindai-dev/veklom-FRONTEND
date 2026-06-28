@@ -36,8 +36,9 @@ function gradeFor(score: number): { letter: string; color: string } {
   return                   { letter: 'F',  color: '#FF003C' };
 }
 
-export default function ApiDetailPage({ params }: { params: { apiId: string } }) {
-  const { apiId } = params;
+export default function ApiDetailPage({ params }: { params: Promise<{ apiId: string }> }) {
+  const resolvedParams = React.use(params);
+  const apiId = resolvedParams.apiId;
   const { data: lbData } = useSWR<BenchmarkApiEntry[]>('/api/v1/benchmarks/leaderboard', fetcher);
   const [copied, setCopied] = useState(false);
 
