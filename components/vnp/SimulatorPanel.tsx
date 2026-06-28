@@ -150,57 +150,57 @@ export default function SimulatorPanel() {
     let isSuccess = true;
     
     try {
-      // 1. Fire to the real cAPI backend
+      // 1. Fire to the real cAPI backend with real-time SSE streaming
       const receipt = await executeGovernedAction({
         agent_id: 'agent-001',
         pgl_id: 'PGL_TEST_SIG',
         target_protocol: 'simulator',
         action: scenario.action,
         payload: scenario.payload
+      }, (logLine) => {
+        push(logLine);
+        
+        // Parse Phase from logLine: e.g. "[Phase 1] Identity..."
+        const match = logLine.match(/\[Phase (\d+)\]/);
+        if (match) {
+          const pIdx = parseInt(match[1], 10) - 1;
+          setPipeline(prev => prev.map((s, idx) => {
+            if (idx === pIdx) return { ...s, status: 'running' };
+            if (idx < pIdx && s.status !== 'blocked' && s.status !== 'quarantined') {
+              return { ...s, status: 'completed', duration_ms: 100, hash: `sha256:${Math.random().toString(16).slice(2, 10)}` };
+            }
+            return s;
+          }));
+        }
       });
       
       push(`[WebMCP] Response status: ${receipt.status.toUpperCase()}`);
 
-      // 2. Play out the pipeline visualization dynamically based on response
+      // 2. Play out the final visualization dynamically based on response
       if (receipt.status === 'quarantined') {
         isSuccess = false;
         finalPhase = receipt.phase ?? 4;
         setBlockReason(`QUARANTINED: ${receipt.reason || 'Manual review required'}`);
         push(`⚠ Phase ${finalPhase + 1}: QUARANTINE — ${receipt.reason}`);
         push(`→ HTTP 202 Accepted returned. Quarantine ID: ${receipt.quarantine_id}`);
+        setPipeline(prev => prev.map((s, idx) => idx === finalPhase ? { ...s, status: 'quarantined' } : s));
+        setSeked('WAIT');
       } else if (receipt.status === 'rejected') {
         isSuccess = false;
         finalPhase = receipt.phase ?? 1;
         setBlockReason(`BLOCKED: ${receipt.error} - ${receipt.reason}`);
         push(`⚠ Phase ${finalPhase + 1}: BLOCK — ${receipt.reason}`);
         push(`✕ Execution HALTED at Phase ${finalPhase + 1}.`);
+        setPipeline(prev => prev.map((s, idx) => idx === finalPhase ? { ...s, status: 'blocked' } : s));
+        setSeked('HALT');
+        setBlockedCount(c => c + 1);
       } else {
         // Success
         push(`→ Phase 6: Executing — live sandboxed run`);
         push(`→ Phase 7: Evidence — Merkle proof generated on PGL: ${receipt.evidence_chain_id}`);
         push(`→ Phase 8: Audit — Trust score updated (${receipt.new_trust_score})`);
-      }
-
-      // Visual delay loop for pipeline steps
-      for (let i = 0; i <= finalPhase; i++) {
-        setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'running' } : s));
-        await new Promise(r => setTimeout(r, 400 + Math.random() * 200));
-
-        if (i === finalPhase && !isSuccess) {
-          if (receipt.status === 'quarantined') {
-            setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'quarantined' } : s));
-            setSeked('WAIT');
-          } else {
-            setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'blocked' } : s));
-            setSeked('HALT');
-            setBlockedCount(c => c + 1);
-          }
-          setIsRunning(false);
-          return;
-        }
-
-        const hash = `sha256:${Math.random().toString(16).slice(2, 18)}`;
-        setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'completed', duration_ms: 100, hash } : s));
+        // Complete the remaining phases
+        setPipeline(prev => prev.map(s => ({ ...s, status: 'completed', duration_ms: 100, hash: `sha256:${Math.random().toString(16).slice(2, 10)}` })));
       }
 
       if (isSuccess) {
