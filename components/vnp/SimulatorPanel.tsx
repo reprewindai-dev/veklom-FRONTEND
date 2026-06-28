@@ -23,14 +23,13 @@ interface PipelineStep {
   hash?: string;
 }
 
-interface ThreatScenario {
+interface PresetIntent {
   id: string;
   label: string;
   description: string;
   threat: ThreatLevel;
-  failsAtStep: number | null;
-  blockReason?: string;
-  terminalLines: string[];
+  action: string;
+  payload: Record<string, any>;
 }
 
 // ── Pipeline Definitions ───────────────────────────────────────────────────
@@ -46,92 +45,32 @@ const PIPELINE_DEFS: Omit<PipelineStep, 'status' | 'duration_ms' | 'hash'>[] = [
   { id: 8, name: 'RESPONSE',            subtitle: 'Result Egress + Metadata sync',               icon: Network },
 ];
 
-];
-
 // ── Threat Scenarios ───────────────────────────────────────────────────────
-const SCENARIOS: ThreatScenario[] = [
+const PRESETS: PresetIntent[] = [
   {
     id: 'clean_run',
     label: 'Governed Execution',
     description: 'Standard agent task within all policy bounds',
     threat: 'CLEAN',
-    failsAtStep: null,
-    terminalLines: [
-      '→ Phase 1: Identity PASS — Ed25519 signature verified',
-      '→ Phase 2: Policy PASS — send_email ✓, temporal ✓',
-      '→ Phase 3: Safety PASS — baseline nominal, 0 anomalies',
-      '→ Phase 4: Budget PASS — cost $0.80 within limits',
-      '→ Phase 5: Approval PASS — M-of-N quorum not required',
-      '→ Phase 6: Executing — 1,218ms sandboxed run',
-      '→ Phase 7: Evidence — Merkle proof generated on PGL',
-      '→ Phase 8: Audit — Trust score updated (+2)',
-      '→ Phase 9: Response — Metadata egress synced to WebMCP',
-    ],
+    action: 'email.send',
+    payload: { to: 'team@company.com', subject: 'Digest' }
   },
   {
     id: 'rogue_db',
     label: 'Rogue DB Write',
     description: 'Agent attempts unauthorized database modification',
     threat: 'CRITICAL',
-    failsAtStep: 1, // Fails at Capability & Policy (index 1)
-    blockReason: 'POLICY_VIOLATION: tool "db.write" not in authorized scope. Agent scope: READ_ONLY. Escalation required to OPERATOR_SIGNED.',
-    terminalLines: [
-      '→ Phase 1: Identity PASS — Ed25519 signature verified',
-      '⚠ Phase 2: BLOCK — db.write requires OPERATOR_SIGNED permission',
-      '⚠ Agent scope: READ_ONLY — no write access granted',
-      '✕ Execution HALTED at POLICY COMPOSITION. Zero actions taken.',
-      '→ Incident logged: INC-7823. EAT denied.',
-    ],
+    action: 'db.drop_tables',
+    payload: { table: 'users' }
   },
   {
     id: 'anomaly_quarantine',
-    label: 'Anomaly Quarantine',
-    description: 'Agent triggers a rate limit spike leading to a Quarantine state',
+    label: 'Syscall Escalation',
+    description: 'Agent attempts raw syscall execution requiring quorum',
     threat: 'MEDIUM',
-    failsAtStep: 2, // Fails at Safety & Anomaly (index 2)
-    blockReason: 'QUARANTINED: Rate limit anomaly detected (85 req/min). Execution paused pending out-of-band quorum approval.',
-    terminalLines: [
-      '→ Phase 1: Identity PASS — Ed25519 signature verified',
-      '→ Phase 2: Policy PASS — read_data ✓',
-      '⚠ Phase 3: QUARANTINE — Rate spike detected (85 req/min)',
-      '⚠ Trust suppressed: -10 points',
-      '✕ Execution SUSPENDED at SAFETY LAYER.',
-      '→ HTTP 202 Accepted returned. Quarantine ID: QZ-a7b9c1...',
-    ],
-  },
-  {
-    id: 'budget_loop',
-    label: 'Budget Runaway',
-    description: 'Runaway agent burns through compute cap',
-    threat: 'HIGH',
-    failsAtStep: 3, // Fails at Cost & Budget (index 3)
-    blockReason: 'BUDGET_CIRCUIT_BREAKER: Spend exceeded $4.20 hard cap. Execution halted mid-run.',
-    terminalLines: [
-      '→ Phase 1: Identity PASS — Ed25519 signature verified',
-      '→ Phase 2: Policy PASS — optimize_listings ✓',
-      '→ Phase 3: Safety PASS — baseline nominal',
-      '⚠ Phase 4: BLOCK — Spend projected at $4.21 (cap $4.20)',
-      '✕ Execution HALTED at COST & BUDGET.',
-      '→ Incident logged: INC-7825.',
-    ],
-  },
-  {
-    id: 'repo_mutation',
-    label: 'Unauthorized Push',
-    description: 'Agent attempts git.push to main without approval gate',
-    threat: 'HIGH',
-    failsAtStep: 4, // Fails at Approval Workflows (index 4)
-    blockReason: 'QUORUM_VIOLATION: git.push(main) requires HUMAN_APPROVAL gate (2-of-3 signatures). Gate status: UNSIGNED. Action blocked.',
-    terminalLines: [
-      '→ Phase 1: Identity PASS — Ed25519 signature verified',
-      '→ Phase 2: Policy PASS — git.push detected',
-      '→ Phase 3: Safety PASS — baseline nominal',
-      '→ Phase 4: Budget PASS — Cost $0.10',
-      '⚠ Phase 5: BLOCK — git.push(main) requires HITL quorum',
-      '⚠ Gate REQ-2041 status: UNSIGNED (0-of-3)',
-      '✕ Execution HALTED at APPROVAL WORKFLOWS.',
-    ],
-  },
+    action: 'syscall_execute',
+    payload: { command: 'rm -rf /' }
+  }
 ];
 
 const SEKED_STYLES: Record<SEKEDDirective, string> = {
@@ -148,9 +87,8 @@ const SEKED_STYLES: Record<SEKEDDirective, string> = {
 // ── Component ──────────────────────────────────────────────────────────────
 export default function SimulatorPanel() {
   const { executeGovernedAction } = useWebMCP();
-  const [liveMode, setLiveMode] = useState(false);
   
-  const [scenario, setScenario] = useState<ThreatScenario>(SCENARIOS[0]);
+  const [scenario, setScenario] = useState<PresetIntent>(PRESETS[0]);
   const [intent, setIntent] = useState("Summarize last week's support tickets and send the digest to team@company.com");
   const [pipeline, setPipeline] = useState<PipelineStep[]>(
     PIPELINE_DEFS.map(d => ({ ...d, status: 'pending' }))
@@ -206,69 +144,83 @@ export default function SimulatorPanel() {
 
     push(`EXEC_START — "${scenario.label}" — agent: ${agentModel}`);
     push(`Budget cap: $${budgetCap.toFixed(2)} | Safety: ${safetyLevel.toUpperCase()} | PGL identity: verified`);
+    push(`[WebMCP] Routing live execution intent to backend...`);
 
-    if (liveMode) {
-      push(`[WebMCP] Routing real execution intent to backend...`);
-      try {
-        const receipt = await executeGovernedAction({
-          agent_id: 'agent-001',
-          pgl_id: 'badsig', // Force badsig or test signature
-          target_protocol: 'simulator',
-          action: 'veklom.testCapability',
-          payload: { scenario: scenario.id }
-        });
-        push(`[WebMCP] Response status: ${receipt.status.toUpperCase()}`);
-        if (receipt.status === 'quarantined') {
-          push(`[WebMCP] Quarantine ID: ${receipt.quarantine_id}`);
-        } else if (receipt.status === 'rejected') {
-          push(`[WebMCP] Block Reason: ${receipt.error}`);
-        }
-      } catch(e: any) {
-        push(`[WebMCP] Network Error: ${e.toString()}`);
-      }
-    }
+    let finalPhase = 8;
+    let isSuccess = true;
+    
+    try {
+      // 1. Fire to the real cAPI backend
+      const receipt = await executeGovernedAction({
+        agent_id: 'agent-001',
+        pgl_id: 'PGL_TEST_SIG',
+        target_protocol: 'simulator',
+        action: scenario.action,
+        payload: scenario.payload
+      });
+      
+      push(`[WebMCP] Response status: ${receipt.status.toUpperCase()}`);
 
-    for (let i = 0; i < PIPELINE_DEFS.length; i++) {
-      setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'running' } : s));
-      if (scenario.terminalLines[i]) push(scenario.terminalLines[i]);
-
-      const delay = (i === 5 && scenario.id === 'budget_loop') ? 2200 : 750 + Math.random() * 600;
-      await new Promise(r => setTimeout(r, delay));
-
-      if (scenario.failsAtStep === i) {
-        if (scenario.id === 'anomaly_quarantine') {
-          setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'quarantined' } : s));
-          scenario.terminalLines.slice(i + 1).forEach(l => push(l));
-          setBlockReason(scenario.blockReason!);
-          setSeked('WAIT');
-          setIsRunning(false);
-          return;
-        } else {
-          setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'blocked' } : s));
-          scenario.terminalLines.slice(i + 1).forEach(l => push(l));
-          setBlockReason(scenario.blockReason!);
-          setSeked('HALT');
-          setBlockedCount(c => c + 1);
-          setIsRunning(false);
-          return;
-        }
+      // 2. Play out the pipeline visualization dynamically based on response
+      if (receipt.status === 'quarantined') {
+        isSuccess = false;
+        finalPhase = receipt.phase ?? 4;
+        setBlockReason(`QUARANTINED: ${receipt.reason || 'Manual review required'}`);
+        push(`⚠ Phase ${finalPhase + 1}: QUARANTINE — ${receipt.reason}`);
+        push(`→ HTTP 202 Accepted returned. Quarantine ID: ${receipt.quarantine_id}`);
+      } else if (receipt.status === 'rejected') {
+        isSuccess = false;
+        finalPhase = receipt.phase ?? 1;
+        setBlockReason(`BLOCKED: ${receipt.error} - ${receipt.reason}`);
+        push(`⚠ Phase ${finalPhase + 1}: BLOCK — ${receipt.reason}`);
+        push(`✕ Execution HALTED at Phase ${finalPhase + 1}.`);
+      } else {
+        // Success
+        push(`→ Phase 6: Executing — live sandboxed run`);
+        push(`→ Phase 7: Evidence — Merkle proof generated on PGL: ${receipt.evidence_chain_id}`);
+        push(`→ Phase 8: Audit — Trust score updated (${receipt.new_trust_score})`);
       }
 
-      const duration = Math.floor(100 + Math.random() * 480);
-      const hash = `sha256:${Math.random().toString(16).slice(2, 18)}`;
-      setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'completed', duration_ms: duration, hash } : s));
-    }
+      // Visual delay loop for pipeline steps
+      for (let i = 0; i <= finalPhase; i++) {
+        setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'running' } : s));
+        await new Promise(r => setTimeout(r, 400 + Math.random() * 200));
 
-    // Successful run
-    const token = `EAT_${Date.now().toString(16).toUpperCase()}_${Math.random().toString(16).slice(2,8).toUpperCase()}`;
-    setEatToken(token);
-    setSeked('EXECUTE');
-    push(`→ EAT issued: ${token}`);
-    push(`EXEC_COMPLETE — all 9 gates cleared ✓ — evidence sealed`);
-    setEatCount(c => c + 1);
-    setRunCount(c => c + 1);
+        if (i === finalPhase && !isSuccess) {
+          if (receipt.status === 'quarantined') {
+            setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'quarantined' } : s));
+            setSeked('WAIT');
+          } else {
+            setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'blocked' } : s));
+            setSeked('HALT');
+            setBlockedCount(c => c + 1);
+          }
+          setIsRunning(false);
+          return;
+        }
+
+        const hash = `sha256:${Math.random().toString(16).slice(2, 18)}`;
+        setPipeline(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'completed', duration_ms: 100, hash } : s));
+      }
+
+      if (isSuccess) {
+        setEatToken(receipt.evidence_chain_id || `EAT_${Date.now().toString(16).toUpperCase()}`);
+        setSeked('EXECUTE');
+        push(`→ EAT issued: ${receipt.evidence_chain_id}`);
+        push(`EXEC_COMPLETE — all 9 gates cleared ✓ — evidence sealed`);
+        setEatCount(c => c + 1);
+        setRunCount(c => c + 1);
+      }
+      
+    } catch(e: any) {
+      push(`[WebMCP] Network Error: ${e.toString()}`);
+      setPipeline(prev => prev.map((s, idx) => idx === 0 ? { ...s, status: 'blocked' } : s));
+      setBlockReason(`NETWORK_ERROR: ${e.message}`);
+      setSeked('HALT');
+    }
+    
     setIsRunning(false);
-  }, [isRunning, scenario, agentModel, budgetCap, safetyLevel, reset]);
+  }, [isRunning, scenario, agentModel, budgetCap, safetyLevel, reset, executeGovernedAction]);
 
   const stepBorderClass = (s: StepStatus) => {
     if (s === 'completed') return 'border-[#00FF66]/30 bg-[#00FF66]/[0.03]';
@@ -450,9 +402,9 @@ export default function SimulatorPanel() {
 
           {/* Threat Scenarios */}
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-3">Threat Simulation</div>
+            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-3">Live Threat Testing</div>
             <div className="space-y-1.5">
-              {SCENARIOS.map(s => (
+              {PRESETS.map(s => (
                 <button
                   key={s.id}
                   onClick={() => { setScenario(s); reset(); }}
@@ -477,19 +429,7 @@ export default function SimulatorPanel() {
             </div>
           </div>
 
-          {/* Live Mode Toggle */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
-            <div>
-              <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-0.5">Live WebMCP Routing</div>
-              <div className="text-[9px] text-slate-500">Route real execution intents to the /api/v1/capi/execute backend</div>
-            </div>
-            <button
-              onClick={() => setLiveMode(!liveMode)}
-              className={`w-10 h-5 rounded-full relative transition-colors ${liveMode ? 'bg-[#00FF66]/20 border border-[#00FF66]/50' : 'bg-[#070b12] border border-slate-800'}`}
-            >
-              <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full transition-all ${liveMode ? 'translate-x-5 bg-[#00FF66]' : 'translate-x-0 bg-slate-600'}`} />
-            </button>
-          </div>
+
 
           {/* Run / Reset */}
           <div className="flex gap-2">
