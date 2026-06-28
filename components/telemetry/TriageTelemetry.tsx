@@ -105,6 +105,10 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
   const [triageRuns, setTriageRuns] = useState<any[]>([]);
   const [auditTrails, setAuditTrails] = useState<any[]>([]);
 
+  // SSE Platform Pulse State
+  const [pulseData, setPulseData] = useState<{ active_requests: number; latency_ms: number; timestamp: string } | null>(null);
+  const [sseConnected, setSseConnected] = useState(false);
+
   // Triage Run inputs
   const [intakeText, setIntakeText] = useState("");
   const [isClassifying, setIsClassifying] = useState(false);
@@ -189,6 +193,69 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
     );
     return () => unsubscribe();
   }, []);
+
+  // Subscribe to live backend Platform Pulse SSE stream
+  useEffect(() => {
+    if (!user) return;
+
+    let eventSource: EventSource | null = null;
+    let reconnectTimeout: any = null;
+
+    const connectSSE = async () => {
+      try {
+        const idToken = await auth.currentUser?.getIdToken();
+        if (!idToken) {
+          console.warn("No active Firebase token found for SSE subscription.");
+          return;
+        }
+
+        const { apiBaseUrl } = require("../../lib/api");
+        const base = apiBaseUrl();
+        // Construct SSE stream URL with token query parameter fallback
+        const sseUrl = `${base}/api/v1/platform/pulse/stream?token=${idToken}`;
+
+        eventSource = new EventSource(sseUrl);
+
+        eventSource.onopen = () => {
+          setSseConnected(true);
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed && parsed.event === "pulse" && parsed.data) {
+              setPulseData(parsed.data);
+            }
+          } catch (e) {
+            console.error("Failed to parse SSE event data:", e);
+          }
+        };
+
+        eventSource.onerror = (err) => {
+          console.error("SSE Connection error:", err);
+          setSseConnected(false);
+          if (eventSource) {
+            eventSource.close();
+          }
+          // Attempt reconnection after 5 seconds
+          reconnectTimeout = setTimeout(connectSSE, 5000);
+        };
+      } catch (e) {
+        console.error("Failed to initialize SSE connection:", e);
+      }
+    };
+
+    connectSSE();
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+    };
+  }, [user]);
 
   // Fetch / Subscribe to persistent Firestore logs once authenticated
   useEffect(() => {
@@ -495,6 +562,38 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
             Disconnect
           </button>
         </div>
+      </div>
+
+      {/* Live Stream Telemetry Banner */}
+      <div className="bg-slate-950/40 border-b border-slate-850 px-5 py-2.5 flex items-center justify-between gap-4 flex-wrap text-[10px] font-mono">
+        <div className="flex items-center space-x-4 flex-wrap gap-y-2">
+          <div className="flex items-center space-x-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${sseConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500 animate-ping"}`} />
+            <span className="text-slate-500 font-medium">Live Telemetry Stream:</span>
+            <span className={`${sseConnected ? "text-emerald-400" : "text-red-400"} font-bold`}>
+              {sseConnected ? "CONNECTED" : "DISCONNECTED"}
+            </span>
+          </div>
+          {sseConnected && pulseData && (
+            <>
+              <div className="hidden sm:block h-3 w-px bg-slate-800" />
+              <div className="flex items-center space-x-1.5">
+                <span className="text-slate-500 font-medium">Active Requests:</span>
+                <span className="text-amber-400 font-bold">{pulseData.active_requests}</span>
+              </div>
+              <div className="hidden sm:block h-3 w-px bg-slate-800" />
+              <div className="flex items-center space-x-1.5">
+                <span className="text-slate-500 font-medium">Avg Latency:</span>
+                <span className="text-amber-400 font-bold">{pulseData.latency_ms} ms</span>
+              </div>
+            </>
+          )}
+        </div>
+        {sseConnected && pulseData && (
+          <span className="text-slate-500 font-medium self-end sm:self-auto">
+            Last Pulse: {new Date(pulseData.timestamp).toLocaleTimeString()}
+          </span>
+        )}
       </div>
 
       {/* Main content grid */}

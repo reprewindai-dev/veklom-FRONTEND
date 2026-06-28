@@ -3,6 +3,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, apiUrl, clearTokens, getToken, setTokens } from "./api";
 import { normalizeTier, Tier } from "./tiers";
+import { auth } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import type { Me, Subscription } from "@/types/api";
 
 interface AuthState {
@@ -88,6 +90,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const idToken = await user.getIdToken();
+          if (idToken) {
+            setTokens(idToken);
+            await loadProfile();
+          }
+        } catch (e) {
+          console.error("Failed to sync Firebase auth state to profile:", e);
+        }
+      }
+    });
+    return () => unsub();
   }, [loadProfile]);
 
   const login = useCallback(async (email: string, password: string) => {

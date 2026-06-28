@@ -146,9 +146,26 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen grid place-items-center">
-        <div className="flex items-center gap-3 text-ink-400 text-sm">
-          <span className="spinner" /> Loading your control plane...
+      <div className="min-h-screen bg-[#0A0A0A] grid place-items-center relative overflow-hidden">
+        {/* Aesthetic background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-500/5 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="flex flex-col items-center gap-5 z-10">
+          <div className="relative">
+            {/* Double ring animated pulse spinner */}
+            <div className="w-16 h-16 rounded-full border-2 border-slate-900" />
+            <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-t-brand-500 border-r-brand-500 animate-spin" />
+            <div className="absolute -inset-1.5 w-[76px] h-[76px] rounded-full border border-dashed border-brand-500/20 animate-[spin_10s_linear_infinite]" />
+          </div>
+          
+          <div className="flex flex-col items-center gap-1.5">
+            <span className="text-[10px] font-mono text-brand-400 tracking-[0.2em] uppercase font-bold animate-pulse">
+              Hydrating Secure Session...
+            </span>
+            <span className="text-xs text-ink-400 font-mono tracking-wide">
+              Veklom Sovereign Control Node
+            </span>
+          </div>
         </div>
       </div>
     );
