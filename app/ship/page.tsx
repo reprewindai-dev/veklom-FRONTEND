@@ -3,6 +3,7 @@
 import { ReactNode, useMemo, useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
+import QuarantineDashboard from "@/components/vnp/QuarantineDashboard";
 import { useApi } from "@/hooks/useApi";
 import { Button } from "@/components/ui";
 import { KV, ModuleHeader, Pill, SectionCard } from "@/components/telemetry";
@@ -614,6 +615,16 @@ export default function ShipAssetPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4">
         <StageRail active={active} states={states} onSelect={setActive} />
         <StageCanvas stage={activeStage} state={states[activeStage.id]} />
+      </div>
+
+      <div className="mt-8 pt-8 border-t border-border/50">
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold">Governance Human Review</h2>
+          <p className="text-xs text-ink-500">M-of-N quorum processing for intercepted anomalous capability intents.</p>
+        </div>
+        <div className="bg-bg-900 border border-border rounded-xl p-6">
+          <QuarantineDashboard />
+        </div>
       </div>
     </Shell>
   );
