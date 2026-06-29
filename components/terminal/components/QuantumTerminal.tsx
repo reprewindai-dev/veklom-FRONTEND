@@ -399,7 +399,7 @@ export default function QuantumTerminal() {
 
       if (isLanding) {
         const isNavigation = ['login', 'signup', 'exit', 'workspace', 'overview', 'dashboard'].includes(lo.trim());
-        const isSafeCommand = ['health check', 'status', 'telemetry', 'monitoring health', 'help'].some(safe => lo.startsWith(safe));
+        const isSafeCommand = ['health check', 'status', 'telemetry', 'monitoring health', 'help', 'veklom'].some(safe => lo.startsWith(safe));
         
         if (isNavigation || (!token && !isSafeCommand)) {
           pushLog(`[GATEWAY] Intercepting command sequence: "${raw}"`, 'warn');
@@ -507,12 +507,13 @@ export default function QuantumTerminal() {
               className="view active absolute inset-0 flex flex-col"
               id="v-terminal"
             >
-          <div className="chips-bar flex gap-2 p-2 overflow-x-auto shrink-0">
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#111820] border border-[#63b3ed1f] rounded-full text-[10px] cursor-pointer" onClick={() => fillPrompt('Optimize a 10,000-bit monochrome bitmap transmission')}>📡 Bitmap tx</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#111820] border border-[#63b3ed1f] rounded-full text-[10px] cursor-pointer" onClick={() => fillPrompt('Calibrate a thousand-qubit Heron processor')}>⚛️ Heron QPU</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#111820] border border-[#63b3ed1f] rounded-full text-[10px] cursor-pointer" onClick={() => fillPrompt('Synthesize MCP orchestration plan for CO2 Router')}>🌿 CO2 Router</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#111820] border border-[#63b3ed1f] rounded-full text-[10px] cursor-pointer" onClick={() => fillPrompt('Run Zeno interrogation on filesystem_srv')}>🔬 Zeno scan</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#111820] border border-[#63b3ed1f] rounded-full text-[10px] cursor-pointer" onClick={() => fillPrompt('Show MCP mesh topology')}>🕸️ MCP mesh</div>
+          <div className="chips-bar flex gap-2 p-2 overflow-x-auto shrink-0 scrollbar-hide">
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom compare')}>📊 Veklom vs. Competitors</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield injection')}>🛡️ Prompt Injection Shield</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield credential')}>🔐 Credential Masking / x402 Swap</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield depth')}>🕸️ Schema Moat Depth Limit</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield slash')}>⚡ VNP SLA Autoslash</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom status')}>ℹ️ Sovereign Gateway Status</div>
           </div>
 
           <div className="output flex-grow overflow-y-auto p-4 space-y-1" id="output" ref={outRef}>
