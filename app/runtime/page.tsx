@@ -6,7 +6,7 @@ import TerminalApp from "@/components/terminal/App";
 export default function RuntimePage() {
   return (
     <div className="w-full h-screen overflow-hidden">
-      <TerminalApp defaultTab="overview" />
+      <TerminalApp defaultTab="runtime" />
     </div>
   );
 }

@@ -185,7 +185,6 @@ export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
                 onAgentUpdate={handleAgentUpdate}
               />
             )}
-
             {activeTab === 'terminal' && (
               <div className="w-full h-full flex flex-col xl:flex-row overflow-hidden">
                 <div className="flex-grow h-full relative min-w-0">
@@ -197,6 +196,13 @@ export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
                   </div>
                 )}
               </div>
+            )}
+            {activeTab === 'spine' && (
+              <RunSpine 
+                runs={runs}
+                selectedRunId={selectedRunId}
+                onSelectRun={setSelectedRunId}
+              />
             )}
 
             {activeTab === 'runtime' && (
@@ -250,7 +256,7 @@ export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
           </div>
 
           {/* 4. Live Telemetry Console Ticker */}
-          {!isLandingPage && (
+          {!isLandingPage && ['overview', 'terminal'].includes(activeTab) && (
             <div className="h-72 border-t border-white/[0.05] bg-[#030303] shrink-0 relative z-10 select-none">
               <LiveTelemetry
                 logs={logs}

@@ -92,12 +92,15 @@ export class TerminalBackendStore {
   }
 
   public startSimulation() {
-    // Replaced polling with SSE
     if (this.intervalId) return;
-    this.intervalId = setTimeout(() => {}, 1000000) as any; // mock interval to prevent double init
-
+    
     // Initial state fetch
     this.syncWithTerminalState();
+
+    // Periodically poll the state every 30 seconds to sync metrics, billings, and logs
+    this.intervalId = setInterval(() => {
+      this.syncWithTerminalState();
+    }, 30000) as any;
     
     // Start SSE stream
     this.initSseConnection();

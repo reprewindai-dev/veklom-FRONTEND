@@ -17,6 +17,7 @@ import {
   Database,
   ExternalLink
 } from 'lucide-react';
+import { GenomeDNA } from './GenomeDNA';
 
 interface ProberNode {
   id: string;
@@ -56,6 +57,34 @@ export default function NexusProtocol() {
   const [anchorCount, setAnchorCount] = useState(1442);
   const [lastAnchorTime, setLastAnchorTime] = useState<string>('4m ago');
   const [isAttesting, setIsAttesting] = useState(true);
+  const [genome, setGenome] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchGenome = async () => {
+      try {
+        const res = await fetch('/api/pgl/genome');
+        if (res.ok) {
+          const data = await res.json();
+          setGenome(data);
+        } else {
+          throw new Error(`Endpoint returned status: ${res.status}`);
+        }
+      } catch (e) {
+        console.warn('Backend genome fetch failed. Engaging secure local pre-seeded PGL genome:', e);
+        setGenome({
+          hash: 'a1b2c3d4',
+          layers: {
+            model: 'Olmo3-Hybrid',
+            prompt: 'PGL-Constitutional',
+            policy: 'Article-12',
+            watchtower: 'MELT-Guard'
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+    };
+    fetchGenome();
+  }, []);
 
   // Dynamic simulation state for latency
   const [nodes, setNodes] = useState<ProberNode[]>([
@@ -289,6 +318,17 @@ export default function NexusProtocol() {
                     </div>
                   </button>
                 ))}
+              </div>
+
+              {/* Mini Genome DNA Widget */}
+              <div className="mt-2.5">
+                {genome ? (
+                  <GenomeDNA mini genome={genome} />
+                ) : (
+                  <div className="p-4 rounded-xl border border-white/5 bg-void-metal/20 text-center py-6 text-[10px] font-mono text-white/30 uppercase tracking-widest animate-pulse">
+                    Decoding PGL Genome...
+                  </div>
+                )}
               </div>
             </div>
 
