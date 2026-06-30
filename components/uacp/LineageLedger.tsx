@@ -12,6 +12,14 @@ interface LineageLedgerProps {
 export const LineageLedger: React.FC<LineageLedgerProps> = ({ nodes }) => {
   const [selectedNode, setSelectedNode] = useState<PGLNode | null>(null);
 
+  const getSeededLatency = (id: string) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return 100 + Math.abs(hash % 400);
+  };
+
   const getActiveStatus = (index: number) => {
     return index === nodes.length - 1 ? 'ACTIVE' : 'HISTORICAL';
   };
@@ -109,7 +117,7 @@ export const LineageLedger: React.FC<LineageLedgerProps> = ({ nodes }) => {
                 <div className="flex items-center gap-1.5 text-[9px] font-mono text-white/30 uppercase tracking-tighter">
                   <Clock size={10} /> Ledger Time
                 </div>
-                <div className="text-[10px] font-mono text-white/60">T+{Math.floor(Math.random() * 500)}ms RELATIVE</div>
+                <div className="text-[10px] font-mono text-white/60">T+{getSeededLatency(selectedNode.id)}ms RELATIVE</div>
               </div>
               <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-0.5">
                 <div className="flex items-center gap-1.5 text-[9px] font-mono text-white/30 uppercase tracking-tighter">

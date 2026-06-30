@@ -984,6 +984,16 @@ function GenomeVisualizer({ genome }: { genome: any }) {
 }
 
 function LedgerVisualizer({ workspace }: { workspace: any }) {
+  const getDeterministicHash = (seed: string) => {
+    let hash = 0;
+    const str = seed || "default_pgl_genesis";
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hex = Math.abs(hash).toString(16).padEnd(8, "f").slice(0, 8);
+    return `hash_${hex}`;
+  };
+
   return (
     <div className="w-full flex flex-col items-center gap-4">
       {[1, 2, 3].map((i) => (
@@ -1004,7 +1014,7 @@ function LedgerVisualizer({ workspace }: { workspace: any }) {
             </div>
             <div className="font-mono text-xs text-white/80">
               {i === 1
-                ? `hash_${Math.random().toString(16).slice(2, 10)}`
+                ? getDeterministicHash(workspace?.name)
                 : "pending..."}
             </div>
           </div>

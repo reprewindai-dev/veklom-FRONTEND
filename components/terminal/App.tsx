@@ -22,9 +22,13 @@ import TriageTelemetry from '@/components/telemetry/TriageTelemetry';
 import VanguardPlayground from './components/VanguardPlayground';
 import { controlStore } from './data/simulation';
 
-export default function App() {
+interface TerminalAppProps {
+  defaultTab?: string;
+}
+
+export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
   // Primary Navigation State
-  const [activeTab, setActiveTab] = useState<string>('terminal');
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [isLandingPage, setIsLandingPage] = useState<boolean>(false);
 
   useEffect(() => {
@@ -88,13 +92,7 @@ export default function App() {
 
   // Handle high priority manual execution injection
   const handleTriggerManualOverride = async (intentText: string, policyText: string) => {
-    // Empty state fallback - just log it for now
-    setLogs(prev => [{
-      timestamp: new Date().toISOString(),
-      source: 'Operator',
-      message: `MANUAL OVERRIDE: ${intentText}`,
-      type: 'warn'
-    }, ...prev]);
+    await controlStore.triggerManualRun(intentText, policyText);
   };
 
   return (

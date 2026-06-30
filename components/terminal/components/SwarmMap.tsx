@@ -59,7 +59,10 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
 
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(() => {
-    return localStorage.getItem('swarm_diagnostics_open') === 'true';
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('swarm_diagnostics_open') === 'true';
+    }
+    return false;
   });
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
 

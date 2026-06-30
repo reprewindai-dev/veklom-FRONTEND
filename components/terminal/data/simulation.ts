@@ -108,7 +108,7 @@ export class TerminalBackendStore {
 
     const connect = () => {
       console.log("Connecting to Veklom Swarm SSE endpoint...");
-      const source = new EventSource(`${API_BASE_URL}/api/v1/terminal/events`);
+      const source = new EventSource(`${API_BASE_URL}/api/terminal/events`);
 
       source.onmessage = (event) => {
         try {
@@ -174,7 +174,7 @@ export class TerminalBackendStore {
   private async syncWithTerminalState() {
     try {
       // 1. Fetch real swarm state (Agents, Delegates, active telemetry)
-      const res = await fetch(`${API_BASE_URL}/api/v1/terminal/state`);
+      const res = await fetch(`${API_BASE_URL}/api/terminal/state`);
       if (res.ok) {
         const state = await res.json();
         

@@ -661,8 +661,11 @@ export default function SimulatorPanel() {
           </div>
 
           {/* Enforcement Ledger */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-3">Enforcement Ledger</div>
+          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">Enforcement Ledger</div>
+              <span className="text-[8px] font-mono font-bold px-2 py-0.5 rounded border bg-amber-500/10 border-amber-500/20 text-amber-500 tracking-wider">SANDBOX EMULATION</span>
+            </div>
             <div className="space-y-2.5">
               {[
                 { label: 'EAT Issued (session)',  val: eatCount.toLocaleString(),         color: 'text-[#00FF66]'  },
