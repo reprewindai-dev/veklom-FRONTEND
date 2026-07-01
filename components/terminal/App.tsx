@@ -133,7 +133,7 @@ export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
         <div className="flex items-center gap-6">
           {isLandingPage && (
             <a 
-              href="/login" 
+              href="/terminal" 
               className="px-4 py-1.5 bg-[#FFB800]/10 border border-[#FFB800]/40 hover:bg-[#FFB800]/20 text-[#FFB800] hover:text-white font-mono text-[10px] font-bold uppercase rounded tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,184,0,0.1)] hover:shadow-[0_0_15px_rgba(255,184,0,0.3)] animate-pulse"
             >
               [ ACCESS SOVEREIGN CONSOLE ]
