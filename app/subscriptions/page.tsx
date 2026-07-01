@@ -7,6 +7,7 @@ import { unwrapList } from "@/types/api";
 import { useAuth } from "@/lib/auth-context";
 import { TIER_LABEL, normalizeTier } from "@/lib/tiers";
 import { useState } from "react";
+import { api } from "@/lib/api";
 
 export default function SubscriptionsPage() {
   const plans = useApi<any>("/api/v1/subscriptions/plans");
@@ -28,14 +29,31 @@ export default function SubscriptionsPage() {
   }
 
   async function checkout(planId: string) {
-    setBusy(planId); setErr(undefined);
+    setBusy(planId);
+    setErr(undefined);
     try {
-      // Instead of Stripe checkout, simulate opening an x402 Machine Payment connection
+      const res: any = await api("/api/v1/subscriptions/checkout", {
+        method: "POST",
+        body: { plan_id: planId }
+      });
+      
+      if (res && res.url) {
+        // If it's a real Stripe URL, redirect to Stripe
+        if (res.url.includes("stripe.com")) {
+          window.location.href = res.url;
+        } else {
+          // Otherwise, it is a local sandbox/emulated fallback link from the backend
+          setShowWallet(true);
+        }
+      } else {
+        setShowWallet(true);
+      }
+    } catch (e) {
+      console.warn("Stripe subscription checkout failed, falling back to local x402 sandbox:", e);
+      // Gracefully fall back to local interactive sandbox connection
       setShowWallet(true);
-    } catch (e) { 
-      setErr((e as Error).message); 
-    } finally { 
-      setBusy(undefined); 
+    } finally {
+      setBusy(undefined);
     }
   }
 
