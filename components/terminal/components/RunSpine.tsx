@@ -236,13 +236,24 @@ interface BYOAgentHubProps {
 
 export function BYOAgentHub({ isCompleted }: BYOAgentHubProps) {
   const [activeFramework, setActiveFramework] = useState<'crewai' | 'langchain' | 'autogen' | 'vercel'>('crewai');
+  const [activeFrameworkLanguage, setActiveFrameworkLanguage] = useState<'python' | 'javascript'>('python');
   const [activeMainTab, setActiveMainTab] = useState<'byo' | 'deploy'>('byo');
   const [copiedAction, setCopiedAction] = useState(false);
   const [buildLogs, setBuildLogs] = useState<string[]>([]);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
-  const pythonWrappers = {
-    crewai: `from crewai import Crew
+  // User Parametric Configurations
+  const [repoName, setRepoName] = useState('reprewindai-dev/veklom-byos-backend');
+  const [serverIp, setServerIp] = useState('5.78.135.11');
+  const [sshKeyName, setSshKeyName] = useState('HETZNER_SSH_KEY');
+  const [appDir, setAppDir] = useState('/data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru');
+  const [containerName, setContainerName] = useState('n13gp1nhrcdp0hvazvbnlxru-213557155694');
+  const [containerPort, setContainerPort] = useState('8088');
+
+  const codeWrappers = {
+    crewai: {
+      python: `from crewai import Crew
 from veklom import PGLAgentWrapper
 
 # 1. Wrap your existing Crew in 1 line
@@ -254,7 +265,22 @@ crew = PGLAgentWrapper(
 
 # 2. Kick off agent operations as usual
 crew.kickoff()`,
-    langchain: `from langchain.agents import AgentExecutor
+      javascript: `import { Crew } from 'crewai-js';
+import { PGLAgentWrapper } from '@veklom/sdk';
+
+// 1. Intercept Crew operations under Zero-Trust
+const crew = new PGLAgentWrapper(
+  new Crew({ agents: [auditor, disburser] }),
+  {
+    workspaceId: '0x7fca4b76a086...',
+    vnpStakeBond: '0.05 VNP'
+  }
+);
+
+await crew.kickoff();`
+    },
+    langchain: {
+      python: `from langchain.agents import AgentExecutor
 from veklom import PGLAgentWrapper
 
 # 1. Seamlessly intercept existing LangChain Agents
@@ -266,7 +292,22 @@ agent = PGLAgentWrapper(
 
 # 2. Run agent safely under ArbiterOS
 agent.run("Sync and disburse payroll sheets")`,
-    autogen: `from autogen import ConversableAgent
+      javascript: `import { AgentExecutor } from 'langchain/agents';
+import { PGLAgentWrapper } from '@veklom/sdk';
+
+// 1. Secure LangChain Executor in Node.js
+const agent = new PGLAgentWrapper(
+  new AgentExecutor({ agent: llmChain, tools }),
+  {
+    gateway: 'https://api.veklom.com',
+    zeroTrustRules: 'Article-12'
+  }
+);
+
+await agent.run("Sync and disburse payroll sheets");`
+    },
+    autogen: {
+      python: `from autogen import ConversableAgent
 from veklom import PGLAgentWrapper
 
 # 1. Route Conversable Agent conversations via PGL
@@ -278,7 +319,34 @@ user_proxy = PGLAgentWrapper(
 
 # 2. Start chats under zero-trust auditing
 user_proxy.initiate_chat(assistant, message="Verify ledger")`,
-    vercel: `import { generateText } from 'ai';
+      javascript: `import { ConversableAgent } from '@microsoft/autogen';
+import { PGLAgentWrapper } from '@veklom/sdk';
+
+// 1. Node.js AutoGen Agent Interceptor
+const userProxy = new PGLAgentWrapper(
+  new ConversableAgent("user_proxy", ...),
+  {
+    enforcePGL: true,
+    receiptId: 'X-Veklom-Receipt-ID-91'
+  }
+);
+
+await userProxy.initiateChat(assistant, { message: 'Verify ledger' });`
+    },
+    vercel: {
+      python: `from veklom import pgl_middleware
+from vercel_ai import generate_text
+
+# 1. Python Vercel AI SDK Gateway middleware
+result = generate_text(
+    model="gpt-4o",
+    middleware=pgl_middleware(
+        workspace_id="0x7fca4b76a086",
+        enforce_sla=True
+    ),
+    prompt="Release payroll payload to AWS"
+)`,
+      javascript: `import { generateText } from 'ai';
 import { pglMiddleware } from '@veklom/sdk';
 
 // 1. Inbound zero-trust audit wrapper for Vercel AI SDK
@@ -290,6 +358,7 @@ const { text } = await generateText({
   }),
   prompt: 'Release payroll payload to AWS'
 });`
+    }
   };
 
   const githubWorkflow = `name: Veklom CI/CD Agent Deployment
@@ -307,41 +376,43 @@ jobs:
       - name: Deploy to Veklom Hetzner Node
         uses: appleboy/ssh-action@master
         with:
-          host: 5.78.135.11
+          host: ${serverIp}
           username: root
-          key: \${{ secrets.HETZNER_SSH_KEY }}
+          key: \${{ secrets.${sshKeyName} }}
           script: |
-            cd /data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru
+            cd ${appDir}
             git pull origin main
             docker build -t veklom-local:latest .
-            docker stop n13gp1nhrcdp0hvazvbnlxru-213557155694 || true
-            docker rm n13gp1nhrcdp0hvazvbnlxru-213557155694 || true
+            docker stop ${containerName} || true
+            docker rm ${containerName} || true
             docker run -d \\
-              --name n13gp1nhrcdp0hvazvbnlxru-213557155694 \\
+              --name ${containerName} \\
               --network coolify \\
-              --env-file /data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru/.env \\
-              -p 8088:8088 \\
+              --env-file ${appDir}/.env \\
+              -p ${containerPort}:${containerPort} \\
               veklom-local:latest`;
 
   const handleTriggerBuild = () => {
     setIsBuilding(true);
     setBuildLogs([]);
     const steps = [
-      '[GITHUB-CI] Fetching repository commit 1a2b3c4d...',
-      '[GITHUB-CI] Verified local configuration, authenticating with Veklom Server (5.78.135.11)...',
-      '[HETZNER-SSH] Opening secure tunnel using veklom-deploy SSH key... Connected.',
-      '[HETZNER-SSH] Pulling latest main branch changes from GitHub...',
-      '[HETZNER-SSH] Executing Docker container build: veklom-local:latest...',
-      '[DOCKER-BUILD] Building layers... (Step 1/4) FROM python:3.11-slim... Done.',
-      '[DOCKER-BUILD] Building layers... (Step 2/4) COPY requirements.txt... Done.',
-      '[DOCKER-BUILD] Building layers... (Step 3/4) RUN pip install @veklom/sdk... Done.',
-      '[DOCKER-BUILD] Building layers... (Step 4/4) CMD ["python", "main.py"]... Done.',
-      '[DOCKER-RUN] Stopping existing container n13gp1nhrcdp0hvazvbnlxru-213557155694...',
-      '[DOCKER-RUN] Initializing fresh container under Traefik Reverse Proxy...',
-      '[TRAEFIK-PROXY] Hot-swapping routing config: api.veklom.com -> container:8088...',
-      '[HEALTH-CHECK] Pinging container health endpoint... GET /health... 200 OK (Healthy)',
-      '[VNP-STAKE] Initializing off-path SLA Performance Ledger...',
-      '[STATUS] DEPLOYMENT COMPLETED SUCCESSFULLY! 🚀 Your agent is now live at api.veklom.com!'
+      `[GITHUB-CI] Fetching repository commit 1a2b3c4d for ${repoName}...`,
+      `[GITHUB-CI] Verified configuration, authenticating with Veklom Server (${serverIp})...`,
+      `[HETZNER-SSH] Opening secure tunnel using SSH key linked to secret \${{ secrets.${sshKeyName} }}... Connected.`,
+      `[HETZNER-SSH] Pulling latest main branch changes into application directory: ${appDir}...`,
+      `[HETZNER-SSH] Executing Docker container build: veklom-local:latest...`,
+      `[DOCKER-BUILD] Building layers... (Step 1/5) FROM python:3.11-slim... Done.`,
+      `[DOCKER-BUILD] Building layers... (Step 2/5) COPY requirements.txt . && RUN pip install -r requirements.txt... Done.`,
+      `[DOCKER-BUILD] Building layers... (Step 3/5) COPY . .... Done.`,
+      `[DOCKER-BUILD] Building layers... (Step 4/5) RUN pip install @veklom/sdk... Done.`,
+      `[DOCKER-BUILD] Building layers... (Step 5/5) EXPOSE ${containerPort}... Done.`,
+      `[DOCKER-RUN] Stopping existing container ${containerName}...`,
+      `[DOCKER-RUN] Removing stopped container ${containerName}...`,
+      `[DOCKER-RUN] Initializing fresh container on port ${containerPort} under Traefik Reverse Proxy...`,
+      `[TRAEFIK-PROXY] Hot-swapping routing config: api.veklom.com -> container:${containerPort}...`,
+      `[HEALTH-CHECK] Pinging container health endpoint... GET http://localhost:${containerPort}/health... 200 OK (Healthy)`,
+      `[VNP-STAKE] Initializing off-path SLA Performance Ledger...`,
+      `[STATUS] DEPLOYMENT COMPLETED SUCCESSFULLY! 🚀 Your agent is now live and interlinked at ${serverIp}:${containerPort}!`
     ];
 
     let delay = 0;
@@ -406,22 +477,40 @@ jobs:
             Bringing your own agent code over to Veklom is **100% painless and easier than ABC**. Just wrap your existing CrewAI, LangChain, or AutoGen agent definitions with the Veklom SDK. All authorization, stakes, and ledgering are intercepted seamlessly.
           </p>
 
-          {/* Subtabs */}
-          <div className="flex gap-1.5 border-b border-white/5 pb-2 text-[9px] font-bold select-none">
-            {(['crewai', 'langchain', 'autogen', 'vercel'] as const).map(fw => (
+          {/* Subtabs and language switcher */}
+          <div className="flex justify-between items-center border-b border-white/5 pb-2 text-[9px] font-bold select-none">
+            <div className="flex gap-1.5">
+              {(['crewai', 'langchain', 'autogen', 'vercel'] as const).map(fw => (
+                <button
+                  key={fw}
+                  onClick={() => setActiveFramework(fw)}
+                  className={`px-2 py-0.5 border rounded-sm uppercase cursor-pointer transition-all ${activeFramework === fw ? 'bg-[#b8860b]/10 border-[#b8860b] text-[#b8860b] font-bold' : 'border-white/5 text-white/40 hover:text-white/70'}`}
+                >
+                  {fw === 'vercel' ? 'Vercel AI SDK' : fw}
+                </button>
+              ))}
+            </div>
+            
+            {/* Language Switcher */}
+            <div className="flex bg-black/60 border border-white/10 rounded overflow-hidden p-0.5 text-[8px]">
               <button
-                key={fw}
-                onClick={() => setActiveFramework(fw)}
-                className={`px-2 py-0.5 border rounded-sm uppercase cursor-pointer transition-all ${activeFramework === fw ? 'bg-[#b8860b]/10 border-[#b8860b] text-[#b8860b] font-bold' : 'border-white/5 text-white/40 hover:text-white/70'}`}
+                onClick={() => setActiveFrameworkLanguage('python')}
+                className={`px-1.5 py-0.5 rounded-sm uppercase cursor-pointer transition-all ${activeFrameworkLanguage === 'python' ? 'bg-[#b8860b]/20 text-[#b8860b] font-black' : 'text-white/40 hover:text-white'}`}
               >
-                {fw === 'vercel' ? 'Vercel AI SDK' : fw}
+                Python
               </button>
-            ))}
+              <button
+                onClick={() => setActiveFrameworkLanguage('javascript')}
+                className={`px-1.5 py-0.5 rounded-sm uppercase cursor-pointer transition-all ${activeFrameworkLanguage === 'javascript' ? 'bg-[#b8860b]/20 text-[#b8860b] font-black' : 'text-white/40 hover:text-white'}`}
+              >
+                Javascript
+              </button>
+            </div>
           </div>
 
           {/* Code display */}
           <div className="p-3 bg-black/60 border border-white/5 rounded text-[10px] text-[#00E5FF] select-all overflow-x-auto font-mono whitespace-pre max-h-56 leading-relaxed custom-scrollbar">
-            {pythonWrappers[activeFramework]}
+            {codeWrappers[activeFramework][activeFrameworkLanguage]}
           </div>
 
           <div className="flex justify-between items-center text-[9px] text-white/30 uppercase mt-1 select-none">
@@ -434,8 +523,93 @@ jobs:
       ) : (
         <div className="space-y-3 flex-grow">
           <p className="text-[10.5px] text-white/60 leading-relaxed font-sans select-none">
-            Push code directly to your GitHub repository to trigger automated mainnet deployments to your Hetzner VPS node (`5.78.135.11`) under Traefik.
+            Push code directly to your GitHub repository to trigger automated mainnet deployments to your Hetzner VPS node under Traefik.
           </p>
+
+          {/* Collapsible Configuration Form Panel */}
+          <div className="border border-white/5 bg-white/[0.02] rounded-lg p-3 space-y-2">
+            <button
+              onClick={() => setShowConfig(!showConfig)}
+              className="w-full flex justify-between items-center text-[9px] text-white/50 uppercase tracking-widest font-black cursor-pointer hover:text-white focus:outline-none"
+            >
+              <span>{showConfig ? '▼ Hide Destination Parameters' : '▶ Configure Deployment Parameters'}</span>
+              <span className="text-[#b8860b] font-extrabold">{showConfig ? '[OPEN]' : '[COLLAPSED]'}</span>
+            </button>
+
+            {showConfig && (
+              <div className="grid grid-cols-2 gap-3 pt-2.5 border-t border-white/5 animate-fadeIn">
+                <div className="space-y-1">
+                  <label className="text-[8px] text-white/40 uppercase font-bold">GitHub Repository</label>
+                  <input
+                    type="text"
+                    value={repoName}
+                    onChange={e => setRepoName(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-[#b8860b] transition-all font-mono text-[9px]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] text-white/40 uppercase font-bold">Hetzner Node IP</label>
+                  <input
+                    type="text"
+                    value={serverIp}
+                    onChange={e => setServerIp(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-[#b8860b] transition-all font-mono text-[9px]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] text-white/40 uppercase font-bold">GitHub Secret Name</label>
+                  <input
+                    type="text"
+                    value={sshKeyName}
+                    onChange={e => setSshKeyName(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-[#b8860b] transition-all font-mono text-[9px]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] text-white/40 uppercase font-bold">Application Directory</label>
+                  <input
+                    type="text"
+                    value={appDir}
+                    onChange={e => setAppDir(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-[#b8860b] transition-all font-mono text-[9px]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] text-white/40 uppercase font-bold">Container Name</label>
+                  <input
+                    type="text"
+                    value={containerName}
+                    onChange={e => setContainerName(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-[#b8860b] transition-all font-mono text-[9px]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] text-white/40 uppercase font-bold">Target Port</label>
+                  <input
+                    type="text"
+                    value={containerPort}
+                    onChange={e => setContainerPort(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-[#b8860b] transition-all font-mono text-[9px]"
+                  />
+                </div>
+                <div className="col-span-2 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setRepoName('reprewindai-dev/veklom-byos-backend');
+                      setServerIp('5.78.135.11');
+                      setSshKeyName('HETZNER_SSH_KEY');
+                      setAppDir('/data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru');
+                      setContainerName('n13gp1nhrcdp0hvazvbnlxru-213557155694');
+                      setContainerPort('8088');
+                    }}
+                    className="text-[8px] text-[#b8860b] uppercase font-bold tracking-wider hover:text-white transition-colors cursor-pointer"
+                  >
+                    Reset Defaults
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-3.5 my-2">
             {/* Left side actions */}
@@ -466,12 +640,12 @@ jobs:
             </div>
 
             {/* Right side config summary info */}
-            <div className="p-3 bg-black/40 border border-white/5 rounded space-y-1.5 text-[9px] select-none">
-              <div className="text-white/30 uppercase">MAINNET METADATA</div>
-              <div>SSH AUTH: <strong className="text-white">root@5.78.135.11</strong></div>
+            <div className="p-3 bg-black/40 border border-white/5 rounded space-y-1.5 text-[9px] select-none flex flex-col justify-center">
+              <div className="text-white/30 uppercase font-black">MAINNET TARGET MANIFEST</div>
+              <div>SSH AUTH: <strong className="text-white">root@{serverIp}</strong></div>
               <div>DEPLOY KEY: <strong className="text-white">~/.ssh/veklom-deploy</strong></div>
               <div>PROXY ROUTING: <strong className="text-white">Traefik (api.veklom.com)</strong></div>
-              <div>CONTAINER PORT: <strong className="text-white">8088 (FastAPI Standalone)</strong></div>
+              <div>CONTAINER PORT: <strong className="text-white">{containerPort}</strong></div>
             </div>
           </div>
 
