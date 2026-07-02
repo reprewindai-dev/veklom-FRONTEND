@@ -9,8 +9,8 @@ export default function GpcPage() {
   const stats = useApi<any>("/api/v1/gpc/stats");
   const s = stats.data || {};
 
-  // Default to the external render URL if env var is missing
-  const uacpUrl = process.env.NEXT_PUBLIC_UACP_URL || "https://uacpv3.onrender.com";
+  // Default to the secure Coolify GPC URL if env var is missing
+  const uacpUrl = process.env.NEXT_PUBLIC_UACP_URL || "https://gpc.veklom.com";
 
   return (
     <Shell>

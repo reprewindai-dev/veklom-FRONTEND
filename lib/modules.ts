@@ -51,7 +51,7 @@ export const MODULES: ModuleDef[] = [
 
   // 5. ⚖️ Governance & Security
   { slug: "governance", label: "Governance & Identity", href: "/governance", group: "govern", minTier: "starter", description: "Operator trust score, rank progression, immutable event ledger, and identity verification.", icon: "Scale", sidebar: true },
-  { slug: "command-center", label: "Interlink", href: "/interlink", group: "govern", minTier: "free", description: "cAPI execution proofs and 9-phase ledger.", icon: "ShieldAlert", sidebar: true },
+  { slug: "interlink", label: "Interlink", href: "/interlink", group: "govern", minTier: "free", description: "cAPI execution proofs and 9-phase ledger.", icon: "ShieldAlert", sidebar: true },
   { slug: "audit", label: "Audit Log", href: "/audit", group: "govern", minTier: "pro", description: "Tamper-evident audit trail.", icon: "FileSearch", sidebar: false },
   { slug: "compliance", label: "Compliance", href: "/compliance", group: "govern", minTier: "sovereign", description: "Frameworks and evidence packages.", icon: "ShieldCheck", sidebar: false },
   { slug: "security", label: "Security Center", href: "/security", group: "govern", minTier: "sovereign", description: "Alerts and vault.", icon: "Shield", sidebar: false },
@@ -77,6 +77,7 @@ export const MODULES: ModuleDef[] = [
   { slug: "status", label: "System Status", href: "/status", group: "insights", minTier: "free", description: "Platform health.", icon: "HeartPulse", sidebar: false },
 
   // Admin
+  { slug: "command-center", label: "Command Center", href: "/command-center", group: "admin", minTier: "enterprise", description: "Real-time user insights, active telemetry, and platform activity admin control panel.", icon: "Activity", sidebar: true },
   { slug: "admin", label: "Global Admin", href: "/admin", group: "admin", minTier: "enterprise", description: "Workspaces, users, and billing reconciliation for superusers.", icon: "ShieldQuestion", sidebar: true },
 ];
 
