@@ -26,7 +26,7 @@ interface TerminalAppProps {
   defaultTab?: string;
 }
 
-export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
+export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
   // Primary Navigation State
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [isLandingPage, setIsLandingPage] = useState<boolean>(false);
@@ -35,9 +35,6 @@ export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
     if (typeof window !== "undefined") {
       const isLanding = window.location.pathname === "/";
       setIsLandingPage(isLanding);
-      if (isLanding) {
-        setActiveTab('terminal');
-      }
     }
   }, []);
 
@@ -163,15 +160,13 @@ export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
       {/* Main Content Split Frame */}
       <div className="flex-grow flex overflow-hidden relative">
         {/* 2. Primary Navigation Sidebar */}
-        {!isLandingPage && (
-          <Sidebar
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
-            throughput={liveMetrics.throughput}
-            agentsCount={agents.length}
-          />
-        )}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
+          throughput={liveMetrics.throughput}
+          agentsCount={agents.length}
+        />
 
 
         {/* 3. Central Application Viewport */}

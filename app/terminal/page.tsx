@@ -8,7 +8,7 @@ export const metadata = {
 export default function TerminalPage() {
   return (
     <div className="w-full h-screen overflow-hidden">
-      <TerminalApp />
+      <TerminalApp defaultTab="terminal" />
     </div>
   );
 }
