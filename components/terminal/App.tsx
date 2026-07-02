@@ -237,6 +237,8 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
               <CouncilMatrix 
                 delegates={delegates}
                 onVotePropose={handleVotePropose}
+                logs={logs}
+                metrics={liveMetrics}
               />
             )}
 

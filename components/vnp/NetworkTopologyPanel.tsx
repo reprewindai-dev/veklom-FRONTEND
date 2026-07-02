@@ -166,7 +166,7 @@ export default function NetworkTopologyPanel() {
   const triggerStorm = () => {
     setIsActiveStorm(true);
     setEventsLog(prev => [
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡ STORM INGESTION REGISTERED - 10,000 High-Frequency Microtransactions gliding across PBFT network`,
+      `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡ STORM INGESTION REGISTERED - 10,000 High-Frequency Microtransactions gliding across VNP validation network`,
       `[${new Date().toLocaleTimeString([], { hour12: false })}] [SQLx Pool] dynamically spinning active pooling tunnels to handle connection throughput.`,
       ...prev.slice(0, 5)
     ]);
@@ -188,7 +188,7 @@ export default function NetworkTopologyPanel() {
 
     setEventsLog(prev => [
       `[${new Date().toLocaleTimeString([], { hour12: false })}] 🚨 ATTESTATION FAIL OR CHEAT SUSPICION: "validator-eu-west-1" submitted anomalous metric payload.`,
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] [PBFT Guardian] slashing 12,000 USD from validator deposit. Quarantine state LOCK applied.`,
+      `[${new Date().toLocaleTimeString([], { hour12: false })}] [VNP Arbiter] slashing 12,000 USD from validator deposit. Quarantine state LOCK applied.`,
       `[${new Date().toLocaleTimeString([], { hour12: false })}] [RLS Isolation] All queries from identity "tempo_global" redirected to isolated decoy storage buffer until audit clears.`,
       ...prev.slice(0, 5)
     ]);
@@ -248,10 +248,10 @@ export default function NetworkTopologyPanel() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Radio className="w-4.5 h-4.5 text-emerald-400 animate-pulse" />
-              <span className="text-xs font-bold text-slate-100 uppercase tracking-widest">Veklom MCP Gateway &amp; ConvergeOS Swarm</span>
+              <span className="text-xs font-bold text-slate-100 uppercase tracking-widest">Veklom Gateway &amp; x402 Settlement Swarm</span>
             </div>
             <span className="text-[9px] text-[#86efac]/80 uppercase font-extrabold bg-[#052e16]/30 border border-emerald-500/10 px-2 py-0.5 rounded">
-              PBFT Multicast Consensus &amp; attestation web
+              VNP SLA Performance &amp; attestation web
             </span>
           </div>
 
@@ -432,7 +432,7 @@ export default function NetworkTopologyPanel() {
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-[10px] text-slate-500 uppercase font-extrabold pb-1.5 border-b border-slate-900">
             <Terminal className="w-3.5 h-3.5 text-slate-500" />
-            <span>osconverge Repo &amp; PBFT Ledger Trace output</span>
+            <span>VNP Ledger Trace &amp; x402 Proof of Reserve</span>
           </div>
           <div className="h-[65px] overflow-y-auto font-mono text-[9px]/relaxed text-slate-400 space-y-1 select-text scrollbar-thin">
             {eventsLog.map((log, idx) => {

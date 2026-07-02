@@ -204,3 +204,39 @@ body > * { position: relative; z-index: 1; }
   border-radius: 9999px;
   will-change: box-shadow, border-color;
 }
+
+/* ---- Trust Strip Marquee ---- */
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.trust-strip {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  z-index: 40;
+}
+.trust-strip-inner {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: max-content;
+  animation: scroll-left 40s linear infinite;
+}
+.trust-badge {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.02);
+  font-family: monospace;
+}
+

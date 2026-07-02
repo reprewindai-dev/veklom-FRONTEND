@@ -5,20 +5,30 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Delegate } from '../types';
-import { Users, Send, AlertTriangle } from 'lucide-react';
+import { Users, Send, AlertTriangle, Radio, ShieldCheck, Zap, Layers, Terminal as TerminalIcon } from 'lucide-react';
 
 interface CouncilMatrixProps {
   delegates: Delegate[];
   onVotePropose?: (proposalName: string) => void;
+  logs?: any[];
+  metrics?: {
+    throughput: number;
+    attestationRate: number;
+    gasSaved: number;
+    activeQueue: number;
+    uptime: string;
+    totalExecutions: number;
+  };
 }
 
-export default function CouncilMatrix({ delegates, onVotePropose }: CouncilMatrixProps) {
+export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics }: CouncilMatrixProps) {
   const [activeMotion, setActiveMotion] = useState<string>('SYS-UPDATE-V5.0.3: Allocate Swarm validators to high-priority ZK proof pipeline.');
   const [proposedMotionText, setProposedMotionText] = useState('');
   const [isSealing, setIsSealing] = useState(false);
   const [motionStatus, setMotionStatus] = useState<'voting' | 'sealed' | 'rejected'>('voting');
+  const [showSecuritas, setShowSecuritas] = useState(true);
 
   // Calculate real-time weights and votes
   const voteAnalysis = useMemo(() => {
@@ -80,7 +90,7 @@ export default function CouncilMatrix({ delegates, onVotePropose }: CouncilMatri
   };
 
   return (
-    <div className="w-full h-full p-6 bg-void-black grid-overlay select-none overflow-y-auto font-mono">
+    <div className="relative w-full h-full p-6 bg-void-black grid-overlay select-none overflow-y-auto font-mono">
       
       {/* Page Header */}
       <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-white/10">
@@ -209,6 +219,57 @@ export default function CouncilMatrix({ delegates, onVotePropose }: CouncilMatri
             </div>
           </div>
 
+          {/* Real-time high-density metrics directly below the delegates grid */}
+          {metrics && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+              <div className="p-3 border border-white/5 bg-white/[0.01]">
+                <div className="text-white/30 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Radio className="w-3 h-3 text-electric-cyan" /> Throughput
+                </div>
+                <div className="text-white text-xs font-bold font-sans">{metrics.throughput} KB/S</div>
+              </div>
+              <div className="p-3 border border-white/5 bg-white/[0.01]">
+                <div className="text-white/30 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-matrix-emerald" /> Attestation Rate
+                </div>
+                <div className="text-[#00FF66] text-xs font-bold font-sans">{metrics.attestationRate}%</div>
+              </div>
+              <div className="p-3 border border-white/5 bg-white/[0.01]">
+                <div className="text-white/30 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-hazard-amber" /> Gas Saved
+                </div>
+                <div className="text-white text-xs font-bold font-sans">{metrics.gasSaved.toLocaleString()}</div>
+              </div>
+              <div className="p-3 border border-white/5 bg-white/[0.01]">
+                <div className="text-white/30 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Layers className="w-3 h-3 text-white/50" /> Active Queue
+                </div>
+                <div className="text-electric-cyan text-xs font-bold font-sans">{metrics.activeQueue} Pending</div>
+              </div>
+            </div>
+          )}
+
+          {/* Real-time commit stream directly below metrics */}
+          {logs && (
+            <div className="mt-6">
+              <div className="text-[10px] text-white/40 uppercase tracking-widest font-black mb-1.5 flex items-center gap-1.5 pb-1 border-b border-white/5">
+                <TerminalIcon className="w-3.5 h-3.5 text-electric-cyan" /> MCP IO SYSCON STREAM &amp; cAPI COMMIT LOGS
+              </div>
+              <div className="h-44 bg-[#040406] border border-white/10 p-3 overflow-y-auto font-mono text-[10.5px] leading-relaxed space-y-1.5 select-text scroll-thin">
+                {logs.slice(-10).reverse().map((log, idx) => {
+                  const logColor = log.type === 'error' ? 'text-laser-red' : log.type === 'warn' ? 'text-hazard-amber' : log.type === 'success' ? 'text-matrix-emerald' : 'text-[#ffffffb3]';
+                  return (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-white/20 select-none">[{log.timestamp?.substring(11, 19) || '00:00:00'}]</span>
+                      <span className="text-electric-cyan font-bold select-none min-w-[70px] uppercase">[{log.source}]</span>
+                      <span className={`${logColor} font-sans text-xs break-all`}>{log.message}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* RIGHT COLUMN (4 cols): Propose new motion engine */}
@@ -248,22 +309,39 @@ export default function CouncilMatrix({ delegates, onVotePropose }: CouncilMatri
             </div>
           </div>
 
-          {/* Legislative rules banner help */}
-          <div className="p-4.5 rounded-none border border-[#ff003c]/20 bg-black/40 space-y-3.5 font-mono text-[11px] leading-relaxed">
-            <h5 className="flex items-center gap-1.5 font-bold text-laser-red text-[11px] uppercase tracking-widest animate-pulse">
-              <AlertTriangle className="w-4 h-4 text-laser-red" /> ArbiterOS Securitas
-            </h5>
+        </div>
+
+      </div>
+
+      {/* Floating Securitas Overlay */}
+      <AnimatePresence>
+        {showSecuritas && (
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            className="absolute bottom-6 right-6 p-4.5 border border-[#ff003c]/30 bg-black/95 space-y-2.5 font-mono text-[11px] leading-relaxed max-w-sm shadow-[0_8px_32px_rgba(0,0,0,0.85)] z-50 rounded"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-1.5">
+              <h5 className="flex items-center gap-1.5 font-bold text-laser-red text-[11px] uppercase tracking-widest animate-pulse">
+                <AlertTriangle className="w-4 h-4 text-laser-red" /> ArbiterOS Securitas
+              </h5>
+              <button
+                onClick={() => setShowSecuritas(false)}
+                className="text-white/40 hover:text-white transition-colors cursor-pointer text-xs"
+              >
+                [DISMISS]
+              </button>
+            </div>
             <p className="text-white/60">
               Council votes represent state-root validator enclaves. Under catastrophic rollback threats, a direct Veto triggers complete consensus lockout (RED ALARM).
             </p>
             <div className="text-[9.5px] text-white/30 leading-snug">
               *All voting weights represent actual staking bounds computed under SEKED sandboxes.
             </div>
-          </div>
-
-        </div>
-
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
