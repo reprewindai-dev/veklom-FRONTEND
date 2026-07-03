@@ -118,7 +118,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
   const [signatureName, setSignatureName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [licenseKeyInput, setLicenseKeyInput] = useState("");
-  const [ollamaUrlInput, setOllamaUrlInput] = useState("http://localhost:11434");
+  const [ollamaUrlInput, setOllamaUrlInput] = useState("http://127.0.0.1:11434");
   const [workspaceIdInput, setWorkspaceIdInput] = useState("veklom-ws-901");
   const [isDeploying, setIsDeploying] = useState(false);
   const [deployProgress, setDeployProgress] = useState(0);

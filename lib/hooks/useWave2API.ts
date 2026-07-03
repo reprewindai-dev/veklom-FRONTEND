@@ -168,7 +168,7 @@ export function useRuntime() {
     async (payload: ExecutionRequest) => {
       return request<ExecutionResult>('/v1/exec', {
         method: 'POST',
-        body: payload,
+        body: payload as any,
       });
     },
     [request]

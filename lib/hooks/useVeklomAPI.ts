@@ -1,8 +1,7 @@
 // lib/hooks/useVeklomAPI.ts
 import { useState, useCallback } from 'react';
-import { apiBaseUrl } from '../api';
 
-const API_BASE = process.env.NEXT_PUBLIC_VEKLOM_API_URL || apiBaseUrl();
+const API_BASE = process.env.NEXT_PUBLIC_VEKLOM_API_URL || 'http://api.veklom.com';
 const API_KEY = process.env.NEXT_PUBLIC_VEKLOM_API_KEY || 'demo_key';
 
 export interface APIError {
@@ -16,11 +15,11 @@ export function useVeklomAPI() {
   const [error, setError] = useState<APIError | null>(null);
 
   const request = useCallback(
-    async <T, B = unknown>(
+    async <T,>(
       endpoint: string,
       options?: {
         method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-        body?: B;
+        body?: Record<string, unknown>;
         headers?: Record<string, string>;
         useAuth?: boolean;
       }
@@ -111,7 +110,7 @@ export function useExecution() {
     async (payload: ExecutionRequest) => {
       return request<ExecutionResponse>('/v1/exec', {
         method: 'POST',
-        body: payload,
+        body: payload as any,
       });
     },
     [request]
@@ -149,7 +148,7 @@ export function useCostPrediction() {
         '/api/v1/cost/predict',
         {
           method: 'POST',
-          body: payload,
+          body: payload as any,
         }
       );
     },
@@ -261,7 +260,7 @@ export function useBilling() {
 
   const getBalance = useCallback(async () => {
     return request<WalletBalance>(
-      '/api/v1/wallet/balance'
+      '/api/v1/billing/wallet/balance'
     );
   }, [request]);
 

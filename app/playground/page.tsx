@@ -1,456 +1,431 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  ShieldCheck, Activity, Zap, Cpu,
-  Sparkles, Check, AlertTriangle, Layers, Fingerprint, Network, ShieldAlert,
-  Database, GitBranch, Swords, Send, User, Bot
-} from 'lucide-react';
-import Shell from '@/components/Shell';
-import { api, duelApi, apiUrl, getToken } from '@/lib/api';
-import { motion, AnimatePresence } from 'motion/react';
-import clsx from 'clsx';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Copy, Download, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'agent1' | 'agent2' | 'system';
-  content: string;
-  timestamp: string;
+interface ModelResponse {
+  response: string;
+  model: string;
+  provider: 'ollama' | 'groq';
+  latency_ms: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  cost: string;
+  log_id: string;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const STREAM_WORD_DELAY_MS = 25;
-
-function StreamingText({ text, isStreaming }: { text: string; isStreaming: boolean }) {
-  return (
-    <span className="font-mono text-[13px] leading-relaxed text-ink-200 whitespace-pre-wrap">
-      {text}
-      {isStreaming && (
-        <span className="inline-block w-[6px] h-[14px] ml-1 bg-brand-400 align-middle animate-pulse" />
-      )}
-    </span>
-  );
+interface CircuitBreakerState {
+  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+  failures: number;
+  threshold: number;
+  cooldown_seconds: number;
 }
 
-export default function SwarmAssemblyMatrix() {
-  const [executionMode, setExecutionMode] = useState<'CAPI' | 'DUEL'>('DUEL');
-  
-  // Debate State
-  const [topic, setTopic] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+interface SystemStatus {
+  status: string;
+  circuit_breaker: CircuitBreakerState;
+  llm_ok: boolean;
+  redis_ok: boolean;
+  db_ok: boolean;
+}
+
+export default function PlaygroundPage() {
+  const [systemPrompt, setSystemPrompt] = useState('You are a helpful AI assistant.');
+  const [userPrompt, setUserPrompt] = useState('');
+  const [maxTokens, setMaxTokens] = useState(2048);
+  const [temperature, setTemperature] = useState(0.7);
+  const [conversationId, setConversationId] = useState('');
+  const [useMemory, setUseMemory] = useState(true);
+
+  const [modelA, setModelA] = useState('ollama');
+  const [modelB, setModelB] = useState('groq');
+  const [responseA, setResponseA] = useState<ModelResponse | null>(null);
+  const [responseB, setResponseB] = useState<ModelResponse | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [vnpMicroStaking, setVnpMicroStaking] = useState(false);
+  const [circuitBreaker, setCircuitBreaker] = useState<CircuitBreakerState | null>(null);
+  const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
 
-  // Agents
-  const [agent1Theme, setAgent1Theme] = useState('Crypto Native Maxy');
-  const [agent2Theme, setAgent2Theme] = useState('Traditional Finance Skeptic');
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const streamInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
-  const [displayText, setDisplayText] = useState('');
-
+  // Fetch circuit breaker status
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, displayText]);
-
-  // Cleanup streaming on unmount
-  useEffect(() => {
-    return () => {
-      if (streamInterval.current) clearInterval(streamInterval.current);
-    };
-  }, []);
-
-  const startStreaming = useCallback((messageId: string, fullText: string) => {
-    if (streamInterval.current) clearInterval(streamInterval.current);
-    const words = fullText.split(' ');
-    let idx = 0;
-    setDisplayText('');
-    setStreamingMessageId(messageId);
-    
-    streamInterval.current = setInterval(() => {
-      idx++;
-      setDisplayText(words.slice(0, idx).join(' '));
-      if (idx >= words.length) {
-        clearInterval(streamInterval.current!);
-        streamInterval.current = null;
-        setStreamingMessageId(null);
-        setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: fullText } : m));
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch('http://api.veklom.com/status');
+        const data: SystemStatus = await res.json();
+        setCircuitBreaker(data.circuit_breaker);
+      } catch (err) {
+        console.error('Failed to fetch circuit breaker status:', err);
       }
-    }, STREAM_WORD_DELAY_MS);
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const runCapiTest = async () => {
-    if (!topic.trim()) return;
+  // Execute single model
+  const executeModel = async (model: string, isModelA: boolean) => {
     setError('');
     setLoading(true);
-    
-    const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: topic, timestamp: new Date().toLocaleTimeString() };
-    setMessages(prev => [...prev, userMsg]);
-    setTopic('');
+
+    const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
     try {
-      let replyText = 'No response generated.';
-      let vnpResultText = '';
-      
-      if (vnpMicroStaking) {
-        // Direct fetch to read VNP stake headers from response
-        const tok = getToken();
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (tok) headers['Authorization'] = `Bearer ${tok}`;
-        headers['X-VNP-Stake'] = '0.001';
-        
-        const res = await fetch(apiUrl('/api/v1/ai/chat'), {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            messages: [{ role: 'user', content: userMsg.content }],
-            model: 'llama3.2:latest',
-            temperature: 0.2,
-            session_id: `capi_${Date.now()}`,
-          })
-        });
-        
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || data.error || 'Execution Failed');
-        
-        replyText = data.response_text || data.response || 'No response generated.';
-        const stakeResult = res.headers.get('X-VNP-Stake-Result');
-        const latencyMs = res.headers.get('X-VNP-Latency-Ms') || data.latency_ms;
-        if (stakeResult) {
-          vnpResultText = `\n\n[VNP Stakes Engine] Latency: ${latencyMs}ms | Result: ${stakeResult.toUpperCase()} | Micro-stake: 0.001 USDC`;
-        } else if (data.latency_ms) {
-          vnpResultText = `\n\n[VNP Stakes Engine] Latency: ${data.latency_ms}ms | Provider: ${data.provider} | Model: ${data.model}`;
-        }
-      } else {
-        // Route through /api/v1/ai/chat — wired to Ollama on Node 2 (10.0.1.1:11434)
-        const chatData = await api<any>('/api/v1/ai/chat', {
-          method: 'POST',
-          body: {
-            messages: [{ role: 'user', content: userMsg.content }],
-            model: 'llama3.2:latest',
-            temperature: 0.2,
-            session_id: `capi_${Date.now()}`,
-          },
-        });
-        replyText = chatData.response_text || chatData.response || 'No response generated.';
-        if (chatData.latency_ms) {
-          vnpResultText = `\n\n[CAPI Node] Latency: ${chatData.latency_ms}ms | Provider: ${chatData.provider} | Model: ${chatData.model}`;
-        }
+      // Step 1: Predict cost
+      const costRes = await fetch('http://api.veklom.com/api/v1/cost/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operation_type: 'inference',
+          provider: model,
+          input_text: userPrompt,
+          model: model === 'ollama' ? 'qwen2.5:3b' : 'llama-3.1-8b-instant',
+        }),
+      });
+      const costData = await costRes.json();
+      const predictedCost = costData.predicted_cost || '0.000000';
+
+      // Step 2: Execute inference
+      const execRes = await fetch('http://api.veklom.com/v1/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': process.env.NEXT_PUBLIC_VEKLOM_API_KEY || 'demo_key',
+        },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          model: model === 'ollama' ? 'qwen2.5:3b' : 'llama-3.1-8b-instant',
+          conversation_id: useMemory && conversationId ? conversationId : undefined,
+          use_memory: useMemory,
+          max_tokens: maxTokens,
+          temperature,
+        }),
+      });
+
+      if (!execRes.ok) {
+        throw new Error(`Execution failed: ${execRes.statusText}`);
       }
-      
-      const finalReply = replyText + vnpResultText;
-      
-      const agentMsgId = (Date.now() + 1).toString();
-      const agentMsg: ChatMessage = { id: agentMsgId, role: 'system', content: '', timestamp: new Date().toLocaleTimeString() };
-      setMessages(prev => [...prev, agentMsg]);
-      startStreaming(agentMsgId, finalReply);
-      
+
+      const execData: ModelResponse = await execRes.json();
+      execData.cost = predictedCost;
+
+      if (isModelA) {
+        setResponseA(execData);
+      } else {
+        setResponseB(execData);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Execution Failed');
+      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const runAgentDuel = async () => {
-    if (!topic.trim()) return;
-    setError('');
-    setLoading(true);
+  // Run both models simultaneously
+  const runBoth = async () => {
+    await Promise.all([
+      executeModel(modelA, true),
+      executeModel(modelB, false),
+    ]);
+  };
 
-    const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: `Topic: ${topic}\nAgent 1: ${agent1Theme}\nAgent 2: ${agent2Theme}`, timestamp: new Date().toLocaleTimeString() };
-    setMessages(prev => [...prev, userMsg]);
-    
-    try {
-      // Agent 1 fires first — pro-argument for their theme
-      const agent1Prompt = `You are ${agent1Theme}. Give a sharp, confident 3-sentence opening argument about: "${topic}". Stay fully in character.`;
-      
-      let agent1Reply = '';
-      let agent2Reply = '';
+  // Export audit log as JSON
+  const exportAudit = () => {
+    const auditData = {
+      timestamp: new Date().toISOString(),
+      system_prompt: systemPrompt,
+      user_prompt: userPrompt,
+      parameters: { maxTokens, temperature, conversationId, useMemory },
+      responses: {
+        model_a: responseA ? {
+          model: responseA.model,
+          provider: responseA.provider,
+          latency_ms: responseA.latency_ms,
+          tokens: {
+            prompt: responseA.prompt_tokens,
+            completion: responseA.completion_tokens,
+            total: responseA.total_tokens,
+          },
+          cost: responseA.cost,
+          log_id: responseA.log_id,
+        } : null,
+        model_b: responseB ? {
+          model: responseB.model,
+          provider: responseB.provider,
+          latency_ms: responseB.latency_ms,
+          tokens: {
+            prompt: responseB.prompt_tokens,
+            completion: responseB.completion_tokens,
+            total: responseB.total_tokens,
+          },
+          cost: responseB.cost,
+          log_id: responseB.log_id,
+        } : null,
+      },
+    };
 
-      // Agent 1 call — hits Ollama on Node 2 via /api/v1/ai/chat
-      const sessionId = `duel_${Date.now()}`;
-      const agent1Res = await api<any>('/api/v1/ai/chat', {
-        method: 'POST',
-        body: {
-          messages: [{ role: 'user', content: agent1Prompt }],
-          model: 'llama3.2:latest',
-          temperature: 0.8,
-          session_id: `${sessionId}_agent1`,
-        },
-      });
-      agent1Reply = agent1Res.response_text || agent1Res.response || 'No response.';
-
-      // Display agent 1 response with streaming
-      const agent1MsgId = (Date.now() + 1).toString();
-      const agent1Msg: ChatMessage = { id: agent1MsgId, role: 'agent1', content: '', timestamp: new Date().toLocaleTimeString() };
-      setMessages(prev => [...prev, agent1Msg]);
-      await new Promise<void>(resolve => {
-        startStreaming(agent1MsgId, agent1Reply + `\n\n[${agent1Res.provider || 'ollama'} · ${agent1Res.latency_ms || '?'}ms]`);
-        setTimeout(resolve, Math.max(500, (agent1Reply.split(' ').length * 25) + 200));
-      });
-
-      // Agent 2 rebuttal — counter-argument
-      const agent2Prompt = `You are ${agent2Theme}. Rebut this argument in 3 sharp sentences: "${agent1Reply}". Stay fully in character as a ${agent2Theme}.`;
-      const agent2Res = await api<any>('/api/v1/ai/chat', {
-        method: 'POST',
-        body: {
-          messages: [{ role: 'user', content: agent2Prompt }],
-          model: 'llama3.2:latest',
-          temperature: 0.8,
-          session_id: `${sessionId}_agent2`,
-        },
-      });
-      agent2Reply = agent2Res.response_text || agent2Res.response || 'No response.';
-
-      const agent2MsgId = (Date.now() + 2).toString();
-      const agent2Msg: ChatMessage = { id: agent2MsgId, role: 'agent2', content: '', timestamp: new Date().toLocaleTimeString() };
-      setMessages(prev => [...prev, agent2Msg]);
-      startStreaming(agent2MsgId, agent2Reply + `\n\n[${agent2Res.provider || 'ollama'} · ${agent2Res.latency_ms || '?'}ms]`);
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Duel Execution Failed');
-    } finally {
-      setLoading(false);
-      setTopic('');
-    }
+    const blob = new Blob([JSON.stringify(auditData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit_${new Date().getTime()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <Shell>
-      <div className="space-y-6 animate-fade-up max-w-[1400px] mx-auto h-[calc(100vh-100px)] flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">🔬 VEKLOM PLAYGROUND</h1>
+          <p className="text-slate-400">Compare AI models side-by-side with real-time cost analysis</p>
+        </div>
 
-        {/* ── Header ────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-2 border-b border-[#242424] pb-6 shrink-0">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-6 h-6 rounded bg-brand-500/20 text-brand-400">
-                <Layers size={14} />
-              </span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-400 font-bold">
-                Control Plane · Swarm Operations
-              </span>
+        {/* Circuit Breaker Banner */}
+        {circuitBreaker && (
+          <div className={`mb-6 p-4 rounded-lg border flex items-center gap-3 ${
+            circuitBreaker.state === 'CLOSED'
+              ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+              : circuitBreaker.state === 'HALF_OPEN'
+              ? 'bg-amber-950 border-amber-500 text-amber-300'
+              : 'bg-red-950 border-red-500 text-red-300'
+          }`}>
+            {circuitBreaker.state === 'CLOSED' ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5" />
+            )}
+            <div className="flex-1">
+              <p className="font-semibold">Circuit Breaker: {circuitBreaker.state}</p>
+              <p className="text-sm opacity-90">
+                {circuitBreaker.state === 'CLOSED'
+                  ? 'Ollama local inference active ✓'
+                  : circuitBreaker.state === 'OPEN'
+                  ? `Ollama offline. Routing to Groq cloud fallback. Cooldown: ${circuitBreaker.cooldown_seconds}s`
+                  : 'Testing Ollama recovery...'}
+              </p>
             </div>
-            <h1 className="text-[32px] font-bold tracking-tight text-white">
-              Swarm Assembly & Debug Matrix
-            </h1>
-            <p className="text-sm text-ink-400 max-w-3xl">
-              Construct, test, and pit autonomous agents against each other. 
-              Live-wire multi-backend routing between the main CAPI node and the Base Duel Arena.
-            </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] px-3 py-1.5 rounded text-[10px] font-mono font-bold text-accent-green">
-              <Network size={12} />
-              Dual-Node Active
-            </span>
+        )}
+
+        {/* System Prompt Section */}
+        <div className="mb-6 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setIsSystemPromptOpen(!isSystemPromptOpen)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-700 transition"
+          >
+            <span className="font-semibold text-white">System Prompt</span>
+            <ChevronDown
+              className={`w-5 h-5 text-slate-400 transition ${
+                isSystemPromptOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          {isSystemPromptOpen && (
+            <div className="px-6 pb-6 border-t border-slate-700">
+              <textarea
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                className="w-full p-4 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none resize-none"
+                rows={4}
+                placeholder="Enter system prompt..."
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {/* Max Tokens */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <label className="block text-sm font-semibold text-white mb-3">
+              Max Tokens: {maxTokens}
+            </label>
+            <input
+              type="range"
+              min="64"
+              max="4096"
+              value={maxTokens}
+              onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            />
+            <p className="text-xs text-slate-400 mt-2">64 - 4096</p>
+          </div>
+
+          {/* Temperature */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <label className="block text-sm font-semibold text-white mb-3">
+              Temperature: {temperature.toFixed(2)}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={temperature}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            />
+            <p className="text-xs text-slate-400 mt-2">0.0 (deterministic) - 1.0 (creative)</p>
+          </div>
+
+          {/* Conversation Memory */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useMemory}
+                onChange={(e) => setUseMemory(e.target.checked)}
+                className="w-5 h-5"
+              />
+              <span className="font-semibold text-white">Enable Memory</span>
+            </label>
+            {useMemory && (
+              <input
+                type="text"
+                value={conversationId}
+                onChange={(e) => setConversationId(e.target.value)}
+                placeholder="Conversation ID (optional)"
+                className="w-full mt-3 p-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none text-sm"
+              />
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-          
-          {/* ── Left Column: Configuration ────────────────────── */}
-          <div className="lg:col-span-4 space-y-4 flex flex-col h-full overflow-y-auto custom-scrollbar">
-            
-            {/* Mode Selector */}
-            <div className="bg-[#111] border border-[#242424] rounded-xl p-1 flex relative shrink-0">
-              <div 
-                className="absolute inset-y-1 transition-all duration-300 ease-out bg-[#1a1a1a] border border-[#333] rounded-lg shadow-sm"
-                style={{
-                  left: executionMode === 'CAPI' ? '4px' : 'calc(50% + 2px)',
-                  width: 'calc(50% - 6px)',
-                }}
-              />
-              <button 
-                onClick={() => setExecutionMode('CAPI')}
-                className={clsx(
-                  "relative flex-1 flex flex-col items-center justify-center gap-1 py-3 px-4 rounded-lg z-10 transition-colors",
-                  executionMode === 'CAPI' ? "text-white" : "text-ink-500 hover:text-ink-300"
-                )}
-              >
-                <Database size={16} className={executionMode === 'CAPI' ? "text-ink-300" : ""} />
-                <span className="text-[11px] font-bold tracking-wide">CAPI Gateway</span>
-              </button>
-              <button 
-                onClick={() => setExecutionMode('DUEL')}
-                className={clsx(
-                  "relative flex-1 flex flex-col items-center justify-center gap-1 py-3 px-4 rounded-lg z-10 transition-colors",
-                  executionMode === 'DUEL' ? "text-brand-400" : "text-ink-500 hover:text-ink-300"
-                )}
-              >
-                <Swords size={16} />
-                <span className="text-[11px] font-bold tracking-wide">Agent Duel Arena</span>
-              </button>
-            </div>
+        {/* User Prompt */}
+        <div className="mb-6">
+          <textarea
+            value={userPrompt}
+            onChange={(e) => setUserPrompt(e.target.value)}
+            placeholder="Enter your prompt here..."
+            className="w-full p-4 bg-slate-800 text-white border border-slate-700 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+            rows={6}
+          />
+        </div>
 
-            <div className="bg-[#0a0a0a] border border-[#242424] rounded-xl p-5 shadow-xl shrink-0">
-              <h3 className="text-[11px] font-mono font-bold text-ink-300 uppercase tracking-widest flex items-center gap-2 mb-4">
-                <Activity size={14} className="text-brand-400" /> Active Backend Target
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-[#111] border border-brand-500/20 rounded-lg">
-                  <div>
-                    <p className="text-[10px] font-mono font-bold text-white mb-0.5">
-                      {executionMode === 'DUEL' ? 'Base Agent Duel Node' : 'Main CAPI Inference Node'}
-                    </p>
-                    <p className="text-[9px] font-mono text-ink-500">
-                      {executionMode === 'DUEL' ? 'veklom-agent-duel.vercel.app' : 'api.veklom.com (Hetzner)'}
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-950 border border-red-500 text-red-300 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={runBoth}
+            disabled={loading || !userPrompt.trim()}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold rounded-lg transition disabled:cursor-not-allowed"
+          >
+            {loading ? 'Running...' : '▶ Run Both Models'}
+          </button>
+          <button
+            onClick={exportAudit}
+            disabled={!responseA && !responseB}
+            className="px-8 py-3 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white font-semibold rounded-lg transition flex items-center gap-2 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            Export Audit
+          </button>
+        </div>
+
+        {/* Side-by-Side Responses */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Model A */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 bg-slate-900 border-b border-slate-700">
+              <select
+                value={modelA}
+                onChange={(e) => setModelA(e.target.value)}
+                className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded focus:border-blue-500 focus:outline-none"
+              >
+                <option value="ollama">Ollama (Local)</option>
+                <option value="groq">Groq (Cloud)</option>
+              </select>
+            </div>
+            {responseA ? (
+              <div className="p-6">
+                <div className="prose prose-invert max-w-none mb-6 text-slate-300">
+                  <ReactMarkdown>{responseA.response}</ReactMarkdown>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Latency</p>
+                    <p className="text-white font-semibold flex items-center gap-1">
+                      <Clock className="w-4 h-4" /> {responseA.latency_ms}ms
                     </p>
                   </div>
-                  <span className="flex items-center gap-1 text-[9px] font-mono font-bold text-accent-green px-2 py-1 bg-emerald-500/10 rounded">
-                    <Check size={10} /> WIRED
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* VNP Stakes Engine Config */}
-            <div className="bg-[#0a0a0a] border border-[#242424] rounded-xl p-5 shadow-xl shrink-0">
-              <h3 className="text-[11px] font-mono font-bold text-ink-300 uppercase tracking-widest flex items-center gap-2 mb-4">
-                <ShieldCheck size={14} className="text-brand-400" /> VNP Stakes Engine
-              </h3>
-              <div 
-                className="flex items-center justify-between p-3 bg-[#111] border border-brand-500/20 rounded-lg cursor-pointer" 
-                onClick={() => setVnpMicroStaking(!vnpMicroStaking)}
-              >
-                <div>
-                  <p className="text-[10px] font-mono font-bold text-white mb-0.5">Enable VNP Micro-Staking</p>
-                  <p className="text-[9px] font-mono text-ink-500">Inject X-VNP-Stake headers</p>
-                </div>
-                <div className={clsx("w-8 h-4 rounded-full transition-colors relative", vnpMicroStaking ? "bg-brand-500" : "bg-[#333]")}>
-                  <div className={clsx("absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all", vnpMicroStaking ? "left-4" : "left-0.5")} />
-                </div>
-              </div>
-            </div>
-
-            {/* Duel Config */}
-            <AnimatePresence>
-              {executionMode === 'DUEL' && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="bg-[#050505] border border-[#242424] rounded-xl p-5 shadow-xl space-y-4">
-                    <h3 className="text-[11px] font-mono font-bold text-ink-300 uppercase tracking-widest flex items-center gap-2 mb-2">
-                      <Swords size={14} className="text-brand-400" /> Combatant Assembly
-                    </h3>
-                    
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono text-ink-500 uppercase tracking-widest">Agent Alpha Profile</label>
-                      <input 
-                        value={agent1Theme} onChange={e => setAgent1Theme(e.target.value)}
-                        className="w-full bg-[#111] border border-[#242424] rounded-lg px-3 py-2 text-xs font-mono text-brand-300 focus:border-brand-500/50 outline-none"
-                      />
-                    </div>
-                    
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono text-ink-500 uppercase tracking-widest">Agent Beta Profile</label>
-                      <input 
-                        value={agent2Theme} onChange={e => setAgent2Theme(e.target.value)}
-                        className="w-full bg-[#111] border border-[#242424] rounded-lg px-3 py-2 text-xs font-mono text-red-300 focus:border-red-500/50 outline-none"
-                      />
-                    </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Tokens</p>
+                    <p className="text-white font-semibold">{responseA.total_tokens}</p>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Cost</p>
+                    <p className="text-white font-semibold">${responseA.cost}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Provider</p>
+                    <p className="text-white font-semibold">{responseA.provider}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-center text-slate-400">
+                Run models to see response
+              </div>
+            )}
           </div>
 
-          {/* ── Right Column: Execution Stream ───────────────────────────── */}
-          <div className="lg:col-span-8 flex flex-col h-full min-h-0 bg-[#050505] border border-[#242424] rounded-xl overflow-hidden shadow-2xl relative">
-            
-            {/* Output Header */}
-            <div className="px-5 py-3 border-b border-[#242424] bg-[#0a0a0a] flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-6 h-6 rounded bg-[#1a1a1a] border border-[#333]">
-                  <Sparkles size={12} className={loading || streamingMessageId ? "text-brand-400" : "text-ink-600"} />
+          {/* Model B */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 bg-slate-900 border-b border-slate-700">
+              <select
+                value={modelB}
+                onChange={(e) => setModelB(e.target.value)}
+                className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded focus:border-blue-500 focus:outline-none"
+              >
+                <option value="ollama">Ollama (Local)</option>
+                <option value="groq">Groq (Cloud)</option>
+              </select>
+            </div>
+            {responseB ? (
+              <div className="p-6">
+                <div className="prose prose-invert max-w-none mb-6 text-slate-300">
+                  <ReactMarkdown>{responseB.response}</ReactMarkdown>
                 </div>
-                <div>
-                  <h3 className="text-xs font-bold text-white">Debug Matrix Output</h3>
-                  <p className="text-[10px] font-mono text-ink-500">Live Socket Connection</p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Latency</p>
+                    <p className="text-white font-semibold flex items-center gap-1">
+                      <Clock className="w-4 h-4" /> {responseB.latency_ms}ms
+                    </p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Tokens</p>
+                    <p className="text-white font-semibold">{responseB.total_tokens}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Cost</p>
+                    <p className="text-white font-semibold">${responseB.cost}</p>
+                  </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <p className="text-slate-400">Provider</p>
+                    <p className="text-white font-semibold">{responseB.provider}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Chat Area */}
-            <div className="flex-1 p-6 overflow-y-auto custom-scrollbar flex flex-col gap-4">
-              {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-ink-600 space-y-4">
-                  <div className="w-16 h-16 rounded-full border-2 border-dashed border-[#333] flex items-center justify-center">
-                    <Cpu size={24} className="text-ink-500 opacity-50" />
-                  </div>
-                  <p className="text-xs uppercase tracking-widest font-mono">System Idle - Awaiting Assembly</p>
-                </div>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} className={clsx(
-                    "max-w-[85%] p-4 rounded-xl",
-                    msg.role === 'user' ? "bg-[#111] border border-[#333] self-end" :
-                    msg.role === 'agent1' ? "bg-brand-500/5 border border-brand-500/20 self-start" :
-                    msg.role === 'agent2' ? "bg-red-500/5 border border-red-500/20 self-start" :
-                    "bg-[#0a0a0a] border border-[#242424] self-start"
-                  )}>
-                    <div className="flex items-center gap-2 mb-2">
-                      {msg.role === 'user' && <User size={12} className="text-ink-400" />}
-                      {(msg.role === 'agent1' || msg.role === 'agent2' || msg.role === 'system') && <Bot size={12} className={msg.role === 'agent1' ? 'text-brand-400' : msg.role === 'agent2' ? 'text-red-400' : 'text-emerald-400'} />}
-                      <span className="text-[10px] font-mono font-bold text-ink-500 uppercase tracking-widest">
-                        {msg.role === 'user' ? 'Operator' : msg.role === 'agent1' ? agent1Theme : msg.role === 'agent2' ? agent2Theme : 'CAPI Node'}
-                      </span>
-                      <span className="text-[9px] font-mono text-ink-600 ml-auto">{msg.timestamp}</span>
-                    </div>
-                    {streamingMessageId === msg.id ? (
-                      <StreamingText text={displayText} isStreaming={true} />
-                    ) : (
-                      <div className="font-mono text-[13px] leading-relaxed text-ink-200 whitespace-pre-wrap">{msg.content}</div>
-                    )}
-                  </div>
-                ))
-              )}
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-xs font-mono flex items-start gap-3">
-                  <ShieldAlert size={16} className="shrink-0 mt-0.5" />
-                  <p>Execution Terminated: {error}</p>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Bar */}
-            <div className="p-4 bg-[#111] border-t border-[#242424] shrink-0">
-              <div className="relative">
-                <textarea
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      executionMode === 'DUEL' ? runAgentDuel() : runCapiTest();
-                    }
-                  }}
-                  placeholder={executionMode === 'DUEL' ? "Enter a debate topic to initiate the Base Swarm..." : "Enter a CAPI execution intent..."}
-                  className="w-full bg-[#0a0a0a] border border-[#242424] rounded-xl pl-4 pr-14 py-3 text-[13px] font-mono text-white placeholder-ink-600 focus:outline-none focus:border-brand-500/50 resize-none h-[60px]"
-                />
-                <button
-                  onClick={executionMode === 'DUEL' ? runAgentDuel : runCapiTest}
-                  disabled={loading || !topic.trim()}
-                  className="absolute right-2 top-2 p-2 rounded-lg bg-brand-500 text-black hover:bg-brand-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Send size={16} />
-                </button>
+            ) : (
+              <div className="p-6 text-center text-slate-400">
+                Run models to see response
               </div>
-            </div>
-
+            )}
           </div>
         </div>
       </div>
-    </Shell>
+    </div>
   );
 }

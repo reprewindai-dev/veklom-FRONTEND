@@ -22,8 +22,16 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
   );
 }
 
-/** Full "Veklom" wordmark (orange V + white eklom). */
+/** Full "Veklom" or "UACP" wordmark. */
 export function LogoWordmark({ height = 28, className }: { height?: number; className?: string }) {
+  const isUacp = process.env.NEXT_PUBLIC_BRAND_MODE === "uacp";
+  if (isUacp) {
+    return (
+      <span className={clsx("font-bold tracking-tight text-white select-none", className)} style={{ fontSize: height * 0.8 }}>
+        UACP<span className="text-brand-500">.</span>
+      </span>
+    );
+  }
   return (
     <img
       src={`${BASE}/veklom-wordmark.svg`}

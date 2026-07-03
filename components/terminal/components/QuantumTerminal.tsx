@@ -168,7 +168,7 @@ export default function QuantumTerminal() {
     { id: 'openai', name: 'OpenAI (GPT-4o)', enabled: true },
     { id: 'anthropic', name: 'Anthropic (Claude 3)', enabled: true },
     { id: 'groq', name: 'Groq (Llama-3.1)', enabled: true },
-    { id: 'ollama', name: 'Ollama (Local)', enabled: true, baseUrl: 'http://localhost:11434' },
+    { id: 'ollama', name: 'Ollama (Local)', enabled: true, baseUrl: 'http://127.0.0.1:11434' },
     { id: 'huggingface', name: 'HuggingFace', enabled: true },
     { id: 'deepseek', name: 'DeepSeek', enabled: true }
   ]);
