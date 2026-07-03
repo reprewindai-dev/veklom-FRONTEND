@@ -3,13 +3,10 @@
 export const dynamic = "force-dynamic";
 
 // Agent Duel page within the UACP v5 cinematic shell.
-// The agent-dual page is a large, self-contained component. We render it here
-// directly by delegating to the agent-dual page component.
-// Note: this works because app/agent-dual/page.tsx is a valid React component.
+// Dynamically imports the full agent-dual app (SSR disabled — browser-only).
+import dynamicImport from "next/dynamic";
 
-import dynamic from "next/dynamic";
-
-const AgentDualApp = dynamic(
+const AgentDualApp = dynamicImport(
   () => import("@/app/agent-dual/page"),
   { ssr: false }
 );
