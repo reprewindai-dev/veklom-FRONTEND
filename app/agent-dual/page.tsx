@@ -169,6 +169,7 @@ export default function App() {
 
   // Challenges progress state
   const [challenges, setChallenges] = useState<DailyChallenge[]>(() => {
+    if (typeof window === 'undefined') return INITIAL_CHALLENGES;
     try {
       const saved = localStorage.getItem('agent_duel_challenges_v1');
       if (saved) return JSON.parse(saved);
@@ -224,6 +225,7 @@ export default function App() {
     payout: number;
     timestamp: string;
   } | null>(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem('agent_duel_last_lost_round_v2');
       if (saved) {
@@ -231,7 +233,6 @@ export default function App() {
         if (parsed && parsed.hand && Array.isArray(parsed.hand.playerPackets)) {
           return parsed;
         } else {
-          // Outdated format or invalid, clear it
           localStorage.removeItem('agent_duel_last_lost_round_v2');
         }
       }
