@@ -21,11 +21,13 @@ const nextConfig = {
   // Setting it to https://api.veklom.com causes CORS errors on authenticated requests.
   async redirects() {
     return [
+      // Legacy typo fix
       {
         source: "/terrrinal/:path*",
         destination: "/terminal/:path*",
         permanent: true,
       },
+      // Legacy auth paths
       {
         source: "/workspace/login",
         destination: "/login",
@@ -38,9 +40,42 @@ const nextConfig = {
       },
       {
         source: "/workspace/dashboard",
-        destination: "/dashboard",
+        destination: "/control-node",
         permanent: true,
-      }
+      },
+      // CANONICAL REDIRECTS: Legacy workspace → UACP v5 canonical routes
+      {
+        source: "/dashboard",
+        destination: "/control-node",
+        permanent: false,
+      },
+      {
+        source: "/wallet",
+        destination: "/treasury",
+        permanent: false,
+      },
+      {
+        source: "/wallet/:path*",
+        destination: "/treasury",
+        permanent: false,
+      },
+      {
+        source: "/token-wallet",
+        destination: "/treasury",
+        permanent: false,
+      },
+      {
+        source: "/token-wallet/:path*",
+        destination: "/treasury",
+        permanent: false,
+      },
+      {
+        source: "/governance",
+        destination: "/governance",
+        permanent: false,
+      },
+      // Keep old /terminal route working but now it renders the new page
+      // (app/(uacp)/terminal/page.tsx already handles /terminal)
     ];
   },
   async rewrites() {

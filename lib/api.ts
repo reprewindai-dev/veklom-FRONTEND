@@ -126,7 +126,8 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     // Enterprise Hardening: Automatic PGL/Budget enforcement routing
     if (typeof window !== "undefined") {
       if (res.status === 402) {
-        window.location.href = "/wallet";
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
       } else if (res.status === 403) {
         // Governance lock - redirect to Trust / Security center or login
         if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {

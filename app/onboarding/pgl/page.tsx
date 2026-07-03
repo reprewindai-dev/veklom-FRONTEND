@@ -117,7 +117,7 @@ export default function PGLOnboardingPage() {
 
   useEffect(() => {
     if (status.data?.mode) setMode(status.data.mode);
-    if (status.data?.has_pgl_profile && !onboardingCompleted) router.replace("/dashboard");
+    if (status.data?.has_pgl_profile && !onboardingCompleted) router.replace("/control-node");
   }, [status.data, router, onboardingCompleted]);
 
   const [operatorId, setOperatorId] = useState<string>("");
@@ -242,7 +242,7 @@ export default function PGLOnboardingPage() {
           </div>
 
           <button
-            onClick={() => router.replace("/dashboard")}
+            onClick={() => router.replace("/control-node")}
             className="bg-brand-500 hover:bg-brand-400 text-bg-900 font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all text-xs font-mono"
           >
             Enter Sovereign Workspace <ChevronRight className="w-4 h-4" />
@@ -791,7 +791,7 @@ export default function PGLOnboardingPage() {
           {mode !== "live" && (
             <div className="mt-12 text-center">
               <Link
-                href="/dashboard"
+                href="/control-node"
                 className="text-xs text-ink-500 hover:text-ink-300 border-b border-dashed border-ink-600 pb-0.5 transition-colors"
               >
                 Skip initialization (Replay Mode)

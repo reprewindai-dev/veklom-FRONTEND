@@ -30,9 +30,10 @@ import {
   Map
 } from 'lucide-react';
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
 interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   mcpHeartbeat: string;
   throughput: number;
   agentsCount: number;
@@ -42,6 +43,7 @@ interface MenuItem {
   id: string;
   name: string;
   icon: any;
+  href: string;
   isLive?: boolean;
 }
 
@@ -50,54 +52,56 @@ interface MenuSection {
   items: MenuItem[];
 }
 
-export default function Sidebar({ activeTab, setActiveTab, mcpHeartbeat, throughput, agentsCount }: SidebarProps) {
+export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: SidebarProps) {
+  const pathname = usePathname();
+
   const sections: MenuSection[] = [
     {
       items: [
-        { id: 'overview', name: 'Control Node', icon: LayoutGrid, isLive: true },
-        { id: 'swarm-map', name: 'Swarm Map', icon: Map, isLive: true },
-        { id: 'terminal', name: 'Swarm Terminal', icon: Terminal, isLive: true },
+        { id: 'overview', name: 'Control Node', icon: LayoutGrid, href: '/control-node', isLive: true },
+        { id: 'swarm-map', name: 'Swarm Map', icon: Map, href: '/swarm-map', isLive: true },
+        { id: 'terminal', name: 'Swarm Terminal', icon: Terminal, href: '/terminal', isLive: true },
       ]
     },
     {
       title: 'BUILD',
       items: [
-        { id: 'spine', name: 'Pipelines & GPC', icon: GitBranch, isLive: true },
+        { id: 'spine', name: 'Pipelines & GPC', icon: GitBranch, href: '/pipelines', isLive: true },
       ]
     },
     {
       title: 'RUN',
       items: [
-        { id: 'playground', name: 'Playground', icon: FlaskConical, isLive: true },
-        { id: 'runtime', name: 'Runtime Enforcement', icon: ShieldCheck, isLive: true },
+        { id: 'playground', name: 'Playground', icon: FlaskConical, href: '/playground', isLive: true },
+        { id: 'runtime', name: 'Runtime Enforcement', icon: ShieldCheck, href: '/runtime', isLive: true },
       ]
     },
     {
       title: 'VEKLOM NEXUS',
       items: [
-        { id: 'nexus', name: 'Nexus Protocol', icon: Network, isLive: true },
-        { id: 'runs', name: 'Incidents & Slashing', icon: AlertTriangle },
+        { id: 'nexus', name: 'Nexus Protocol', icon: Network, href: '/nexus', isLive: true },
+        { id: 'runs', name: 'Incidents & Slashing', icon: AlertTriangle, href: '/incidents' },
       ]
     },
     {
       title: 'STAKING & PROTOCOL',
       items: [
-        { id: 'staking', name: 'Staking Protocol', icon: Coins },
-        { id: 'duel', name: 'Agent Duel', icon: Sword },
-        { id: 'id', name: 'Veklom ID', icon: Fingerprint },
+        { id: 'staking', name: 'Staking Protocol', icon: Coins, href: '/staking' },
+        { id: 'duel', name: 'Agent Duel', icon: Sword, href: '/agent-duel' },
+        { id: 'id', name: 'Veklom ID', icon: Fingerprint, href: '/veklom-id' },
       ]
     },
     {
       title: 'ZERO-TRUST',
       items: [
-        { id: 'committee', name: 'Governance & Identity', icon: Scale, isLive: true },
-        { id: 'interlink', name: 'Interlink Console', icon: FileLock },
+        { id: 'committee', name: 'Governance & Identity', icon: Scale, href: '/governance', isLive: true },
+        { id: 'interlink', name: 'Interlink Console', icon: FileLock, href: '/interlink' },
       ]
     },
     {
       title: 'TREASURY',
       items: [
-        { id: 'treasury', name: 'Workspace Treasury', icon: Wallet },
+        { id: 'treasury', name: 'Workspace Treasury', icon: Wallet, href: '/treasury' },
       ]
     }
   ];
@@ -122,7 +126,7 @@ export default function Sidebar({ activeTab, setActiveTab, mcpHeartbeat, through
             </div>
           </div>
         </div>
-
+ 
         {/* Navigation Items */}
         <nav className="p-3.5 space-y-6">
           {sections.map((section, sIdx) => (
@@ -133,12 +137,12 @@ export default function Sidebar({ activeTab, setActiveTab, mcpHeartbeat, through
                 </div>
               )}
               {section.items.map((item) => {
-                const IsActive = activeTab === item.id;
+                const IsActive = pathname === item.href;
                 const Icon = item.icon;
                 return (
-                  <button
+                  <Link
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    href={item.href}
                     className={`w-full group relative flex items-center gap-3 px-3 py-1.5 rounded-lg text-left transition-all duration-300 pointer border border-transparent ${IsActive ? 'bg-[#b8860b22] border-[#b8860b44]' : 'hover:bg-white/5'}`}
                   >
                     {IsActive && (
@@ -159,7 +163,7 @@ export default function Sidebar({ activeTab, setActiveTab, mcpHeartbeat, through
                         LIVE
                       </div>
                     )}
-                  </button>
+                  </Link>
                 );
               })}
             </div>

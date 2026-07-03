@@ -175,8 +175,6 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
       <div className="flex-grow flex overflow-hidden relative">
         {/* 2. Primary Navigation Sidebar */}
         <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
           mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
           throughput={liveMetrics.throughput}
           agentsCount={agents.length}

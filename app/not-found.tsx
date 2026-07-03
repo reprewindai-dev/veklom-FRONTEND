@@ -12,7 +12,9 @@ export default function NotFound() {
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
       if (path.endsWith("/token-wallet") || path.endsWith("/token-wallet/")) {
-        router.replace("/wallet/");
+        router.replace("/treasury/");
+      } else if (path.endsWith("/wallet") || path.endsWith("/wallet/")) {
+        router.replace("/treasury/");
       }
     }
   }, [router]);
@@ -27,7 +29,7 @@ export default function NotFound() {
           The page you’re looking for doesn’t exist or has moved. Let’s get you back to the control plane.
         </p>
         <div className="mt-6 flex items-center justify-center gap-3">
-          <Link href="/dashboard" className="btn btn-primary">Back to dashboard</Link>
+          <Link href="/control-node" className="btn btn-primary">Back to Control Node</Link>
           <Link href="/login" className="btn btn-ghost">Sign in</Link>
         </div>
       </div>
