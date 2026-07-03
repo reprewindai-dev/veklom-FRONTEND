@@ -26,6 +26,21 @@ const nextConfig = {
         destination: "/terminal/:path*",
         permanent: true,
       },
+      {
+        source: "/workspace/login",
+        destination: "/login",
+        permanent: true,
+      },
+      {
+        source: "/workspace/signup",
+        destination: "/signup",
+        permanent: true,
+      },
+      {
+        source: "/workspace/dashboard",
+        destination: "/dashboard",
+        permanent: true,
+      }
     ];
   },
   async rewrites() {
