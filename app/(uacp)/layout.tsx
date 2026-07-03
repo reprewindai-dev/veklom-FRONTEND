@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect } from 'react';
 import { controlStore } from '@/components/terminal/data/simulation';
 import { AgentNode, VeklomRun, Delegate, TelemetryTick } from '@/components/terminal/types';

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect } from 'react';
 import RunSpine from "@/components/terminal/components/RunSpine";
 import { controlStore } from "@/components/terminal/data/simulation";

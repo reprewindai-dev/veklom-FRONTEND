@@ -1,9 +1,11 @@
+"use client";
+
+export const dynamic = "force-dynamic";
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
-"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { WalletState, LeaderboardEntry, WagerTransaction, EscrowState, PushNotification, TelemetryPacket, TelemetryDuelHand, DailyChallenge, getPacketDetails, DuelSession, DuelPlayer } from '@/components/agent-dual/types';
@@ -107,7 +109,10 @@ const INITIAL_CHALLENGES: DailyChallenge[] = [
   }
 ];
 
+const API_BASE_URL = 'http://localhost:3000/api/v1/duel';
+
 export default function App() {
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   // 1. Navigation tab state
   const [activeTab, setActiveTab] = useState<'arena' | 'escrow' | 'rust-specs' | 'challenges' | 'duel' | 'explorer'>('arena');
 
@@ -123,6 +128,7 @@ export default function App() {
 
   // Live increment blocks with real L2 speed (~2s)
   useEffect(() => {
+    fetchLeaderboard();
     const timer = setInterval(() => {
       setBlockHeight((prev) => prev + 1);
     }, 2000);
@@ -164,10 +170,8 @@ export default function App() {
   // Challenges progress state
   const [challenges, setChallenges] = useState<DailyChallenge[]>(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('agent_duel_challenges_v1');
-        if (saved) return JSON.parse(saved);
-      }
+      const saved = localStorage.getItem('agent_duel_challenges_v1');
+      if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn("localStorage challenges read error:", e);
     }
@@ -221,16 +225,14 @@ export default function App() {
     timestamp: string;
   } | null>(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('agent_duel_last_lost_round_v2');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.hand && Array.isArray(parsed.hand.playerPackets)) {
-            return parsed;
-          } else {
-            // Outdated format or invalid, clear it
-            localStorage.removeItem('agent_duel_last_lost_round_v2');
-          }
+      const saved = localStorage.getItem('agent_duel_last_lost_round_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.hand && Array.isArray(parsed.hand.playerPackets)) {
+          return parsed;
+        } else {
+          // Outdated format or invalid, clear it
+          localStorage.removeItem('agent_duel_last_lost_round_v2');
         }
       }
     } catch (e) {
@@ -537,18 +539,86 @@ export default function App() {
     });
   };
 
-  const handleWalletConnect = (address: string, realEthBalance?: number) => {
-    setWallet((prev) => ({
-      ...prev,
-      connected: true,
-      address,
-      balanceEth: realEthBalance !== undefined ? realEthBalance : prev.balanceEth,
-    }));
-    addNotification(
-      'tx_success', 
-      'Veklom Identity Handshake Completed', 
-      `Linked address ${address.slice(0, 8)}...`
-    );
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/leaderboard`);
+      const data = await res.json();
+      if (data.success && data.leaderboard) {
+        setLeaderboard(data.leaderboard);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch leaderboard from backend:", e);
+    }
+  };
+
+  const fetchHistory = async (address: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/player/${address}/history`);
+      const data = await res.json();
+      if (data.success && data.wagers) {
+        const mappedFeed: WagerTransaction[] = data.wagers.map((w: any) => ({
+          id: w.id.toString(),
+          txHash: w.session_id,
+          timestamp: new Date(w.created_at).toLocaleTimeString(),
+          agent: w.bet_type === 'player' ? 'A' : 'B',
+          wagerAmount: w.wager_amount_usdc,
+          multiplier: w.payout_multiplier || 0,
+          payout: w.payout_usdc || 0,
+          status: w.outcome === 'won' ? 'success' : w.outcome === 'lost' ? 'crashed' : 'pending',
+          network: 'Base'
+        }));
+        setRoundFeed(mappedFeed);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch history from backend:", e);
+    }
+  };
+
+  const handleWalletConnect = async (address: string, realEthBalance?: number) => {
+    try {
+      addNotification(
+        'tx_success',
+        'Identity Sync In Progress',
+        `Contacting registry for ${address.slice(0, 8)}...`
+      );
+
+      const response = await fetch(`${API_BASE_URL}/session/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet_address: address }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to initialize session');
+      }
+
+      const backendBalance = Number(data.player.balance_usdc);
+
+      setWallet((prev) => ({
+        ...prev,
+        connected: true,
+        address,
+        balanceUsdc: backendBalance,
+        balanceEth: realEthBalance !== undefined ? realEthBalance : prev.balanceEth,
+      }));
+      setBankroll(backendBalance);
+      setActiveSessionId(data.session_id);
+
+      addNotification(
+        'tx_success', 
+        'Veklom Identity Handshake Completed', 
+        `Linked address ${address.slice(0, 8)}... persistent balance: $${backendBalance.toFixed(2)} USDC`
+      );
+
+      // Load history and leaderboard
+      fetchHistory(address);
+      fetchLeaderboard();
+      
+    } catch (err: any) {
+      console.error(err);
+      addNotification('collapse', 'Handshake Rejected', err.message || 'Network sync failed.');
+    }
   };
 
   const handleWalletDisconnect = () => {
@@ -1341,8 +1411,84 @@ export default function App() {
     };
   };
 
+  const signWager = async (amount: number) => {
+    const fromAddr = wallet.address || "0x6a20f24cc341f72c2f573eb5";
+    const toAddr = "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970"; // Treasury address
+    const rawAmount = Math.round(amount * 1_000_000).toString(); // USDC decimals
+    
+    const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
+    if (!wallet.connected || !hasEthereum) {
+      // Local dev mode test proof bypass format
+      const testProof = `test_proof_valid_${Math.random().toString(36).substring(2, 10)}`;
+      return testProof;
+    }
+
+    try {
+      const nonce = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
+      const now = Math.floor(Date.now() / 1000);
+      
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'version', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+            { name: 'verifyingContract', type: 'address' },
+          ],
+          TransferWithAuthorization: [
+            { name: 'from', type: 'address' },
+            { name: 'to', type: 'address' },
+            { name: 'value', type: 'uint256' },
+            { name: 'validAfter', type: 'uint256' },
+            { name: 'validBefore', type: 'uint256' },
+            { name: 'nonce', type: 'bytes32' },
+          ],
+        },
+        primaryType: 'TransferWithAuthorization' as const,
+        domain: {
+          name: 'USD Coin',
+          version: '2',
+          chainId: 8453, // Base Mainnet
+          verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        },
+        message: {
+          from: fromAddr,
+          to: toAddr,
+          value: rawAmount,
+          validAfter: now,
+          validBefore: now + 3600,
+          nonce: nonce,
+        },
+      };
+
+      const signature = await (window as any).ethereum.request({
+        method: 'dash_signTypedData_v4' in (window as any).ethereum ? 'dash_signTypedData_v4' : 'eth_signTypedData_v4',
+        params: [fromAddr, JSON.stringify(typedData)],
+      });
+
+      const payload = {
+        payload: {
+          authorization: {
+            from: fromAddr,
+            to: toAddr,
+            value: rawAmount,
+            validAfter: String(now),
+            validBefore: String(now + 3600),
+            nonce: nonce,
+          },
+          signature,
+        },
+      };
+
+      return btoa(JSON.stringify(payload));
+    } catch (err) {
+      console.error("MetaMask sign failed, falling back to dev test proof", err);
+      return `test_proof_fallback_${Math.random().toString(36).substring(2, 10)}`;
+    }
+  };
+
   // Launch routing crash loop
-  const initiateRoute = () => {
+  const initiateRoute = async () => {
     if (phase === 'running') return;
     
     const totalWager = Number((bets.player + bets.banker + bets.tie).toFixed(2));
@@ -1355,82 +1501,158 @@ export default function App() {
       return;
     }
 
-    // Set engine states
-    setPhase('running');
-    setMultiplier(1.0);
-    setChartPoints([{ t: 0, m: 1.0 }]);
-
-    // Update daily challenges progress on wager commit
-    updateChallengeProgress('wager_milestone', totalWager, 'add');
-    updateChallengeProgress('high_roller', totalWager, 'max');
-
-    // Trigger Quantum Telemetry Duel!
-    const hand = executeRoutingSync();
-    setActiveHand(hand);
-    setVisiblePacketsCount(0); // Flip packets progressively inside loop
-
-    // Generate random crash logic (with standard 3% house edge)
-    const randomSample = Math.random();
-    if (randomSample < 0.03) {
-      crashAt.current = 1.0;
-    } else {
-      const p = 0.99 / (1 - Math.random());
-      crashAt.current = Math.max(1.01, Math.min(p, 100.0));
-    }
-
-    // Pick winning agent randomly based on Telemetry outcome
-    setRoundWinner(hand.outcome === 'player' ? 'A' : 'B');
-
-    // Deduct stake from active bankroll with high precision
-    const newBalance = Number((bankroll - totalWager).toFixed(2));
-    if (wallet.connected) {
-      setWallet((prev) => ({ ...prev, balanceUsdc: newBalance }));
-    } else {
-      setBankroll(newBalance);
-    }
-
     addNotification(
       'tx_success',
-      'Quantum Wager Locked',
-      `Locked $${totalWager.toFixed(2)} USDC on Duel Routing Board.`
+      'Consensus Check',
+      'Requesting dual authorization signature...'
     );
 
-    // Play starting hum
-    playSfx(220, 0.4, 'sawtooth', 0.12);
-    playSfx(440, 0.3, 'sine', 0.1);
-
-    startTime.current = performance.now();
-    
-    // Core game ticking clock
-    timerId.current = setInterval(() => {
-      const elapsed = (performance.now() - startTime.current) / 1000;
-      const nextMulti = Math.pow(Math.E, elapsed * 0.3);
-      setMultiplier(nextMulti);
-      setChartPoints((prev) => [...prev, { t: elapsed, m: nextMulti }]);
-
-      // Reveal Telemetry packets progressively to build rich tension!
-      if (elapsed >= 1.0 && elapsed < 2.0) {
-        setVisiblePacketsCount((prev) => Math.max(prev, 1));
-      } else if (elapsed >= 2.0 && elapsed < 3.0) {
-        setVisiblePacketsCount((prev) => Math.max(prev, 2));
-      } else if (elapsed >= 3.0) {
-        setVisiblePacketsCount((prev) => Math.max(prev, 3));
+    // Call backend to lock wager
+    try {
+      const signature = await signWager(totalWager);
+      
+      const betsToSubmit = [];
+      if (bets.player > 0) betsToSubmit.push({ type: 'player', amount: bets.player });
+      if (bets.banker > 0) betsToSubmit.push({ type: 'banker', amount: bets.banker });
+      if (bets.tie > 0) betsToSubmit.push({ type: 'tie', amount: bets.tie });
+      
+      for (const bet of betsToSubmit) {
+        const res = await fetch(`${API_BASE_URL}/wager`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'payment-signature': signature
+          },
+          body: JSON.stringify({
+            session_id: activeSessionId || 'd7b752bc-07b7-52bc-07b7-52bc07b752bc',
+            bet_type: bet.type,
+            wager_amount_usdc: bet.amount,
+            wallet_address: wallet.address || '0x6a20f24cc341f72c2f573eb5'
+          })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error(data.message || 'Wager placement rejected by consensus rules.');
+        }
       }
 
-      // Random audio tick
-      if (Math.random() < 0.2) {
-        playSfx(250 + nextMulti * 50, 0.04, 'square', 0.05);
+      // Set engine states
+      setPhase('running');
+      setMultiplier(1.0);
+      setChartPoints([{ t: 0, m: 1.0 }]);
+
+      // Update daily challenges progress on wager commit
+      updateChallengeProgress('wager_milestone', totalWager, 'add');
+      updateChallengeProgress('high_roller', totalWager, 'max');
+
+      // Trigger Quantum Telemetry Duel!
+      const hand = executeRoutingSync();
+      setActiveHand(hand);
+      setVisiblePacketsCount(0); // Flip packets progressively inside loop
+
+      // Generate random crash logic (with standard 3% house edge)
+      const randomSample = Math.random();
+      if (randomSample < 0.03) {
+        crashAt.current = 1.0;
+      } else {
+        const p = 0.99 / (1 - Math.random());
+        crashAt.current = Math.max(1.01, Math.min(p, 100.0));
       }
 
-      // Check crash ceiling
-      if (nextMulti >= crashAt.current) {
-        clearInterval(timerId.current);
-        triggerCrash(crashAt.current);
+      // Pick winning agent randomly based on Telemetry outcome
+      setRoundWinner(hand.outcome === 'player' ? 'A' : 'B');
+
+      // Deduct stake from active bankroll with high precision
+      const newBalance = Number((bankroll - totalWager).toFixed(2));
+      if (wallet.connected) {
+        setWallet((prev) => ({ ...prev, balanceUsdc: newBalance }));
+      } else {
+        setBankroll(newBalance);
       }
-    }, 50);
+
+      addNotification(
+        'tx_success',
+        'Quantum Wager Locked',
+        `Locked $${totalWager.toFixed(2)} USDC on Duel Routing Board.`
+      );
+
+      // Play starting hum
+      playSfx(220, 0.4, 'sawtooth', 0.12);
+      playSfx(440, 0.3, 'sine', 0.1);
+
+      startTime.current = performance.now();
+      
+      // Core game ticking clock
+      timerId.current = setInterval(() => {
+        const elapsed = (performance.now() - startTime.current) / 1000;
+        const nextMulti = Math.pow(Math.E, elapsed * 0.3);
+        setMultiplier(nextMulti);
+        setChartPoints((prev) => [...prev, { t: elapsed, m: nextMulti }]);
+
+        // Reveal Telemetry packets progressively to build rich tension!
+        if (elapsed >= 1.0 && elapsed < 2.0) {
+          setVisiblePacketsCount((prev) => Math.max(prev, 1));
+        } else if (elapsed >= 2.0 && elapsed < 3.0) {
+          setVisiblePacketsCount((prev) => Math.max(prev, 2));
+        } else if (elapsed >= 3.0) {
+          setVisiblePacketsCount((prev) => Math.max(prev, 3));
+        }
+
+        // Random audio tick
+        if (Math.random() < 0.2) {
+          playSfx(250 + nextMulti * 50, 0.04, 'square', 0.05);
+        }
+
+        // Check crash ceiling
+        if (nextMulti >= crashAt.current) {
+          clearInterval(timerId.current);
+          triggerCrash(crashAt.current);
+        }
+      }, 50);
+
+    } catch (err: any) {
+      addNotification('collapse', 'Wager Rejected', err.message || 'Payment gateway returned 402.');
+      setPhase('idle');
+      return;
+    }
+  };
+
+  const handleRoundOutcome = async (winner: 'A' | 'B' | null) => {
+    try {
+      const finalOutcome = winner === 'A' ? 'player' : winner === 'B' ? 'banker' : 'tie';
+      const res = await fetch(`${API_BASE_URL}/outcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: activeSessionId || 'd7b752bc-07b7-52bc-07b7-52bc07b752bc',
+          outcome: finalOutcome
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (wallet.address) {
+          const profileRes = await fetch(`${API_BASE_URL}/session/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet_address: wallet.address }),
+          });
+          const profileData = await profileRes.json();
+          if (profileData.success) {
+            const backendBalance = Number(profileData.player.balance_usdc);
+            setWallet((v) => ({ ...v, balanceUsdc: backendBalance }));
+            setBankroll(backendBalance);
+          }
+          fetchHistory(wallet.address);
+        }
+        fetchLeaderboard();
+      }
+    } catch (err) {
+      console.warn("Failed to record outcome on backend:", err);
+    }
   };
 
   const triggerCrash = (finalMulti: number) => {
+    handleRoundOutcome(roundWinner);
     setLastTenCrashes((prev) => [...prev.slice(1), finalMulti]);
 
     if (activeDuel) {

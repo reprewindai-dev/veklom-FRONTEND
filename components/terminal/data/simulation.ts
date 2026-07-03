@@ -407,4 +407,6 @@ export class TerminalBackendStore {
 }
 
 export const controlStore = new TerminalBackendStore();
-controlStore.startSimulation();
+if (typeof window !== 'undefined') {
+  controlStore.startSimulation();
+}

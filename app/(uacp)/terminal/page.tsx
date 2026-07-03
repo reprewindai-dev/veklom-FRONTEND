@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React from 'react';
 import QuantumTerminal from "@/components/terminal/components/QuantumTerminal";
 import TriageTelemetry from "@/components/telemetry/TriageTelemetry";

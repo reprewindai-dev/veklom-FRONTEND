@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect } from 'react';
 import SwarmMap from "@/components/terminal/components/SwarmMap";
 import { controlStore } from "@/components/terminal/data/simulation";
