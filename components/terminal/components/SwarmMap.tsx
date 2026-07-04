@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AgentNode } from '../types';
 import { Search, ZoomIn, ZoomOut, RotateCcw, X, Cpu, Activity, Database, Flame, RefreshCcw, Terminal, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 function highlightJson(json: string): React.ReactNode[] {
   if (!json) return [];
@@ -58,6 +59,7 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const router = useRouter();
 
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -731,8 +733,8 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                 <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                   <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Action Handoff</span>
                   <div className="grid grid-cols-2 gap-2">
-                    <button disabled title="Terminal session API not yet available" className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.01] border border-white/5 text-white/30 text-[9px] font-bold font-mono uppercase cursor-not-allowed transition-colors">
-                      <Terminal className="w-3 h-3 opacity-50" /> Terminal
+                    <button onClick={() => router.push(`/terminal?agent=${selectedAgent.id}`)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                      <Terminal className="w-3 h-3" /> Terminal
                     </button>
                     <button onClick={() => handleViewTrace(selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
                       <Activity className="w-3 h-3" /> Trace
