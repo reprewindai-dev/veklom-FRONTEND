@@ -93,6 +93,9 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
     return false;
   });
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+  const [traceResult, setTraceResult] = useState<{count: number} | null>(null);
+  const [traceError, setTraceError] = useState<string | null>(null);
+  const [isLoadingTrace, setIsLoadingTrace] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('swarm_diagnostics_open', isDiagnosticsOpen.toString());
@@ -104,8 +107,8 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
       active: agents.filter(a => a.status === 'Active').length,
       idle: agents.filter(a => a.status === 'Idle').length,
       blocked: agents.filter(a => a.status === 'Blocked').length,
-      degraded: 0, // Mock for now
-      inFlight: agents.filter(a => a.status === 'Active').length * 2, // Mock for now
+      degraded: agents.filter(a => a.status === 'Degraded' || a.metrics.cpu > 90 || a.metrics.latency > 2000).length,
+      inFlight: agents.filter(a => a.status === 'Active').length,
     };
   }, [agents]);
 
@@ -304,13 +307,17 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
   };
 
   const handleViewTrace = async (id: string) => {
+    setIsLoadingTrace(true);
+    setTraceError(null);
+    setTraceResult(null);
     try {
       const trace: any = await api.get(`/api/v1/agents/${id}/trace`);
-      console.log("Agent Trace:", trace);
-      alert(`Retrieved ${trace.count || 0} trace events. Check console for details.`);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to retrieve trace");
+      setTraceResult({ count: trace.count || 0 });
+      setIsDiagnosticsOpen(true);
+    } catch (e: any) {
+      setTraceError(e?.message || 'Trace endpoint unavailable — endpoint not yet wired');
+    } finally {
+      setIsLoadingTrace(false);
     }
   };
 
@@ -450,6 +457,7 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#00E5FF] bg-[rgba(0,229,255,0.2)]" style={{boxShadow: '0 0 5px #00E5FF'}}/> Active (Pulsing)</div>
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white/20 bg-[#0f0f12]" /> Idle (Dim)</div>
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#FF003C] bg-[rgba(255,0,60,0.2)]" /> Blocked (Warning)</div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#FFAB00] bg-[rgba(255,171,0,0.15)]" /> Degraded (High Load)</div>
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white bg-transparent" /> Selected Focus</div>
         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10">
           <div className="px-1 py-0.5 bg-white/10 text-white rounded-[2px] text-[8px] font-bold leading-none">D</div> Diagnostics mode
@@ -553,6 +561,9 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
               } else if (agent.status === 'Blocked') {
                 strokeColor = '#FF003C';
                 fillColor = 'rgba(255, 0, 60, 0.2)';
+              } else if (agent.status === 'Degraded' || agent.metrics.cpu > 90 || agent.metrics.latency > 2000) {
+                strokeColor = '#FFAB00';
+                fillColor = 'rgba(255, 171, 0, 0.15)';
               } else if (isLead) {
                 strokeColor = 'rgba(255, 255, 255, 0.4)';
                 fillColor = '#1a1a24';
@@ -615,6 +626,14 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                     <g transform={`translate(${agent.x}, ${agent.y - r - 8}) scale(0.7)`}>
                       <path d="M-10,10 L0,-10 L10,10 Z" fill="#FF003C" stroke="#FF003C" strokeWidth="2" strokeLinejoin="round" className="animate-pulse" />
                       <text x="0" y="6" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="sans-serif">!</text>
+                    </g>
+                  )}
+
+                  {/* Attention Markers for Degraded Nodes */}
+                  {(agent.status === 'Degraded' || agent.metrics.cpu > 90 || agent.metrics.latency > 2000) && agent.status !== 'Blocked' && (
+                    <g transform={`translate(${agent.x + r + 3}, ${agent.y - r - 2}) scale(0.6)`}>
+                      <circle cx="0" cy="0" r="8" fill="rgba(255,171,0,0.2)" className="animate-pulse" />
+                      <text x="0" y="4" textAnchor="middle" fill="#FFAB00" fontSize="12" fontWeight="bold" fontFamily="monospace">⚠</text>
                     </g>
                   )}
 
@@ -731,6 +750,44 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                   </p>
                 </div>
 
+                {/* Operational Context — Current Task, Last Action, Provider, Warnings */}
+                {(selectedAgent.currentTask || selectedAgent.lastAction || selectedAgent.provider || (selectedAgent.warnings && selectedAgent.warnings.length > 0)) && (
+                  <div className="space-y-2 p-3 bg-white/[0.02] border border-white/5 rounded-none">
+                    <span className="text-[10px] uppercase text-white/35 block font-bold">Operational Context</span>
+                    {selectedAgent.currentTask && (
+                      <div>
+                        <span className="text-[9px] text-white/30 block uppercase">Current Task</span>
+                        <span className="text-white/80 text-[11px] font-mono">{selectedAgent.currentTask}</span>
+                      </div>
+                    )}
+                    {selectedAgent.lastAction && (
+                      <div>
+                        <span className="text-[9px] text-white/30 block uppercase">Last Action</span>
+                        <span className="text-white/70 text-[11px] font-mono">{selectedAgent.lastAction}</span>
+                      </div>
+                    )}
+                    {selectedAgent.provider && (
+                      <div>
+                        <span className="text-[9px] text-white/30 block uppercase">Route / Provider</span>
+                        <span className="text-electric-cyan text-[11px] font-mono font-bold">{selectedAgent.provider}</span>
+                      </div>
+                    )}
+                    {selectedAgent.warnings && selectedAgent.warnings.length > 0 && (
+                      <div>
+                        <span className="text-[9px] text-hazard-amber block uppercase font-bold">Warnings</span>
+                        <div className="space-y-1 mt-1">
+                          {selectedAgent.warnings.map((w, i) => (
+                            <div key={i} className="flex items-start gap-1.5 text-[10px] text-hazard-amber/90 font-mono">
+                              <span className="mt-0.5">⚠</span>
+                              <span>{w}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Tool scope codes */}
                 <div className="space-y-1.5">
                   <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Authorized Tool Capability Scopes</span>
@@ -763,11 +820,16 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                 <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                   <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Action Handoff</span>
                   <div className="grid grid-cols-2 gap-2">
-                      <button onClick={() => router.push(`/terminal?agent=${selectedAgent.id}&cluster=${selectedDept}&state=${selectedStatus}&diagnostics=${isDiagnosticsOpen}`)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
-                        <Terminal className="w-3 h-3" /> Terminal
-                      </button>
-                    <button onClick={() => handleViewTrace(selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
-                      <Activity className="w-3 h-3" /> Trace
+                    <button onClick={() => router.push(`/terminal?agent=${selectedAgent.id}&cluster=${selectedDept}&state=${selectedStatus}&diagnostics=${isDiagnosticsOpen}`)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                      <Terminal className="w-3 h-3" /> Terminal
+                    </button>
+                    <button
+                      onClick={() => handleViewTrace(selectedAgent.id)}
+                      disabled={isLoadingTrace}
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors disabled:opacity-50"
+                    >
+                      <Activity className={`w-3 h-3 ${isLoadingTrace ? 'animate-spin' : ''}`} />
+                      {isLoadingTrace ? 'Loading...' : 'Trace'}
                     </button>
                     <button onClick={() => setIsDiagnosticsOpen(true)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
                       <Database className="w-3 h-3" /> Payload
@@ -776,6 +838,16 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                       <ShieldAlert className="w-3 h-3" /> Isolate
                     </button>
                   </div>
+                  {traceError && (
+                    <div className="text-[9px] font-mono text-hazard-amber/80 bg-hazard-amber/5 border border-hazard-amber/20 px-2 py-1 mt-1">
+                      ⚠ {traceError}
+                    </div>
+                  )}
+                  {traceResult && (
+                    <div className="text-[9px] font-mono text-matrix-emerald bg-matrix-emerald/5 border border-matrix-emerald/20 px-2 py-1 mt-1">
+                      ✓ {traceResult.count} trace events — see diagnostics
+                    </div>
+                  )}
                 </div>
 
               </div>

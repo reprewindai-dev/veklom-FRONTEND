@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type AgentStatus = 'Idle' | 'Active' | 'Blocked';
+export type AgentStatus = 'Idle' | 'Active' | 'Blocked' | 'Degraded';
 
 export interface AgentNode {
   id: string;
@@ -12,6 +12,10 @@ export interface AgentNode {
   department: 'Engineering' | 'Growth' | 'Ops' | 'Research' | 'Revenue';
   status: AgentStatus;
   mission: string;
+  currentTask?: string;
+  lastAction?: string;
+  provider?: string;
+  warnings?: string[];
   toolScopes: string[];
   metrics: {
     cpu: number;
