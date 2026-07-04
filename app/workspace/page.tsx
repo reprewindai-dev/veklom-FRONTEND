@@ -97,7 +97,7 @@ export default function WorkspaceTreasuryPage() {
                 <Wallet size={14} className="text-brand-400" />
               </div>
               <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
-                ${metrics.balance.toFixed(2)}
+                ${Number.isNaN(metrics.balance) ? "0.00" : metrics.balance.toFixed(2)}
               </p>
               <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold text-accent-green">
                 <CheckCircle size={12} /> Stable Reserves
@@ -110,7 +110,7 @@ export default function WorkspaceTreasuryPage() {
                 <Activity size={14} className="text-red-400" />
               </div>
               <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
-                ${metrics.burnRate.toFixed(2)}<span className="text-sm text-ink-600">/hr</span>
+                ${Number.isNaN(metrics.burnRate) ? "0.00" : metrics.burnRate.toFixed(2)}<span className="text-sm text-ink-600">/hr</span>
               </p>
               <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono text-ink-500">
                 Projected runway: 4.5 days
@@ -124,7 +124,7 @@ export default function WorkspaceTreasuryPage() {
                 <ShieldAlert size={14} className="text-accent-green" />
               </div>
               <p className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
-                ${metrics.slaStaked.toFixed(2)}
+                ${Number.isNaN(metrics.slaStaked) ? "0.00" : metrics.slaStaked.toFixed(2)}
               </p>
               <div className="flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold text-accent-green">
                 <CheckCircle size={12} /> Fully Collateralized

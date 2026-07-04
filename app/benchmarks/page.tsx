@@ -309,8 +309,8 @@ export default function BenchmarksPage() {
                 ) : scoredAPIs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-8 text-slate-500">
                     <AlertCircle size={32} className="mb-3 opacity-50" />
-                    <p className="text-sm font-medium">Awaiting Data</p>
-                    <p className="text-xs">No benchmark executions detected yet.</p>
+                    <p className="text-sm font-medium">Needs proof</p>
+                    <p className="text-xs">Awaiting benchmark execution proof. No executions detected.</p>
                   </div>
                 ) : (
                   scoredAPIs.map((api, idx) => (

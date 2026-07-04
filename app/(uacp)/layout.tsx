@@ -39,7 +39,7 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
         if (res.ok) {
           setMcpHeartbeat('online');
           // Use latency as a proxy for throughput display
-          setThroughput(Math.floor(Math.random() * 40 + 80)); // 80–120 KB/s until real metric available
+          setThroughput(0); // Real metric unavailable
         } else {
           setMcpHeartbeat('degraded');
         }

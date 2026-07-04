@@ -484,7 +484,7 @@ export default function NetworkTopologyPanel() {
               <span className="text-slate-300 font-bold uppercase">{selectedNode.region}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Active Locked Stake:</span>
+              <span className="text-slate-500">Active Locked Stake <span className="text-[8px]">(Simulated)</span>:</span>
               <span className="text-emerald-400 font-bold">${selectedNode.stakeUsd.toLocaleString()} USD</span>
             </div>
             <div className="flex justify-between">

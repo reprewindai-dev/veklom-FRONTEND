@@ -1,3 +1,4 @@
+import { AlertCircle } from 'lucide-react';
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -128,24 +129,8 @@ export default function WebhooksPage() {
     setNewEvents(prev => prev.includes(ev) ? prev.filter(e => e !== ev) : [...prev, ev]);
   }
 
-  // Demo data when backend is empty
-  const displayEndpoints = endpoints.length > 0 ? endpoints : [
-    {
-      id: "demo-1",
-      url: "https://your-webhook-endpoint.example.com/events",
-      events: ["budget.cap_exceeded", "kill_switch.activated", "sla.breach"],
-      secret_hint: "whsec_...abc123",
-      is_active: true,
-      last_triggered_at: new Date(Date.now() - 3600000).toISOString(),
-      fail_count: 0,
-    },
-  ];
-
-  const displayDeliveries: WebhookDelivery[] = deliveries.length > 0 ? deliveries : [
-    { id: "d1", event: "inference.completed", status: "success", status_code: 200, url: "https://your-webhook-endpoint.example.com/events", delivered_at: new Date(Date.now() - 900000).toISOString(), duration_ms: 123 },
-    { id: "d2", event: "budget.cap_warning", status: "success", status_code: 200, url: "https://your-webhook-endpoint.example.com/events", delivered_at: new Date(Date.now() - 1800000).toISOString(), duration_ms: 87 },
-    { id: "d3", event: "kill_switch.activated", status: "failed", status_code: 502, url: "https://your-webhook-endpoint.example.com/events", delivered_at: new Date(Date.now() - 7200000).toISOString(), duration_ms: 5000 },
-  ];
+  const displayEndpoints = endpoints;
+  const displayDeliveries: WebhookDelivery[] = deliveries;
 
   return (
     <Shell>
@@ -254,6 +239,12 @@ export default function WebhooksPage() {
         <SectionCard label="Outbound endpoints" title="Your Webhook Endpoints">
           {loading ? (
             <div className="skeleton h-32 rounded-lg" />
+          ) : displayEndpoints.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-border border-dashed rounded-lg text-ink-500">
+              <AlertCircle size={20} className="mb-2 opacity-50" />
+              <p className="text-sm font-medium">Needs proof</p>
+              <p className="text-xs">No webhooks registered.</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {displayEndpoints.map(ep => (
@@ -303,6 +294,12 @@ export default function WebhooksPage() {
         <SectionCard label="Delivery log · Last 20" title="Recent Deliveries">
           {loading ? (
             <div className="skeleton h-48 rounded-lg" />
+          ) : displayDeliveries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-border border-dashed rounded-lg text-ink-500">
+              <AlertCircle size={20} className="mb-2 opacity-50" />
+              <p className="text-sm font-medium">Needs proof</p>
+              <p className="text-xs">No webhook deliveries yet.</p>
+            </div>
           ) : (
             <div className="space-y-0">
               {displayDeliveries.map((d, i) => (

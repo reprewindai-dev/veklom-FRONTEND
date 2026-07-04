@@ -2,6 +2,12 @@
 
 export const dynamic = "force-dynamic";
 
+import { useState, useEffect, useRef } from "react";
+import { initialStreamState, connectStream, shouldAcceptEvent, isHeartbeatExpired, StreamMachineState } from "@/lib/covenant/machines/streamMachine";
+import { reduceRunState, RunState } from "@/lib/covenant/machines/runMachine";
+import type { SseEvent } from "@/lib/covenant/generated/sse";
+import { api } from "@/lib/api";
+
 import { useApi } from "@/hooks/useApi";
 import { 
   PanelCard, 
@@ -55,6 +61,82 @@ interface WorkspaceData {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function ControlNodePage() {
+
+  const [streamState, setStreamState] = useState<StreamMachineState>(initialStreamState());
+  const [runState, setRunState] = useState<RunState>("not_started");
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  function handleEvent(evt: SseEvent, generation: number) {
+    setStreamState(prev => {
+      if (!shouldAcceptEvent(prev, generation, evt)) return prev;
+      return {
+        ...prev,
+        connection: evt.event === "run.done" ? "completed" : "connected",
+        lastSequence: evt.sequence,
+        lastEventId: evt.event_id,
+        heartbeatAt: Date.now(),
+        error: undefined,
+      };
+    });
+
+    setRunState(prev => reduceRunState(prev, evt));
+  }
+
+  async function testRun() {
+    try {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const ac = new AbortController();
+      abortControllerRef.current = ac;
+
+      setStreamState(prev => ({ ...prev, connection: "connecting", generation: prev.generation + 1, lastSequence: -1 }));
+      setRunState("not_started");
+
+      const res = await api.post("/api/v1/capi/execute", {
+        workspace_id: workspace.data?.id || "default",
+        agent_id: "agent-test",
+        pgl_id: "user-test",
+        target_protocol: "test",
+        action: "ping",
+        payload: {}
+      });
+
+      const { run_id, stream_token } = await (res as any).json();
+      
+      const streamUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088'}/api/v1/capi/stream/${run_id}`;
+      
+      setStreamState(prev => ({ ...prev, connection: "connected" }));
+      
+      await connectStream({
+        url: streamUrl,
+        token: stream_token,
+        generation: streamState.generation + 1,
+        onEvent: handleEvent,
+        onProtocolError: (detail) => {
+          setStreamState(prev => ({ ...prev, error: detail, connection: "failed" }));
+        },
+        signal: ac.signal
+      });
+    } catch (err: any) {
+      if (err.name === "AbortError") return;
+      setStreamState(prev => ({ ...prev, error: err.message, connection: err.message === "AUTH_FORBIDDEN" ? "failed_authz" : "failed" }));
+    }
+  }
+
+  // Periodic heartbeat check
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStreamState(prev => {
+        if (prev.connection === "connected" && isHeartbeatExpired(prev)) {
+          return { ...prev, connection: "stale" };
+        }
+        return prev;
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   const health = useApi<HealthData>("/api/v1/sys/health");
   const usage = useApi<UsageData>("/api/v1/usage/summary");
   const audit = useApi<AuditData>("/api/v1/audit/events?limit=5");
@@ -161,15 +243,19 @@ export default function ControlNodePage() {
                   label="Total Requests" 
                   value={fmt(usage.data?.total_requests)} 
                 />
+                
                 <MetricCard 
-                  label="Active Runs" 
-                  value="0" 
-                  subtext="No governed runs yet" 
-                  empty={!usage.data?.total_requests} 
+                  label="Stream State" 
+                  value={streamState.connection === "idle" ? "Needs Proof" : streamState.connection} 
+                  subtext={streamState.error || runState} 
                 />
+                <button onClick={testRun} className="col-span-1 border border-cyan-500/30 bg-cyan-900/20 rounded p-2 text-xs text-cyan-400 hover:bg-cyan-900/40">
+                  TEST CAPI EXECUTION
+                </button>
+
                 <MetricCard 
                   label="Spend Today" 
-                  value={usage.data?.total_cost_usd !== undefined ? `$${usage.data.total_cost_usd.toFixed(4)}` : "$0.00"} 
+                  value={usage.data?.total_cost_usd !== undefined && !Number.isNaN(usage.data.total_cost_usd) ? `$${usage.data.total_cost_usd.toFixed(4)}` : "$0.00"} 
                   subtext={usage.data?.total_cost_usd === undefined ? "Awaiting billing signal" : undefined}
                   empty={usage.data?.total_cost_usd === undefined} 
                 />

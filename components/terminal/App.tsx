@@ -59,13 +59,11 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
   const [runs, setRuns] = useState<any[]>([]);
   const [delegates, setDelegates] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
-  const [liveMetrics, setLiveMetrics] = useState({ globalThroughput: 0, complianceScore: 100, slaMisses: 0, activeYieldTokens: 0, totalPglRequests: 0, autoRoutedExecutions: 0 });
+  const [liveMetrics, setLiveMetrics] = useState<any>({ globalThroughput: 0, complianceScore: 100, slaMisses: 0, activeYieldTokens: 0, totalPglRequests: 0, autoRoutedExecutions: 0, mcpIOHeartbeat: 0, throughput: 0, attestationRate: 0, gasSaved: 0, activeQueue: 0, uptime: '0h', totalExecutions: 0 });
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   // Future integration point:
   useEffect(() => {
-    
-    });
   }, []);
 
   // Update a single agent properties (Reboot / Diagnostics actions)

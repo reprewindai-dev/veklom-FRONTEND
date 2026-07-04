@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, Users, Server, Activity, FileLock, UserCheck, Search, Plus, Globe, Eye } from "lucide-react";
+import { ShieldAlert, Users, Server, Activity, FileLock, UserCheck, Search, Plus, Globe, Eye, AlertCircle } from "lucide-react";
 
 export default function WorkspaceAdminPage() {
   const { me, loading } = useAuth();
@@ -40,7 +40,6 @@ export default function WorkspaceAdminPage() {
   }
 
   // RBAC Distinction: Platform Admin vs Workspace Admin
-  // Ultimate Owner (reprewindai@gmail.com or designated is_superuser from backend) gets Global View
   const isUltimateOwner = me.email === "reprewindai@gmail.com" || me.is_superuser === true;
 
   // Replaced mock data with real empty state pending backend wiring
@@ -140,37 +139,13 @@ export default function WorkspaceAdminPage() {
             <tbody>
                 {displayUsers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-white/50 font-mono text-sm">
-                      Awaiting Telemetry / No Users Found
+                    <td colSpan={isUltimateOwner ? 7 : 6} className="p-8 text-center text-white/50 font-mono text-sm">
+                      <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-white/40" />
+                      Needs proof<br/>
+                      <span className="text-xs">Awaiting telemetry. No users found.</span>
                     </td>
                   </tr>
                 )}
-              {displayUsers.map((user: any) => (
-                <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-4 font-mono text-xs text-white/70">{user.id}</td>
-                  <td className="p-4 text-sm text-white">{user.email}</td>
-                  <td className="p-4">
-                    <span className={`bg-white/10 text-white/80 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider uppercase border border-white/10 ${user.role === 'platform_admin' ? 'border-electric-cyan/50 text-electric-cyan' : ''}`}>
-                      {user.role.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${user.status === 'active' ? 'bg-matrix-emerald animate-pulse' : 'bg-red-500'}`} />
-                      <span className="text-xs font-mono text-white/60 capitalize">{user.status}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-xs font-mono text-white/50">{user.location}</td>
-                  {isUltimateOwner && (
-                    <td className="p-4 text-xs font-mono text-white/70">{user.action}</td>
-                  )}
-                  <td className="p-4 text-right">
-                    <button className={`text-[10px] font-mono text-white/40 uppercase tracking-wider transition-colors ${isUltimateOwner ? 'hover:text-electric-cyan' : 'hover:text-[#b8860b]'}`}>
-                      {isUltimateOwner ? 'Audit' : 'Manage'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>

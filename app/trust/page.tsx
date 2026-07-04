@@ -135,8 +135,8 @@ export default function TrustPage() {
           ) : displayRecords.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-border border-dashed rounded-lg text-ink-500">
               <AlertCircle size={20} className="mb-2 opacity-50" />
-              <p className="text-sm font-medium">No Anchored Endpoints</p>
-              <p className="text-xs">The trust chain is empty or pending data.</p>
+              <p className="text-sm font-medium">Needs proof</p>
+              <p className="text-xs">Awaiting trust chain proof. No anchored endpoints.</p>
             </div>
           ) : (
             <div className="space-y-2">

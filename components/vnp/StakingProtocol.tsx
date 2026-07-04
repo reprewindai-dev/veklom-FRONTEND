@@ -44,8 +44,14 @@ import type {
 
 // ============ Helpers ============
 
-const fmtUSD = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
-const fmtMs = (n: number) => `${n.toFixed(1)}ms`;
+const fmtUSD = (n: number | undefined | null) => {
+  if (n === undefined || n === null || isNaN(n)) return "—";
+  return "$" + Math.round(n).toLocaleString("en-US");
+};
+const fmtMs = (n: number | undefined | null) => {
+  if (n === undefined || n === null || isNaN(n)) return "—";
+  return `${n.toFixed(1)}ms`;
+};
 
 const STATUS_COLORS: Record<BondStatusLevel, { bg: string; border: string; text: string; label: string }> = {
   healthy: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-400", label: "Healthy" },
@@ -227,9 +233,9 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]" },
-          { label: "Active APIs", value: String(protocolStats.activeApis), icon: Server, color: "text-cyan-400" },
-          { label: "Active Verifiers", value: String(protocolStats.activeVerifiers), icon: Users, color: "text-[#FFB800]" },
-          { label: "Settlement Rate", value: `${protocolStats.settlementRate}%`, icon: CheckCircle, color: "text-emerald-400" },
+          { label: "Active APIs", value: protocolStats.activeApis === undefined || isNaN(protocolStats.activeApis) ? "—" : String(protocolStats.activeApis), icon: Server, color: "text-cyan-400" },
+          { label: "Active Verifiers", value: protocolStats.activeVerifiers === undefined || isNaN(protocolStats.activeVerifiers) ? "—" : String(protocolStats.activeVerifiers), icon: Users, color: "text-[#FFB800]" },
+          { label: "Settlement Rate", value: protocolStats.settlementRate === undefined || isNaN(protocolStats.settlementRate) ? "—" : `${protocolStats.settlementRate}%`, icon: CheckCircle, color: "text-emerald-400" },
           { label: "Total Penalties", value: fmtUSD(protocolStats.totalPenalties), icon: AlertTriangle, color: "text-rose-400" },
         ].map((stat) => (
           <div key={stat.label} className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-4">
