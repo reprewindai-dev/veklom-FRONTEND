@@ -27,7 +27,8 @@ import {
   Scale,
   FileLock,
   Wallet,
-  Map
+  Map,
+  ExternalLink
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -55,12 +56,13 @@ interface MenuSection {
 export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: SidebarProps) {
   const pathname = usePathname();
 
+  const TERMINAL_URL = 'https://terminal.veklom.com';
+
   const sections: MenuSection[] = [
     {
       items: [
         { id: 'overview', name: 'Control Node', icon: LayoutGrid, href: '/control-node', isLive: true },
         { id: 'swarm-map', name: 'Swarm Map', icon: Map, href: '/swarm-map', isLive: true },
-        { id: 'terminal', name: 'Swarm Terminal', icon: Terminal, href: '/terminal', isLive: true },
       ]
     },
     {
@@ -169,6 +171,23 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
             </div>
           ))}
         </nav>
+
+        {/* Swarm Terminal — External Service */}
+        <div className="px-4 pb-4">
+          <a
+            href={TERMINAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full group flex items-center gap-3 px-3 py-2 rounded-lg border border-electric-cyan/20 bg-electric-cyan/5 hover:bg-electric-cyan/10 hover:border-electric-cyan/40 transition-all duration-300"
+          >
+            <Terminal className="w-4 h-4 text-electric-cyan" />
+            <div className="flex-grow">
+              <div className="text-[11px] font-medium text-electric-cyan/90 group-hover:text-electric-cyan">Swarm Terminal</div>
+              <div className="text-[9px] font-mono text-white/30">terminal.veklom.com</div>
+            </div>
+            <ExternalLink className="w-3 h-3 text-electric-cyan/40 group-hover:text-electric-cyan/80" />
+          </a>
+        </div>
       </div>
 
       {/* Footer Metrics */}

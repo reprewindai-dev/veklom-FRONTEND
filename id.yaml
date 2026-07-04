@@ -1,0 +1,15 @@
+http:
+  routers:
+    veklom-id:
+      entryPoints:
+        - http
+        - https
+      rule: "Host(`id.veklom.com`)"
+      service: veklom-id
+      tls:
+        certResolver: letsencrypt
+  services:
+    veklom-id:
+      loadBalancer:
+        servers:
+          - url: "http://veklom-id:3000"

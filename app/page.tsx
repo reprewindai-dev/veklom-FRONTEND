@@ -9,11 +9,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-// These components use useSWR + browser APIs — must skip SSR or the build explodes
-const InteractiveLandingTerminal = dynamicImport(
-  () => import("@/components/terminal/App"),
-  { ssr: false, loading: () => <div className="h-[600px] bg-[#0A0A0C]/50 border border-white/5 rounded-2xl animate-pulse flex items-center justify-center"><span className="text-gray-500 font-mono text-sm">Initializing quantum viewport...</span></div> }
-);
+// Swarm Terminal is now the standalone Veklom-RealTerminal service at terminal.veklom.com
+const TERMINAL_URL = 'https://terminal.veklom.com';
+
 const NetworkTopologyPanel = dynamicImport(
   () => import("@/components/vnp/NetworkTopologyPanel"),
   { ssr: false, loading: () => <div className="h-[500px] bg-white/5 rounded-xl animate-pulse" /> }
@@ -146,7 +144,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Interactive Terminal Widget */}
+          {/* Swarm Terminal CTA — powered by Veklom-RealTerminal */}
           <motion.div variants={fadeUpVariants} id="live-demo" className="relative scroll-mt-24">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-3xl opacity-50 rounded-3xl -z-10" />
             <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0A0A0C] shadow-2xl">
@@ -157,15 +155,34 @@ export default function Home() {
                     <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
                     <div className="w-3 h-3 rounded-full bg-green-500/50" />
                   </div>
-                  <span className="ml-4 text-xs font-mono text-gray-400">VEKLOM CONTROL CENTER (LIVE TELEMETRY)</span>
+                  <span className="ml-4 text-xs font-mono text-gray-400">VEKLOM SWARM TERMINAL (LIVE)</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-green-400 font-mono bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   CONNECTED
                 </div>
               </div>
-              <div className="h-[600px] overflow-hidden relative">
-                <InteractiveLandingTerminal />
+              <div className="h-[320px] flex flex-col items-center justify-center gap-6 bg-[#060608] relative overflow-hidden">
+                {/* Animated background grid */}
+                <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'linear-gradient(rgba(0,229,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.15) 1px, transparent 1px)', backgroundSize: '32px 32px'}} />
+                <div className="relative z-10 text-center px-8">
+                  <div className="inline-flex items-center gap-2 text-[#00E5FF] text-xs font-bold uppercase tracking-widest bg-[#00E5FF]/5 border border-[#00E5FF]/20 px-4 py-1.5 rounded-full mb-5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+                    Standalone Swarm Intelligence Interface
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Veklom Swarm Terminal</h3>
+                  <p className="text-sm text-gray-400 max-w-sm mx-auto mb-6">
+                    Real-time multi-agent coordination, live telemetry, swarm map, and governance controls — in a dedicated command environment.
+                  </p>
+                  <a
+                    href={TERMINAL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] font-bold text-sm rounded-lg hover:bg-[#00E5FF]/20 hover:border-[#00E5FF]/60 transition-all duration-200 font-mono"
+                  >
+                    Launch Swarm Terminal <ArrowUpRight className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
             </div>
           </motion.div>
