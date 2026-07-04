@@ -870,7 +870,10 @@ export default function QuantumTerminal() {
                 </div>
              </div>
 
-             <div className="text-[9px] uppercase tracking-widest text-[#3d5269] border-b border-[#63b3ed1f] pb-2">120-Agent Task Force <span className="float-right text-[#63b3ed] font-normal">{agentTaskForce.filter(a => a.status === 'executing').length} Active</span></div>
+             <div className="text-[9px] uppercase tracking-widest text-[#3d5269] border-b border-[#63b3ed1f] pb-2 flex justify-between items-center">
+               <span>120-Agent Task Force <span className="ml-2 text-[#63b3ed] font-normal">{agentTaskForce.filter(a => a.status === 'executing').length} Active</span></span>
+               <button onClick={() => { if(typeof window !== 'undefined') window.location.href = '/swarm-map'; }} className="text-[9px] text-[#bc8cff] hover:text-[#fff] bg-[#bc8cff1a] hover:bg-[#bc8cff33] px-2 py-0.5 rounded transition-colors uppercase cursor-pointer border border-[#bc8cff4d]">Open Deep Map ↗</button>
+             </div>
              <div className="grid grid-cols-10 gap-1 bg-[#111820] p-4 border border-[#63b3ed1f] rounded-xl">
                {agentTaskForce.map(a => (
                  <div key={a.id} className={`w-full aspect-square border border-[#63b3ed1f] rounded-sm transition-all ${a.status === 'executing' ? 'bg-[#63b3ed4d] border-[#63b3ed99]' : a.status === 'assigned' ? 'bg-[#bc8cff33] border-[#bc8cff66]' : a.status === 'blocked' ? 'bg-[#e3b34133] border-[#e3b34166]' : 'bg-[#0d1117]'}`} title={`${a.role}: ${a.status}`}></div>
