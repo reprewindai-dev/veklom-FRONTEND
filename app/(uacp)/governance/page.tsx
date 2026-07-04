@@ -49,7 +49,14 @@ export default function GovernancePage() {
       delegates={delegates}
       onVotePropose={handleVotePropose}
       logs={logs}
-      metrics={{ consensus: 99.98, throughput: 1.2, activeProposals: 0 }}
+      metrics={{
+        throughput: 1.2,
+        attestationRate: 99.98,
+        gasSaved: 12500,
+        activeQueue: 0,
+        uptime: "99.99%",
+        totalExecutions: 15420
+      }}
     />
   );
 }
