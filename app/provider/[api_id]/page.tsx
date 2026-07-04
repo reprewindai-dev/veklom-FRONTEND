@@ -7,9 +7,15 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+const Card = ({children, className}: any) => <div className={`border rounded-lg p-4 bg-zinc-900 ${className}`}>{children}</div>;
+const CardHeader = ({children, className}: any) => <div className={`mb-4 ${className}`}>{children}</div>;
+const CardTitle = ({children, className}: any) => <h3 className={`text-xl font-bold ${className}`}>{children}</h3>;
+const CardDescription = ({children, className}: any) => <p className={`text-sm text-zinc-400 ${className}`}>{children}</p>;
+const CardContent = ({children, className}: any) => <div className={className}>{children}</div>;
+const Button = ({children, className, ...props}: any) => <button className={`px-4 py-2 rounded-md font-medium flex items-center justify-center ${className}`} {...props}>{children}</button>;
+const Alert = ({children, className}: any) => <div className={`p-4 rounded-md border ${className}`}>{children}</div>;
+const AlertTitle = ({children, className}: any) => <h4 className={`font-bold mb-1 ${className}`}>{children}</h4>;
+const AlertDescription = ({children, className}: any) => <div className={`text-sm ${className}`}>{children}</div>;
 import { Terminal, Shield, Activity, Clock, Zap } from 'lucide-react';
 
 interface ScoreData {
