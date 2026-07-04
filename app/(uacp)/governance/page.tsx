@@ -17,7 +17,12 @@ export default function GovernancePage() {
     name: identity.agent_name || "Unknown Identity",
     reputation: 100, // Default base reputation
     status: identity.status?.toLowerCase() === 'quarantined' ? 'offline' : 'active',
-    lastSync: identity.created_at || new Date().toISOString()
+    lastSync: identity.created_at || new Date().toISOString(),
+    department: 'General',
+    weight: 1,
+    vote: 'pending',
+    lastAttestation: new Date().toISOString(),
+    influence: 10
   }));
 
   const handleVotePropose = (proposalName: string) => {
