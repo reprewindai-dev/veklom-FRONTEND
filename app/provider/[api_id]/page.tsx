@@ -27,7 +27,8 @@ interface ScoreData {
   measured_at: string;
 }
 
-export default function ProviderDashboard({ params }: { params: { api_id: string } }) {
+export default function ProviderDashboard({ params }: { params: Promise<{ api_id: string }> }) {
+  const resolvedParams = React.use(params);
   const [data, setData] = useState<any>(null);
   const [liveScore, setLiveScore] = useState<number>(0);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
     const fetchLeaderboard = async () => {
       try {
         const response = await api.get('/benchmarks/leaderboard');
-        const item = response.find((r: any) => r.id === params.api_id);
+        const item = response.find((r: any) => r.id === resolvedParams.api_id);
         if (!item) {
           setError('API not found in VNP Registry');
         } else {
@@ -52,7 +53,7 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
       }
     };
     fetchLeaderboard();
-  }, [params.api_id]);
+  }, [resolvedParams.api_id]);
 
   // Real-time SSE Connection
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
       try {
         const payload: ScoreData = JSON.parse(event.data);
         // Only update if it matches our API
-        if (payload.api_id === params.api_id) {
+        if (payload.api_id === resolvedParams.api_id) {
           setLiveScore(payload.score);
           
           // Optionally push to a history array for the line chart here
@@ -86,7 +87,7 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
     return () => {
       sse.close();
     };
-  }, [data, params.api_id]);
+  }, [data, resolvedParams.api_id]);
 
 
   if (loading) {
@@ -94,7 +95,7 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
       <div className="flex items-center justify-center h-screen bg-black text-white">
         <div className="animate-pulse flex flex-col items-center">
           <Activity className="h-12 w-12 text-orange-500 mb-4" />
-          <p>Loading VNP Telemetry for {params.api_id}...</p>
+          <p>Loading VNP Telemetry for {resolvedParams.api_id}...</p>
         </div>
       </div>
     );
@@ -133,7 +134,7 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
               <Terminal className="text-orange-500" />
               {data.name}
             </h1>
-            <p className="text-zinc-500 mt-2 font-mono text-sm">{params.api_id}</p>
+            <p className="text-zinc-500 mt-2 font-mono text-sm">{resolvedParams.api_id}</p>
           </div>
           <div className="mt-4 md:mt-0 text-right">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-mono">
@@ -223,13 +224,13 @@ export default function ProviderDashboard({ params }: { params: { api_id: string
             </CardHeader>
             <CardContent>
               <div className="mb-6 p-4 bg-zinc-950 rounded-lg border border-zinc-800 flex justify-center items-center h-32">
-                 <img src={`http://localhost:8088/api/v1/badges/${params.api_id}.svg`} alt="VNP Badge Preview" className="max-w-full" />
+                 <img src={`http://localhost:8088/api/v1/badges/${resolvedParams.api_id}.svg`} alt="VNP Badge Preview" className="max-w-full" />
               </div>
               
               <div className="space-y-2">
                 <p className="text-sm text-zinc-400">Markdown:</p>
                 <code className="block p-3 bg-black rounded border border-zinc-800 text-xs text-zinc-300 overflow-x-auto whitespace-nowrap">
-                  [![VNP Certified](https://api.veklom.com/api/v1/badges/{params.api_id}.svg)](https://vnp.io/provider/{params.api_id})
+                  [![VNP Certified](https://api.veklom.com/api/v1/badges/{resolvedParams.api_id}.svg)](https://vnp.io/provider/{resolvedParams.api_id})
                 </code>
               </div>
             </CardContent>
