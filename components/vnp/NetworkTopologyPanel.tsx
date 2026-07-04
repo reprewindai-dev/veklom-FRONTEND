@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import useSWR from "swr";
-import { fetcher } from "@/lib/api";
-import { Server, Activity, ShieldAlert, Zap, Cpu, Clipboard, RefreshCw, Layers, Radio, Flame, CheckCircle, Terminal, Play, Lock, Database } from "lucide-react";
+import { fetcher, api } from "@/lib/api";
+import { Server, Activity, ShieldAlert, Zap, Cpu, Clipboard, RefreshCw, Layers, Radio, Flame, CheckCircle, Terminal, Play, Lock, Database, PlayCircle, StopCircle } from "lucide-react";
 
 interface PeerNode {
   id: string;
@@ -42,9 +42,12 @@ interface SwarmTransaction {
 
 export default function NetworkTopologyPanel() {
   const [selectedNodeId, setSelectedNodeId] = useState<string>("peer-1");
-  const { data: topologyData } = useSWR<any>("/api/v1/beacon/topology", fetcher, { refreshInterval: 5000 });
-  const topology = topologyData?.topology;
+  const { data: topologyData, mutate: refreshTopology } = useSWR<any>("/api/v1/beacon/topology", fetcher, { refreshInterval: 5000 });
+  
+  // Real State from Backend
+  const realTopology = topologyData?.topology;
 
+  // UI State
   const [nodes, setNodes] = useState<PeerNode[]>([]);
   const [packets, setPackets] = useState<PaymentPacket[]>([]);
   const [eventsLog, setEventsLog] = useState<string[]>([]);
@@ -52,17 +55,22 @@ export default function NetworkTopologyPanel() {
   const [isActiveStorm, setIsActiveStorm] = useState(false);
   const [totalSettledUsd, setTotalSettledUsd] = useState(0);
   const [safetyGuardActive, setSafetyGuardActive] = useState(true);
+  
+  // Explicit Simulation Mode Toggle
+  const [isSimulationMode, setIsSimulationMode] = useState(false);
 
+  // Sync real data when not in simulation mode
   useEffect(() => {
-    if (topology) {
-      if (nodes.length === 0) setNodes(topology.nodes || []);
-      setEventsLog(topology.eventsLog || []);
-      setLedgerFeed(topology.ledgerFeed || []);
-      setTotalSettledUsd(topology.totalSettledUsd || 0);
-      setIsActiveStorm(topology.isActiveStorm || false);
-      setSafetyGuardActive(topology.safetyGuardActive ?? true);
+    if (!isSimulationMode && realTopology) {
+      if (nodes.length === 0 || realTopology.nodes) setNodes(realTopology.nodes || []);
+      if (realTopology.eventsLog) setEventsLog(realTopology.eventsLog);
+      if (realTopology.ledgerFeed) setLedgerFeed(realTopology.ledgerFeed);
+      if (realTopology.totalSettledUsd !== undefined) setTotalSettledUsd(realTopology.totalSettledUsd);
+      if (realTopology.isActiveStorm !== undefined) setIsActiveStorm(realTopology.isActiveStorm);
+      if (realTopology.safetyGuardActive !== undefined) setSafetyGuardActive(realTopology.safetyGuardActive);
     }
-  }, [topology]);
+  }, [realTopology, isSimulationMode]);
+
   const DEFAULT_NODE: PeerNode = {
     id: "peer-1",
     name: "validator-us-east",
@@ -78,20 +86,25 @@ export default function NetworkTopologyPanel() {
   };
   const selectedNode = nodes.find(n => n.id === selectedNodeId) || nodes[0] || DEFAULT_NODE;
 
-  // Animate packets flowing between nodes
+  // ── SIMULATION ENGINE ──────────────────────────────────────────────────────────
+  // Only runs when isSimulationMode === true
   useEffect(() => {
-    const timer = setInterval(() => {
-      // 1. Advance existing packets
+    if (!isSimulationMode) {
+      // Clear fake packets if turning off simulation
+      setPackets([]);
+      return;
+    }
+
+    // Packet Spawner & Settled Incrementer
+    const packetTimer = setInterval(() => {
       setPackets((prevPackets) => {
         return prevPackets
           .map((p) => ({ ...p, progress: p.progress + 0.04 }))
           .filter((p) => p.progress < 1.0);
       });
 
-      // 2. Increment active settled total score
       setTotalSettledUsd(prev => prev + (Math.random() > 0.6 ? parseFloat((Math.random() * 0.05).toFixed(6)) : 0));
 
-      // 3. Random packet spawner to simulate actual ledger transactions
       if (Math.random() > (isActiveStorm ? 0.08 : 0.65) && nodes.length > 0) {
         const fromNode = nodes[Math.floor(Math.random() * nodes.length)];
         const toNode = nodes[Math.floor(Math.random() * nodes.length)];
@@ -110,7 +123,6 @@ export default function NetworkTopologyPanel() {
 
           setPackets((prev) => [...prev, newP]);
 
-          // Also trigger a corresponding ledger log entry if storm handles it
           if (Math.random() > 0.45) {
             setLedgerFeed((prev) => {
               const txId = "tx_0x" + Math.random().toString(16).substr(2, 5);
@@ -132,13 +144,10 @@ export default function NetworkTopologyPanel() {
       }
     }, 110);
 
-    return () => clearInterval(timer);
-  }, [nodes, isActiveStorm]);
-
-  // Periodic node metrics fluctuation
-  useEffect(() => {
-    const testTimer = setInterval(() => {
+    // Node Metric Fluctuator
+    const metricTimer = setInterval(() => {
       setNodes((prevNodes) => {
+        if (!prevNodes.length) return prevNodes;
         return prevNodes.map((node) => {
           if (node.status === "STANDBY") return node;
           
@@ -150,122 +159,177 @@ export default function NetworkTopologyPanel() {
           if (nextPool < 5) nextPool = 5;
           if (nextPool > 85) nextPool = 85;
 
-          return {
-            ...node,
-            cpuMs: nextCpu,
-            poolUtilization: nextPool
-          };
+          return { ...node, cpuMs: nextCpu, poolUtilization: nextPool };
         });
       });
     }, 4000);
 
-    return () => clearInterval(testTimer);
-  }, []);
+    return () => {
+      clearInterval(packetTimer);
+      clearInterval(metricTimer);
+    };
+  }, [nodes.length, isActiveStorm, isSimulationMode]);
 
-  // 1. Fire Transaction Storm Trigger
-  const triggerStorm = () => {
-    setIsActiveStorm(true);
-    setEventsLog(prev => [
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡ STORM INGESTION REGISTERED - 10,000 High-Frequency Microtransactions gliding across VNP validation network`,
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] [SQLx Pool] dynamically spinning active pooling tunnels to handle connection throughput.`,
-      ...prev.slice(0, 5)
-    ]);
-
-    setTimeout(() => {
-      setIsActiveStorm(false);
-    }, 4500);
-  };
-
-  // 2. Trigger Slashing attestation challenge
-  const triggerAttestationChallenge = () => {
-    // We arbitrarily challenge peer-3 (validator-eu-west-1) or peer-2
-    setNodes((prev) => prev.map((n) => {
-      if (n.id === "peer-3") {
-        return { ...n, status: "CHALLENGED", stakeUsd: n.stakeUsd - 12000 };
-      }
-      return n;
-    }));
-
-    setEventsLog(prev => [
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] 🚨 ATTESTATION FAIL OR CHEAT SUSPICION: "validator-eu-west-1" submitted anomalous metric payload.`,
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] [VNP Arbiter] slashing 12,000 USD from validator deposit. Quarantine state LOCK applied.`,
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] [RLS Isolation] All queries from identity "tempo_global" redirected to isolated decoy storage buffer until audit clears.`,
-      ...prev.slice(0, 5)
-    ]);
-
-    // Recover after 7 seconds
-    setTimeout(() => {
-      setNodes((prev) => prev.map((n) => {
-        if (n.id === "peer-3") {
-          return { ...n, status: "ATTESTING", version: "vnp-v0.1.3-patch" };
-        }
-        return n;
-      }));
+  // ── ACTIONS ────────────────────────────────────────────────────────────────────
+  
+  const triggerStorm = async () => {
+    if (isSimulationMode) {
+      setIsActiveStorm(true);
       setEventsLog(prev => [
-        `[${new Date().toLocaleTimeString([], { hour12: false })}] ✓ "validator-eu-west-1" hot patched to v0.1.3-patch. Attestation integrity restored. State un-frozen.`,
-        ...prev.slice(0, 4)
+        `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡ STORM INGESTION REGISTERED - 10,000 High-Frequency Microtransactions gliding across VNP validation network`,
+        ...prev.slice(0, 5)
       ]);
-    }, 7000);
+      setTimeout(() => setIsActiveStorm(false), 4500);
+    } else {
+      // Real API Call
+      try {
+        await api.post("/api/v1/admin/debug/storm", {});
+        refreshTopology();
+      } catch (err) {
+        console.error("Failed to trigger real storm:", err);
+      }
+    }
   };
 
-  // 3. Toggle Security Guard Isolation Modes
-  const toggleSafetyGuard = () => {
-    setSafetyGuardActive(prev => !prev);
-    const state = !safetyGuardActive ? "ARMED" : "SOFT-LOG ONLY";
-    setEventsLog(prev => [
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] Security guard system changed direction to [${state}]. PostgreSQL Row-Level-Security rules updated dynamically.`,
-      ...prev.slice(0, 6)
-    ]);
+  const triggerAttestationChallenge = async () => {
+    if (isSimulationMode) {
+      setNodes((prev) => prev.map((n) => n.id === "peer-3" ? { ...n, status: "CHALLENGED", stakeUsd: n.stakeUsd - 12000 } : n));
+      setEventsLog(prev => [
+        `[${new Date().toLocaleTimeString([], { hour12: false })}] 🚨 ATTESTATION FAIL OR CHEAT SUSPICION: "validator-eu-west-1" submitted anomalous metric payload.`,
+        `[${new Date().toLocaleTimeString([], { hour12: false })}] [VNP Arbiter] slashing 12,000 USD from validator deposit. Quarantine state LOCK applied.`,
+        ...prev.slice(0, 5)
+      ]);
+      setTimeout(() => {
+        setNodes((prev) => prev.map((n) => n.id === "peer-3" ? { ...n, status: "ATTESTING", version: "vnp-v0.1.3-patch" } : n));
+        setEventsLog(prev => [
+          `[${new Date().toLocaleTimeString([], { hour12: false })}] ✓ "validator-eu-west-1" hot patched to v0.1.3-patch. Attestation integrity restored.`,
+          ...prev.slice(0, 4)
+        ]);
+      }, 7000);
+    } else {
+      // Real API call (if implemented)
+      try {
+        await api.post("/api/v1/admin/debug/slash", { peer: "peer-3" });
+        refreshTopology();
+      } catch (err) {
+        console.error("Failed to trigger real slash:", err);
+      }
+    }
+  };
+
+  const toggleSafetyGuard = async () => {
+    if (isSimulationMode) {
+      setSafetyGuardActive(prev => !prev);
+      const state = !safetyGuardActive ? "ARMED" : "SOFT-LOG ONLY";
+      setEventsLog(prev => [
+        `[${new Date().toLocaleTimeString([], { hour12: false })}] Security guard system changed direction to [${state}]. PostgreSQL Row-Level-Security rules updated dynamically.`,
+        ...prev.slice(0, 6)
+      ]);
+    } else {
+      try {
+        await api.post("/api/v1/admin/config", { safetyGuard: !safetyGuardActive });
+        setSafetyGuardActive(!safetyGuardActive);
+      } catch(err) {
+        console.error("Failed to toggle guard", err);
+      }
+    }
   };
 
   return (
     <div id="vnp-topology-cockpit-root" className="grid grid-cols-1 lg:grid-cols-12 gap-7 animate-fade-in text-[11px] font-mono">
       
       {/* LEFT SPACE: Interactive SVG Graph Node Swarm (lg:col-span-8) */}
-      <div className="lg:col-span-8 flex flex-col justify-between bg-[#080d15] border border-slate-900 rounded-2xl p-5 relative overflow-hidden h-[570px]">
+      <div className="lg:col-span-8 flex flex-col justify-between bg-gradient-to-br from-[#080d15] to-[#04070a] border border-cyan-900/30 rounded-2xl p-5 relative overflow-hidden h-[570px] shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+        
         {/* Glow Effects Filters */}
         <svg className="absolute w-0 h-0">
           <defs>
             <filter id="laser-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <filter id="node-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+            <filter id="node-glow-healthy" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComponentTransfer in="blur" result="glow">
+                <feFuncA type="linear" slope="0.5" />
+              </feComponentTransfer>
               <feMerge>
-                <feMergeNode in="blur" />
+                <feMergeNode in="glow" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            <filter id="node-glow-challenged" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComponentTransfer in="blur" result="glow">
+                <feFuncA type="linear" slope="0.8" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            
+            <radialGradient id="grad-leader" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#047857" stopOpacity="1" />
+              <stop offset="70%" stopColor="#022c22" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#022c22" stopOpacity="0.4" />
+            </radialGradient>
+            <radialGradient id="grad-challenged" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#b91c1c" stopOpacity="1" />
+              <stop offset="70%" stopColor="#450a0a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#450a0a" stopOpacity="0.4" />
+            </radialGradient>
+            <radialGradient id="grad-standby" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#334155" stopOpacity="1" />
+              <stop offset="70%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.4" />
+            </radialGradient>
           </defs>
         </svg>
 
         {/* HUD Overlay Info Bar */}
-        <div className="flex items-center justify-between border-b border-slate-900 pb-3 z-10">
-          <div className="space-y-1">
+        <div className="flex items-center justify-between border-b border-cyan-900/30 pb-3 z-10 relative">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Radio className="w-4.5 h-4.5 text-emerald-400 animate-pulse" />
-              <span className="text-xs font-bold text-slate-100 uppercase tracking-widest">Veklom Gateway &amp; x402 Settlement Swarm</span>
+              <Radio className="w-5 h-5 text-emerald-400 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              <span className="text-sm font-sans tracking-wide text-white/90">Veklom Gateway &amp; x402 Settlement Swarm</span>
             </div>
-            <span className="text-[9px] text-[#86efac]/80 uppercase font-extrabold bg-[#052e16]/30 border border-emerald-500/10 px-2 py-0.5 rounded">
-              VNP SLA Performance &amp; attestation web
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] text-emerald-300 uppercase tracking-widest bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]">
+                VNP SLA Performance
+              </span>
+              
+              <button 
+                onClick={() => setIsSimulationMode(!isSimulationMode)}
+                className={`flex items-center gap-1 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded border transition-colors ${
+                  isSimulationMode 
+                    ? "bg-amber-950/40 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]" 
+                    : "bg-slate-900/50 text-slate-400 border-slate-700/50 hover:bg-slate-800"
+                }`}
+              >
+                {isSimulationMode ? <StopCircle className="w-3 h-3" /> : <PlayCircle className="w-3 h-3" />}
+                {isSimulationMode ? "Sim Mode Active" : "Enable UI Sim"}
+              </button>
+            </div>
           </div>
 
-          <div className="text-right text-[10px]">
-            <span className="text-slate-500 block uppercase leading-tight font-extrabold">x402 USDC ROUTE PAYMENTS</span>
-            <span className="text-emerald-400 font-bold block">{totalSettledUsd.toFixed(6)} $SETTLED (USDC)</span>
+          <div className="text-right flex flex-col items-end gap-1">
+            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC ROUTE PAYMENTS</span>
+            <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded px-3 py-1 flex items-center gap-2 backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_5px_#34d399]"></span>
+              <span className="text-emerald-400 font-mono text-sm tracking-tight">{totalSettledUsd.toFixed(6)} $SETTLED</span>
+            </div>
           </div>
         </div>
 
         {/* The Vector map viewport area */}
-        <div className="flex-1 min-h-[350px] relative mt-2 select-all">
+        <div className="flex-1 min-h-[350px] relative mt-2 select-none">
           <svg viewBox="0 0 600 450" className="w-[100%] h-[100%] block">
             {/* Draw grid background lines */}
-            <g stroke="rgba(30, 41, 59, 0.2)" strokeWidth="0.5" strokeDasharray="3,3">
+            <g stroke="rgba(34, 211, 238, 0.05)" strokeWidth="1">
               {Array.from({ length: 9 }).map((_, i) => (
                 <line key={`grid-v-${i}`} x1={i * 70 + 20} y1="0" x2={i * 70 + 20} y2="450" />
               ))}
@@ -274,54 +338,51 @@ export default function NetworkTopologyPanel() {
               ))}
             </g>
 
-            {/* Draw laser peer-to-peer connection lines */}
-            <g stroke="rgba(16, 185, 129, 0.08)" strokeWidth="1">
+            {/* Draw animated fiber-optic connection lines */}
+            <g>
               {nodes.map((n1, idx1) => 
                 nodes.slice(idx1 + 1).map((n2) => {
                   const isLeaderCon = n1.status === "LEADER" || n2.status === "LEADER";
                   const isChallenged = n1.status === "CHALLENGED" || n2.status === "CHALLENGED";
                   
+                  // Base static line
+                  const strokeColor = isChallenged ? "rgba(239, 68, 68, 0.15)" : isLeaderCon ? "rgba(16, 185, 129, 0.2)" : "rgba(34, 211, 238, 0.1)";
+                  const strokeWidth = isLeaderCon ? "1.5" : "1";
+                  
                   return (
-                    <line
-                      key={`${n1.id}-${n2.id}`}
-                      x1={n1.x}
-                      y1={n1.y}
-                      x2={n2.x}
-                      y2={n2.y}
-                      stroke={isChallenged ? "rgba(239, 68, 68, 0.15)" : isLeaderCon ? "rgba(16, 185, 129, 0.22)" : "rgba(16, 185, 129, 0.08)"}
-                      strokeWidth={isLeaderCon ? "1.2" : "0.75"}
-                      style={isLeaderCon ? { filter: "url(#laser-glow)" } : undefined}
-                    />
+                    <g key={`link-${n1.id}-${n2.id}`}>
+                      {/* Glow backdrop for leader connections */}
+                      {isLeaderCon && !isChallenged && (
+                        <line x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} stroke="rgba(16, 185, 129, 0.1)" strokeWidth="4" style={{ filter: "url(#laser-glow)" }} />
+                      )}
+                      <line x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} stroke={strokeColor} strokeWidth={strokeWidth} />
+                      
+                      {/* Animated traffic flow (dashed line moving) */}
+                      {isLeaderCon && !isChallenged && (
+                        <line 
+                          x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} 
+                          stroke="rgba(16, 185, 129, 0.4)" 
+                          strokeWidth="1.5" 
+                          strokeDasharray="4 12" 
+                          className="animate-[dash_3s_linear_infinite]" 
+                        />
+                      )}
+                    </g>
                   );
                 })
               )}
             </g>
 
-            {/* Draw animation gliding packets */}
+            {/* Draw simulation packets if active */}
             {packets.map((p) => {
               const currentX = p.fromX + (p.toX - p.fromX) * p.progress;
               const currentY = p.fromY + (p.toY - p.fromY) * p.progress;
+              const color = p.tenant === "veklom.io" ? "#10b981" : p.tenant === "tempo_global" ? "#6366f1" : "#f59e0b";
 
               return (
                 <g key={p.id}>
-                  {/* Glowing package head dot */}
-                  <circle
-                    cx={currentX}
-                    cy={currentY}
-                    r="3.5"
-                    fill={p.tenant === "veklom.io" ? "#10b981" : p.tenant === "tempo_global" ? "#6366f1" : "#f59e0b"}
-                    style={{ filter: "url(#laser-glow)" }}
-                  />
-                  {/* Subtle outer halo ripple ring */}
-                  <circle
-                    cx={currentX}
-                    cy={currentY}
-                    r="7"
-                    fill="none"
-                    stroke={p.tenant === "veklom.io" ? "#10b981" : p.tenant === "tempo_global" ? "#6366f1" : "#f59e0b"}
-                    strokeWidth="0.5"
-                    opacity={1.0 - p.progress}
-                  />
+                  <circle cx={currentX} cy={currentY} r="3" fill={color} style={{ filter: "url(#laser-glow)" }} />
+                  <circle cx={currentX} cy={currentY} r="8" fill="none" stroke={color} strokeWidth="1" opacity={(1.0 - p.progress) * 0.8} />
                 </g>
               );
             })}
@@ -329,99 +390,101 @@ export default function NetworkTopologyPanel() {
             {/* Draw interactable physical nodes */}
             {nodes.map((n) => {
               const isSelected = selectedNodeId === n.id;
-              let fillNodeColor = "#111827";
-              let borderStroke = "rgba(16, 185, 129, 0.4)";
-              let ledColor = "#10b981";
+              let fillGradient = "url(#grad-standby)";
+              let borderStroke = "rgba(34, 211, 238, 0.3)";
+              let ledColor = "#94a3b8";
+              let glowFilter = undefined;
 
               if (n.status === "LEADER") {
-                fillNodeColor = "#022c22";
-                borderStroke = "#10b981";
+                fillGradient = "url(#grad-leader)";
+                borderStroke = "rgba(16, 185, 129, 0.8)";
                 ledColor = "#10b981";
+                glowFilter = "url(#node-glow-healthy)";
               } else if (n.status === "CHALLENGED") {
-                fillNodeColor = "#450a0a";
-                borderStroke = "#ef4444";
+                fillGradient = "url(#grad-challenged)";
+                borderStroke = "rgba(239, 68, 68, 0.8)";
                 ledColor = "#ef4444";
-              } else if (n.status === "STANDBY") {
-                fillNodeColor = "#1e293b";
-                borderStroke = "rgba(148, 163, 184, 0.3)";
-                ledColor = "#94a3b8";
+                glowFilter = "url(#node-glow-challenged)";
               }
 
               if (isSelected) {
-                borderStroke = "#FFB800";
+                borderStroke = "#22d3ee"; // Cyan for selected
               }
 
               return (
                 <g 
                   key={n.id} 
                   transform={`translate(${n.x}, ${n.y})`}
-                  className="cursor-pointer group"
+                  className="cursor-pointer group outline-none"
                   onClick={() => setSelectedNodeId(n.id)}
                 >
-                  {/* Invisible broad click target path */}
-                  <circle cx="0" cy="0" r="28" fill="transparent" />
+                  <circle cx="0" cy="0" r="30" fill="transparent" />
 
-                  {/* Pulsing Selection Ring */}
+                  {/* Selection Ring */}
                   {isSelected && (
                     <circle
                       cx="0"
                       cy="0"
-                      r="20"
+                      r="22"
                       fill="none"
-                      stroke="#FFB800"
+                      stroke="rgba(34,211,238,0.5)"
                       strokeWidth="1.5"
-                      strokeDasharray="4,3"
-                      className="animate-spin"
-                      style={{ animationDuration: "12s" }}
+                      strokeDasharray="4 4"
+                      className="animate-[spin_10s_linear_infinite]"
                     />
                   )}
 
-                  {/* Healthy outer halo glow */}
-                  {n.status === "LEADER" && (
-                    <circle
-                      cx="0"
-                      cy="0"
-                      r="16"
-                      fill="transparent"
-                      stroke="#10b981"
-                      strokeWidth="1.2"
-                      opacity="0.3"
-                      className="animate-pulse"
-                    />
-                  )}
-
-                  {/* Physical chassis polygon / shape circle */}
+                  {/* Core Base */}
                   <circle
                     cx="0"
                     cy="0"
-                    r="12.5"
-                    fill={fillNodeColor}
+                    r="14"
+                    fill={fillGradient}
                     stroke={borderStroke}
-                    strokeWidth={isSelected ? "2.5" : "1.25"}
-                    style={n.status === "CHALLENGED" ? { filter: "url(#node-glow)" } : undefined}
-                    className="transition duration-150 group-hover:scale-110"
+                    strokeWidth={isSelected ? "2" : "1"}
+                    style={{ filter: glowFilter }}
+                    className="transition-transform duration-300 group-hover:scale-110"
                   />
 
-                  {/* Central Core status LED */}
+                  {/* Core Inner Ring */}
                   <circle
                     cx="0"
                     cy="0"
-                    r="3.5"
+                    r="8"
+                    fill="none"
+                    stroke={ledColor}
+                    strokeWidth="0.5"
+                    opacity="0.5"
+                    className={n.status === "LEADER" ? "animate-[spin_4s_linear_infinite]" : undefined}
+                    strokeDasharray="2 2"
+                  />
+
+                  {/* Status LED */}
+                  <circle
+                    cx="0"
+                    cy="0"
+                    r="2.5"
                     fill={ledColor}
-                    className={n.status === "CHALLENGED" ? "animate-pulse" : undefined}
+                    className={n.status === "CHALLENGED" ? "animate-ping" : undefined}
+                    style={{ filter: "url(#laser-glow)" }}
                   />
 
                   {/* Floating Identifier Label */}
-                  <text
-                    x="0"
-                    y="25"
-                    fill={isSelected ? "#FFB800" : n.status === "CHALLENGED" ? "#f87171" : "#94a3b8"}
-                    fontSize="8.5"
-                    textAnchor="middle"
-                    className="font-bold tracking-tight select-none opacity-85 group-hover:opacity-100"
-                  >
-                    {n.name.split("-")[1] || n.name}
-                  </text>
+                  <g transform="translate(0, 28)">
+                    {/* Label background pill */}
+                    <rect x="-35" y="-8" width="70" height="14" rx="4" fill="rgba(3,7,12,0.8)" stroke={borderStroke} strokeWidth="0.5" opacity="0.8" />
+                    <text
+                      x="0"
+                      y="3"
+                      fill={isSelected ? "#22d3ee" : n.status === "CHALLENGED" ? "#f87171" : "#cbd5e1"}
+                      fontSize="9"
+                      fontFamily="monospace"
+                      textAnchor="middle"
+                      className="font-medium tracking-tight group-hover:fill-white transition-colors"
+                    >
+                      {n.name.split("-")[1] || n.name}
+                    </text>
+                  </g>
                 </g>
               );
             })}
@@ -429,176 +492,205 @@ export default function NetworkTopologyPanel() {
         </div>
 
         {/* Real-time system tracing console logs bar */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 uppercase font-extrabold pb-1.5 border-b border-slate-900">
-            <Terminal className="w-3.5 h-3.5 text-slate-500" />
+        <div className="space-y-2 mt-4">
+          <div className="flex items-center gap-2 text-[10px] text-cyan-500/50 uppercase tracking-widest pb-2 border-b border-cyan-900/20">
+            <Terminal className="w-3.5 h-3.5 text-cyan-400" />
             <span>VNP Ledger Trace &amp; x402 Proof of Reserve</span>
           </div>
-          <div className="h-[65px] overflow-y-auto font-mono text-[9px]/relaxed text-slate-400 space-y-1 select-text scrollbar-thin">
-            {eventsLog.map((log, idx) => {
-              let badge = "text-slate-500";
-              if (log.includes("STORM")) badge = "text-amber-400 font-extrabold animate-pulse";
-              if (log.includes("FAIL") || log.includes("CHALLENGE") || log.includes("slashing")) badge = "text-red-400 font-bold";
-              if (log.includes("patched") || log.includes("restored")) badge = "text-emerald-400 font-bold";
-              if (log.includes("Row Level Security")) badge = "text-blue-400";
-              
-              return (
-                <div key={idx} className={`${badge} break-all`}>
-                  {log}
-                </div>
-              );
-            })}
+          <div className="h-[75px] overflow-y-auto font-mono text-[10px] leading-relaxed text-slate-300 space-y-1.5 scrollbar-thin scrollbar-thumb-cyan-900/50 p-2 bg-[#03070c]/50 rounded border border-cyan-900/10 inset-shadow">
+            {eventsLog.length === 0 ? (
+              <div className="text-cyan-500/30 italic">Awaiting network events...</div>
+            ) : (
+              eventsLog.map((log, idx) => {
+                let badge = "text-cyan-200/70";
+                if (log.includes("STORM")) badge = "text-amber-400 font-bold drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]";
+                if (log.includes("FAIL") || log.includes("CHALLENGE") || log.includes("slashing")) badge = "text-rose-400 font-bold";
+                if (log.includes("patched") || log.includes("restored")) badge = "text-emerald-400 font-bold";
+                if (log.includes("Row Level Security")) badge = "text-indigo-300";
+                
+                return (
+                  <div key={idx} className={`${badge} break-all flex gap-2`}>
+                    <span className="text-cyan-500/30 shrink-0">❯</span>
+                    <span>{log}</span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
       </div>
 
       {/* RIGHT SPACE: Controlling Command Center HUD (lg:col-span-4) */}
-      <div className="lg:col-span-4 space-y-6 flex flex-col justify-between">
+      <div className="lg:col-span-4 space-y-5 flex flex-col justify-between">
         
         {/* Validator HUD Inspector Details */}
-        <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
-            <Server className={`${selectedNode.status === "LEADER" ? "text-emerald-400 animate-pulse" : selectedNode.status === "CHALLENGED" ? "text-red-400 animate-spin" : "text-[#FFB800]"} w-5 h-5`} />
-            <div>
-              <span className="text-[8px] uppercase tracking-wider text-slate-500 font-bold block">Consensus HUD Node</span>
-              <h3 className="text-xs font-bold text-slate-100">{selectedNode.name}</h3>
+        <div className="bg-gradient-to-b from-[#080d15]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-5 space-y-5 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
+          
+          <div className="flex items-start gap-3 border-b border-cyan-900/30 pb-4">
+            <div className={`p-2 rounded-lg border ${selectedNode.status === "LEADER" ? "bg-emerald-950/30 border-emerald-500/30" : selectedNode.status === "CHALLENGED" ? "bg-rose-950/30 border-rose-500/30" : "bg-cyan-950/20 border-cyan-900/30"}`}>
+              <Server className={`${selectedNode.status === "LEADER" ? "text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]" : selectedNode.status === "CHALLENGED" ? "text-rose-400" : "text-cyan-400"} w-5 h-5`} />
             </div>
-            <span className={`text-[8.5px] font-mono px-2 py-0.5 rounded font-extrabold uppercase border ml-auto ${
+            <div className="flex-1">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">Consensus Node</span>
+              <h3 className="text-sm font-sans font-medium text-white/90">{selectedNode.name}</h3>
+            </div>
+            <span className={`text-[9px] font-mono px-2.5 py-1 rounded border tracking-widest uppercase ${
               selectedNode.status === "LEADER"
-                ? "bg-emerald-950/40 text-emerald-300 border-emerald-500/20"
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
                 : selectedNode.status === "CHALLENGED"
-                ? "bg-red-950/40 text-red-300 border-red-500/20 animate-pulse"
+                ? "bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse"
                 : selectedNode.status === "STANDBY"
-                ? "bg-slate-900 text-slate-400 border-slate-800"
-                : "bg-[#FFB800]/10 text-[#FFB800] border-[#FFB800]/20"
+                ? "bg-slate-800/50 text-slate-400 border-slate-700"
+                : "bg-amber-500/10 text-amber-400 border-amber-500/30"
             }`}>
               {selectedNode.status_str || selectedNode.status}
             </span>
           </div>
 
-          {/* Interactive Node Metric HUD */}
-          <div className="space-y-3 font-mono text-[10px] text-slate-400">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Validator Jurisdiction:</span>
-              <span className="text-slate-300 font-bold uppercase">{selectedNode.region}</span>
+          <div className="space-y-4 font-mono text-[10px] text-cyan-100/60">
+            <div className="flex justify-between items-center">
+              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Jurisdiction</span>
+              <span className="text-white/90 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30 uppercase">{selectedNode.region}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Active Locked Stake <span className="text-[8px]">(Simulated)</span>:</span>
-              <span className="text-emerald-400 font-bold">${selectedNode.stakeUsd.toLocaleString()} USD</span>
+            <div className="flex justify-between items-center">
+              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Active Stake {isSimulationMode && "(Sim)"}</span>
+              <span className="text-emerald-400 text-[11px]">${selectedNode.stakeUsd.toLocaleString()} USD</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Node Latency response:</span>
-              <span className="text-slate-300 font-bold">{selectedNode.cpuMs} ms</span>
+            <div className="flex justify-between items-center">
+              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Latency</span>
+              <span className="text-cyan-300">{selectedNode.cpuMs.toFixed(3)} ms</span>
             </div>
             
             {/* Connection Pool Meter */}
-            <div className="space-y-1 bg-[#111827]/40 p-2.5 rounded border border-slate-900">
-              <div className="flex justify-between text-[9px]">
-                <span className="text-slate-500 lowercase">sqlx::Pool idle warm connections:</span>
-                <span className="text-[#FFB800] font-bold">{selectedNode.poolUtilization}% utilization</span>
+            <div className="space-y-2 bg-[#03070c]/50 p-3 rounded-lg border border-cyan-900/20">
+              <div className="flex justify-between items-center">
+                <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">sqlx::Pool Utilization</span>
+                <span className={`${selectedNode.poolUtilization > 80 ? "text-amber-400" : "text-cyan-400"}`}>{selectedNode.poolUtilization}%</span>
               </div>
-              <div className="w-full bg-slate-950 h-1 rounded-full overflow-hidden">
+              <div className="w-full bg-[#0b1219] h-1.5 rounded-full overflow-hidden border border-cyan-900/30">
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ${selectedNode.status === "CHALLENGED" ? "bg-red-500" : "bg-[#FFB800]"}`} 
+                  className={`h-full rounded-full transition-all duration-500 ${selectedNode.status === "CHALLENGED" ? "bg-rose-500" : selectedNode.poolUtilization > 80 ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]"}`} 
                   style={{ width: `${selectedNode.poolUtilization}%` }}
                 />
               </div>
             </div>
 
-            <div className="flex justify-between pt-1 border-t border-slate-900 text-[9.5px]">
-              <span className="text-slate-500">Tenant Namespace Isolation lock:</span>
-              <span className="text-indigo-400 block max-w-[140px] truncate bg-indigo-950/15 px-1.5 py-0.2 rounded border border-indigo-500/10 font-bold">
+            <div className="flex justify-between items-center pt-2 border-t border-cyan-900/20">
+              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Tenant Namespace Lock</span>
+              <span className="text-indigo-300 max-w-[140px] truncate bg-indigo-950/20 px-2 py-0.5 rounded border border-indigo-500/20">
                 {selectedNode.tenantLock}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Live Reactor Button Deck (Spiders/Lasers Control Room) */}
-        <div className="p-4 bg-[#0a0f18] border border-slate-900 rounded-2xl relative space-y-4">
-          <div className="flex items-center gap-1.5 font-bold text-xs text-slate-300">
-            <Layers className="w-4 h-4 text-emerald-400" />
+        {/* Live Reactor Button Deck */}
+        <div className="p-5 bg-gradient-to-br from-[#080d15] to-[#04070a] border border-cyan-900/30 rounded-2xl relative space-y-5 shadow-[0_0_20px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center gap-2 font-sans font-medium text-[13px] text-white/90 border-b border-cyan-900/20 pb-3">
+            <Layers className="w-4 h-4 text-cyan-400" />
             <span>Interactive Protocol Probes</span>
           </div>
 
-          <div className="flex flex-col gap-2.5">
-            {/* Storm trigger button */}
+          <div className="flex flex-col gap-3">
             <button
               onClick={triggerStorm}
               disabled={isActiveStorm}
-              className="w-full py-3 bg-gradient-to-tr from-amber-600 to-emerald-600 hover:from-amber-500 hover:to-emerald-500 disabled:opacity-40 text-white rounded-xl text-xs font-black select-none cursor-pointer transition hover:scale-[1.01] active:scale-95 duration-100 uppercase tracking-wider flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-gradient-to-r from-amber-900/40 to-amber-600/20 hover:from-amber-800/50 hover:to-amber-500/30 disabled:opacity-50 text-amber-200 border border-amber-500/30 hover:border-amber-400/50 rounded-xl font-mono text-[10px] tracking-widest transition-all duration-300 uppercase flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] group"
             >
-              <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
-              <span>{isActiveStorm ? "Consensus Flooding..." : "Simulate Escrow Traffic Storm"}</span>
+              <Zap className="w-4 h-4 text-amber-400 group-hover:animate-pulse" />
+              <span>{isActiveStorm ? "Consensus Flooding..." : "Simulate Escrow Storm"}</span>
             </button>
 
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              {/* Challenge slash trigger */}
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={triggerAttestationChallenge}
-                className="py-2.5 bg-red-950/40 hover:bg-red-950/80 hover:text-red-300 text-red-400 rounded-lg font-bold border border-red-500/20 hover:border-red-500/50 cursor-pointer text-center transition block"
+                className="py-3 px-2 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 rounded-xl border border-rose-900/50 hover:border-rose-500/40 transition-all duration-300 flex flex-col items-center justify-center gap-1.5 group"
                 title="Force-triggers anomalous payload from validator-eu-west-1 to fire automatic Slashing penalty"
               >
-                <Flame className="w-3.5 h-3.5 inline mr-1 text-red-500 animate-bounce" />
-                Fire Slashing Attest
+                <Flame className="w-4 h-4 text-rose-500 group-hover:animate-bounce shadow-[0_0_10px_rgba(244,63,94,0.2)] rounded-full" />
+                <span className="text-[9px] font-mono uppercase tracking-widest">Slashing Attest</span>
               </button>
 
-              {/* RLS Safety toggle switch */}
               <button
                 onClick={toggleSafetyGuard}
-                className={`py-2.5 rounded-lg border font-bold cursor-pointer text-center transition flex items-center justify-center gap-1 ${
+                className={`py-3 px-2 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-widest ${
                   safetyGuardActive 
-                    ? "bg-emerald-950/20 text-emerald-300 border-emerald-500/20 hover:bg-emerald-950/40" 
-                    : "bg-slate-900/60 text-slate-400 border-slate-800 hover:bg-slate-800"
+                    ? "bg-emerald-950/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/30 hover:border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.05)]" 
+                    : "bg-[#0b1219]/80 text-cyan-500/40 border-cyan-900/30 hover:bg-[#0b1219]"
                 }`}
               >
-                <Lock className="w-3.5 h-3.5" />
-                <span>RLS Shield: {safetyGuardActive ? "ARMED" : "OFF"}</span>
+                <Lock className={`w-4 h-4 ${safetyGuardActive ? "text-emerald-400" : "text-cyan-700"}`} />
+                <span>RLS: {safetyGuardActive ? "ARMED" : "OFF"}</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Ledger Swarm Event trace feed */}
-        <div className="bg-[#0b1017]/80 border border-slate-900/80 rounded-2xl p-4 space-y-3 flex-1 flex flex-col justify-between min-h-[140px]">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Database className="w-4 h-4 text-indigo-400" />
-              <span>x402 Micropayment Ledger (USDC on Base)</span>
+        <div className="bg-gradient-to-b from-[#0b1219]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-4 flex-1 flex flex-col min-h-[160px] backdrop-blur-md">
+          <div className="flex items-center justify-between border-b border-cyan-900/20 pb-3 mb-3">
+            <span className="text-[9px] text-cyan-100/50 font-mono uppercase tracking-[0.2em] flex items-center gap-2">
+              <Database className="w-3.5 h-3.5 text-indigo-400" />
+              x402 Micropayment Ledger
             </span>
-            <span className="text-[8.5px] bg-[#1a1224] text-[#d8b4fe] border border-purple-950 px-2 py-0.5 rounded font-bold uppercase animate-pulse">
+            <span className="text-[8px] bg-indigo-950/30 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded uppercase tracking-widest animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.2)]">
               Anchor RLS
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto max-h-[110px] pr-1.5 space-y-2 mt-1 custom-scrollbar">
-            {ledgerFeed.map((tx) => (
-              <div 
-                key={tx.id} 
-                className="p-2.5 bg-slate-950/90 border border-slate-900/60 hover:border-slate-800 rounded-lg flex items-center justify-between text-[10.5px] transition"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-200 text-[11px]">{tx.tenant}</span>
-                    <span className="text-[8.5px] text-slate-600 select-all font-mono">({tx.id})</span>
+          <div className="flex-1 overflow-y-auto pr-1.5 space-y-2 custom-scrollbar">
+            {ledgerFeed.length === 0 ? (
+               <div className="flex h-full items-center justify-center text-[10px] font-mono text-cyan-500/30 italic">No ledger transactions recorded.</div>
+            ) : (
+              ledgerFeed.map((tx) => (
+                <div 
+                  key={tx.id} 
+                  className="p-3 bg-[#03070c]/60 border border-cyan-900/20 hover:border-cyan-700/40 rounded-lg flex items-center justify-between transition-colors duration-300 group"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-sans font-medium text-white/90 text-xs">{tx.tenant}</span>
+                      <span className="text-[9px] text-cyan-500/40 font-mono tracking-wider">({tx.id})</span>
+                    </div>
+                    <span className="text-[9px] text-cyan-100/30 block font-mono">Proposer: {tx.proposer}</span>
                   </div>
-                  <span className="text-[8.5px] text-slate-500 block leading-none">Proposer Node: {tx.proposer}</span>
-                </div>
 
-                <div className="text-right">
-                  <span className={`block font-extrabold ${tx.status === "SLASHED" ? "text-red-400" : tx.status === "ESCROWED" ? "text-amber-400" : "text-emerald-400"}`}>
-                    ${tx.amount.toFixed(6)}
-                  </span>
-                  <span className="text-[8px] text-slate-500 block">{tx.signature}</span>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <span className={`block font-mono text-[11px] tracking-wide ${tx.status === "SLASHED" ? "text-rose-400 drop-shadow-[0_0_5px_rgba(244,63,94,0.3)]" : tx.status === "ESCROWED" ? "text-amber-400" : "text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]"}`}>
+                      ${tx.amount.toFixed(6)}
+                    </span>
+                    <span className="text-[8px] text-cyan-500/30 font-mono group-hover:text-cyan-500/50 transition-colors">{tx.signature}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
       </div>
-
+      
+      {/* Global CSS overrides for this component */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes dash {
+          to { stroke-dashoffset: -32; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(8, 145, 178, 0.05);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(8, 145, 178, 0.2);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(8, 145, 178, 0.4);
+        }
+      `}} />
     </div>
   );
 }
