@@ -61,13 +61,33 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
     }
     return null;
   });
+
+  const [isFocusedFromTerminal, setIsFocusedFromTerminal] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !!new URLSearchParams(window.location.search).get('agent');
+    }
+    return false;
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDept, setSelectedDept] = useState<string>('ALL');
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const [selectedDept, setSelectedDept] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('cluster') || 'ALL';
+    }
+    return 'ALL';
+  });
+  const [selectedStatus, setSelectedStatus] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('state') || 'ALL';
+    }
+    return 'ALL';
+  });
   const router = useRouter();
 
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(() => {
     if (typeof window !== 'undefined') {
+      const diagParam = new URLSearchParams(window.location.search).get('diagnostics');
+      if (diagParam) return diagParam === 'true';
       return localStorage.getItem('swarm_diagnostics_open') === 'true';
     }
     return false;
@@ -630,22 +650,27 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
             className="drawer absolute right-0 top-0 w-80 h-full border-l border-white/10 bg-[#060608]/95 z-20 flex flex-col justify-between"
           >
-            {/* Header section with Close */}
-            <div>
-              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#0A0A0C]">
-                <div>
-                  <div className="text-[10px] font-mono uppercase text-white/40">AGENT SPECS & CONTEXT</div>
-                  <div className="font-mono text-xs font-bold text-white tracking-tight break-all flex items-center gap-1.5">
-                    {selectedAgent.name}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedAgentId(null)}
-                  className="p-1 px-2 rounded-none hover:bg-white/5 text-white/50 hover:text-white border border-transparent hover:border-white/10"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+            {isFocusedFromTerminal && selectedAgent && (
+              <div className="absolute top-0 left-0 w-full bg-[#bc8cff1a] border-b border-[#bc8cff4d] px-4 py-1 text-[9px] text-[#bc8cff] uppercase font-bold tracking-widest flex items-center justify-center gap-2 z-10">
+                <Terminal className="w-3 h-3" /> FOCUSED FROM TERMINAL: {selectedAgent.id}
               </div>
+            )}
+            {selectedAgent ? (
+              <>
+                <div className={`p-4 border-b border-white/10 flex items-center justify-between bg-[#0A0A0C] ${isFocusedFromTerminal ? 'pt-8' : ''}`}>
+                  <div>
+                    <div className="text-[10px] font-mono uppercase text-white/40">AGENT SPECS & CONTEXT</div>
+                    <div className="font-mono text-xs font-bold text-white tracking-tight break-all flex items-center gap-1.5">
+                      {selectedAgent.name}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setSelectedAgentId(null); setIsFocusedFromTerminal(false); }}
+                    className="p-1 px-2 rounded-none hover:bg-white/5 text-white/50 hover:text-white border border-transparent hover:border-white/10 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
               {/* Specs parameters */}
               <div className="p-4 space-y-4 font-mono text-xs overflow-y-auto max-h-[calc(100vh-210px)]">
@@ -738,9 +763,9 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                 <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                   <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Action Handoff</span>
                   <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => router.push(`/terminal?agent=${selectedAgent.id}`)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
-                      <Terminal className="w-3 h-3" /> Terminal
-                    </button>
+                      <button onClick={() => router.push(`/terminal?agent=${selectedAgent.id}&cluster=${selectedDept}&state=${selectedStatus}&diagnostics=${isDiagnosticsOpen}`)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                        <Terminal className="w-3 h-3" /> Terminal
+                      </button>
                     <button onClick={() => handleViewTrace(selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
                       <Activity className="w-3 h-3" /> Trace
                     </button>
@@ -767,6 +792,23 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                 {isRefreshing ? 'REBOOTING ENCLAVE...' : 'PAUSE / INSPECT NODE'}
               </button>
             </div>
+            </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center py-20 px-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full border border-dashed border-laser-red/30 flex items-center justify-center">
+                  <ShieldAlert className="w-8 h-8 text-laser-red/50" />
+                </div>
+                <div>
+                  <h4 className="text-white font-mono text-xs uppercase tracking-wider font-bold mb-1">Agent Not Available</h4>
+                  <p className="text-[10px] text-white/40 max-w-[200px] leading-relaxed">
+                    The enclave <b>{selectedAgentId}</b> could not be located in the current swarm topology. It may have been terminated or migrated.
+                  </p>
+                </div>
+                <button onClick={() => { setSelectedAgentId(null); setIsFocusedFromTerminal(false); }} className="mt-4 px-4 py-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white text-[10px] uppercase font-bold tracking-widest transition-colors cursor-pointer">
+                  Clear Selection
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
