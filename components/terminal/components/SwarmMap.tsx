@@ -8,6 +8,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AgentNode } from '../types';
 import { Search, ZoomIn, ZoomOut, RotateCcw, X, Cpu, Activity, Database, Flame, RefreshCcw, Terminal, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { api } from '@/lib/api';
 
 function highlightJson(json: string): React.ReactNode[] {
   if (!json) return [];
@@ -240,22 +241,50 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
 
   // Manual Diagnostics Action: Reboot / Flush agent memory
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const handleAgentDiagnostics = (id: string) => {
+  const handleAgentDiagnostics = async (id: string) => {
     setIsRefreshing(true);
-    if (onAgentUpdate) {
-      onAgentUpdate(id, {
-        status: 'Active',
-        telemetryLogs: [
-          `[${new Date().toISOString().substring(11, 19)}] MAN_OVERRIDE: Hard reboot command received.`,
-          `[${new Date().toISOString().substring(11, 19)}] FLUSHING: Clearing Redis cache lock slots.`,
-          `[${new Date().toISOString().substring(11, 19)}] SEKED: Re-establishing sandbox enclavement bounds.`,
-          ...(selectedAgent?.telemetryLogs || [])
-        ].slice(0, 15)
-      });
-    }
-    setTimeout(() => {
+    try {
+      await api.post(`/api/v1/agents/${id}/pause`);
+      if (onAgentUpdate) {
+        onAgentUpdate(id, {
+          status: 'Idle',
+          telemetryLogs: [
+            `[${new Date().toISOString().substring(11, 19)}] MAN_OVERRIDE: Hard reboot / pause command received.`,
+            `[${new Date().toISOString().substring(11, 19)}] FLUSHING: Clearing Redis cache lock slots.`,
+            `[${new Date().toISOString().substring(11, 19)}] SEKED: Agent transitioned to Idle.`,
+            ...(selectedAgent?.telemetryLogs || [])
+          ].slice(0, 15)
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to pause agent");
+    } finally {
       setIsRefreshing(false);
-    }, 1000);
+    }
+  };
+
+  const handleIsolateAgent = async (id: string) => {
+    try {
+      await api.post(`/api/v1/agents/${id}/isolate`);
+      if (onAgentUpdate) {
+        onAgentUpdate(id, { status: 'Blocked' });
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to isolate agent");
+    }
+  };
+
+  const handleViewTrace = async (id: string) => {
+    try {
+      const trace: any = await api.get(`/api/v1/agents/${id}/trace`);
+      console.log("Agent Trace:", trace);
+      alert(`Retrieved ${trace.count || 0} trace events. Check console for details.`);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to retrieve trace");
+    }
   };
 
   return (
@@ -702,16 +731,16 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                 <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                   <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Action Handoff</span>
                   <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => console.log('Open Terminal', selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                    <button onClick={() => alert("Terminal connection initialized... (Not fully integrated in UI yet)")} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
                       <Terminal className="w-3 h-3" /> Terminal
                     </button>
-                    <button onClick={() => console.log('View Trace', selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                    <button onClick={() => handleViewTrace(selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
                       <Activity className="w-3 h-3" /> Trace
                     </button>
                     <button onClick={() => setIsDiagnosticsOpen(true)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
                       <Database className="w-3 h-3" /> Payload
                     </button>
-                    <button onClick={() => console.log('Isolate Agent', selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-laser-red/10 hover:bg-laser-red/20 border border-laser-red/30 text-laser-red text-[9px] font-bold font-mono uppercase transition-colors">
+                    <button onClick={() => handleIsolateAgent(selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-laser-red/10 hover:bg-laser-red/20 border border-laser-red/30 text-laser-red text-[9px] font-bold font-mono uppercase transition-colors">
                       <ShieldAlert className="w-3 h-3" /> Isolate
                     </button>
                   </div>
