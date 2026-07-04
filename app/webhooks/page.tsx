@@ -1,5 +1,5 @@
-import { AlertCircle } from 'lucide-react';
 "use client";
+import { AlertCircle } from 'lucide-react';
 
 import React, { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
