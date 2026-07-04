@@ -66,7 +66,7 @@ export default function ControlNodePage() {
   // Determine overall readiness verdict
   let verdictTitle = "Ready for governed production";
   let verdictSubtitle = "System healthy, identity synced, spend within budget.";
-  let verdictState: 'healthy' | 'warning' | 'critical' = 'healthy';
+  let verdictState: 'healthy' | 'warning' | 'critical' | 'neutral' = 'healthy';
 
   if (!systemOperational && !health.isLoading) {
     verdictTitle = "Production readiness degraded";
