@@ -36,7 +36,7 @@ export default function TrustPage() {
       try {
         const [certData, recData] = await Promise.all([
           api<CertInfo>("/api/v1/pgl/certificate").catch(() => null),
-          api<{ records: TrustRecord[] }>("/api/v1/trust/records").catch(() => ({ records: [] })),
+          api<{ records: TrustRecord[] }>("/api/v1/pgl/trust/records").catch(() => ({ records: [] })),
         ]);
         setCert(certData);
         setRecords(recData?.records ?? []);
@@ -46,20 +46,10 @@ export default function TrustPage() {
     load();
   }, []);
 
-  // Fallback demo data if backend not returning
-  const displayCert: CertInfo = cert ?? {
-    workspace_id: "ws_sovereign",
-    pgl_cert_id: "PGL-CERT-" + Math.random().toString(36).slice(2, 10).toUpperCase(),
-    issued_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-    chain_root: "sha256:a3f9" + Math.random().toString(16).slice(2, 18),
-    verified: true,
-  };
+  // Honest fallback state if backend not returning
+  const displayCert: CertInfo | null = cert;
 
-  const displayRecords: TrustRecord[] = records.length > 0 ? records : [
-    { domain: "api.veklom.com", hash: "sha256:d4e8f2a1b3c9", anchored_at: new Date(Date.now() - 3600000).toISOString(), status: "verified", chain_length: 142 },
-    { domain: "capi.veklom.com", hash: "sha256:9f2c4b7a1e3d", anchored_at: new Date(Date.now() - 7200000).toISOString(), status: "verified", chain_length: 89 },
-    { domain: "github.com/reprewindai-dev", hash: "sha256:b1a5f3e2c7d8", anchored_at: new Date(Date.now() - 14400000).toISOString(), status: "verified", chain_length: 56 },
-  ];
+  const displayRecords: TrustRecord[] = records;
 
   return (
     <Shell>
@@ -95,13 +85,19 @@ export default function TrustPage() {
           label="PGL Birth Certificate"
           title="Workspace Identity Anchor"
           actions={
-            <Pill tone={displayCert.verified ? "green" : "amber"}>
-              {displayCert.verified ? "Verified" : "Pending"}
+            <Pill tone={displayCert?.verified ? "green" : "amber"}>
+              {displayCert?.verified ? "Verified" : "Pending"}
             </Pill>
           }
         >
           {loading ? (
             <div className="skeleton h-24 rounded-lg" />
+          ) : !displayCert ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-border border-dashed rounded-lg text-ink-500">
+              <AlertCircle size={20} className="mb-2 opacity-50" />
+              <p className="text-sm font-medium">Needs proof</p>
+              <p className="text-xs">No PGL identity anchor detected. Awaiting backend synchronization.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
@@ -129,13 +125,19 @@ export default function TrustPage() {
           label="Trust Chain · Anchored endpoints"
           title="Verified Domains"
           actions={
-            <button className="text-xs text-brand-400 hover:underline flex items-center gap-1">
+            <button className="text-xs text-brand-400 hover:underline flex items-center gap-1 cursor-pointer">
               + Add Domain <ChevronRight size={12} />
             </button>
           }
         >
           {loading ? (
             <div className="skeleton h-40 rounded-lg" />
+          ) : displayRecords.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-border border-dashed rounded-lg text-ink-500">
+              <AlertCircle size={20} className="mb-2 opacity-50" />
+              <p className="text-sm font-medium">No Anchored Endpoints</p>
+              <p className="text-xs">The trust chain is empty or pending data.</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {displayRecords.map((r, i) => (

@@ -149,7 +149,7 @@ export default function SovereignOperatorRegistry() {
           summary: actionDescription,
           details: {
             delta,
-            client_proof_seed: Math.random().toString(36).slice(2)
+            client_proof_seed: crypto.randomUUID().replace(/-/g, '').substring(0, 8)
           }
         }
       });

@@ -392,7 +392,7 @@ export default function App() {
           validBefore: Math.floor(Date.now() / 1000) + 3600,
           nonce: '0x' + crypto.randomUUID().replace(/-/g, '')
         },
-        signature: '0x' + Array.from({length:130}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('')
+        signature: '0x' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
       }
     };
 
@@ -536,7 +536,7 @@ export default function App() {
               validBefore: Math.floor(Date.now() / 1000) + 3600,
               nonce: '0x' + crypto.randomUUID().replace(/-/g, '')
             },
-            signature: '0x' + Array.from({length:130}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('')
+            signature: '0x' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
           }
         };
 
@@ -600,7 +600,7 @@ export default function App() {
                 validBefore: Math.floor(Date.now() / 1000) + 3600,
                 nonce: '0x' + crypto.randomUUID().replace(/-/g, '')
               },
-              signature: '0x' + Array.from({length:130}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('')
+              signature: '0x' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
             }
           };
 

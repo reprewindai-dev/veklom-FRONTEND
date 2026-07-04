@@ -38,7 +38,7 @@ export default function ProviderDashboard({ params }: { params: Promise<{ api_id
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await api.get('/benchmarks/leaderboard');
+        const response = await api.get('/benchmarks/leaderboard') as any;
         const item = response.find((r: any) => r.id === resolvedParams.api_id);
         if (!item) {
           setError('API not found in VNP Registry');

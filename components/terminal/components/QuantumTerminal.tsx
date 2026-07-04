@@ -33,8 +33,11 @@ import { ThreatLandscape } from './ThreatLandscape';
 import QuantumDashboard from './QuantumDashboard';
 import { API_BASE_URL } from '../data/pglLoader';
 import { getToken } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
+import { VeklomRun } from '../types';
+import RunSpine from './RunSpine';
 
-type ViewType = 'terminal' | 'mesh' | 'tele' | 'paths' | 'engine' | 'hub' | 'trust' | 'dashboard' | 'tools' | 'climate' | 'security';
+type ViewType = 'terminal' | 'mesh' | 'tele' | 'paths' | 'engine' | 'hub' | 'trust' | 'dashboard' | 'tools' | 'climate' | 'security' | 'pipeline';
 
 type LogType = 'sys' | 'pmt' | 'out' | 'ok' | 'warn' | 'err' | 'error' | 'dim' | 'pur' | 'hdr' | 'sep' | 'custom';
 
@@ -159,6 +162,11 @@ export default function QuantumTerminal() {
     }
     return 'dashboard';
   });
+
+  // Pipeline Runs Data (Fetched off-path for the new Ledger Tab)
+  const { data: runs = [], isLoading: isLoadingRuns } = useApi<VeklomRun[]>("/api/v1/autonomous/decisions");
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+
   const [inputVal, setInputVal] = useState('');
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -1056,6 +1064,31 @@ export default function QuantumTerminal() {
               <MCPGateway status={{sanitization: 'active', redaction: 'active', auditing: 'active', egress_control: 'active', last_scan_result: 'clear'}} />
             </motion.div>
           )}
+
+          {activeView === 'pipeline' && (
+            <motion.div
+              key="pipeline"
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={viewVariants}
+              className="view active absolute inset-0 overflow-hidden flex flex-col"
+              id="v-pipeline"
+            >
+              <RunSpine 
+                runs={runs}
+                selectedRunId={selectedRunId}
+                onSelectRun={setSelectedRunId}
+                isCompact={true}
+                onOpenFull={() => {
+                  if(typeof window !== 'undefined') {
+                    const runParam = selectedRunId ? `?run=${selectedRunId}&from=terminal` : '?from=terminal';
+                    window.location.href = `/pipelines${runParam}`;
+                  }
+                }}
+              />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -1069,6 +1102,7 @@ export default function QuantumTerminal() {
           <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'engine' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('engine')}>Engine</div>
           <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'hub' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('hub')}>Hub</div>
           <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'trust' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('trust')}>Trust</div>
+          <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'pipeline' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('pipeline')}>Pipeline</div>
           <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'dashboard' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('dashboard')}>Dashboard</div>
           <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'tools' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('tools')}>Tools</div>
           <div className={`bt flex-grow flex flex-col items-center justify-center p-2 text-[8px] uppercase tracking-widest cursor-pointer ${activeView === 'climate' ? 'text-[#63b3ed]' : 'text-[#3d5269]'}`} onClick={() => setActiveView('climate')}>Climate</div>

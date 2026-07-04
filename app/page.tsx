@@ -20,10 +20,7 @@ const StakingProtocol = dynamicImport(
   () => import("@/components/vnp/StakingProtocol"),
   { ssr: false, loading: () => <div className="h-[400px] bg-white/5 rounded-xl animate-pulse" /> }
 );
-const LiveSwarmDemo = dynamicImport(
-  () => import("@/app/components/LiveSwarmDemo"),
-  { ssr: false, loading: () => <div className="h-[450px] w-full bg-white/5 rounded-2xl animate-pulse" /> }
-);
+
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -151,7 +148,6 @@ export default function Home() {
           {/* Swarm Terminal CTA — powered by Veklom-RealTerminal */}
           <motion.div variants={fadeUpVariants} id="live-demo" className="relative scroll-mt-24">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-3xl opacity-50 rounded-3xl -z-10" />
-            <LiveSwarmDemo />
           </motion.div>
         </motion.div>
       </section>

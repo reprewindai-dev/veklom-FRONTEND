@@ -779,7 +779,6 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                 </div>
 
               </div>
-            </div>
 
             {/* Diagnostics footer override triggers */}
             <div className="p-3 bg-[#0A0A0C] border-t border-white/10">

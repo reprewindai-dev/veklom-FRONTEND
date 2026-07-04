@@ -21,7 +21,7 @@ import { AmphotericRuntimeControl } from './components/AmphotericRuntimeControl'
 import NexusProtocol from './components/NexusProtocol';
 import TriageTelemetry from '@/components/telemetry/TriageTelemetry';
 import VanguardPlayground from './components/VanguardPlayground';
-import { controlStore } from './data/simulation';
+
 
 interface TerminalAppProps {
   defaultTab?: string;
@@ -55,21 +55,16 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
   }, []);
 
   // Local Reactive State mirroring our central control simulation store
-  const [agents, setAgents] = useState<AgentNode[]>(controlStore.agents);
-  const [runs, setRuns] = useState<VeklomRun[]>(controlStore.runs);
-  const [delegates, setDelegates] = useState<Delegate[]>(controlStore.delegates);
-  const [logs, setLogs] = useState<TelemetryTick[]>(controlStore.logs);
-  const [liveMetrics, setLiveMetrics] = useState(controlStore.liveMetrics);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [runs, setRuns] = useState<any[]>([]);
+  const [delegates, setDelegates] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [liveMetrics, setLiveMetrics] = useState({ globalThroughput: 0, complianceScore: 100, slaMisses: 0, activeYieldTokens: 0, totalPglRequests: 0, autoRoutedExecutions: 0 });
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   // Future integration point:
   useEffect(() => {
-    return controlStore.subscribe(() => {
-      setAgents([...controlStore.agents]);
-      setRuns([...controlStore.runs]);
-      setDelegates([...controlStore.delegates]);
-      setLogs([...controlStore.logs]);
-      setLiveMetrics({ ...controlStore.liveMetrics });
+    
     });
   }, []);
 
@@ -90,7 +85,7 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
 
   // Handle high priority manual execution injection
   const handleTriggerManualOverride = async (intentText: string, policyText: string) => {
-    await controlStore.triggerManualRun(intentText, policyText);
+    // await api.triggerManualRun(intentText, policyText);
   };
 
 
@@ -296,3 +291,4 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
     </div>
   );
 }
+

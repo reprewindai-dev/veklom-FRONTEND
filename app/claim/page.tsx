@@ -38,7 +38,7 @@ export default function ClaimProviderPage() {
       const res = await api.post('/claims/request', {
         api_did: apiDid,
         domain_name: domain
-      });
+      }) as any;
       
       setClaimId(res.claim_id);
       setStatus('pending');
@@ -59,7 +59,7 @@ export default function ClaimProviderPage() {
     setVerifying(true);
     setErrorMsg('');
     try {
-      const res = await api.post(`/claims/verify/${claimId}`);
+      const res = await api.post(`/claims/verify/${claimId}`) as any;
       if (res.verified) {
         setStatus('verified');
         toast({
@@ -114,7 +114,7 @@ export default function ClaimProviderPage() {
                     id="apiDid" 
                     placeholder="did:vnp:api:..." 
                     value={apiDid} 
-                    onChange={(e) => setApiDid(e.target.value)}
+                    onChange={(e: any) => setApiDid(e.target.value)}
                     className="bg-zinc-950 border-zinc-800"
                     required
                   />
@@ -126,7 +126,7 @@ export default function ClaimProviderPage() {
                     id="domain" 
                     placeholder="example.com" 
                     value={domain} 
-                    onChange={(e) => setDomain(e.target.value)}
+                    onChange={(e: any) => setDomain(e.target.value)}
                     className="bg-zinc-950 border-zinc-800"
                     required
                   />
@@ -134,7 +134,7 @@ export default function ClaimProviderPage() {
                 </div>
 
                 {errorMsg && (
-                  <Alert variant="destructive" className="bg-zinc-950 border-red-900">
+                  <Alert className="bg-zinc-950 border-red-900">
                     <AlertDescription>{errorMsg}</AlertDescription>
                   </Alert>
                 )}
@@ -163,7 +163,7 @@ export default function ClaimProviderPage() {
                     <code className="flex-1 p-2 bg-zinc-950 border border-zinc-800 rounded-l text-sm font-mono overflow-x-auto">
                       _vnp-claim.{claimId}.{domain}
                     </code>
-                    <Button variant="outline" className="rounded-l-none border-l-0 border-zinc-800 bg-zinc-900 hover:bg-zinc-800" onClick={() => copyToClipboard(`_vnp-claim.${claimId}.${domain}`)}>
+                    <Button className="rounded-l-none border-l-0 border-zinc-800 bg-zinc-900 hover:bg-zinc-800" onClick={() => copyToClipboard(`_vnp-claim.${claimId}.${domain}`)}>
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
@@ -182,7 +182,7 @@ export default function ClaimProviderPage() {
                     <code className="flex-1 p-2 bg-zinc-950 border border-zinc-800 rounded-l text-sm font-mono overflow-x-auto">
                       vnp-verification={claimId}
                     </code>
-                    <Button variant="outline" className="rounded-l-none border-l-0 border-zinc-800 bg-zinc-900 hover:bg-zinc-800" onClick={() => copyToClipboard(`vnp-verification=${claimId}`)}>
+                    <Button className="rounded-l-none border-l-0 border-zinc-800 bg-zinc-900 hover:bg-zinc-800" onClick={() => copyToClipboard(`vnp-verification=${claimId}`)}>
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
@@ -190,13 +190,13 @@ export default function ClaimProviderPage() {
               </div>
 
               {errorMsg && (
-                <Alert variant="destructive" className="bg-zinc-950 border-red-900 text-red-400">
+                <Alert className="bg-zinc-950 border-red-900 text-red-400">
                   <AlertDescription>{errorMsg}</AlertDescription>
                 </Alert>
               )}
 
               <div className="flex gap-4 pt-4 border-t border-zinc-800">
-                <Button variant="outline" onClick={() => setStatus('idle')} className="bg-transparent border-zinc-700 text-zinc-300">
+                <Button onClick={() => setStatus('idle')} className="bg-transparent border-zinc-700 text-zinc-300">
                   Cancel
                 </Button>
                 <Button onClick={handleVerify} className="flex-1 bg-green-600 hover:bg-green-700" disabled={verifying}>
@@ -218,7 +218,10 @@ export default function ClaimProviderPage() {
                   Domain <span className="font-mono text-white">{domain}</span> has been successfully linked to <span className="font-mono text-white">{apiDid}</span>.
                 </p>
               </div>
-              <Button onClick={() => window.location.href = `/provider/${apiDid}`} className="bg-orange-600 hover:bg-orange-700 mt-4">
+              <Button onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                window.location.href = `/provider/${apiDid}`;
+              }} className="bg-orange-600 hover:bg-orange-700 mt-4">
                 Go to Provider Dashboard
               </Button>
             </CardContent>

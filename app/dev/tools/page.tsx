@@ -59,7 +59,7 @@ print(response.provider)      # ollama | groq`}
                     language="python"
                     theme={dracula}
                     showLineNumbers={true}
-                    wrapLines
+                    
                   />
                 </div>
               </div>
@@ -92,7 +92,7 @@ console.log(response.provider);`}
                     language="typescript"
                     theme={dracula}
                     showLineNumbers={true}
-                    wrapLines
+                    
                   />
                 </div>
               </div>

@@ -1,0 +1,27 @@
+http:
+  routers:
+    veklom-api:
+      entryPoints:
+        - http
+        - https
+      rule: "Host(`veklom.com`) || Host(`www.veklom.com`) || Host(`app.veklom.com`) || Host(`api.veklom.com`)"
+      service: veklom-api
+      tls:
+        certResolver: letsencrypt
+    veklom-control:
+      entryPoints:
+        - http
+        - https
+      rule: "Host(`control.veklom.com`)"
+      service: veklom-control
+      tls:
+        certResolver: letsencrypt
+  services:
+    veklom-api:
+      loadBalancer:
+        servers:
+          - url: "http://n13gp1nhrcdp0hvazvbnlxru-213557155694:8088"
+    veklom-control:
+      loadBalancer:
+        servers:
+          - url: "http://tvxcsezs2ypd8tjuj6ic9gih-230135676493:3002"

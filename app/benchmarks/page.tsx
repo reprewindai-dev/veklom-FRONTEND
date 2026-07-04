@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, ArrowUp, ArrowDown, Zap, Lock, ChevronRight, X } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Zap, Lock, ChevronRight, X, AlertCircle } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface APIMetrics {
   id: string;
@@ -76,13 +77,11 @@ export default function BenchmarksPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch('http://api.veklom.com/api/v1/benchmarks/leaderboard');
-        const data = await res.json();
-        setApis(data.leaderboard || []);
+        const data = await api<APIMetrics[]>('/api/v1/benchmarks/leaderboard');
+        setApis(Array.isArray(data) ? data : (data as any).leaderboard || []);
       } catch (err) {
         console.error('Failed to fetch leaderboard:', err);
-        // Fallback demo data
-        setApis(generateDemoAPIs());
+        setApis([]);
       } finally {
         setLoading(false);
       }
@@ -90,23 +89,21 @@ export default function BenchmarksPage() {
 
     const fetchPools = async () => {
       try {
-        const res = await fetch('http://api.veklom.com/api/v1/benchmarks/staking/markets');
-        const data = await res.json();
-        setPools(data.markets || []);
+        const data = await api<StakingPool[]>('/api/v1/benchmarks/staking/markets');
+        setPools(Array.isArray(data) ? data : (data as any).markets || []);
       } catch (err) {
         console.error('Failed to fetch pools:', err);
-        setPools(generateDemoPools());
+        setPools([]);
       }
     };
 
     const fetchLogs = async () => {
       try {
-        const res = await fetch('http://api.veklom.com/api/v1/benchmarks/logs');
-        const data = await res.json();
-        setLogs(data.logs || []);
+        const data = await api<OracleLog[]>('/api/v1/benchmarks/logs');
+        setLogs(Array.isArray(data) ? data : (data as any).logs || []);
       } catch (err) {
         console.error('Failed to fetch logs:', err);
-        setLogs(generateDemoLogs());
+        setLogs([]);
       }
     };
 
@@ -126,11 +123,11 @@ export default function BenchmarksPage() {
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        const res = await fetch('http://api.veklom.com/api/v1/billing/wallet/balance');
-        const data = await res.json();
-        setWalletBalance(data.balance_usd || 5000);
+        const data = await api<{ balance_usd: number }>('/api/v1/billing/wallet/balance');
+        setWalletBalance(data?.balance_usd ?? 0);
       } catch (err) {
         console.error('Failed to fetch balance:', err);
+        setWalletBalance(0);
       }
     };
 
@@ -164,29 +161,25 @@ export default function BenchmarksPage() {
     if (!selectedPool || !stakingAmount) return;
 
     try {
-      const res = await fetch(
-        'http://api.veklom.com/api/v1/benchmarks/staking/stake',
+      const res = await api<any>(
+        '/api/v1/benchmarks/staking/stake',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          body: {
             pool_id: selectedPool.id,
             amount: parseFloat(stakingAmount),
             choice: stakingChoice,
-          }),
+          },
         }
       );
 
-      if (res.ok) {
+      if (res) {
         setWalletBalance(walletBalance - parseFloat(stakingAmount));
         setStakingAmount('');
         setSelectedPool(null);
         // Refresh pools
-        const poolsRes = await fetch(
-          'http://api.veklom.com/api/v1/benchmarks/staking/markets'
-        );
-        const poolsData = await poolsRes.json();
-        setPools(poolsData.markets || []);
+        const poolsData = await api<StakingPool[]>('/api/v1/benchmarks/staking/markets');
+        setPools(Array.isArray(poolsData) ? poolsData : (poolsData as any).markets || []);
       } else {
         alert('Stake failed. Check your balance.');
       }
@@ -199,10 +192,9 @@ export default function BenchmarksPage() {
   // Fetch MCP schema for selected API
   const fetchMCPSchema = async (apiId: string) => {
     try {
-      const res = await fetch(
-        `http://api.veklom.com/api/v1/benchmarks/mcp-schema/${apiId}`
+      const data = await api<MCPToolSchema>(
+        `/api/v1/benchmarks/mcp-schema/${apiId}`
       );
-      const data = await res.json();
       setMcpSchema(data);
     } catch (err) {
       console.error('Failed to fetch MCP schema:', err);
@@ -315,7 +307,11 @@ export default function BenchmarksPage() {
                 {loading ? (
                   <div className="p-6 text-center text-slate-400">Loading...</div>
                 ) : scoredAPIs.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400">No APIs found</div>
+                  <div className="flex flex-col items-center justify-center p-8 text-slate-500">
+                    <AlertCircle size={32} className="mb-3 opacity-50" />
+                    <p className="text-sm font-medium">Awaiting Data</p>
+                    <p className="text-xs">No benchmark executions detected yet.</p>
+                  </div>
                 ) : (
                   scoredAPIs.map((api, idx) => (
                     <div
@@ -587,108 +583,4 @@ export default function BenchmarksPage() {
       </div>
     </div>
   );
-}
-
-// Demo data generators (fallback)
-function generateDemoAPIs(): APIMetrics[] {
-  return [
-    {
-      id: '1',
-      name: 'OpenRouter',
-      provider: 'OpenAI',
-      latency_p50: 145,
-      latency_p95: 320,
-      latency_p99: 450,
-      sla_success_percent: 99.95,
-      drift_index: 0.02,
-      trust_score: 98,
-      sovereign_tier: 'Apex',
-      staked_amount: 45000,
-      category: 'Financial',
-    },
-    {
-      id: '2',
-      name: 'Together AI',
-      provider: 'Together',
-      latency_p50: 280,
-      latency_p95: 580,
-      latency_p99: 920,
-      sla_success_percent: 99.5,
-      drift_index: 0.05,
-      trust_score: 94,
-      sovereign_tier: 'Trusted',
-      staked_amount: 28000,
-      category: 'Enterprise',
-    },
-    {
-      id: '3',
-      name: 'Groq Cloud',
-      provider: 'Groq',
-      latency_p50: 89,
-      latency_p95: 150,
-      latency_p99: 220,
-      sla_success_percent: 99.2,
-      drift_index: 0.08,
-      trust_score: 92,
-      sovereign_tier: 'Trusted',
-      staked_amount: 15000,
-      category: 'Healthcare',
-    },
-  ];
-}
-
-function generateDemoPools(): StakingPool[] {
-  return [
-    {
-      id: '1',
-      api_id: '1',
-      api_name: 'OpenRouter',
-      yes_price: 72,
-      no_price: 28,
-      yes_volume: 127500,
-      no_volume: 45200,
-      target_resolution_date: '2026-02-28',
-      status: 'open',
-    },
-    {
-      id: '2',
-      api_id: '3',
-      api_name: 'Groq Cloud',
-      yes_price: 65,
-      no_price: 35,
-      yes_volume: 82000,
-      no_volume: 54300,
-      target_resolution_date: '2026-03-15',
-      status: 'open',
-    },
-  ];
-}
-
-function generateDemoLogs(): OracleLog[] {
-  return [
-    {
-      id: '1',
-      timestamp: new Date().toISOString(),
-      api_name: 'OpenRouter',
-      latency_ms: 142,
-      success: true,
-      message: 'Probe OK. Latency stable.',
-    },
-    {
-      id: '2',
-      timestamp: new Date(Date.now() - 2000).toISOString(),
-      api_name: 'Groq Cloud',
-      latency_ms: 87,
-      success: true,
-      message: 'Probe OK. Cache hit.',
-    },
-    {
-      id: '3',
-      timestamp: new Date(Date.now() - 4000).toISOString(),
-      api_name: 'Together AI',
-      latency_ms: 285,
-      success: true,
-      message: 'Probe OK. Queue depth nominal.',
-    },
-  ];
 }

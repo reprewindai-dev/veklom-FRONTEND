@@ -59,10 +59,10 @@ export default function AdminPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <SectionCard label="Tenants (Sample data)" title="Workspaces" bodyClassName="p-0">
+        <SectionCard label="Tenants" title="Workspaces" bodyClassName="p-0">
           {workspaces.isLoading ? <div className="p-5"><Skeleton className="h-32 w-full" /></div> :
             <Table rows={wsRows} rowKey={(r) => r.id} empty="No workspaces" columns={[
-              { key: "name", header: "Workspace", render: (r) => <div><div className="text-ink-100">{r.name} <span className="text-[10px] text-brand-400 font-mono">[DEMO]</span></div><code className="text-[10px] text-ink-600">{r.id}</code></div> },
+              { key: "name", header: "Workspace", render: (r) => <div><div className="text-ink-100">{r.name} </div><code className="text-[10px] text-ink-600">{r.id}</code></div> },
               { key: "plan", header: "Plan", render: (r) => <Pill tone="amber">{r.plan || r.tier}</Pill> },
               { key: "status", header: "Status", render: (r) => <Pill tone={r.is_active === false ? "red" : "green"}>{r.is_active === false ? "suspended" : "active"}</Pill> },
               { key: "act", header: "", width: "100px", render: (r) => <Button variant="danger" onClick={() => suspend(r.id)}>Suspend</Button> },

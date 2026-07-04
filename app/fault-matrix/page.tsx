@@ -70,9 +70,9 @@ export default function FaultMatrixPage() {
 
   const handleAppendLedger = (eventType: string, action: string, memo: string, agentId: string = "SYS-000") => {
     const nextBlockNum = (ledger[0]?.blockNumber || 84281382) + 1;
-    const randomHex = () => Math.random().toString(16).substring(2, 10);
+    const randomHex = () => crypto.randomUUID().replace(/-/g, '').substring(0, 8);
     const txHash = `${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
-    const pdaAddress = `pda_seed_${eventType.toLowerCase()}_${Math.random().toString(36).substring(2, 8)}`;
+    const pdaAddress = `pda_seed_${eventType.toLowerCase()}_${crypto.randomUUID().split('-')[0]}`;
 
     const newBlock: LedgerBlock = {
       blockNumber: nextBlockNum,
@@ -98,7 +98,7 @@ export default function FaultMatrixPage() {
   };
 
   const handleTriggerRealtimeNotification = (title: string, message: string, payload: object) => {
-    const id = `NTF-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const id = `NTF-${crypto.randomUUID().split('-')[0].toUpperCase()}`;
     const timestamp = new Date().toISOString();
     
     const log: NotificationLog = {

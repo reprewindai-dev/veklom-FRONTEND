@@ -43,22 +43,8 @@ export default function WorkspaceAdminPage() {
   // Ultimate Owner (reprewindai@gmail.com or designated is_superuser from backend) gets Global View
   const isUltimateOwner = me.email === "reprewindai@gmail.com" || me.is_superuser === true;
 
-  // Mock data representing standard workspace workers
-  const workspaceWorkers = [
-    { id: "wk-001", email: "bob@worker.com", role: "operator", status: "active", lastActive: "2 mins ago", location: "US-East" },
-    { id: "wk-002", email: "alice@worker.com", role: "analyst", status: "active", lastActive: "5 mins ago", location: "EU-West" },
-    { id: "wk-003", email: "charlie@worker.com", role: "operator", status: "offline", lastActive: "2 days ago", location: "US-West" },
-  ];
-
-  // Mock data representing the entire global platform for the Ultimate Owner
-  const globalUsers = [
-    { id: "usr-991", email: "ceo@starkcorp.com", role: "workspace_owner", status: "active", lastActive: "Just now", location: "NY, USA", action: "Deploying Sentinel Agent" },
-    { id: "usr-992", email: "dev@starkcorp.com", role: "operator", status: "active", lastActive: "1 min ago", location: "CA, USA", action: "Reviewing X402 Ledger" },
-    { id: "usr-993", email: "admin@oscorp.com", role: "workspace_owner", status: "offline", lastActive: "4 hours ago", location: "London, UK", action: "-" },
-    { id: "usr-994", email: "reprewindai@gmail.com", role: "platform_admin", status: "active", lastActive: "Just now", location: "Global", action: "Monitoring Platform" },
-  ];
-
-  const displayUsers = isUltimateOwner ? globalUsers : workspaceWorkers;
+  // Replaced mock data with real empty state pending backend wiring
+  const displayUsers: any[] = [];
   
   return (
     <div className="min-h-screen bg-void-black text-white p-8">
@@ -90,7 +76,7 @@ export default function WorkspaceAdminPage() {
           <div className={`${isUltimateOwner ? 'text-electric-cyan' : 'text-[#b8860b]'} text-xs font-bold font-mono tracking-widest mb-1`}>
             {isUltimateOwner ? 'Global Platform Users' : 'Total Workspace Workers'}
           </div>
-          <div className="text-4xl font-bold font-mono text-white">{isUltimateOwner ? '1,492' : '3'}</div>
+          <div className="text-4xl font-bold font-mono text-white">--</div>
         </div>
         
         <div className={`bg-black/40 border p-6 rounded-lg backdrop-blur-md relative overflow-hidden group ${isUltimateOwner ? 'border-electric-cyan/30' : 'border-[#b8860b]/30'}`}>
@@ -100,7 +86,7 @@ export default function WorkspaceAdminPage() {
           <div className={`${isUltimateOwner ? 'text-electric-cyan' : 'text-[#b8860b]'} text-xs font-bold font-mono tracking-widest mb-1`}>
             {isUltimateOwner ? 'Global Active Sessions' : 'Active Sessions'}
           </div>
-          <div className="text-4xl font-bold font-mono text-white">{isUltimateOwner ? '348' : '2'}</div>
+          <div className="text-4xl font-bold font-mono text-white">--</div>
         </div>
 
         <div className={`bg-black/40 border p-6 rounded-lg backdrop-blur-md relative overflow-hidden group ${isUltimateOwner ? 'border-electric-cyan/30' : 'border-[#b8860b]/30'}`}>
@@ -152,6 +138,13 @@ export default function WorkspaceAdminPage() {
               </tr>
             </thead>
             <tbody>
+                {displayUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-white/50 font-mono text-sm">
+                      Awaiting Telemetry / No Users Found
+                    </td>
+                  </tr>
+                )}
               {displayUsers.map((user: any) => (
                 <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="p-4 font-mono text-xs text-white/70">{user.id}</td>

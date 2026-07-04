@@ -52,6 +52,7 @@ interface ApiScoreCard {
 }
 
 export default function NexusProtocol() {
+  const [genome, setGenome] = useState<any>(null);
   const [subTab, setSubTab] = useState<'trust' | 'topology' | 'docs'>('trust');
   const [selectedApiId, setSelectedApiId] = useState<string>('stripe-payments');
   const [docTab, setDocTab] = useState<'governance' | 'methodology'>('governance');

@@ -500,37 +500,67 @@ export default function VanguardPlayground() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                 <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
-                  <Database className="w-4 h-4 text-[#b8860b]" /> 1. REQUEST BUILDER
+                  <Users className="w-4 h-4 text-[#b8860b]" /> 1. ORCHESTRATE CREW
                 </span>
-                <span className="text-[9px] text-gray-500 font-mono">HYBRID_PLAYGROUND</span>
+                <span className="text-[9px] text-gray-500 font-mono">CREW_ORCHESTRATOR</span>
               </div>
 
-              {/* Request Builder Form */}
-              <div className="space-y-3 flex-grow mt-2">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-gray-400 tracking-wider">AGENT IDENTITY</label>
-                  <select value={agentId} onChange={e => setAgentId(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl p-2 text-xs text-white outline-none focus:border-[#b8860b] transition-all">
-                    <option value="agent-atlas">agent-atlas (Data & DB Query)</option>
-                    <option value="agent-ledger">agent-ledger (Financial & Transactions)</option>
-                    <option value="agent-echo">agent-echo (Echo / Utility)</option>
-                    <option value="agent-scout">agent-scout (Search & Retrieval)</option>
-                  </select>
+              {/* Selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-400 tracking-wider">SELECT ACTIVE CREW ASSEMBLY</label>
+                <div className="grid grid-cols-1 gap-2">
+                  {CREWS.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        setSelectedCrew(c);
+                        resetPlayground();
+                      }}
+                      className={`text-left p-3 rounded-xl border transition-all relative ${
+                        selectedCrew.id === c.id 
+                          ? 'border-[#b8860b] bg-[#b8860b]/5 shadow-lg' 
+                          : 'border-white/5 bg-white/[0.01] hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        {c.name}
+                        {selectedCrew.id === c.id && <span className="w-1.5 h-1.5 bg-[#b8860b] rounded-full animate-ping" />}
+                      </div>
+                      <div className="text-[10px] text-gray-400 mt-1 leading-relaxed">{c.description}</div>
+                      
+                      {/* Sub-agents */}
+                      <div className="flex gap-1.5 mt-2.5 pt-2 border-t border-white/5">
+                        {c.agents.map((a, i) => (
+                          <span key={i} className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-gray-300 border border-white/5 flex items-center gap-1">
+                            <span>{a.avatar}</span> {a.name}
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-gray-400 tracking-wider">ACTION ENDPOINT</label>
-                  <input value={action} onChange={e => setAction(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl p-2 text-xs text-white outline-none focus:border-[#b8860b] transition-all font-mono" />
-                </div>
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-gray-400 tracking-wider">JSON PAYLOAD</label>
-                  <textarea
-                    value={payloadStr}
-                    onChange={(e) => setPayloadStr(e.target.value)}
-                    rows={6}
-                    spellCheck={false}
-                    className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-[11px] text-[#00E5FF] outline-none focus:border-[#b8860b] transition-all resize-none font-mono scrollbar-thin"
-                  />
+              {/* Cognitive Prompt */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-400 tracking-wider">COGNITIVE RUN INTENT PROMPT</label>
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={2}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-xs text-white outline-none focus:border-[#b8860b] transition-all resize-none font-mono"
+                />
+              </div>
+
+              {/* Integrations */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-400 tracking-wider">CREW API INTEGRATIONS</label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCrew.tools.map((t, idx) => (
+                    <span key={idx} className="text-[9px] px-2.5 py-1 rounded bg-[#090D14] border border-cyan-500/20 text-cyan-400 font-bold flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5" /> {t}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -581,7 +611,7 @@ export default function VanguardPlayground() {
                 disabled={executionState === 'running'}
                 className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 active:scale-[0.98] text-xs shadow-lg"
               >
-                <Play className="w-3.5 h-3.5 fill-current text-black" /> Run Custom Payload
+                <Play className="w-3.5 h-3.5 fill-current text-black" /> Run Standard Secure Intent
               </button>
             </div>
 
@@ -815,3 +845,4 @@ export default function VanguardPlayground() {
     </div>
   );
 }
+
