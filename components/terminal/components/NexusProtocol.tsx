@@ -108,7 +108,7 @@ export default function NexusProtocol() {
     // Just a placeholder if we need it
   };
 
-  const selectedApi = apiCards.find(a => a.id === selectedApiId) || apiCards[0];
+  const selectedApi = apiCards.find(a => a.id === selectedApiId) || apiCards[0] || null;
 
   // Simulating live tick
   useEffect(() => {
@@ -138,6 +138,14 @@ export default function NexusProtocol() {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (!selectedApi && subTab === 'trust') {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#030303] text-white/30 font-mono text-xs">
+        LOADING TRUST MATRIX...
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col bg-[#030303] text-white/90 overflow-hidden font-sans border-l border-white/5 relative">
@@ -380,31 +388,31 @@ export default function NexusProtocol() {
                     <div className="absolute top-[30%] left-[25%] flex flex-col items-center">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">US-WEST: {nodes[1].latency}ms</span>
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">US-WEST: {nodes[1]?.latency ?? '--'}ms</span>
                     </div>
 
                     <div className="absolute top-[40%] left-[45%] flex flex-col items-center">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">US-EAST: {nodes[0].latency}ms</span>
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">US-EAST: {nodes[0]?.latency ?? '--'}ms</span>
                     </div>
 
                     <div className="absolute top-[25%] left-[60%] flex flex-col items-center">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">EU-WEST: {nodes[2].latency}ms</span>
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">EU-WEST: {nodes[2]?.latency ?? '--'}ms</span>
                     </div>
 
                     <div className="absolute top-[65%] left-[80%] flex flex-col items-center">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">AP-SE: {nodes[3].latency}ms</span>
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">AP-SE: {nodes[3]?.latency ?? '--'}ms</span>
                     </div>
 
                     <div className="absolute top-[35%] left-[85%] flex flex-col items-center">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
                       <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">AP-NE: {nodes[4].latency}ms</span>
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">AP-NE: {nodes[4]?.latency ?? '--'}ms</span>
                     </div>
 
                     <div className="text-[9px] font-mono text-white/20 select-none uppercase tracking-widest">Global Swarm Mesh Network</div>
