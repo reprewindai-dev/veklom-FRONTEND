@@ -213,7 +213,16 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
   const netStake = Math.round(stakeNum * (1 - 0.025));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
+      {/* COMING SOON OVERLAY */}
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl">
+        <div className="text-center p-8 bg-[#0D0D0D] border border-[#FFB800]/30 rounded-2xl shadow-2xl">
+          <Globe className="w-12 h-12 text-[#FFB800] mx-auto mb-4 opacity-80" />
+          <h2 className="text-3xl font-mono text-white mb-2">STAKING PROTOCOL</h2>
+          <p className="text-[#A1A1A6] font-mono uppercase tracking-widest">Coming Soon</p>
+          <p className="text-sm text-[#A1A1A6] mt-4 max-w-md">Decentralized prediction markets for API benchmarking (PolyMarket-style) are currently in development.</p>
+        </div>
+      </div>
       {/* Protocol Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[

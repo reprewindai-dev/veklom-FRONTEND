@@ -43,46 +43,54 @@ export default function Leaderboard({ entries, currentPlayerWallet }: Leaderboar
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {entries.map((player, index) => {
-              const isCurrent = player.walletAddress.toLowerCase() === currentPlayerWallet.toLowerCase();
-              return (
-                <tr
-                  key={player.walletAddress}
-                  className={`
-                    transition-colors duration-200
-                    ${isCurrent ? 'bg-white/10 text-white font-bold' : 'hover:bg-white/5 text-white/80'}
-                  `}
-                >
-                  <td className="py-3 pl-1 flex items-center gap-1">
-                    {index === 0 && <Award className="w-4 h-4 text-yellow-400" />}
-                    {index === 1 && <Award className="w-4 h-4 text-slate-300" />}
-                    {index === 2 && <Award className="w-4 h-4 text-amber-500" />}
-                    {index > 2 && <span className="w-4 text-center block text-white/40">{index + 1}</span>}
-                  </td>
-                  <td className="py-3">
-                    <span className={isCurrent ? 'text-[#00f3ff] font-bold' : 'text-white'}>
-                      {player.username}
-                    </span>
-                    <span className="block text-[8px] text-white/40 font-mono tracking-tighter mt-0.5">
-                      {player.walletAddress.slice(0, 8)}...{player.walletAddress.slice(-8)}
-                    </span>
-                  </td>
-                  <td className="py-3 text-center font-bold text-white">
-                    {player.wins}
-                  </td>
-                  <td className="py-3 text-center">
-                    <span className="inline-flex items-center gap-1 text-red-400 font-semibold text-xs">
-                      <Heart className="w-3 h-3 text-red-500 animate-pulse" /> {player.avgCardiacCoherence.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="py-3 text-center">
-                    <span className="inline-flex items-center gap-1 text-[#bc13fe]">
-                      <Cpu className="w-3 h-3 text-[#bc13fe]" /> {player.peakNeuralFrequency.toFixed(1)} Hz
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
+            {entries.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-slate-500 font-bold">
+                  No players found. Be the first to play!
+                </td>
+              </tr>
+            ) : (
+              entries.map((player, index) => {
+                const isCurrent = player.walletAddress.toLowerCase() === currentPlayerWallet.toLowerCase();
+                return (
+                  <tr
+                    key={player.walletAddress}
+                    className={`
+                      transition-colors duration-200
+                      ${isCurrent ? 'bg-white/10 text-white font-bold' : 'hover:bg-white/5 text-white/80'}
+                    `}
+                  >
+                    <td className="py-3 pl-1 flex items-center gap-1">
+                      {index === 0 && <Award className="w-4 h-4 text-yellow-400" />}
+                      {index === 1 && <Award className="w-4 h-4 text-slate-300" />}
+                      {index === 2 && <Award className="w-4 h-4 text-amber-500" />}
+                      {index > 2 && <span className="w-4 text-center block text-white/40">{index + 1}</span>}
+                    </td>
+                    <td className="py-3">
+                      <span className={isCurrent ? 'text-[#00f3ff] font-bold' : 'text-white'}>
+                        {player.username}
+                      </span>
+                      <span className="block text-[8px] text-white/40 font-mono tracking-tighter mt-0.5">
+                        {player.walletAddress.slice(0, 8)}...{player.walletAddress.slice(-8)}
+                      </span>
+                    </td>
+                    <td className="py-3 text-center font-bold text-white">
+                      {player.wins}
+                    </td>
+                    <td className="py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-red-400 font-semibold text-xs">
+                        <Heart className="w-3 h-3 text-red-500 animate-pulse" /> {player.avgCardiacCoherence.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-[#bc13fe]">
+                        <Cpu className="w-3 h-3 text-[#bc13fe]" /> {player.peakNeuralFrequency.toFixed(1)} Hz
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

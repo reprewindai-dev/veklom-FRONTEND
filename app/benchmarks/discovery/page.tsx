@@ -36,7 +36,7 @@ export default function VeklomDiscoveryPage() {
   const [walletConnected, setWalletConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [balanceUSDC, setBalanceUSDC] = useState(1000.0);
-  const [currentTab, setCurrentTab] = useState<"ap2" | "acp" | "x402" | "mpp" | "security">("ap2");
+  const [currentTab, setCurrentTab] = useState<"ap2" | "acp" | "x402" | "mpp" | "security" | "leaderboard">("leaderboard");
 
   // AP2 Simulator State
   const [ap2Type, setAp2Type] = useState<"intent" | "cart" | "payment">("intent");
@@ -75,6 +75,26 @@ export default function VeklomDiscoveryPage() {
   const [securityMitigationActive, setSecurityMitigationActive] = useState(true);
   const [exploitStatus, setExploitStatus] = useState<"idle" | "running" | "breached" | "blocked">("idle");
   const [exploitLogs, setExploitLogs] = useState<string[]>([]);
+
+  // Leaderboard State
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+
+  useEffect(() => {
+    if (currentTab === "leaderboard") {
+      setLoadingLeaderboard(true);
+      fetch("https://api.veklom.com/api/v1/discovery/leaderboard")
+        .then((res) => res.json())
+        .then((data) => {
+          setLeaderboard(data.leaderboard || []);
+          setLoadingLeaderboard(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          setLoadingLeaderboard(false);
+        });
+    }
+  }, [currentTab]);
 
   // Global Notification logs
   const [notification, setNotification] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
@@ -499,6 +519,7 @@ export default function VeklomDiscoveryPage() {
         {/* Tab Switching Menu */}
         <div className="flex border-b border-[#1E2430]">
           {([
+            { id: "leaderboard", label: "Discovery Leaderboard", icon: Award, color: "text-yellow-400" },
             { id: "ap2", label: "AP2 Mandates (Authorization)", icon: Lock, color: "text-blue-400" },
             { id: "acp", label: "Dual-ACP (Commerce)", icon: Shield, color: "text-purple-400" },
             { id: "x402", label: "x402 Payments (Settlement Stateless)", icon: DollarSign, color: "text-green-400" },
@@ -1117,6 +1138,90 @@ export default function VeklomDiscoveryPage() {
                       })
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentTab === "leaderboard" && (
+            <div className="space-y-6">
+              <div className="bg-[#11151C] border border-[#1E2430] rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
+                      <Award className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-sm uppercase tracking-wider font-mono">Discovery Game Leaderboard</h3>
+                      <p className="text-xs text-slate-400 font-sans mt-1">Live ranking of tenant operators managing active agents.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setLoadingLeaderboard(true);
+                      fetch("https://api.veklom.com/api/v1/discovery/leaderboard")
+                        .then(res => res.json())
+                        .then(data => { setLeaderboard(data.leaderboard || []); setLoadingLeaderboard(false); })
+                        .catch(err => { console.error(err); setLoadingLeaderboard(false); });
+                    }}
+                    className="p-2 bg-[#0A0D14] hover:bg-[#1E2430] text-slate-400 hover:text-white border border-[#1E2430] rounded-lg transition-colors"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loadingLeaderboard ? "animate-spin" : ""}`} />
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-[#1E2430]">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-[#0A0D14] text-slate-500 uppercase">
+                      <tr>
+                        <th className="px-6 py-4 font-semibold tracking-wider">Rank</th>
+                        <th className="px-6 py-4 font-semibold tracking-wider">Tenant Address</th>
+                        <th className="px-6 py-4 font-semibold tracking-wider">Agent</th>
+                        <th className="px-6 py-4 font-semibold tracking-wider text-right">Trust Score</th>
+                        <th className="px-6 py-4 font-semibold tracking-wider text-right">Missions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#1E2430] bg-[#11151C]">
+                      {leaderboard.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-12 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <Award className="w-8 h-8 text-slate-600" />
+                              <p className="text-slate-400 font-sans">No active players yet.</p>
+                              <p className="text-emerald-400 font-bold uppercase tracking-wider text-[10px]">Be the first to play!</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        leaderboard.map((entry: any) => (
+                          <tr key={entry.address} className="hover:bg-[#1E2430]/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold ${
+                                entry.rank === 1 ? "bg-yellow-500/20 text-yellow-400" :
+                                entry.rank === 2 ? "bg-slate-300/20 text-slate-300" :
+                                entry.rank === 3 ? "bg-amber-600/20 text-amber-500" :
+                                "text-slate-500"
+                              }`}>
+                                {entry.rank}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-cyan-400 font-medium">
+                              {entry.address.length > 20 ? `${entry.address.substring(0, 6)}...${entry.address.substring(entry.address.length - 4)}` : entry.address}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-white">
+                              {entry.agent}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-emerald-400">
+                              {entry.trustScore}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-slate-300">
+                              {entry.completedMissions}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

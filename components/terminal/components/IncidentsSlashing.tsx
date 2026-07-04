@@ -14,6 +14,7 @@ import {
   ArrowDownRight,
   ExternalLink
 } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
 
 interface SlashingIncident {
   id: string;
@@ -36,50 +37,14 @@ export default function IncidentsSlashing() {
   const [yieldRate, setYieldRate] = useState<number>(8.4);
   const [activeValidators, setActiveValidators] = useState<number>(15);
 
-  const [incidents, setIncidents] = useState<SlashingIncident[]>([
-    {
-      id: 'slash-01',
-      timestamp: new Date(Date.now() - 3600000 * 2).toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-      target: 'did:vnp:api:anthropic-claude3',
-      region: 'AP-SOUTHEAST (Singapore)',
-      type: 'Latency SLA Breach',
-      details: 'Measured latency: 680ms | Allowed SLA threshold: 350ms',
-      slashedAmount: 250,
-      evidenceHash: '0x3a4b89968a41bc9eb92f153a4c495914ab77de0fc855b7fca4b76a086a9f4e2',
-      txHash: '0x8de9fc855b7fca4b76a086a9f4e242a4b89968a41bc9eb92f153a4c495914ab77',
-      headerStake: 'yield=8.4%; slashed=12200',
-      headerResult: 'SLA_VIOLATED_SLASHED',
-      status: 'slashed'
-    },
-    {
-      id: 'slash-02',
-      timestamp: new Date(Date.now() - 3600000 * 8).toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-      target: 'did:vnp:api:openai-gpt4o',
-      region: 'US-EAST (N. Virginia)',
-      type: 'Uptime Outage Failure',
-      details: 'HTTP Status: 503 Service Unavailable | Availability: 0.00%',
-      slashedAmount: 1000,
-      evidenceHash: '0x7fca4b76a086a9f4e242a4b89968a41bc9eb92f153a4c495914ab77de0fc855b',
-      txHash: '0x3e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      headerStake: 'yield=8.4%; slashed=11200',
-      headerResult: 'OUTAGE_DETECTED_SLASHED',
-      status: 'slashed'
-    },
-    {
-      id: 'slash-03',
-      timestamp: new Date(Date.now() - 3600000 * 18).toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-      target: 'did:vnp:api:stripe-payments',
-      region: 'EU-WEST (Frankfurt)',
-      type: 'Cryptographic Signature Fault',
-      details: 'Ed25519 payload signature check failed: BadSignatureError',
-      slashedAmount: 500,
-      evidenceHash: '0x2a2491a61c3a649fb92080a4c8996fa127be41e4649b934ca495991b7852b3de',
-      txHash: '0x9fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afbf4c899',
-      headerStake: 'yield=8.5%; slashed=10700',
-      headerResult: 'SIGNATURE_INVALID_SLASHED',
-      status: 'slashed'
+  const [incidents, setIncidents] = useState<SlashingIncident[]>([]);
+  const { data: remoteIncidents, isLoading } = useApi<SlashingIncident[]>('/api/v1/vnp-incidents/slashing');
+
+  useEffect(() => {
+    if (remoteIncidents && remoteIncidents.length > 0) {
+      setIncidents(remoteIncidents);
     }
-  ]);
+  }, [remoteIncidents]);
 
   // Simulators
   const triggerSimulation = (type: 'latency' | 'outage' | 'signature') => {
@@ -205,8 +170,13 @@ export default function IncidentsSlashing() {
           {/* SLA Logs ticker (Left) */}
           <div className="lg:col-span-2 flex flex-col gap-3">
             <div className="text-[10px] font-mono tracking-wider text-white/30 uppercase">SLA SLASHING LOG TICKER</div>
-            <div className="flex flex-col gap-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
-              {incidents.map(inc => (
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar relative z-10 min-h-[300px]">
+              {isLoading && (
+                <div className="flex items-center justify-center h-32 text-electric-cyan text-sm animate-pulse">
+                  SYNCING WITH LEDGER...
+                </div>
+              )}
+              {incidents.map((inc) => (
                 <div 
                   key={inc.id}
                   className="p-4 bg-void-metal/30 border border-[#FF003C]/20 hover:border-[#FF003C]/40 transition-all rounded-lg flex flex-col gap-3 relative overflow-hidden"

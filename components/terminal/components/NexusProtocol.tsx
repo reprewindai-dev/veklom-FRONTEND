@@ -17,6 +17,7 @@ import {
   Database,
   ExternalLink
 } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
 import { GenomeDNA } from './GenomeDNA';
 import { ApiDnaVisualizer, MiniDnaVisualizer } from './ApiDnaVisualizer';
 
@@ -58,8 +59,11 @@ export default function NexusProtocol() {
   const [anchorCount, setAnchorCount] = useState(1442);
   const [lastAnchorTime, setLastAnchorTime] = useState<string>('4m ago');
   const [isAttesting, setIsAttesting] = useState(true);
-  const [genome, setGenome] = useState<any>(null);
   const [hoveredDimIndex, setHoveredDimIndex] = useState<number | null>(null);
+
+  const { data: remoteGenome } = useApi<any>('/api/v1/nexus/genome');
+  const { data: remoteNodes } = useApi<ProberNode[]>('/api/v1/nexus/nodes');
+  const { data: remoteScores } = useApi<ApiScoreCard[]>('/api/v1/nexus/scores');
 
   useEffect(() => {
     const fetchGenome = async () => {
@@ -86,134 +90,22 @@ export default function NexusProtocol() {
       }
     };
     fetchGenome();
-  }, []);
+  }, [remoteGenome]);
 
   // Dynamic simulation state for latency
-  const [nodes, setNodes] = useState<ProberNode[]>([
-    { id: 'us-east', name: 'Node-01 // US-East', region: 'N. Virginia, USA', latency: 18, throughput: 440, status: 'attesting', activeCycles: 9812 },
-    { id: 'us-west', name: 'Node-02 // US-West', region: 'Oregon, USA', latency: 32, throughput: 310, status: 'attesting', activeCycles: 9789 },
-    { id: 'eu-west', name: 'Node-03 // EU-West', region: 'Frankfurt, GER', latency: 12, throughput: 512, status: 'attesting', activeCycles: 9910 },
-    { id: 'ap-southeast', name: 'Node-04 // AP-Southeast', region: 'Singapore', latency: 42, throughput: 215, status: 'attesting', activeCycles: 9540 },
-    { id: 'ap-northeast', name: 'Node-05 // AP-Northeast', region: 'Tokyo, JPN', latency: 38, throughput: 290, status: 'attesting', activeCycles: 9688 },
-  ]);
+  const [nodes, setNodes] = useState<ProberNode[]>([]);
+  useEffect(() => {
+    if (remoteNodes && remoteNodes.length > 0) setNodes(remoteNodes);
+  }, [remoteNodes]);
 
-  const apiCards: ApiScoreCard[] = [
-    {
-      id: 'stripe-payments',
-      name: 'Stripe Payments API',
-      provider: 'Stripe, Inc.',
-      score: 96,
-      grade: 'A',
-      dimensions: [
-        { name: 'Performance', score: 98, weight: 15, desc: 'p50/p95 response latency' },
-        { name: 'Reliability', score: 99, weight: 15, desc: 'HTTP 200 uptime consistency' },
-        { name: 'Security Posture', score: 95, weight: 10, desc: 'TLS configuration & headers' },
-        { name: 'SLA Compliance', score: 96, weight: 10, desc: 'Acceptable boundary conformance' },
-        { name: 'Data Residency', score: 90, weight: 10, desc: 'Regional sovereignty rules alignment' },
-        { name: 'Cost Efficiency', score: 88, weight: 10, desc: 'M2M compute spend scaling' },
-        { name: 'Hardware Coherence', score: 94, weight: 10, desc: 'Predictability across host variations' },
-        { name: 'Network Jitter', score: 97, weight: 10, desc: 'Standard deviation of routing path' },
-        { name: 'Cryptographic Proof', score: 100, weight: 5, desc: 'Valid response signature matching' },
-        { name: 'Dispute Ratio', score: 100, weight: 5, desc: 'Absence of unresolved SLA appeals' },
-      ],
-      anchorHash: '0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      ipfsHash: 'QmYwAPJhy5nJqqEAQUWKWtURPzRrCb76c8cUpV1J8U3F47',
-      txHash: '0x7fca4b76a086a9f4e242a4b89968a41bc9eb92f153a4c495914ab77de0fc855b',
-      lastUpdated: '12m ago'
-    },
-    {
-      id: 'openai-gpt4o',
-      name: 'OpenAI GPT-4o API',
-      provider: 'OpenAI L.L.C.',
-      score: 91,
-      grade: 'A-',
-      dimensions: [
-        { name: 'Performance', score: 84, weight: 15, desc: 'p50/p95 response latency' },
-        { name: 'Reliability', score: 94, weight: 15, desc: 'HTTP 200 uptime consistency' },
-        { name: 'Security Posture', score: 92, weight: 10, desc: 'TLS configuration & headers' },
-        { name: 'SLA Compliance', score: 90, weight: 10, desc: 'Acceptable boundary conformance' },
-        { name: 'Data Residency', score: 85, weight: 10, desc: 'Regional sovereignty rules alignment' },
-        { name: 'Cost Efficiency', score: 93, weight: 10, desc: 'M2M compute spend scaling' },
-        { name: 'Hardware Coherence', score: 88, weight: 10, desc: 'Predictability across host variations' },
-        { name: 'Network Jitter', score: 95, weight: 10, desc: 'Standard deviation of routing path' },
-        { name: 'Cryptographic Proof', score: 100, weight: 5, desc: 'Valid response signature matching' },
-        { name: 'Dispute Ratio', score: 98, weight: 5, desc: 'Absence of unresolved SLA appeals' },
-      ],
-      anchorHash: '0x2a2491a61c3a649fb92080a4c8996fa127be41e4649b934ca495991b7852b3de',
-      ipfsHash: 'QmZv21A7xWQUwAPJhynJqqEAQURPzRrCb76c8cUpV1J8U',
-      txHash: '0x1de9fc855b7fca4b76a086a9f4e242a4b89968a41bc9eb92f153a4c495914ab77',
-      lastUpdated: '8m ago'
-    },
-    {
-      id: 'gemini-pro',
-      name: 'Google Gemini Pro API',
-      provider: 'Google L.L.C.',
-      score: 94,
-      grade: 'A',
-      dimensions: [
-        { name: 'Performance', score: 91, weight: 15, desc: 'p50/p95 response latency' },
-        { name: 'Reliability', score: 97, weight: 15, desc: 'HTTP 200 uptime consistency' },
-        { name: 'Security Posture', score: 96, weight: 10, desc: 'TLS configuration & headers' },
-        { name: 'SLA Compliance', score: 94, weight: 10, desc: 'Acceptable boundary conformance' },
-        { name: 'Data Residency', score: 88, weight: 10, desc: 'Regional sovereignty rules alignment' },
-        { name: 'Cost Efficiency', score: 95, weight: 10, desc: 'M2M compute spend scaling' },
-        { name: 'Hardware Coherence', score: 90, weight: 10, desc: 'Predictability across host variations' },
-        { name: 'Network Jitter', score: 94, weight: 10, desc: 'Standard deviation of routing path' },
-        { name: 'Cryptographic Proof', score: 100, weight: 5, desc: 'Valid response signature matching' },
-        { name: 'Dispute Ratio', score: 100, weight: 5, desc: 'Absence of unresolved SLA appeals' },
-      ],
-      anchorHash: '0x5ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b93',
-      ipfsHash: 'QmPXrrCb76c8cUpV1J8U3F47YwAPJhy5nJqqEAQUWKWtU',
-      txHash: '0x495914ab77de0fc855b7fca4b76a086a9f4e242a4b89968a41bc9eb92f153a4c4',
-      lastUpdated: '15m ago'
-    },
-    {
-      id: 'anthropic-claude3',
-      name: 'Anthropic Claude 3 API',
-      provider: 'Anthropic PBC',
-      score: 89,
-      grade: 'B+',
-      dimensions: [
-        { name: 'Performance', score: 82, weight: 15, desc: 'p50/p95 response latency' },
-        { name: 'Reliability', score: 92, weight: 15, desc: 'HTTP 200 uptime consistency' },
-        { name: 'Security Posture', score: 94, weight: 10, desc: 'TLS configuration & headers' },
-        { name: 'SLA Compliance', score: 88, weight: 10, desc: 'Acceptable boundary conformance' },
-        { name: 'Data Residency', score: 85, weight: 10, desc: 'Regional sovereignty rules alignment' },
-        { name: 'Cost Efficiency', score: 86, weight: 10, desc: 'M2M compute spend scaling' },
-        { name: 'Hardware Coherence', score: 92, weight: 10, desc: 'Predictability across host variations' },
-        { name: 'Network Jitter', score: 93, weight: 10, desc: 'Standard deviation of routing path' },
-        { name: 'Cryptographic Proof', score: 100, weight: 5, desc: 'Valid response signature matching' },
-        { name: 'Dispute Ratio', score: 95, weight: 5, desc: 'Absence of unresolved SLA appeals' },
-      ],
-      anchorHash: '0x9fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afbf4c899',
-      ipfsHash: 'QmURPzRrCb76c8cUpV1J8U3F47YwAPJhy5nJqqEAQUWKWt',
-      txHash: '0xeb92f153a4c495914ab77de0fc855b7fca4b76a086a9f4e242a4b89968a41bc9',
-      lastUpdated: '18m ago'
-    },
-    {
-      id: 'local-ollama',
-      name: 'Local Ollama Instance',
-      provider: 'Sovereign Node / Localhost',
-      score: 98,
-      grade: 'A+',
-      dimensions: [
-        { name: 'Performance', score: 100, weight: 15, desc: 'p50/p95 response latency' },
-        { name: 'Reliability', score: 100, weight: 15, desc: 'HTTP 200 uptime consistency' },
-        { name: 'Security Posture', score: 85, weight: 10, desc: 'TLS configuration & headers' },
-        { name: 'SLA Compliance', score: 100, weight: 10, desc: 'Acceptable boundary conformance' },
-        { name: 'Data Residency', score: 100, weight: 10, desc: 'Regional sovereignty rules alignment' },
-        { name: 'Cost Efficiency', score: 100, weight: 10, desc: 'M2M compute spend scaling' },
-        { name: 'Hardware Coherence', score: 95, weight: 10, desc: 'Predictability across host variations' },
-        { name: 'Network Jitter', score: 100, weight: 10, desc: 'Standard deviation of routing path' },
-        { name: 'Cryptographic Proof', score: 100, weight: 5, desc: 'Valid response signature matching' },
-        { name: 'Dispute Ratio', score: 100, weight: 5, desc: 'Absence of unresolved SLA appeals' },
-      ],
-      anchorHash: '0x4ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b93b7',
-      ipfsHash: 'QmYwAPJhy5nJqqEAQUWKWtURPzRrCb76c8cUpV1J8U3F47',
-      txHash: '0x4c495914ab77de0fc855b7fca4b76a086a9f4e242a4b89968a41bc9eb92f153a4',
-      lastUpdated: '1m ago'
-    }
-  ];
+  const [apiCards, setApiCards] = useState<ApiScoreCard[]>([]);
+  useEffect(() => {
+    if (remoteScores && remoteScores.length > 0) setApiCards(remoteScores);
+  }, [remoteScores]);
+
+  const toggleProber = (id: string) => {
+    // Just a placeholder if we need it
+  };
 
   const selectedApi = apiCards.find(a => a.id === selectedApiId) || apiCards[0];
 

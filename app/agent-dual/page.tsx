@@ -43,13 +43,7 @@ import {
 } from 'lucide-react';
 
 // Pre-seeded competitive players for realism
-const INITIAL_LEADERBOARD: LeaderboardEntry[] = [
-  { rank: 1, username: "Veklom Prime", address: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970", totalWonUsdc: 42050, bestMultiplier: 18.52, streak: 5, agentPreference: 'Vector North' },
-  { rank: 2, username: "Base Degen Pro", address: "0x6a20f24cc341f72c2f573eb5", totalWonUsdc: 24100, bestMultiplier: 8.41, streak: 3, agentPreference: 'Quiet Switch' },
-  { rank: 3, username: "Facilitator Node", address: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970", totalWonUsdc: 15890, bestMultiplier: 4.82, streak: 0, agentPreference: 'Balanced' },
-  { rank: 4, username: "Gas Guzzling Whale", address: "0x9812A54f42E1BC177aF8125C7cb4bf190e227091", totalWonUsdc: 8400, bestMultiplier: 3.12, streak: 2, agentPreference: 'Vector North' },
-  { rank: 5, username: "Arbitrage Runner", address: "0xDf42A8C11ffab4E51CDc77a942B59190e44b9E6B", totalWonUsdc: 3950, bestMultiplier: 2.15, streak: 1, agentPreference: 'Balanced' }
-];
+const INITIAL_LEADERBOARD: LeaderboardEntry[] = [];
 
 const INITIAL_CHALLENGES: DailyChallenge[] = [
   {
@@ -109,7 +103,7 @@ const INITIAL_CHALLENGES: DailyChallenge[] = [
   }
 ];
 
-const API_BASE_URL = 'http://localhost:3000/api/v1/duel';
+const API_BASE_URL = '/api/v1/duel';
 
 export default function App() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
