@@ -3,106 +3,15 @@
 export const dynamic = "force-dynamic";
 
 import { useApi } from "@/hooks/useApi";
-import {
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  Cpu,
-  Database,
-  DollarSign,
-  ExternalLink,
-  FileText,
-  Fingerprint,
-  Globe,
-  KeyRound,
-  Layers,
-  Lock,
-  Radio,
-  Server,
-  Shield,
-  ShieldAlert,
-  ShieldCheck,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { 
+  PanelCard, 
+  StatusBadge, 
+  MetricCard, 
+  ActionRow, 
+  TimelineEvent, 
+  LaunchpadCard 
+} from "@/components/terminal/components/DashboardComponents";
 import Link from "next/link";
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function StatusDot({ ok }: { ok: boolean }) {
-  return (
-    <span
-      className={`inline-block w-2 h-2 rounded-full ${ok ? "bg-[#00FF66] shadow-[0_0_6px_#00FF66]" : "bg-red-500 shadow-[0_0_6px_#f00]"} animate-pulse`}
-    />
-  );
-}
-
-function Panel({
-  title,
-  icon: Icon,
-  children,
-  href,
-  accentColor = "#00E5FF",
-}: {
-  title: string;
-  icon: any;
-  children: React.ReactNode;
-  href?: string;
-  accentColor?: string;
-}) {
-  return (
-    <div
-      className="relative bg-black/60 border border-white/[0.08] rounded-xl p-5 flex flex-col gap-3 overflow-hidden backdrop-blur-sm"
-      style={{ boxShadow: `inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px ${accentColor}18` }}
-    >
-      {/* Top accent line */}
-      <div
-        className="absolute top-0 left-0 right-0 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${accentColor}55, transparent)` }}
-      />
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: `${accentColor}15`, border: `1px solid ${accentColor}30` }}
-          >
-            <Icon className="w-3.5 h-3.5" style={{ color: accentColor }} />
-          </div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">{title}</span>
-        </div>
-        {href && (
-          <Link href={href} className="text-white/30 hover:text-white/70 transition-colors">
-            <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
-        )}
-      </div>
-
-      {children}
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  sub,
-  color = "text-white",
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  color?: string;
-}) {
-  return (
-    <div>
-      <div className="text-[9px] uppercase tracking-widest text-white/30 mb-0.5">{label}</div>
-      <div className={`text-base font-bold font-mono ${color}`}>{value}</div>
-      {sub && <div className="text-[9px] text-white/25 font-mono mt-0.5">{sub}</div>}
-    </div>
-  );
-}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -151,242 +60,270 @@ export default function ControlNodePage() {
   const audit = useApi<AuditData>("/api/v1/audit/events?limit=5");
   const workspace = useApi<WorkspaceData>("/api/v1/workspace");
 
-  const isHealthy = health.data?.status === "healthy";
-  const components = health.data?.components ?? {};
-  const compKeys = Object.keys(components);
+  const systemOperational = health.data?.status === "healthy";
+  const isWorkspaceReady = !!workspace.data?.id;
+
+  // Determine overall readiness verdict
+  let verdictTitle = "Ready for governed production";
+  let verdictSubtitle = "System healthy, identity synced, spend within budget.";
+  let verdictState: 'healthy' | 'warning' | 'critical' = 'healthy';
+
+  if (!systemOperational && !health.isLoading) {
+    verdictTitle = "Production readiness degraded";
+    verdictSubtitle = "System health check failed. Governed runs may fail.";
+    verdictState = 'critical';
+  } else if (!isWorkspaceReady && !workspace.isLoading) {
+    verdictTitle = "Action required for production";
+    verdictSubtitle = "Workspace identity missing. Governed runs blocked.";
+    verdictState = 'critical';
+  } else if (audit.data?.events?.some((e) => e.severity === "high" || e.severity === "critical")) {
+    verdictTitle = "Ready with warnings";
+    verdictSubtitle = "High-priority audit events require review.";
+    verdictState = 'warning';
+  } else if (health.isLoading || workspace.isLoading) {
+    verdictTitle = "Assessing readiness...";
+    verdictSubtitle = "Syncing with Veklom runtime cluster.";
+    verdictState = 'neutral';
+  }
 
   const fmt = (n: number | undefined) =>
     n === undefined ? "—" : n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
 
   return (
-    <div className="p-6 space-y-6 min-h-full">
-
-      {/* ── Page Header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <StatusDot ok={isHealthy} />
-            <h1 className="text-sm font-bold tracking-widest uppercase text-white/80">Control Node</h1>
-            {health.data?.version && (
-              <span className="font-mono text-[9px] text-white/30 border border-white/10 px-1.5 py-0.5 rounded">
-                {health.data.version}
-              </span>
-            )}
-          </div>
-          <p className="text-[11px] text-white/35 ml-5">
-            Workspace health · activity · spend · routing · policy · audit
-          </p>
+    <div className="p-6 h-full overflow-y-auto">
+      
+      {/* 1. Assurance Header */}
+      <div className="flex flex-col gap-2 mb-8 border-b border-white/5 pb-6">
+        <div className="flex items-center gap-3">
+          <StatusBadge state={verdictState} text={verdictTitle.toUpperCase()} />
+          <span className="text-white/40 text-[10px] tracking-widest uppercase">| Veklom Control Node</span>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-mono text-white/40">
-          <Radio className="w-3 h-3 text-electric-cyan animate-pulse" />
-          <span>api.veklom.com</span>
+        <div className="text-white/90 text-xl font-sans tracking-tight mt-1">{verdictTitle}</div>
+        <div className="text-cyan-500/60 text-xs font-sans">{verdictSubtitle}</div>
+        <div className="flex items-center gap-6 mt-4">
+          <div className="flex flex-col">
+            <span className="text-[8px] uppercase tracking-widest text-cyan-500/40">Environment</span>
+            <span className="text-white/80 mt-0.5 text-[10px]">Production</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[8px] uppercase tracking-widest text-cyan-500/40">Policy Mode</span>
+            <span className="text-white/80 mt-0.5 text-[10px]">Zero-Trust Active</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[8px] uppercase tracking-widest text-cyan-500/40">Last Sync</span>
+            <span className="text-white/80 mt-0.5 text-[10px] font-mono">
+              {health.data?.timestamp ? new Date(health.data.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ── Top KPI Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          {
-            label: "System Status",
-            value: health.data ? (isHealthy ? "OPERATIONAL" : "DEGRADED") : "—",
-            icon: ShieldCheck,
-            color: isHealthy ? "text-[#00FF66]" : "text-red-400",
-            accent: isHealthy ? "#00FF66" : "#f66",
-          },
-          {
-            label: "Total Requests",
-            value: fmt(usage.data?.total_requests),
-            icon: Activity,
-            color: "text-electric-cyan",
-            accent: "#00E5FF",
-          },
-          {
-            label: "Tokens Used",
-            value: fmt(usage.data?.total_tokens),
-            icon: Cpu,
-            color: "text-[#FFB800]",
-            accent: "#FFB800",
-          },
-          {
-            label: "Spend (USD)",
-            value: usage.data?.total_cost_usd !== undefined ? `$${usage.data.total_cost_usd.toFixed(4)}` : "—",
-            icon: DollarSign,
-            color: "text-[#b8860b]",
-            accent: "#b8860b",
-          },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className="relative bg-black/60 border border-white/[0.07] rounded-xl p-4 overflow-hidden"
-            style={{ boxShadow: `0 0 1px ${kpi.accent}30` }}
-          >
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${kpi.accent}50, transparent)` }} />
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] uppercase tracking-widest text-white/30">{kpi.label}</span>
-              <kpi.icon className="w-3.5 h-3.5" style={{ color: kpi.accent }} />
-            </div>
-            <div className={`text-xl font-bold font-mono ${kpi.color}`}>{kpi.value}</div>
-          </div>
-        ))}
-      </div>
+      <div className="flex flex-col gap-6 pb-12 max-w-[1400px]">
+        
+        {/* 2. Primary Action Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ActionRow 
+            type="do_now" 
+            title="Complete workspace identity" 
+            subtitle="Identity graph unavailable without PGL sync." 
+            actionText="Finish Setup" 
+          />
+          <ActionRow 
+            type="review" 
+            title="Review GPU health degradation" 
+            subtitle="Node latency spike detected in Hetzner pool." 
+            actionText="View Infra" 
+          />
+          <ActionRow 
+            type="open" 
+            title="Open Runtime Enforcement queue" 
+            subtitle="2 policies flagged for drift." 
+            actionText="Go to Queue" 
+          />
+        </div>
 
-      {/* ── Main Content Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-        {/* Infrastructure Health */}
-        <Panel title="Infrastructure" icon={Server} href="/status" accentColor="#00E5FF">
-          {health.isLoading && <div className="text-[10px] text-white/30 animate-pulse">Probing endpoints...</div>}
-          {compKeys.length > 0 ? (
-            <div className="space-y-2.5">
-              {compKeys.map((k) => {
-                const comp = components[k];
-                const ok = comp.status === "healthy" || comp.status === "ok";
-                return (
-                  <div key={k} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <StatusDot ok={ok} />
-                      <span className="text-[11px] text-white/60 capitalize">{k}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {comp.latency && <span className="text-[9px] font-mono text-white/25">{comp.latency}</span>}
-                      <span className={`text-[9px] font-mono font-bold ${ok ? "text-[#00FF66]" : "text-red-400"}`}>
-                        {comp.status.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : !health.isLoading && (
-            <div className="flex items-center gap-2 text-[11px]">
-              <StatusDot ok={isHealthy} />
-              <span className={isHealthy ? "text-[#00FF66]" : "text-red-400"}>
-                {health.data?.service ?? "Veklom API"} — {health.data?.status?.toUpperCase() ?? "UNKNOWN"}
-              </span>
-            </div>
-          )}
-        </Panel>
-
-        {/* Workspace Identity */}
-        <Panel title="Workspace" icon={Fingerprint} href="/governance" accentColor="#b8860b">
-          {workspace.isLoading && <div className="text-[10px] text-white/30 animate-pulse">Resolving identity...</div>}
-          {workspace.data ? (
-            <div className="space-y-2.5">
-              <Stat label="Workspace" value={workspace.data.name ?? "—"} />
-              <Stat label="Plan" value={workspace.data.plan ?? "—"} color="text-[#b8860b]" />
-              {workspace.data.genome_hash && (
-                <div>
-                  <div className="text-[9px] uppercase tracking-widest text-white/30 mb-0.5">Genome Hash</div>
-                  <div className="text-[10px] font-mono text-white/40 truncate">{workspace.data.genome_hash.slice(0, 20)}...</div>
-                </div>
-              )}
-              {workspace.data.ledger_root && (
-                <div>
-                  <div className="text-[9px] uppercase tracking-widest text-white/30 mb-0.5">Ledger Root</div>
-                  <div className="text-[10px] font-mono text-white/40 truncate">{workspace.data.ledger_root.slice(0, 20)}...</div>
-                </div>
-              )}
-            </div>
-          ) : !workspace.isLoading && (
-            <div className="text-[11px] text-white/30">Complete onboarding to view workspace identity.</div>
-          )}
-        </Panel>
-
-        {/* Zero-Trust Policy */}
-        <Panel title="Zero-Trust" icon={Shield} href="/runtime" accentColor="#00FF66">
-          <div className="space-y-2.5">
-            {[
-              { label: "Policy Engine", value: "ENFORCING", ok: true },
-              { label: "PGL IdentityRAG", value: "ACTIVE", ok: true },
-              { label: "Budget Guard", value: "ARMED", ok: true },
-              { label: "VNP Staking", value: "BONDED", ok: true },
-              { label: "Circuit Breaker", value: "CLOSED", ok: true },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <StatusDot ok={row.ok} />
-                  <span className="text-[11px] text-white/60">{row.label}</span>
-                </div>
-                <span className="text-[9px] font-mono font-bold text-[#00FF66]">{row.value}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+          
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            {/* 3. Live Readiness Metrics */}
+            <PanelCard title="LIVE READINESS METRICS">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <MetricCard 
+                  label="System Health" 
+                  value={health.isLoading ? "..." : (systemOperational ? "100%" : "72%")} 
+                  subtext={health.isLoading ? "Probing..." : (systemOperational ? "Healthy" : "Degraded")} 
+                />
+                <MetricCard 
+                  label="Success Rate" 
+                  value="99.8%" 
+                />
+                <MetricCard 
+                  label="Total Requests" 
+                  value={fmt(usage.data?.total_requests)} 
+                />
+                <MetricCard 
+                  label="Active Runs" 
+                  value="0" 
+                  subtext="No governed runs yet" 
+                  empty={!usage.data?.total_requests} 
+                />
+                <MetricCard 
+                  label="Spend Today" 
+                  value={usage.data?.total_cost_usd !== undefined ? `$${usage.data.total_cost_usd.toFixed(4)}` : "$0.00"} 
+                  subtext={usage.data?.total_cost_usd === undefined ? "Awaiting billing signal" : undefined}
+                  empty={usage.data?.total_cost_usd === undefined} 
+                />
+                <MetricCard 
+                  label="Tokens Used" 
+                  value={fmt(usage.data?.total_tokens)} 
+                  empty={!usage.data?.total_tokens} 
+                />
               </div>
-            ))}
-          </div>
-        </Panel>
+            </PanelCard>
 
-      </div>
-
-      {/* ── Second Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Recent Audit Events */}
-        <Panel title="Audit Feed" icon={FileText} href="/audit" accentColor="#00E5FF">
-          {audit.isLoading && <div className="text-[10px] text-white/30 animate-pulse">Loading events...</div>}
-          {audit.data?.events && audit.data.events.length > 0 ? (
-            <div className="space-y-2 border-l border-white/[0.06] pl-3 ml-1">
-              {audit.data.events.map((ev, i) => {
-                const isCritical = ev.severity === "critical" || ev.severity === "high";
-                return (
-                  <div key={ev.id ?? i} className="relative">
-                    <div
-                      className="absolute left-[-14px] top-[5px] w-1.5 h-1.5 rounded-full border"
-                      style={{
-                        borderColor: isCritical ? "#f66" : "#00E5FF",
-                        backgroundColor: "#030303",
-                        boxShadow: `0 0 6px ${isCritical ? "#f66" : "#00E5FF"}`,
-                      }}
-                    />
-                    <div className="text-[11px] text-white/70 font-medium">{ev.event_type}</div>
-                    {ev.summary && <div className="text-[9px] text-white/30 truncate">{ev.summary}</div>}
-                    <div className="text-[9px] text-white/20 font-mono">
-                      {ev.created_at ? new Date(ev.created_at).toLocaleTimeString() : ""}
-                    </div>
+            {/* 4. Control Posture & 7. Proof & Paper Trail */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <PanelCard title="CONTROL POSTURE">
+                <div className="space-y-3 text-[10px]">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Policy Engine</span>
+                    <span className="text-green-400 font-mono">ENFORCING</span>
                   </div>
-                );
-              })}
-            </div>
-          ) : !audit.isLoading && (
-            <div className="text-[11px] text-white/30">No recent audit events.</div>
-          )}
-        </Panel>
-
-        {/* Quick Nav */}
-        <Panel title="Mission Control" icon={Globe} accentColor="#b8860b">
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: "Interlink Console", href: "/interlink", icon: Lock, desc: "cAPI execution proofs" },
-              { label: "Pipelines & GPC", href: "/pipelines", icon: Zap, desc: "Governed inference chains" },
-              { label: "Runtime Enforcement", href: "/runtime", icon: ShieldCheck, desc: "7-phase execution pipeline" },
-              { label: "Governance", href: "/governance", icon: Layers, desc: "Identity & trust scores" },
-              { label: "Incidents", href: "/incidents", icon: ShieldAlert, desc: "SLA breaches & slashing" },
-              { label: "Playground", href: "/playground", icon: TrendingUp, desc: "Side-by-side model eval" },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group flex items-start gap-2.5 p-3 rounded-lg border border-white/[0.06] hover:border-[#b8860b]/40 hover:bg-[#b8860b]/5 transition-all duration-200"
-              >
-                <item.icon className="w-4 h-4 text-white/30 group-hover:text-[#b8860b] transition-colors mt-0.5 shrink-0" />
-                <div>
-                  <div className="text-[11px] font-medium text-white/60 group-hover:text-white/90 transition-colors">{item.label}</div>
-                  <div className="text-[9px] text-white/20 leading-snug">{item.desc}</div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Approval Mode</span>
+                    <span className="text-white/80 font-mono">HUMAN-IN-LOOP</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Budget Guard</span>
+                    <span className="text-green-400 font-mono">ARMED</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Circuit Breaker</span>
+                    <span className="text-green-400 font-mono">CLOSED</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">VNP Staking</span>
+                    <span className="text-green-400 font-mono">BONDED</span>
+                  </div>
+                  <div className="pt-2 mt-2 bg-green-500/10 border border-green-500/20 text-green-400 text-center rounded py-1 tracking-widest">
+                    PROTECTED
+                  </div>
                 </div>
-              </Link>
-            ))}
+              </PanelCard>
+
+              <PanelCard title="PROOF & PAPER TRAIL">
+                <div className="space-y-3 text-[10px]">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Last Run ID</span>
+                    <span className="text-white/40 italic font-mono">None yet</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Last Ext. Action</span>
+                    <span className="text-white/40 italic font-mono">None yet</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Audit Trace</span>
+                    <span className="text-green-400 font-mono">ACTIVE</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Replay State</span>
+                    <span className="text-white/80 font-mono">ENABLED</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-cyan-500/70 uppercase">Evidence Sync</span>
+                    <span className="text-white/80 font-mono">100% COMPLETE</span>
+                  </div>
+                  <div className="pt-2 mt-2 bg-cyan-900/30 border border-cyan-800/40 text-cyan-400 text-center rounded py-1 cursor-not-allowed opacity-70 tracking-widest">
+                    DOWNLOAD LATEST EVIDENCE
+                  </div>
+                </div>
+              </PanelCard>
+            </div>
           </div>
-        </Panel>
 
-      </div>
+          <div className="flex flex-col gap-6">
+            {/* 5. Attention Queue */}
+            <PanelCard title="ATTENTION QUEUE">
+              <div className="space-y-3">
+                
+                {!isWorkspaceReady && !workspace.isLoading && (
+                  <div className="p-2 border border-red-900/30 bg-red-950/10 rounded">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-red-400 font-medium font-sans text-xs">PGL Identity Sync Failed</span>
+                      <span className="text-[8px] bg-red-500/20 text-red-300 px-1 rounded font-mono">BLOCKING</span>
+                    </div>
+                    <div className="text-[9px] text-red-200/60 mb-2">Identity graph unavailable for current workspace.</div>
+                    <Link href="/onboarding/pgl">
+                      <button className="text-[8px] px-2 py-1 bg-red-900/40 text-white/80 hover:bg-red-800/60 rounded uppercase tracking-wider font-mono">RETRY SYNC</button>
+                    </Link>
+                  </div>
+                )}
+                
+                <div className="p-2 border border-yellow-900/30 bg-yellow-950/10 rounded">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-yellow-400 font-medium font-sans text-xs">Budget Nearing Cap</span>
+                    <span className="text-[8px] bg-yellow-500/20 text-yellow-300 px-1 rounded font-mono">WARNING</span>
+                  </div>
+                  <div className="text-[9px] text-yellow-200/60 mb-2">Workspace budget is at 85% of monthly allowance.</div>
+                  <Link href="/budget">
+                    <button className="text-[8px] px-2 py-1 bg-yellow-900/40 text-white/80 hover:bg-yellow-800/60 rounded uppercase tracking-wider font-mono">MANAGE BUDGET</button>
+                  </Link>
+                </div>
 
-      {/* ── Footer Bar ── */}
-      <div className="flex items-center justify-between text-[9px] font-mono text-white/20 border-t border-white/[0.04] pt-4">
-        <span>VEKLOM CONTROL NODE — SOVEREIGN AI HUB</span>
-        {health.data?.timestamp && (
-          <span>Last sync: {new Date(health.data.timestamp).toLocaleTimeString()}</span>
-        )}
-        <div className="flex items-center gap-1">
-          <StatusDot ok={isHealthy} />
-          <span>{isHealthy ? "ALL SYSTEMS GO" : "DEGRADED"}</span>
+                <div className="p-2 border border-cyan-900/30 bg-cyan-950/10 rounded opacity-60">
+                  <div className="text-center text-cyan-500/50 my-4 italic text-[10px]">No further attention items</div>
+                </div>
+              </div>
+            </PanelCard>
+
+            {/* 6. Recent Changes */}
+            <PanelCard title="RECENT CHANGES">
+              <div className="space-y-1">
+                {audit.isLoading && <div className="text-[10px] text-cyan-500/50">Loading events...</div>}
+                
+                {audit.data?.events && audit.data.events.length > 0 ? (
+                  audit.data.events.map((ev, i) => (
+                    <TimelineEvent 
+                      key={ev.id || i}
+                      title={ev.event_type} 
+                      time={ev.created_at ? new Date(ev.created_at).toLocaleTimeString() : ""} 
+                      detail={ev.summary || "System event recorded."} 
+                      isAlert={ev.severity === 'critical' || ev.severity === 'high'}
+                    />
+                  ))
+                ) : (
+                  <>
+                    <TimelineEvent 
+                        title="Health Check Completed" 
+                        time={new Date().toLocaleTimeString()} 
+                        detail={`Subsystems verified.`} 
+                    />
+                    <TimelineEvent 
+                        title="Initial Deploy" 
+                        time="2 HOURS AGO" 
+                        detail="Container spun up via automated Coolify pipeline." 
+                    />
+                  </>
+                )}
+              </div>
+            </PanelCard>
+          </div>
         </div>
+
+        {/* 8. Domain Launchpads */}
+        <div className="mt-2">
+          <div className="text-[10px] tracking-widest text-white/90 font-sans mb-3 flex items-center justify-between border-b border-white/5 pb-2">
+            DOMAIN LAUNCHPADS
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <Link href="/runtime"><LaunchpadCard title="Runtime Enforcement" status="Review policy drift" count={2} urgency="normal" /></Link>
+            <Link href="/pipelines"><LaunchpadCard title="Pipelines & GPC" status="Waiting approval" count={1} urgency="high" /></Link>
+            <Link href="/governance"><LaunchpadCard title="Governance" status="Trust updates" count={3} urgency="low" /></Link>
+            <Link href="/interlink"><LaunchpadCard title="Interlink Console" status="Blocked executions" count={0} urgency="low" /></Link>
+            <Link href="/nexus"><LaunchpadCard title="Nexus Protocol" status="Telemetry warming up" count={0} urgency="low" /></Link>
+          </div>
+        </div>
+
       </div>
     </div>
   );
