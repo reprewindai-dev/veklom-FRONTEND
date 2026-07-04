@@ -28,11 +28,13 @@ import {
   FileLock,
   Wallet,
   Map,
-  ExternalLink
+  ExternalLink,
+  Crown
 } from 'lucide-react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 interface SidebarProps {
   mcpHeartbeat: string;
@@ -55,6 +57,7 @@ interface MenuSection {
 
 export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: SidebarProps) {
   const pathname = usePathname();
+  const { me } = useAuth();
 
   const TERMINAL_URL = 'https://terminal.veklom.com';
 
@@ -107,6 +110,15 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
       ]
     }
   ];
+
+  if (me?.role === 'admin' || me?.is_superuser) {
+    sections.push({
+      title: 'SUPER USER CONTROL',
+      items: [
+        { id: 'workspace-admin', name: 'Super User Dashboard', icon: Crown, href: '/workspace-admin', isLive: true },
+      ]
+    });
+  }
 
   return (
     <aside className="w-64 h-full border-r border-[#ffffff0a] bg-void-black flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto scrollbar-hide">
