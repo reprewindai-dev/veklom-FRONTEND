@@ -185,15 +185,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <Link href="/dashboard" className="flex items-start gap-2.5 px-2 py-1.5 mb-4">
           <LogoWordmark height={22} className="mt-0.5" />
           <span className="text-[8px] leading-[1.3] text-ink-600 uppercase tracking-[0.16em] font-semibold mt-0.5">
-            {process.env.NEXT_PUBLIC_BRAND_MODE === "uacp" ? (
-              <>
-                UACP Swarm<br />Console
-              </>
-            ) : (
-              <>
-                Sovereign<br />Control Node
-              </>
-            )}
+            <>Sovereign<br />Control Node</>
           </span>
         </Link>
         <nav className="flex-1 overflow-y-auto scroll-thin space-y-5 pr-1">

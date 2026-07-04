@@ -33,11 +33,11 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: url("/control-plane-next/watermark.svg");
+  background-image: url("/watermark.svg");
   background-repeat: no-repeat;
   background-position: center 46%;
   background-size: min(58vw, 720px);
-  opacity: 0.035;
+  opacity: 0.055;
 }
 /* Keep app content above the watermark layer. */
 body > * { position: relative; z-index: 1; }
