@@ -46,7 +46,7 @@ import {
 const INITIAL_LEADERBOARD: LeaderboardEntry[] = [
   { rank: 1, username: "Veklom Prime", address: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970", totalWonUsdc: 42050, bestMultiplier: 18.52, streak: 5, agentPreference: 'Vector North' },
   { rank: 2, username: "Base Degen Pro", address: "0x6a20f24cc341f72c2f573eb5", totalWonUsdc: 24100, bestMultiplier: 8.41, streak: 3, agentPreference: 'Quiet Switch' },
-  { rank: 3, username: "Facilitator Node", address: "0xCC34553b4e6332ffb9C1b61E22436ACA53113D1d", totalWonUsdc: 15890, bestMultiplier: 4.82, streak: 0, agentPreference: 'Balanced' },
+  { rank: 3, username: "Facilitator Node", address: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970", totalWonUsdc: 15890, bestMultiplier: 4.82, streak: 0, agentPreference: 'Balanced' },
   { rank: 4, username: "Gas Guzzling Whale", address: "0x9812A54f42E1BC177aF8125C7cb4bf190e227091", totalWonUsdc: 8400, bestMultiplier: 3.12, streak: 2, agentPreference: 'Vector North' },
   { rank: 5, username: "Arbitrage Runner", address: "0xDf42A8C11ffab4E51CDc77a942B59190e44b9E6B", totalWonUsdc: 3950, bestMultiplier: 2.15, streak: 1, agentPreference: 'Balanced' }
 ];
@@ -144,7 +144,7 @@ export default function App() {
   const [wallet, setWallet] = useState<WalletState>({
     address: null,
     idWallet: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
-    paymentWallet: "0xCC34553b4e6332ffb9C1b61E22436ACA53113D1d",
+    paymentWallet: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     network: "Base Mainnet",
     verificationDomain: "veklom-id.vercel.app",
     connected: false,
@@ -157,7 +157,7 @@ export default function App() {
     totalSecuredUsdc: 145890.30,
     facilitatorFeePercent: 1.50,
     gasPriceGwei: 15,
-    contractAddress: "0xCC34553b4e6332ffb9C1b61E22436ACA53113D1d",
+    contractAddress: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     veklomVerified: true
   });
 
@@ -3030,7 +3030,7 @@ export default function App() {
                         <tbody className="divide-y divide-white/5">
                           <tr>
                             <td className="py-2">Base Mainnet Escrow Address</td>
-                            <td className="py-2 text-right text-amber-400 select-all">0xCC34553b4e6332ffb9C1b61E22436ACA53113D1d</td>
+                            <td className="py-2 text-right text-amber-400 select-all">0x3a74772e925b54F7dAD7FD95c9Ba30825033f970</td>
                           </tr>
                           <tr>
                             <td className="py-2">Liquidity Standard</td>

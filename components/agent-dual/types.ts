@@ -6,7 +6,7 @@
 export interface WalletState {
   address: string | null;
   idWallet: string; // 0x3a74772e925b54F7dAD7FD95c9Ba30825033f970
-  paymentWallet: string; // 0xCC34553b4e6332ffb9C1b61E22436ACA53113D1d
+  paymentWallet: string; // 0x3a74772e925b54F7dAD7FD95c9Ba30825033f970
   network: string; // Base Mainnet
   verificationDomain: string; // veklom-id.vercel.app
   connected: boolean;
