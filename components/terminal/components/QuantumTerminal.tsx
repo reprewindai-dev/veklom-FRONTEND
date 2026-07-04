@@ -152,6 +152,7 @@ function ZenoCanvas({ zenoOn, zenoLabel }: { zenoOn: boolean; zenoLabel: string 
 
 export default function QuantumTerminal() {
   const isLanding = typeof window !== 'undefined' && window.location.pathname === '/';
+  const targetAgent = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('agent') : null;
   const [activeView, setActiveView] = useState<ViewType>(() => {
     if (typeof window !== 'undefined' && (window.location.pathname.includes('terminal') || window.location.pathname.includes('terrrinal') || window.location.pathname === '/')) {
       return 'terminal';
@@ -214,14 +215,22 @@ export default function QuantumTerminal() {
       pushLog('  VEKLOM TERMINAL  //  UACP v4.0', 'hdr');
       pushLog('  Neural Orchestration Engine · Antigravity v4.0', 'dim');
       pushLog('—'.repeat(44), 'sep');
-      await sleep(200); pushLog('[BOOT]  Quantum context surface…', 'sys');
+      await sleep(200); pushLog('[BOOT]  Terminal surface active…', 'sys');
       await sleep(200); pushLog('[BOOT]  MCP host adapter loaded', 'sys');
-      await sleep(200); pushLog('        ✓  filesystem_srv  (stdio)', 'ok');
-      await sleep(200); pushLog('        ✓  quantum_srv     (SSE, 1024 qubits)', 'ok');
-      await sleep(200); pushLog('        ⚠  co2router_srv   (capability pending)', 'warn');
-      await sleep(200); pushLog('[BOOT]  Zeno Interrogator: ONLINE', 'sys');
-      await sleep(200); pushLog('[BOOT]  Gladiator Engine: 8 paths ready', 'sys');
-      await sleep(200); pushLog('[BOOT]  Cognitive Engine: CONNECTED', 'ok');
+      
+      if (targetAgent) {
+        await sleep(200); pushLog(`[LINK]  Requesting secure shell to enclave: ${targetAgent}`, 'pur');
+        await sleep(400); pushLog(`[LINK]  Handshake accepted. Isolated agent context loaded.`, 'ok');
+        await sleep(200); pushLog(`        Agent ${targetAgent} is ready for direct commands.`, 'ok');
+      } else {
+        await sleep(200); pushLog('        ✓  filesystem_srv  (stdio)', 'ok');
+        await sleep(200); pushLog('        ✓  quantum_srv     (SSE, 1024 qubits)', 'ok');
+        await sleep(200); pushLog('        ⚠  co2router_srv   (capability pending)', 'warn');
+        await sleep(200); pushLog('[BOOT]  Zeno Interrogator: ONLINE', 'sys');
+        await sleep(200); pushLog('[BOOT]  Gladiator Engine: 8 paths ready', 'sys');
+        await sleep(200); pushLog('[BOOT]  Cognitive Engine: CONNECTED', 'ok');
+      }
+
       await sleep(150); pushLog('', 'out');
       await sleep(150); pushLog('Tap a chip or type a command. Explore all tabs below.', 'dim');
       await sleep(150); pushLog('—'.repeat(44), 'sep');
