@@ -13,13 +13,7 @@ async function proxyRequest(req: NextRequest) {
   headers.delete("host"); // Let the native fetch set the host
   headers.delete("connection");
 
-  if (path.startsWith("/api/v1/gpc")) {
-    targetUrl = `${CAPPO_BACKEND_URL}${path}${url.search}`;
-    headers.set("x-admin-api-key", CAPPO_ADMIN_KEY);
-  } else {
-    // Note: this assumes the Next.js frontend fetches /api/v1/... (so the path starts with /api/v1)
-    targetUrl = `${VBB_BACKEND_URL}${path}${url.search}`;
-  }
+  targetUrl = `${VBB_BACKEND_URL}${path}${url.search}`;
 
   try {
     const init: RequestInit = {
