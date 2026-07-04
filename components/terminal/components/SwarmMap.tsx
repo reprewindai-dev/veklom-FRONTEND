@@ -7,7 +7,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AgentNode } from '../types';
-import { Search, ZoomIn, ZoomOut, RotateCcw, X, Cpu, Activity, Database, Flame, RefreshCcw, Terminal } from 'lucide-react';
+import { Search, ZoomIn, ZoomOut, RotateCcw, X, Cpu, Activity, Database, Flame, RefreshCcw, Terminal, ShieldAlert, AlertTriangle } from 'lucide-react';
 
 function highlightJson(json: string): React.ReactNode[] {
   if (!json) return [];
@@ -69,6 +69,17 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
   useEffect(() => {
     localStorage.setItem('swarm_diagnostics_open', isDiagnosticsOpen.toString());
   }, [isDiagnosticsOpen]);
+
+  const swarmStats = useMemo(() => {
+    return {
+      total: agents.length,
+      active: agents.filter(a => a.status === 'Active').length,
+      idle: agents.filter(a => a.status === 'Idle').length,
+      blocked: agents.filter(a => a.status === 'Blocked').length,
+      degraded: 0, // Mock for now
+      inFlight: agents.filter(a => a.status === 'Active').length * 2, // Mock for now
+    };
+  }, [agents]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -250,6 +261,34 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
   return (
     <div className="relative w-full h-full flex flex-col bg-void-black grid-overlay select-none overflow-hidden">
       
+      {/* 0. Swarm Status Strip */}
+      <div className="flex items-center gap-6 px-4 py-2 border-b border-white/[0.08] bg-[#030303] z-10 font-mono text-[10px] text-white/50 uppercase tracking-widest shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-white/30">Total:</span>
+          <span className="text-white font-bold">{swarmStats.total}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-white/30">Active:</span>
+          <span className="text-electric-cyan font-bold">{swarmStats.active}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-white/30">Idle:</span>
+          <span className="text-white/80 font-bold">{swarmStats.idle}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-white/30">Blocked:</span>
+          <span className="text-laser-red font-bold">{swarmStats.blocked}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-white/30">Degraded:</span>
+          <span className="text-hazard-amber font-bold">{swarmStats.degraded}</span>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-white/30">Tasks in Flight:</span>
+          <span className="text-matrix-emerald font-bold">{swarmStats.inFlight}</span>
+        </div>
+      </div>
+
       {/* 1. Topological Filtering Overlay Banner */}
       <div className="p-3.5 border-b border-white/[0.08] bg-black/80 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 z-10 font-mono text-xs">
         <div className="flex items-center gap-3">
@@ -267,15 +306,26 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
           <div className="flex items-center gap-1.5">
             <span className="text-white/40">CLUSTER:</span>
             <div className="flex rounded-none border border-white/15 overflow-hidden">
-              {['ALL', 'Engineering', 'Ops', 'Research', 'Revenue', 'Growth'].map((dept) => (
-                <button
-                  key={dept}
-                  onClick={() => setSelectedDept(dept)}
-                  className={`px-2 py-0.5 text-[10px] uppercase font-bold transition-colors rounded-none ${selectedDept === dept ? 'bg-electric-cyan text-void-black' : 'bg-[#0A0A0C] text-white/60 hover:text-white hover:bg-white/5'}`}
-                >
-                  {dept === 'Engineering' ? 'ENG' : dept === 'Research' ? 'RES' : dept === 'Revenue' ? 'REV' : dept === 'Growth' ? 'GRO' : dept}
-                </button>
-              ))}
+              {['ALL', 'Engineering', 'Ops', 'Research', 'Revenue', 'Growth'].map((dept) => {
+                let deptLabel = dept === 'Engineering' ? 'ENG' : dept === 'Research' ? 'RES' : dept === 'Revenue' ? 'REV' : dept === 'Growth' ? 'GRO' : dept;
+                
+                let countStr = "";
+                if (dept !== 'ALL') {
+                  const deptAgents = agents.filter(a => a.department === dept);
+                  const activeCount = deptAgents.filter(a => a.status === 'Active').length;
+                  countStr = ` (${activeCount}/${deptAgents.length})`;
+                }
+
+                return (
+                  <button
+                    key={dept}
+                    onClick={() => setSelectedDept(dept)}
+                    className={`px-2 py-0.5 text-[10px] uppercase font-bold transition-colors rounded-none ${selectedDept === dept ? 'bg-electric-cyan text-void-black' : 'bg-[#0A0A0C] text-white/60 hover:text-white hover:bg-white/5'}`}
+                  >
+                    {deptLabel}{countStr}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -335,6 +385,18 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
               <span>DIAGNOSTICS</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Persistent Legend */}
+      <div className="absolute bottom-4 left-4 border border-white/10 bg-[#060608]/90 backdrop-blur p-3 z-10 font-mono text-[9px] uppercase text-white/60 space-y-2 rounded-none">
+        <div className="font-bold text-white/40 tracking-widest mb-1">Visual Grammar</div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#00E5FF] bg-[rgba(0,229,255,0.2)]" style={{boxShadow: '0 0 5px #00E5FF'}}/> Active (Pulsing)</div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white/20 bg-[#0f0f12]" /> Idle (Dim)</div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#FF003C] bg-[rgba(255,0,60,0.2)]" /> Blocked (Warning)</div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white bg-transparent" /> Selected Focus</div>
+        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10">
+          <div className="px-1 py-0.5 bg-white/10 text-white rounded-[2px] text-[8px] font-bold leading-none">D</div> Diagnostics mode
         </div>
       </div>
 
@@ -492,6 +554,14 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                     className="transition-all duration-500 ease-in-out"
                   />
 
+                  {/* Attention Markers for Blocked Nodes */}
+                  {agent.status === 'Blocked' && (
+                    <g transform={`translate(${agent.x}, ${agent.y - r - 8}) scale(0.7)`}>
+                      <path d="M-10,10 L0,-10 L10,10 Z" fill="#FF003C" stroke="#FF003C" strokeWidth="2" strokeLinejoin="round" className="animate-pulse" />
+                      <text x="0" y="6" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="sans-serif">!</text>
+                    </g>
+                  )}
+
                   {/* Quick hovering node tooltips (Native SVG Title fallback for lightweight telemetry access) */}
                   <title>{`${agent.name} (${agent.role})\nCluster: ${agent.department}\nStatus: ${agent.status}\nMission: ${agent.mission}`}</title>
 
@@ -628,6 +698,25 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                   </div>
                 </div>
 
+                {/* Action Handoffs */}
+                <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
+                  <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Action Handoff</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => console.log('Open Terminal', selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                      <Terminal className="w-3 h-3" /> Terminal
+                    </button>
+                    <button onClick={() => console.log('View Trace', selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                      <Activity className="w-3 h-3" /> Trace
+                    </button>
+                    <button onClick={() => setIsDiagnosticsOpen(true)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-white text-[9px] font-bold font-mono uppercase transition-colors">
+                      <Database className="w-3 h-3" /> Payload
+                    </button>
+                    <button onClick={() => console.log('Isolate Agent', selectedAgent.id)} className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-laser-red/10 hover:bg-laser-red/20 border border-laser-red/30 text-laser-red text-[9px] font-bold font-mono uppercase transition-colors">
+                      <ShieldAlert className="w-3 h-3" /> Isolate
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -636,10 +725,10 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
               <button
                 onClick={() => handleAgentDiagnostics(selectedAgent.id)}
                 disabled={isRefreshing}
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-white/[0.01] hover:bg-white/[0.04] border border-white/10 rounded-none text-white text-[11px] font-bold font-mono uppercase tracking-widest disabled:opacity-50 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-electric-cyan/10 hover:bg-electric-cyan/20 border border-electric-cyan/30 text-electric-cyan text-[11px] font-bold font-mono uppercase tracking-widest disabled:opacity-50 transition-all cursor-pointer"
               >
-                <RefreshCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-electric-cyan' : ''}`} />
-                {isRefreshing ? 'RECONFIGURING HARD ENCLAVE...' : 'TRIGGER AGENT REBOOT'}
+                <RefreshCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'REBOOTING ENCLAVE...' : 'PAUSE / INSPECT NODE'}
               </button>
             </div>
           </motion.div>

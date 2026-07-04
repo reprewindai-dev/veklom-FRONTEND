@@ -18,7 +18,7 @@ export default function GovernancePage() {
     reputation: 100, // Default base reputation
     status: identity.status?.toLowerCase() === 'quarantined' ? 'offline' : 'active',
     lastSync: identity.created_at || new Date().toISOString(),
-    department: 'General',
+    department: 'Engineering',
     weight: 1,
     vote: 'pending',
     lastAttestation: new Date().toISOString(),
