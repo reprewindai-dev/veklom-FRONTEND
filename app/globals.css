@@ -188,6 +188,34 @@ body > * { position: relative; z-index: 1; }
   box-shadow: 0 4px 12px rgba(0, 229, 255, 0.05);
 }
 
+.void-metal {
+  background: #121215;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.grid-overlay {
+  background-size: 30px 30px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+}
+
+.text-glow-emerald {
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+}
+
+.text-glow-amber {
+  text-shadow: 0 0 8px rgba(255, 171, 0, 0.6);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 8px rgba(255, 0, 60, 0.6);
+}
+
 @keyframes active-pulsing-shadow {
   0%, 100% {
     box-shadow: 0 0 8px 1.5px rgba(180, 245, 255, 0.45);

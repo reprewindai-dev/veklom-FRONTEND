@@ -172,43 +172,41 @@ export default function ControlNodePage() {
     n === undefined ? "—" : n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
 
   return (
-    <div className="relative p-6 md:p-10 h-full overflow-y-auto bg-[#03070c] selection:bg-cyan-500/30 text-white scrollbar-thin scrollbar-thumb-cyan-900/50 scrollbar-track-transparent">
+    <div className="relative p-6 md:p-10 h-full overflow-y-auto bg-[#030303] selection:bg-[#00E5FF]/30 text-white scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
       
-      {/* Ambient background glow */}
-      <div className="fixed top-[-10%] left-[-5%] w-[40vw] h-[40vh] bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none animate-pulse" style={{ animationDuration: '8s' }}></div>
-      <div className="fixed bottom-[-10%] right-[-5%] w-[50vw] h-[50vh] bg-blue-900/10 blur-[150px] rounded-full pointer-events-none"></div>
-      <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-5 pointer-events-none"></div>
+      {/* Grid overlay — terminal aesthetic */}
+      <div className="fixed inset-0 grid-overlay pointer-events-none opacity-60"></div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto">
         
         {/* 1. Assurance Header */}
         <div className="flex flex-col gap-3 mb-10 pb-8 relative">
-          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-cyan-500/50 via-cyan-900/20 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-[#00E5FF]/50 via-[#00E5FF]/10 to-transparent"></div>
           
           <div className="flex items-center gap-4">
             <StatusBadge state={verdictState} text={verdictTitle.toUpperCase()} />
-            <div className="h-4 w-[1px] bg-cyan-900/50"></div>
-            <span className="text-cyan-100/30 text-[11px] font-mono tracking-[0.2em] uppercase">Veklom Control Node</span>
+            <div className="h-4 w-[1px] bg-white/10"></div>
+            <span className="text-white/30 text-[11px] font-mono tracking-[0.2em] uppercase">Veklom Control Node</span>
           </div>
           
           <h1 className="text-white/95 text-3xl font-sans tracking-tight mt-2 font-light">{verdictTitle}</h1>
-          <p className="text-cyan-400/70 text-sm font-sans tracking-wide">{verdictSubtitle}</p>
+          <p className="text-[#00E5FF]/70 text-sm font-sans tracking-wide">{verdictSubtitle}</p>
           
           <div className="flex flex-wrap items-center gap-8 mt-6">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/40 font-mono">Environment</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Environment</span>
               <span className="text-white/90 text-xs font-medium tracking-wide flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full shadow-[0_0_8px_#22d3ee]"></span>
+                <span className="w-1.5 h-1.5 bg-[#00E5FF] rounded-full shadow-[0_0_8px_#00E5FF]"></span>
                 Production
               </span>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/40 font-mono">Policy Mode</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Policy Mode</span>
               <span className="text-white/90 text-xs font-medium tracking-wide">Zero-Trust Active</span>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/40 font-mono">Last Sync</span>
-              <span className="text-cyan-300/80 text-xs font-mono tracking-wider bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Last Sync</span>
+              <span className="text-[#00E5FF]/80 text-xs font-mono tracking-wider bg-[#00E5FF]/5 px-2 py-0.5 rounded border border-[#00E5FF]/20">
                 {health.data?.timestamp ? new Date(health.data.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()}
               </span>
             </div>
@@ -265,9 +263,9 @@ export default function ControlNodePage() {
                     subtext={streamState.error || runState} 
                   />
                   
-                  <button onClick={testRun} className="col-span-1 border border-cyan-500/30 bg-gradient-to-br from-cyan-900/40 to-[#0b1219]/80 rounded-lg p-3 text-[10px] text-cyan-400 hover:bg-cyan-900/60 hover:text-cyan-200 transition-all duration-300 font-mono tracking-widest uppercase flex flex-col items-center justify-center gap-2 group shadow-[0_0_15px_rgba(34,211,238,0.05)] hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]">
-                    <span className="w-4 h-4 rounded-full border border-cyan-500/50 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                      <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full group-hover:animate-ping"></span>
+                  <button onClick={testRun} className="col-span-1 border border-[#00E5FF]/30 bg-[#00E5FF]/5 rounded-lg p-3 text-[10px] text-[#00E5FF] hover:bg-[#00E5FF]/15 hover:text-white transition-all duration-300 font-mono tracking-widest uppercase flex flex-col items-center justify-center gap-2 group hover:shadow-[0_0_20px_rgba(0,229,255,0.12)]">
+                    <span className="w-4 h-4 rounded-full border border-[#00E5FF]/50 flex items-center justify-center group-hover:bg-[#00E5FF]/20 transition-colors">
+                      <span className="w-1.5 h-1.5 bg-[#00E5FF] rounded-full group-hover:animate-ping"></span>
                     </span>
                     TEST CAPI EXEC
                   </button>
@@ -285,27 +283,27 @@ export default function ControlNodePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <PanelCard title="CONTROL POSTURE">
                   <div className="space-y-4 text-[11px] font-mono">
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Policy Engine</span>
-                      <span className="text-emerald-400 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">ENFORCING</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Policy Engine</span>
+                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">ENFORCING</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Approval Mode</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Approval Mode</span>
                       <span className="text-white/90 tracking-wider">HUMAN-IN-LOOP</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Budget Guard</span>
-                      <span className="text-emerald-400 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">ARMED</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Budget Guard</span>
+                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">ARMED</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Circuit Breaker</span>
-                      <span className="text-emerald-400 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">CLOSED</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Circuit Breaker</span>
+                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">CLOSED</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">VNP Staking</span>
-                      <span className="text-emerald-400 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">BONDED</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">VNP Staking</span>
+                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">BONDED</span>
                     </div>
-                    <div className="pt-2 mt-4 bg-gradient-to-r from-emerald-500/10 to-transparent border-l-2 border-emerald-500 text-emerald-400 px-3 py-2 tracking-[0.2em] text-[10px] uppercase shadow-[inset_0_0_20px_rgba(16,185,129,0.05)]">
+                    <div className="pt-2 mt-4 bg-gradient-to-r from-[#00FF66]/10 to-transparent border-l-2 border-[#00FF66] text-[#00FF66] px-3 py-2 tracking-[0.2em] text-[10px] uppercase shadow-[inset_0_0_20px_rgba(0,255,102,0.05)]">
                       NODE FULLY PROTECTED
                     </div>
                   </div>
@@ -313,27 +311,27 @@ export default function ControlNodePage() {
 
                 <PanelCard title="PROOF & PAPER TRAIL">
                   <div className="space-y-4 text-[11px] font-mono">
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Last Run ID</span>
-                      <span className="text-cyan-500/30 italic">None yet</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Last Run ID</span>
+                      <span className="text-[#00E5FF]/30 italic">None yet</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Last Ext. Action</span>
-                      <span className="text-cyan-500/30 italic">None yet</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Last Ext. Action</span>
+                      <span className="text-[#00E5FF]/30 italic">None yet</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Audit Trace</span>
-                      <span className="text-emerald-400 font-bold tracking-wider">ACTIVE</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Audit Trace</span>
+                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">ACTIVE</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Replay State</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Replay State</span>
                       <span className="text-white/90 tracking-wider">ENABLED</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-cyan-900/20 pb-3">
-                      <span className="text-cyan-100/40 uppercase tracking-widest">Evidence Sync</span>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-white/40 uppercase tracking-widest">Evidence Sync</span>
                       <span className="text-white/90 tracking-wider">100% COMPLETE</span>
                     </div>
-                    <button className="w-full mt-4 bg-cyan-950/30 border border-cyan-900/40 text-cyan-500/50 hover:bg-cyan-900/40 hover:text-cyan-400 hover:border-cyan-500/30 transition-all duration-300 rounded px-3 py-2 tracking-[0.1em] text-[10px] uppercase shadow-[0_0_15px_rgba(34,211,238,0.05)] text-center cursor-not-allowed">
+                    <button className="w-full mt-4 bg-[#00E5FF]/5 border border-[#00E5FF]/20 text-[#00E5FF]/50 hover:bg-[#00E5FF]/10 hover:text-[#00E5FF] hover:border-[#00E5FF]/40 transition-all duration-300 rounded px-3 py-2 tracking-[0.1em] text-[10px] uppercase text-center cursor-not-allowed">
                       DOWNLOAD LATEST EVIDENCE
                     </button>
                   </div>
@@ -347,31 +345,31 @@ export default function ControlNodePage() {
                 <div className="space-y-4">
                   
                   {!isWorkspaceReady && !workspace.isLoading && (
-                    <div className="p-3 border border-rose-900/40 bg-gradient-to-b from-rose-950/30 to-transparent rounded-lg backdrop-blur-sm">
+                    <div className="p-3 border border-[#FF003C]/30 bg-[#FF003C]/5 rounded-lg backdrop-blur-sm">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-rose-300 font-medium font-sans text-sm tracking-wide">PGL Identity Sync Failed</span>
-                        <span className="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded font-mono tracking-widest">BLOCKING</span>
+                        <span className="text-[#FF003C]/90 font-medium font-sans text-sm tracking-wide">PGL Identity Sync Failed</span>
+                        <span className="text-[9px] bg-[#FF003C]/10 text-[#FF003C] border border-[#FF003C]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">BLOCKING</span>
                       </div>
-                      <div className="text-[11px] text-rose-200/60 mb-3 font-mono leading-relaxed">Identity graph unavailable for current workspace.</div>
+                      <div className="text-[11px] text-white/50 mb-3 font-mono leading-relaxed">Identity graph unavailable for current workspace.</div>
                       <Link href="/onboarding/pgl">
-                        <button className="text-[9px] px-3 py-1.5 border border-rose-900/50 bg-rose-900/20 hover:bg-rose-800/40 text-rose-100 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(244,63,94,0.2)]">RETRY SYNC</button>
+                        <button className="text-[9px] px-3 py-1.5 border border-[#FF003C]/40 bg-[#FF003C]/10 hover:bg-[#FF003C]/20 text-white/90 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,0,60,0.15)]">RETRY SYNC</button>
                       </Link>
                     </div>
                   )}
                   
-                  <div className="p-3 border border-amber-900/40 bg-gradient-to-b from-amber-950/30 to-transparent rounded-lg backdrop-blur-sm">
+                  <div className="p-3 border border-[#FFAB00]/30 bg-[#FFAB00]/5 rounded-lg backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-amber-300 font-medium font-sans text-sm tracking-wide">Budget Nearing Cap</span>
-                      <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono tracking-widest">WARNING</span>
+                      <span className="text-[#FFAB00]/90 font-medium font-sans text-sm tracking-wide">Budget Nearing Cap</span>
+                      <span className="text-[9px] bg-[#FFAB00]/10 text-[#FFAB00] border border-[#FFAB00]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">WARNING</span>
                     </div>
-                    <div className="text-[11px] text-amber-200/60 mb-3 font-mono leading-relaxed">Workspace budget is at 85% of monthly allowance.</div>
+                    <div className="text-[11px] text-white/50 mb-3 font-mono leading-relaxed">Workspace budget is at 85% of monthly allowance.</div>
                     <Link href="/budget">
-                      <button className="text-[9px] px-3 py-1.5 border border-amber-900/50 bg-amber-900/20 hover:bg-amber-800/40 text-amber-100 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(245,158,11,0.2)]">MANAGE BUDGET</button>
+                      <button className="text-[9px] px-3 py-1.5 border border-[#FFAB00]/40 bg-[#FFAB00]/10 hover:bg-[#FFAB00]/20 text-white/90 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,171,0,0.15)]">MANAGE BUDGET</button>
                     </Link>
                   </div>
 
-                  <div className="p-4 border border-cyan-900/20 bg-cyan-950/10 rounded-lg flex items-center justify-center opacity-70">
-                    <div className="text-cyan-500/40 italic text-[11px] font-mono tracking-wide">No further attention items</div>
+                  <div className="p-4 border border-white/5 bg-[#00E5FF]/5 rounded-lg flex items-center justify-center opacity-70">
+                    <div className="text-[#00E5FF]/40 italic text-[11px] font-mono tracking-wide">No further attention items</div>
                   </div>
                 </div>
               </PanelCard>
@@ -379,7 +377,7 @@ export default function ControlNodePage() {
               {/* 6. Recent Changes */}
               <PanelCard title="RECENT CHANGES" className="flex-1">
                 <div className="space-y-1">
-                  {audit.isLoading && <div className="text-[11px] text-cyan-500/50 font-mono tracking-wider animate-pulse">Scanning events log...</div>}
+                  {audit.isLoading && <div className="text-[11px] text-[#00E5FF]/50 font-mono tracking-wider animate-pulse">Scanning events log...</div>}
                   
                   {audit.data?.events && audit.data.events.length > 0 ? (
                     audit.data.events.map((ev, i) => (
@@ -411,10 +409,10 @@ export default function ControlNodePage() {
           </div>
 
           {/* 8. Domain Launchpads */}
-          <div className="mt-6 pt-6 border-t border-cyan-900/20 relative">
-            <div className="text-[10px] tracking-[0.3em] text-cyan-100/50 font-sans mb-4 flex items-center gap-3">
+          <div className="mt-6 pt-6 border-t border-white/5 relative">
+            <div className="text-[10px] tracking-[0.3em] text-white/50 font-sans mb-4 flex items-center gap-3">
               DOMAIN LAUNCHPADS
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-cyan-900/30 to-transparent"></div>
+              <div className="h-[1px] flex-1 bg-gradient-to-r from-[#00E5FF]/20 to-transparent"></div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               <Link href="/runtime"><LaunchpadCard title="Runtime Enforcement" status="Review policy drift" count={2} urgency="normal" /></Link>
