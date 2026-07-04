@@ -872,7 +872,7 @@ export default function QuantumTerminal() {
 
              <div className="text-[9px] uppercase tracking-widest text-[#3d5269] border-b border-[#63b3ed1f] pb-2 flex justify-between items-center">
                <span>120-Agent Task Force <span className="ml-2 text-[#63b3ed] font-normal">{agentTaskForce.filter(a => a.status === 'executing').length} Active</span></span>
-               <button onClick={() => { if(typeof window !== 'undefined') window.location.href = '/swarm-map'; }} className="text-[9px] text-[#bc8cff] hover:text-[#fff] bg-[#bc8cff1a] hover:bg-[#bc8cff33] px-2 py-0.5 rounded transition-colors uppercase cursor-pointer border border-[#bc8cff4d]">Open Deep Map ↗</button>
+               <button onClick={() => { if(typeof window !== 'undefined') window.location.href = targetAgent ? `/swarm-map?agent=${targetAgent}` : '/swarm-map'; }} className="text-[9px] text-[#bc8cff] hover:text-[#fff] bg-[#bc8cff1a] hover:bg-[#bc8cff33] px-2 py-0.5 rounded transition-colors uppercase cursor-pointer border border-[#bc8cff4d]">Open Full Swarm Map ↗</button>
              </div>
              <div className="grid grid-cols-10 gap-1 bg-[#111820] p-4 border border-[#63b3ed1f] rounded-xl">
                {agentTaskForce.map(a => (

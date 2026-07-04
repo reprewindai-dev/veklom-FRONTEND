@@ -55,7 +55,12 @@ interface SwarmMapProps {
 }
 
 export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('agent') || null;
+    }
+    return null;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
