@@ -445,6 +445,7 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                   key={agent.id}
                   className="cursor-pointer group"
                   onClick={() => setSelectedAgentId(agent.id)}
+                  onMouseEnter={() => setSelectedAgentId(agent.id)}
                 >
                   {/* Backdrop glowing concentric wave for Selected and Active units */}
                   {(isSelected || agent.status === 'Active') && (
