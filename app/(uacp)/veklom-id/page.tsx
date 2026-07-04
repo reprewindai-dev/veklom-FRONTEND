@@ -2,8 +2,16 @@
 
 export const dynamic = "force-dynamic";
 
-import GenomeLedgerOnboarding from "@/components/terminal/components/GenomeLedgerOnboarding";
+import React from "react";
 
 export default function VeklomIdPage() {
-  return <GenomeLedgerOnboarding />;
+  return (
+    <div className="w-full h-full bg-[#030303] overflow-hidden">
+      <iframe 
+        src="https://id.veklom.com" 
+        className="w-full h-full border-0" 
+        title="Veklom ID Layer 1" 
+      />
+    </div>
+  );
 }
