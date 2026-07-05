@@ -20,7 +20,14 @@ const StakingProtocol = dynamicImport(
   () => import("@/components/vnp/StakingProtocol"),
   { ssr: false, loading: () => <div className="h-[400px] bg-white/5 rounded-xl animate-pulse" /> }
 );
-
+const HostileAgentDemo = dynamicImport(
+  () => import("@/app/dev/components/HostileAgentDemo"),
+  { ssr: false, loading: () => <div className="h-[600px] bg-white/5 rounded-xl animate-pulse" /> }
+);
+const GovernedExportDemo = dynamicImport(
+  () => import("@/app/dev/components/GovernedExportDemo"),
+  { ssr: false, loading: () => <div className="h-[600px] bg-white/5 rounded-xl animate-pulse" /> }
+);
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -146,8 +153,12 @@ export default function Home() {
           </motion.div>
 
           {/* Swarm Terminal CTA — powered by Veklom-RealTerminal */}
-          <motion.div variants={fadeUpVariants} id="live-demo" className="relative scroll-mt-24">
+          <motion.div variants={fadeUpVariants} id="live-demo" className="relative scroll-mt-24 w-full">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-3xl opacity-50 rounded-3xl -z-10" />
+            <div className="grid md:grid-cols-2 gap-8">
+                <HostileAgentDemo />
+                <GovernedExportDemo />
+            </div>
           </motion.div>
         </motion.div>
       </section>

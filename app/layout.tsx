@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
-import { AmbientIntervention } from "@/components/ambient/AmbientIntervention";
+import AmbientIntervention from "@/components/ambient/AmbientIntervention";
 
 const inter = Inter({ subsets: ["latin"] });
 const BASE = "/control-plane-next";

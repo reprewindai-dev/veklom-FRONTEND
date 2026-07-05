@@ -15,6 +15,8 @@ export interface AgentNode {
   currentTask?: string;
   lastAction?: string;
   provider?: string;
+  pgl_hash?: string;
+  pgl_status?: 'verified' | 'unverified' | 'revoked';
   warnings?: string[];
   toolScopes: string[];
   metrics: {

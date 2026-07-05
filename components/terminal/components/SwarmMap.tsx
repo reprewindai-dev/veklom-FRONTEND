@@ -52,9 +52,10 @@ function highlightJson(json: string): React.ReactNode[] {
 interface SwarmMapProps {
   agents: AgentNode[];
   onAgentUpdate?: (id: string, updatedFields: Partial<AgentNode>) => void;
+  isDemoMode?: boolean;
 }
 
-export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
+export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false }: SwarmMapProps) {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('agent') || null;
@@ -269,12 +270,13 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
     return edges;
   }, [agents]);
 
-  // Manual Diagnostics Action: Reboot / Flush agent memory
   const [isRefreshing, setIsRefreshing] = useState(false);
   const handleAgentDiagnostics = async (id: string) => {
     setIsRefreshing(true);
     try {
-      await api.post(`/api/v1/agents/${id}/pause`);
+      if (!isDemoMode) {
+        await api.post(`/api/v1/agents/${id}/pause`);
+      }
       if (onAgentUpdate) {
         onAgentUpdate(id, {
           status: 'Idle',
@@ -296,7 +298,9 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
 
   const handleIsolateAgent = async (id: string) => {
     try {
-      await api.post(`/api/v1/agents/${id}/isolate`);
+      if (!isDemoMode) {
+        await api.post(`/api/v1/agents/${id}/isolate`);
+      }
       if (onAgentUpdate) {
         onAgentUpdate(id, { status: 'Blocked' });
       }
@@ -311,6 +315,11 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
     setTraceError(null);
     setTraceResult(null);
     try {
+      if (isDemoMode) {
+        setTraceResult({ count: 1 });
+        setIsDiagnosticsOpen(true);
+        return;
+      }
       const trace: any = await api.get(`/api/v1/agents/${id}/trace`);
       setTraceResult({ count: trace.count || 0 });
       setIsDiagnosticsOpen(true);
@@ -770,6 +779,23 @@ export default function SwarmMap({ agents, onAgentUpdate }: SwarmMapProps) {
                       <div>
                         <span className="text-[9px] text-white/30 block uppercase">Route / Provider</span>
                         <span className="text-electric-cyan text-[11px] font-mono font-bold">{selectedAgent.provider}</span>
+                      </div>
+                    )}
+                    {selectedAgent.pgl_hash && (
+                      <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-2">
+                        <div>
+                          <span className="text-[9px] text-white/30 block uppercase">PGL Identity Hash</span>
+                          <span className="text-white/80 text-[11px] font-mono" title={selectedAgent.pgl_hash}>
+                            {selectedAgent.pgl_hash.substring(0, 24)}...
+                          </span>
+                        </div>
+                        <div className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                          selectedAgent.pgl_status === 'verified' ? 'bg-[#3EE7A2]/10 text-[#3EE7A2] border border-[#3EE7A2]/20' :
+                          selectedAgent.pgl_status === 'revoked' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                          'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                        }`}>
+                          {selectedAgent.pgl_status || 'unverified'}
+                        </div>
                       </div>
                     )}
                     {selectedAgent.warnings && selectedAgent.warnings.length > 0 && (
