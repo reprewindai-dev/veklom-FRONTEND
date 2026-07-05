@@ -68,12 +68,12 @@ export function GovernedExportDemo() {
       const authData = await authRes.json();
       const pglToken = authData.access_token;
 
-      // Update agent state to Processing
+      // Update agent state to Active
       setDemoAgents(prev => prev.map(a => 
         a.id === agentId ? { 
           ...a, 
-          status: "Processing", 
-          currentTask: "Exporting Financial Report (Governed)",
+          status: "Active", 
+          currentTask: "Running verification checks...",
           telemetryLogs: [...a.telemetryLogs, "Action Intent: Export Financial Report"]
         } : a
       ));
