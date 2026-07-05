@@ -131,9 +131,13 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       } else if (res.status === 403) {
         // Governance lock - redirect to Trust / Security center or login
         if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {
-          window.location.href = "/login";
+          if (!window.location.pathname.startsWith("/login")) {
+            window.location.href = "/login";
+          }
         } else {
-          window.location.href = "/governance";
+          if (!window.location.pathname.startsWith("/governance")) {
+            window.location.href = "/governance";
+          }
         }
       }
     }

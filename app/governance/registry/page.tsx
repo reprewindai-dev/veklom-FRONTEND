@@ -17,9 +17,11 @@ import {
   Sparkles,
   Flame,
   Terminal,
-  PlayCircle
+  PlayCircle,
+  ArrowRight
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface PGLStatus {
   has_pgl_profile: boolean;
@@ -57,6 +59,7 @@ interface SnapshotResponse {
 }
 
 export default function SovereignOperatorRegistry() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<PGLStatus | null>(null);
   const [snapshot, setSnapshot] = useState<SnapshotResponse | null>(null);
@@ -212,6 +215,13 @@ export default function SovereignOperatorRegistry() {
           <span className="bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded text-neutral-300">
             Domain: <span className="text-white">veklomid.base.eth</span>
           </span>
+          <button 
+            onClick={() => router.push("/onboarding/pgl")}
+            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded font-bold transition-colors"
+          >
+            PGL Identity Onboarding
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </header>
 
@@ -256,6 +266,25 @@ export default function SovereignOperatorRegistry() {
           Reload Live Registry
         </button>
       </div>
+
+      {status?.requires_onboarding && (
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-5 mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-orange-400" />
+            <div>
+              <h3 className="text-sm font-bold text-orange-400">PGL Onboarding Required</h3>
+              <p className="text-xs text-neutral-400">You must register your workspace and setup your PGL identity to fully participate.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => router.push("/onboarding/pgl")}
+            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded text-xs font-bold transition-colors"
+          >
+            Start PGL Onboarding
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column */}
