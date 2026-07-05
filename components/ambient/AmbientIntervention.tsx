@@ -34,7 +34,26 @@ export default function AmbientIntervention() {
     setIsSubmitting(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Real-World Hardening: Dispatch resolution event to unblock the agent
+      let resolutionData = {};
+      if (eventData?.type === "MISSING_KEY") {
+        resolutionData = { api_key: apiKey };
+      } else if (eventData?.type === "QUARANTINE") {
+        resolutionData = { approved: true };
+      } else if (eventData?.type === "PAYMENT_REQUIRED") {
+        resolutionData = { vnp_injected: 15.00 }; // Hardcoded for this UI logic
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("AmbientInterventionResolved", {
+          detail: {
+            originalEvent: eventData,
+            resolution: resolutionData
+          }
+        })
+      );
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
       setIsOpen(false);
       setApiKey("");
     } catch (err) {
