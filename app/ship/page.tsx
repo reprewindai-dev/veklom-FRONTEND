@@ -129,7 +129,7 @@ const STAGES: StageDef[] = [
     shortLabel: "Runtime",
     blurb: "Open the governed runtime surface where deployed assets are exercised and observed.",
     icon: Terminal,
-    route: "/api/v1/platform/pulse/stream",
+    route: "/api/v1/platform/pulse",
     proofRoute: "/api/v1/exec",
     primaryAction: "Open runtime",
     href: "/playground",
@@ -572,7 +572,7 @@ export default function ShipAssetPage() {
   const listing = useApi<any>("/api/v1/marketplace/listings");
   const install = useApi<any>("/api/v1/marketplace/installed");
   const deploy = useApi<any>("/api/v1/deployments");
-  const runtime = useApi<any>("/api/v1/platform/pulse/stream");
+  const runtime = useApi<any>("/api/v1/platform/pulse");
   const evidence = useApi<any>("/api/v1/audit/logs");
 
   const states = useMemo<Record<StageId, StageState>>(() => ({
