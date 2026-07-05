@@ -17,6 +17,9 @@ export function GovernedExportDemo() {
     {
       id: "ag_finance_01",
       name: "Financial Auditor",
+      role: "Auditor",
+      department: "Finance",
+      mission: "Audit financial records",
       status: "Active",
       currentTask: "Awaiting instructions...",
       provider: "Llama-3-70b (Ollama Local)",
