@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
-import { AmbientKeyPrompt } from "@/components/ambient/AmbientKeyPrompt";
+import { AmbientIntervention } from "@/components/ambient/AmbientIntervention";
 
+const inter = Inter({ subsets: ["latin"] });
 const BASE = "/control-plane-next";
 const TITLE = "Veklom Control Plane";
 const DESC = "Veklom — the Sovereign AI Hub. Test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.";
@@ -87,7 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WebMCPProvider>
           <AuthProvider>
             {children}
-            <AmbientKeyPrompt />
+            <AmbientIntervention />
           </AuthProvider>
         </WebMCPProvider>
       </body>
