@@ -173,7 +173,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
               <div className="flex flex-col">
                 <span className="text-[#666] uppercase text-[9px] tracking-wider font-bold">Risk Drift Delta</span>
                 <span className="text-gray-400 mt-0.5">
-                  vs Run #{previousRun.runId.replace(/^run_/i, '').toUpperCase()} ({previousLevel})
+                  vs Run #{previousRun?.runId?.replace(/^run_/i, '').toUpperCase()} ({previousLevel})
                 </span>
               </div>
               
