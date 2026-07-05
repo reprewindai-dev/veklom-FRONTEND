@@ -1,0 +1,51 @@
+name: Frontend CI — Deploy to Coolify
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-prod:
+    name: Deploy to Production (main branch only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/veklom-deploy
+          chmod 600 ~/.ssh/veklom-deploy
+          ssh-keyscan -H 5.78.135.11 >> ~/.ssh/known_hosts
+
+      - name: Pull, Build, and Swap on Server
+        run: |
+          ssh -i ~/.ssh/veklom-deploy root@5.78.135.11 "
+            set -e
+            APP=/data/coolify/applications/tvxcsezs2ypd8tjuj6ic9gih
+            cd \$APP
+            git pull origin main
+            docker build -t veklom-frontend:latest .
+            docker stop tvxcsezs2ypd8tjuj6ic9gih-230135676493 || true
+            docker rm tvxcsezs2ypd8tjuj6ic9gih-230135676493 || true
+            docker run -d \
+              --name tvxcsezs2ypd8tjuj6ic9gih-230135676493 \
+              --network coolify \
+              --restart unless-stopped \
+              -p 3002:3000 \
+              veklom-frontend:latest
+            echo 'Deployment complete: ${{ github.sha }}'
+          "
+
+      - name: Verify Production Health
+        run: |
+          sleep 10
+          HTTP=$(curl -sk https://control.veklom.com -o /dev/null -w '%{http_code}')
+          if [ "$HTTP" != "200" ]; then
+            echo "HEALTH CHECK FAILED: control.veklom.com returned $HTTP"
+            exit 1
+          fi
+          echo "control.veklom.com healthy — deployment successful"
