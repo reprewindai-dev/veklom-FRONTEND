@@ -1,0 +1,86 @@
+name: veklom-FRONTEND CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. TypeScript + Build Check ─────────────────────────────────────────────
+  build:
+    name: Next.js Build Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Type check + build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://api.veklom.com
+        run: npm run build
+
+      - name: Report build size
+        if: success()
+        run: echo "Build passed for ${{ github.sha }}"
+
+  # ── 2. Deploy to Production (main only) ─────────────────────────────────────
+  deploy:
+    name: Deploy to control.veklom.com
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 20
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/veklom-deploy
+          chmod 600 ~/.ssh/veklom-deploy
+          ssh-keyscan -H 5.78.135.11 >> ~/.ssh/known_hosts
+
+      - name: Pull, Build, and Swap on Server
+        run: |
+          ssh -i ~/.ssh/veklom-deploy root@5.78.135.11 "
+            set -e
+            APP=/data/coolify/applications/tvxcsezs2ypd8tjuj6ic9gih
+            cd \$APP
+            git pull origin main
+            docker build \
+              --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com \
+              -t tvxcsezs2ypd8tjuj6ic9gih:latest .
+            docker stop tvxcsezs2ypd8tjuj6ic9gih-230135676493 || true
+            docker rm   tvxcsezs2ypd8tjuj6ic9gih-230135676493 || true
+            docker run -d \
+              --name tvxcsezs2ypd8tjuj6ic9gih-230135676493 \
+              --network coolify \
+              --env-file \$APP/.env \
+              --restart unless-stopped \
+              -p 3002:3002 \
+              tvxcsezs2ypd8tjuj6ic9gih:latest
+            echo 'Frontend deployment complete: ${{ github.sha }}'
+          "
+
+      - name: Verify Production Health
+        run: |
+          sleep 15
+          HTTP=$(curl -sk https://control.veklom.com -o /dev/null -w '%{http_code}')
+          if [ "$HTTP" != "200" ]; then
+            echo "HEALTH CHECK FAILED: control.veklom.com returned $HTTP"
+            exit 1
+          fi
+          echo "control.veklom.com healthy — deployment successful"
