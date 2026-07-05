@@ -63,15 +63,8 @@ jobs:
             docker build \
               --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com \
               -t tvxcsezs2ypd8tjuj6ic9gih:latest .
-            docker stop tvxcsezs2ypd8tjuj6ic9gih-230135676493 || true
-            docker rm   tvxcsezs2ypd8tjuj6ic9gih-230135676493 || true
-            docker run -d \
-              --name tvxcsezs2ypd8tjuj6ic9gih-230135676493 \
-              --network coolify \
-              --env-file \$APP/.env \
-              --restart unless-stopped \
-              -p 3002:3002 \
-              tvxcsezs2ypd8tjuj6ic9gih:latest
+            sed -i \"s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/\" docker-compose.yaml
+            docker compose -f docker-compose.yaml up -d
             echo 'Frontend deployment complete: ${{ github.sha }}'
           "
 
