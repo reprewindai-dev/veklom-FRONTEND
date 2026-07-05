@@ -1,6 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 
 import React, { useState } from 'react';
 import CouncilMatrix from "@/components/terminal/components/CouncilMatrix";

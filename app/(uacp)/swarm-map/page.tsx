@@ -1,6 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 
 import React from 'react';
 import SwarmMap from "@/components/terminal/components/SwarmMap";

@@ -1,6 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 
 // Agent Duel page within the UACP v5 cinematic shell.
 // Dynamically imports the full agent-dual app (SSR disabled — browser-only).
