@@ -234,9 +234,6 @@ export function GovernedExportDemo() {
       <div className="relative h-[500px] border border-white/5 rounded-lg overflow-hidden bg-black/60">
         <SwarmMap 
           agents={demoAgents} 
-          width={800} 
-          height={500} 
-          onAgentClick={() => {}} 
           isDemoMode={true} 
         />
         
