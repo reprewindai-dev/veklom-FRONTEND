@@ -123,12 +123,26 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       res.statusText ||
       `HTTP ${res.status}`;
       
-    // Enterprise Hardening: Automatic PGL/Budget enforcement routing
     if (typeof window !== "undefined") {
       if (res.status === 402) {
         const currentPath = window.location.pathname + window.location.search;
         window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
-      } else if (res.status === 403) {
+      } else if (res.status === 403 || res.status === 401) {
+        // Ambient Interlink cAPI Node 1: Proactive Interception
+        // Instead of hard-failing, we dispatch an event to the Ambient UI.
+        const code = (json as any)?.code || "";
+        if (code.includes("LAW0") || msg.toLowerCase().includes("key") || msg.toLowerCase().includes("token")) {
+          // If the error specifically mentions an LLM or API key (or general execution identity missing), 
+          // intercept it with the glassmorphic prompt.
+          const event = new CustomEvent("AmbientIntervention", {
+            detail: { type: "MISSING_KEY", message: msg, code }
+          });
+          window.dispatchEvent(event);
+          
+          // We throw a silent error here so the UI doesn't crash, but we do NOT redirect.
+          throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json);
+        }
+        
         // Governance lock - redirect to Trust / Security center or login
         if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {
           if (!window.location.pathname.startsWith("/login")) {

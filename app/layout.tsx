@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
+import { AmbientKeyPrompt } from "@/components/ambient/AmbientKeyPrompt";
 
 const BASE = "/control-plane-next";
 const TITLE = "Veklom Control Plane";
@@ -84,7 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen bg-bg-900 text-ink-50 antialiased">
         <WebMCPProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <AmbientKeyPrompt />
+          </AuthProvider>
         </WebMCPProvider>
       </body>
     </html>
