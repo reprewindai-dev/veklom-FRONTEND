@@ -29,7 +29,9 @@ import {
   Wallet,
   Map,
   ExternalLink,
-  Crown
+  Crown,
+  Search,
+  Gamepad2
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -72,6 +74,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
       title: 'BUILD',
       items: [
         { id: 'spine', name: 'Pipelines & GPC', icon: GitBranch, href: '/pipelines', isLive: true },
+        { id: 'repo-risk', name: 'Repo Risk Gate', icon: ShieldAlert, href: '/repogate', isLive: true },
       ]
     },
     {
@@ -85,6 +88,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
       title: 'VEKLOM NEXUS',
       items: [
         { id: 'nexus', name: 'Nexus Protocol', icon: Network, href: '/nexus', isLive: true },
+        { id: 'veklom-discovery', name: 'Veklom Discovery', icon: Search, href: '/benchmarks/discovery', isLive: true },
         { id: 'runs', name: 'Incidents & Slashing', icon: AlertTriangle, href: '/incidents' },
       ]
     },
@@ -94,6 +98,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
         { id: 'staking', name: 'Staking Protocol', icon: Coins, href: '/staking' },
         { id: 'duel', name: 'Agent Duel', icon: Sword, href: '/agent-duel' },
         { id: 'id', name: 'Veklom ID', icon: Fingerprint, href: '/veklom-id' },
+        { id: 'bingo', name: 'Bingo 2060', icon: Gamepad2, href: '/bingo' },
       ]
     },
     {
