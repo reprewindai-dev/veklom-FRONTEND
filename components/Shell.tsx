@@ -232,20 +232,25 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Sovereign-mode posture card */}
+        {/* Compliance Profile Posture Card */}
         <div className="mt-4 rounded-xl border border-border bg-white/[0.02] p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-[0.16em] text-ink-400 font-semibold">Sovereign Mode</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[9px] uppercase tracking-[0.16em] text-ink-400 font-semibold">Compliance Profile</span>
             <span className="flex items-center gap-1 text-[9px] font-bold tracking-wider text-accent-green">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-green" />ON-PREM
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />ENFORCED
             </span>
           </div>
-          <p className="mt-2 text-[10.5px] leading-snug text-ink-500">
-            Every request evaluated by policy on Hetzner. AWS burst gated by tenant rule.
+          <div className="flex items-center justify-between bg-black/20 rounded py-1 px-2 border border-border/50">
+             <span className="text-[10px] font-mono text-brand-400 tracking-wider font-bold">
+               {process.env.NEXT_PUBLIC_COMPLIANCE_PROFILE || "GLOBAL_DEFAULT"}
+             </span>
+          </div>
+          <p className="mt-2 text-[10px] leading-snug text-ink-500">
+            Strict evidence hashing required. Data residency rules applied based on active profile.
           </p>
-          <div className="mt-2.5 flex items-center gap-1.5">
-            <Pill tone="amber">Hetzner</Pill>
-            <Pill tone="cyan">AWS</Pill>
+          <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
+            <Pill tone="amber">Evidence Logged</Pill>
+            <Pill tone="cyan">Residency Checked</Pill>
           </div>
         </div>
       </aside>
