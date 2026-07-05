@@ -276,22 +276,64 @@ export default function Home() {
                   <span className="text-[#FFB800] font-mono text-xs font-extrabold bg-[#FFB800]/10 border border-[#FFB800]/20 px-2.5 py-1 rounded-full">STEP 03</span>
                   <span className="text-gray-500 text-xs font-mono">EVIDENCE ANCHOR</span>
                 </div>
-                <h3 className="text-xl font-bold mb-3">Action runs. Proof is sealed.</h3>
+                <h3 className="text-xl font-bold mb-3">Tamper-evident audit</h3>
                 <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                  Approved tasks run inside a secure container. Output files and telemetry metrics are bound, cryptographically sealed with SHA-256, and stored.
+                  Events are written append-only and hash-chained. The chain head is periodically anchored externally to guarantee it has not been silently rewritten.
                 </p>
               </div>
               <div className="bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[11px] text-gray-300 leading-relaxed">
                 <span className="text-green-400">Execution Complete</span><br />
-                Evidence Hash: <span className="text-[#FFB800]">a3f8b2...c91d</span><br />
-                Settlement Block: <span className="text-[#FFB800]">#4,821</span><br />
-                Status: <span className="text-green-400">SEALED</span>
+                Previous Hash: <span className="text-[#FFB800]">a3f8b2...c91d</span><br />
+                Chain Head: <span className="text-green-400">SEALED (Anchored)</span>
               </div>
             </div>
           </div>
         </div>
       </section>
+      {/* Provable Governance Section */}
+      <section className="py-24 border-t border-white/5 bg-[#0B0B0D] relative scroll-mt-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="inline-flex items-center gap-1 text-[#FFB800] text-xs font-bold uppercase tracking-widest bg-[#FFB800]/5 border border-[#FFB800]/10 px-3 py-1 rounded-full mb-4">
+              <ShieldCheck className="w-3 h-3" /> Provable Governance
+            </span>
+            <h2 className="text-4xl font-extrabold tracking-tight mb-4">A runtime built to show its work.</h2>
+            <p className="text-gray-400 text-lg leading-relaxed">
+              We do not claim that logs are "perfect" or that governance is "magic." We built a runtime with verifiable distributed properties you can check yourself.
+            </p>
+          </div>
 
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="card obsidian-glass p-8 hover:border-[#FFB800]/30 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-3">Distributed Single-Use Approvals</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                High-risk actions are gated by nonce-bound tokens. Nonces are burned atomically via Redis <code className="text-[#FFB800] bg-black px-1 py-0.5 rounded">SET NX EX</code>, mathematically guaranteeing they cannot be replayed across the mesh.
+              </p>
+            </div>
+            
+            <div className="card obsidian-glass p-8 hover:border-[#FFB800]/30 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-3">Tamper-Evident Audit Chains</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                Every event commits to the previous hash inside an atomic <code className="text-[#FFB800] bg-black px-1 py-0.5 rounded">WATCH/MULTI/EXEC</code> optimistic lock. The chain head is periodically externally anchored for independent verification.
+              </p>
+            </div>
+            
+            <div className="card obsidian-glass p-8 hover:border-[#FFB800]/30 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-3">Configurable & Legal-Aware</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                Profiles separate legal obstacles from internal policy. Legal denials (e.g. data residency) explicitly return HTTP 451 with <code className="text-[#FFB800] bg-black px-1 py-0.5 rounded">rel="blocked-by"</code> metadata.
+              </p>
+            </div>
+
+            <div className="card obsidian-glass p-8 hover:border-[#FFB800]/30 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-3">Fail-Closed by Default</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                If an environment profile is missing or malformed, the runtime assumes "no". It blocks external context, blocks sensitive actions, and retains nothing.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* VNP Section */}
       <section className="py-24 border-t border-white/5 bg-[#0B0B0D] relative scroll-mt-16" id="vnp">
         <div className="max-w-7xl mx-auto px-6">
