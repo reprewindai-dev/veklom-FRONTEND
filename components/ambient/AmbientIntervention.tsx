@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import { AlertOctagon, X, ShieldAlert, KeyRound, Sparkles, CheckCircle2, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
