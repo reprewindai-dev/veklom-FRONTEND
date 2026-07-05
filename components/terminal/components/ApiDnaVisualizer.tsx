@@ -222,6 +222,7 @@ export const ApiDnaVisualizer: React.FC<ApiDnaVisualizerProps> = ({
                 className="cursor-pointer"
                 onMouseEnter={() => setHoveredIndex(rung.idx)}
                 onMouseLeave={() => setHoveredIndex(null)}
+                onClick={() => setHoveredIndex(hoveredIndex === rung.idx ? null : rung.idx)}
               >
                 {/* Node 1 */}
                 <circle
@@ -296,7 +297,7 @@ export const ApiDnaVisualizer: React.FC<ApiDnaVisualizerProps> = ({
 
       {/* Bottom explanation */}
       <div className="w-full text-center text-[9px] font-mono text-white/30 uppercase leading-normal border-t border-white/5 pt-2.5">
-        Hover helix nodes to pinpoint constraint thresholds.<br />
+        Hover or tap helix nodes to pinpoint constraint thresholds.<br />
         Shape is mapped to the custom 10D API vector.
       </div>
     </div>
