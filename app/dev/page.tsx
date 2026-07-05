@@ -4,7 +4,7 @@ import DevSidebar from "./components/DevSidebar";
 import WhitepaperContent from "./components/WhitepaperContent";
 import ArchitectureDiagram from "./components/ArchitectureDiagram";
 import HostileAgentDemo from "./components/HostileAgentDemo";
-import { GovernedExportDemo } from "./components/GovernedExportDemo";
+import GovernedExportDemo from "./components/GovernedExportDemo";
 
 export default function DevPortal() {
   return (
