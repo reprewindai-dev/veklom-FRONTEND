@@ -5,9 +5,11 @@ import dynamicImport from "next/dynamic";
 import { 
   ArrowRight, Shield, Globe, Zap, Server, Activity, Lock, 
   Coins, FileSpreadsheet, Power, ShieldAlert, Fingerprint, 
-  Check, Mail, ArrowUpRight, Award, AlertTriangle, ShieldCheck
+  Check, Mail, ArrowUpRight, Award, AlertTriangle, ShieldCheck,
+  Calendar, ChevronRight
 } from "lucide-react";
 import { motion } from "framer-motion";
+import blogsData from "../data/blog-index.json";
 
 // Swarm Terminal is now the standalone Veklom-RealTerminal service at terminal.veklom.com
 const TERMINAL_URL = 'https://terminal.veklom.com';
@@ -40,6 +42,12 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const now = new Date();
+  const activeBlogs = blogsData
+    .filter(blog => new Date(blog.publishDate) <= now)
+    .sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime())
+    .slice(0, 3); // Top 3
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden selection:bg-[#FFB800]/30 relative z-10">
 
@@ -56,6 +64,7 @@ export default function Home() {
             <a href="#problem" className="hover:text-white transition-colors">The Problem</a>
             <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
             <a href="#vnp" className="hover:text-white transition-colors">VNP Spec</a>
+            <Link href="/blog" className="hover:text-white transition-colors font-medium text-brand-300">Blog</Link>
             <a href="#deployment" className="hover:text-white transition-colors">Deployment</a>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
           </div>
@@ -602,6 +611,51 @@ export default function Home() {
               </div>
               <a href="mailto:sales@veklom.com" className="btn btn-ghost w-full mt-8">Talk to Sales</a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sovereign Intelligence Section */}
+      <section className="py-24 border-t border-white/5 relative bg-[#060608]">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,180,216,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,180,216,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20 pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Sovereign Intelligence</h2>
+              <p className="text-ink-300 max-w-2xl text-lg">Engineering deep dives into zero-trust architectures, Option-C latency mechanics, and agentic settlement.</p>
+            </div>
+            <Link href="/blog" className="shrink-0 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2">
+              View All Articles <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {activeBlogs.map(blog => {
+              const formattedDate = new Date(blog.publishDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+              });
+              
+              return (
+                <Link key={blog.slug} href={`/blog/${blog.slug}`} className="block group">
+                  <div className="h-full bg-[#0A0A0C] border border-white/10 group-hover:border-brand-500/50 p-6 rounded-xl transition-all duration-300 flex flex-col hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,180,216,0.15)]">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-xs font-mono text-brand-400">
+                        <Calendar size={12} />
+                        {formattedDate}
+                      </div>
+                      <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-white/40 group-hover:bg-brand-500/10 group-hover:text-brand-400 transition-colors">
+                        <ArrowUpRight size={14} />
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-brand-300 transition-colors line-clamp-2">{blog.title}</h3>
+                    <p className="text-ink-400 text-sm leading-relaxed flex-grow line-clamp-3 mb-6">{blog.excerpt}</p>
+                    <div className="mt-auto text-sm font-medium text-brand-500 flex items-center">
+                      Read Full Deep Dive <ChevronRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
