@@ -37,11 +37,9 @@ interface SwarmTransaction {
   amount: number;
   status: "SETTLED" | "ESCROWED" | "SLASHED" | "PENDING";
   signature: string;
-  proposer: string;
 }
-
 export default function NetworkTopologyPanel() {
-  const [selectedNodeId, setSelectedNodeId] = useState<string>("peer-1");
+  const [selectedNodeId, setSelectedNodeId] = useState<string>("");
   const { data: topologyData, mutate: refreshTopology } = useSWR<any>("/api/v1/beacon/topology", fetcher, { refreshInterval: 5000 });
   
   // Real State from Backend
@@ -55,183 +53,52 @@ export default function NetworkTopologyPanel() {
   const [isActiveStorm, setIsActiveStorm] = useState(false);
   const [totalSettledUsd, setTotalSettledUsd] = useState(0);
   const [safetyGuardActive, setSafetyGuardActive] = useState(true);
-  
-  // Explicit Simulation Mode Toggle
-  const [isSimulationMode, setIsSimulationMode] = useState(false);
 
-  // Sync real data when not in simulation mode
+  // Sync strictly real data from backend
   useEffect(() => {
-    if (!isSimulationMode && realTopology) {
-      if (nodes.length === 0 || realTopology.nodes) setNodes(realTopology.nodes || []);
+    if (realTopology) {
+      if (realTopology.nodes) {
+        setNodes(realTopology.nodes);
+        if (realTopology.nodes.length > 0 && !selectedNodeId) {
+          setSelectedNodeId(realTopology.nodes[0].id);
+        }
+      }
       if (realTopology.eventsLog) setEventsLog(realTopology.eventsLog);
       if (realTopology.ledgerFeed) setLedgerFeed(realTopology.ledgerFeed);
       if (realTopology.totalSettledUsd !== undefined) setTotalSettledUsd(realTopology.totalSettledUsd);
       if (realTopology.isActiveStorm !== undefined) setIsActiveStorm(realTopology.isActiveStorm);
       if (realTopology.safetyGuardActive !== undefined) setSafetyGuardActive(realTopology.safetyGuardActive);
     }
-  }, [realTopology, isSimulationMode]);
+  }, [realTopology]);
 
-  const DEFAULT_NODE: PeerNode = {
-    id: "peer-1",
-    name: "validator-us-east",
-    region: "us-east-1",
-    status: "STANDBY",
-    x: 100,
-    y: 100,
-    stakeUsd: 100000,
-    cpuMs: 0.1,
-    poolUtilization: 10,
-    version: "v0.1.0",
-    tenantLock: "default"
-  };
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) || nodes[0] || DEFAULT_NODE;
-
-  // ── SIMULATION ENGINE ──────────────────────────────────────────────────────────
-  // Only runs when isSimulationMode === true
-  useEffect(() => {
-    if (!isSimulationMode) {
-      // Clear fake packets if turning off simulation
-      setPackets([]);
-      return;
-    }
-
-    // Packet Spawner & Settled Incrementer
-    const packetTimer = setInterval(() => {
-      setPackets((prevPackets) => {
-        return prevPackets
-          .map((p) => ({ ...p, progress: p.progress + 0.04 }))
-          .filter((p) => p.progress < 1.0);
-      });
-
-      setTotalSettledUsd(prev => prev + (Math.random() > 0.6 ? parseFloat((Math.random() * 0.05).toFixed(6)) : 0));
-
-      if (Math.random() > (isActiveStorm ? 0.08 : 0.65) && nodes.length > 0) {
-        const fromNode = nodes[Math.floor(Math.random() * nodes.length)];
-        const toNode = nodes[Math.floor(Math.random() * nodes.length)];
-        if (fromNode.id !== toNode.id) {
-          const tenants = ["veklom.io", "tempo_global", "coinbase_swarms", "mcp_gateway", "stripe.com"];
-          const newP: PaymentPacket = {
-            id: Math.random().toString(36).substr(2, 9),
-            fromX: fromNode.x,
-            fromY: fromNode.y,
-            toX: toNode.x,
-            toY: toNode.y,
-            progress: 0,
-            amountUsd: parseFloat((0.0001 + Math.random() * 0.04).toFixed(6)),
-            tenant: tenants[Math.floor(Math.random() * tenants.length)]
-          };
-
-          setPackets((prev) => [...prev, newP]);
-
-          if (Math.random() > 0.45) {
-            setLedgerFeed((prev) => {
-              const txId = "tx_0x" + Math.random().toString(16).substr(2, 5);
-              const curTime = new Date().toLocaleTimeString([], { hour12: false });
-              const isChallenged = fromNode.status === "CHALLENGED" || toNode.status === "CHALLENGED";
-              const newTx: SwarmTransaction = {
-                id: txId,
-                timestamp: curTime,
-                tenant: newP.tenant,
-                amount: newP.amountUsd,
-                status: isChallenged ? "ESCROWED" : "SETTLED",
-                signature: `ed25519:${Math.random().toString(36).substr(2, 4)}`,
-                proposer: fromNode.name
-              };
-              return [newTx, ...prev.slice(0, 10)];
-            });
-          }
-        }
-      }
-    }, 110);
-
-    // Node Metric Fluctuator
-    const metricTimer = setInterval(() => {
-      setNodes((prevNodes) => {
-        if (!prevNodes.length) return prevNodes;
-        return prevNodes.map((node) => {
-          if (node.status === "STANDBY") return node;
-          
-          let nextCpu = parseFloat((node.cpuMs * (0.8 + Math.random() * 0.4)).toFixed(3));
-          if (nextCpu < 0.03) nextCpu = 0.03;
-          if (nextCpu > 0.75) nextCpu = 0.75;
-
-          let nextPool = Math.round(node.poolUtilization + (Math.random() * 6 - 3));
-          if (nextPool < 5) nextPool = 5;
-          if (nextPool > 85) nextPool = 85;
-
-          return { ...node, cpuMs: nextCpu, poolUtilization: nextPool };
-        });
-      });
-    }, 4000);
-
-    return () => {
-      clearInterval(packetTimer);
-      clearInterval(metricTimer);
-    };
-  }, [nodes.length, isActiveStorm, isSimulationMode]);
+  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
   // ── ACTIONS ────────────────────────────────────────────────────────────────────
   
   const triggerStorm = async () => {
-    if (isSimulationMode) {
-      setIsActiveStorm(true);
-      setEventsLog(prev => [
-        `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡ STORM INGESTION REGISTERED - 10,000 High-Frequency Microtransactions gliding across VNP validation network`,
-        ...prev.slice(0, 5)
-      ]);
-      setTimeout(() => setIsActiveStorm(false), 4500);
-    } else {
-      // Real API Call
-      try {
-        await api.post("/api/v1/admin/debug/storm", {});
-        refreshTopology();
-      } catch (err) {
-        console.error("Failed to trigger real storm:", err);
-      }
+    try {
+      await api.post("/api/v1/admin/debug/storm", {});
+      refreshTopology();
+    } catch (err) {
+      console.error("Failed to trigger real storm:", err);
     }
   };
 
   const triggerAttestationChallenge = async () => {
-    if (isSimulationMode) {
-      setNodes((prev) => prev.map((n) => n.id === "peer-3" ? { ...n, status: "CHALLENGED", stakeUsd: n.stakeUsd - 12000 } : n));
-      setEventsLog(prev => [
-        `[${new Date().toLocaleTimeString([], { hour12: false })}] 🚨 ATTESTATION FAIL OR CHEAT SUSPICION: "validator-eu-west-1" submitted anomalous metric payload.`,
-        `[${new Date().toLocaleTimeString([], { hour12: false })}] [VNP Arbiter] slashing 12,000 USD from validator deposit. Quarantine state LOCK applied.`,
-        ...prev.slice(0, 5)
-      ]);
-      setTimeout(() => {
-        setNodes((prev) => prev.map((n) => n.id === "peer-3" ? { ...n, status: "ATTESTING", version: "vnp-v0.1.3-patch" } : n));
-        setEventsLog(prev => [
-          `[${new Date().toLocaleTimeString([], { hour12: false })}] ✓ "validator-eu-west-1" hot patched to v0.1.3-patch. Attestation integrity restored.`,
-          ...prev.slice(0, 4)
-        ]);
-      }, 7000);
-    } else {
-      // Real API call (if implemented)
-      try {
-        await api.post("/api/v1/admin/debug/slash", { peer: "peer-3" });
-        refreshTopology();
-      } catch (err) {
-        console.error("Failed to trigger real slash:", err);
-      }
+    try {
+      await api.post("/api/v1/admin/debug/slash", { peer: selectedNodeId });
+      refreshTopology();
+    } catch (err) {
+      console.error("Failed to trigger real slash:", err);
     }
   };
 
   const toggleSafetyGuard = async () => {
-    if (isSimulationMode) {
-      setSafetyGuardActive(prev => !prev);
-      const state = !safetyGuardActive ? "ARMED" : "SOFT-LOG ONLY";
-      setEventsLog(prev => [
-        `[${new Date().toLocaleTimeString([], { hour12: false })}] Security guard system changed direction to [${state}]. PostgreSQL Row-Level-Security rules updated dynamically.`,
-        ...prev.slice(0, 6)
-      ]);
-    } else {
-      try {
-        await api.post("/api/v1/admin/config", { safetyGuard: !safetyGuardActive });
-        setSafetyGuardActive(!safetyGuardActive);
-      } catch(err) {
-        console.error("Failed to toggle guard", err);
-      }
+    try {
+      await api.post("/api/v1/admin/config", { safetyGuard: !safetyGuardActive });
+      refreshTopology();
+    } catch(err) {
+      console.error("Failed to toggle guard", err);
     }
   };
 
@@ -301,26 +168,17 @@ export default function NetworkTopologyPanel() {
               <span className="text-[9px] text-emerald-300 uppercase tracking-widest bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]">
                 VNP SLA Performance
               </span>
-              
-              <button 
-                onClick={() => setIsSimulationMode(!isSimulationMode)}
-                className={`flex items-center gap-1 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded border transition-colors ${
-                  isSimulationMode 
-                    ? "bg-amber-950/40 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]" 
-                    : "bg-slate-900/50 text-slate-400 border-slate-700/50 hover:bg-slate-800"
-                }`}
-              >
-                {isSimulationMode ? <StopCircle className="w-3 h-3" /> : <PlayCircle className="w-3 h-3" />}
-                {isSimulationMode ? "Sim Mode Active" : "Enable UI Sim"}
-              </button>
+              <span className="text-[9px] text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded border bg-slate-900/50 border-slate-700/50 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-emerald-400" /> STRICT MODE
+              </span>
             </div>
           </div>
 
           <div className="text-right flex flex-col items-end gap-1">
-            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC ROUTE PAYMENTS</span>
+            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC ROUTE PAYMENTS (REAL)</span>
             <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded px-3 py-1 flex items-center gap-2 backdrop-blur-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_5px_#34d399]"></span>
-              <span className="text-emerald-400 font-mono text-sm tracking-tight">{totalSettledUsd.toFixed(6)} $SETTLED</span>
+              <span className="text-emerald-400 font-mono text-sm tracking-tight">{totalSettledUsd.toFixed(2)} $SETTLED</span>
             </div>
           </div>
         </div>
@@ -482,7 +340,7 @@ export default function NetworkTopologyPanel() {
                       textAnchor="middle"
                       className="font-medium tracking-tight group-hover:fill-white transition-colors"
                     >
-                      {n.name.split("-")[1] || n.name}
+                      {n.name.includes("-") ? n.name.split("-")[1] : n.name}
                     </text>
                   </g>
                 </g>
@@ -525,66 +383,72 @@ export default function NetworkTopologyPanel() {
       <div className="lg:col-span-4 space-y-5 flex flex-col justify-between">
         
         {/* Validator HUD Inspector Details */}
-        <div className="bg-gradient-to-b from-[#080d15]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-5 space-y-5 backdrop-blur-md relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
-          
-          <div className="flex items-start gap-3 border-b border-cyan-900/30 pb-4">
-            <div className={`p-2 rounded-lg border ${selectedNode.status === "LEADER" ? "bg-emerald-950/30 border-emerald-500/30" : selectedNode.status === "CHALLENGED" ? "bg-rose-950/30 border-rose-500/30" : "bg-cyan-950/20 border-cyan-900/30"}`}>
-              <Server className={`${selectedNode.status === "LEADER" ? "text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]" : selectedNode.status === "CHALLENGED" ? "text-rose-400" : "text-cyan-400"} w-5 h-5`} />
-            </div>
-            <div className="flex-1">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">Consensus Node</span>
-              <h3 className="text-sm font-sans font-medium text-white/90">{selectedNode.name}</h3>
-            </div>
-            <span className={`text-[9px] font-mono px-2.5 py-1 rounded border tracking-widest uppercase ${
-              selectedNode.status === "LEADER"
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                : selectedNode.status === "CHALLENGED"
-                ? "bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse"
-                : selectedNode.status === "STANDBY"
-                ? "bg-slate-800/50 text-slate-400 border-slate-700"
-                : "bg-amber-500/10 text-amber-400 border-amber-500/30"
-            }`}>
-              {selectedNode.status_str || selectedNode.status}
-            </span>
-          </div>
-
-          <div className="space-y-4 font-mono text-[10px] text-cyan-100/60">
-            <div className="flex justify-between items-center">
-              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Jurisdiction</span>
-              <span className="text-white/90 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30 uppercase">{selectedNode.region}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Active Stake {isSimulationMode && "(Sim)"}</span>
-              <span className="text-emerald-400 text-[11px]">${selectedNode.stakeUsd.toLocaleString()} USD</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Latency</span>
-              <span className="text-cyan-300">{selectedNode.cpuMs.toFixed(3)} ms</span>
-            </div>
+        {selectedNode ? (
+          <div className="bg-gradient-to-b from-[#080d15]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-5 space-y-5 backdrop-blur-md relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
             
-            {/* Connection Pool Meter */}
-            <div className="space-y-2 bg-[#03070c]/50 p-3 rounded-lg border border-cyan-900/20">
-              <div className="flex justify-between items-center">
-                <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">sqlx::Pool Utilization</span>
-                <span className={`${selectedNode.poolUtilization > 80 ? "text-amber-400" : "text-cyan-400"}`}>{selectedNode.poolUtilization}%</span>
+            <div className="flex items-start gap-3 border-b border-cyan-900/30 pb-4">
+              <div className={`p-2 rounded-lg border ${selectedNode.status === "LEADER" ? "bg-emerald-950/30 border-emerald-500/30" : selectedNode.status === "CHALLENGED" ? "bg-rose-950/30 border-rose-500/30" : "bg-cyan-950/20 border-cyan-900/30"}`}>
+                <Server className={`${selectedNode.status === "LEADER" ? "text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]" : selectedNode.status === "CHALLENGED" ? "text-rose-400" : "text-cyan-400"} w-5 h-5`} />
               </div>
-              <div className="w-full bg-[#0b1219] h-1.5 rounded-full overflow-hidden border border-cyan-900/30">
-                <div 
-                  className={`h-full rounded-full transition-all duration-500 ${selectedNode.status === "CHALLENGED" ? "bg-rose-500" : selectedNode.poolUtilization > 80 ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]"}`} 
-                  style={{ width: `${selectedNode.poolUtilization}%` }}
-                />
+              <div className="flex-1">
+                <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">Consensus Node</span>
+                <h3 className="text-sm font-sans font-medium text-white/90">{selectedNode.name}</h3>
               </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-2 border-t border-cyan-900/20">
-              <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Tenant Namespace Lock</span>
-              <span className="text-indigo-300 max-w-[140px] truncate bg-indigo-950/20 px-2 py-0.5 rounded border border-indigo-500/20">
-                {selectedNode.tenantLock}
+              <span className={`text-[9px] font-mono px-2.5 py-1 rounded border tracking-widest uppercase ${
+                selectedNode.status === "LEADER"
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                  : selectedNode.status === "CHALLENGED"
+                  ? "bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse"
+                  : selectedNode.status === "STANDBY"
+                  ? "bg-slate-800/50 text-slate-400 border-slate-700"
+                  : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+              }`}>
+                {selectedNode.status_str || selectedNode.status}
               </span>
             </div>
+
+            <div className="space-y-4 font-mono text-[10px] text-cyan-100/60">
+              <div className="flex justify-between items-center">
+                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Jurisdiction</span>
+                <span className="text-white/90 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30 uppercase">{selectedNode.region}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Active Stake (Real)</span>
+                <span className="text-emerald-400 text-[11px]">${selectedNode.stakeUsd.toLocaleString()} USD</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Latency</span>
+                <span className="text-cyan-300">{selectedNode.cpuMs.toFixed(3)} ms</span>
+              </div>
+              
+              {/* Connection Pool Meter */}
+              <div className="space-y-2 bg-[#03070c]/50 p-3 rounded-lg border border-cyan-900/20">
+                <div className="flex justify-between items-center">
+                  <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">sqlx::Pool Utilization</span>
+                  <span className={`${selectedNode.poolUtilization > 80 ? "text-amber-400" : "text-cyan-400"}`}>{selectedNode.poolUtilization}%</span>
+                </div>
+                <div className="w-full bg-[#0b1219] h-1.5 rounded-full overflow-hidden border border-cyan-900/30">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${selectedNode.status === "CHALLENGED" ? "bg-rose-500" : selectedNode.poolUtilization > 80 ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]"}`} 
+                    style={{ width: `${selectedNode.poolUtilization}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t border-cyan-900/20">
+                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Tenant Namespace Lock</span>
+                <span className="text-indigo-300 max-w-[140px] truncate bg-indigo-950/20 px-2 py-0.5 rounded border border-indigo-500/20">
+                  {selectedNode.tenantLock}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-[#080d15]/50 border border-cyan-900/30 rounded-2xl p-5 flex items-center justify-center text-cyan-500/50 text-xs italic font-mono h-[280px]">
+            No live nodes connected to network.
+          </div>
+        )}
 
         {/* Live Reactor Button Deck */}
         <div className="p-5 bg-gradient-to-br from-[#080d15] to-[#04070a] border border-cyan-900/30 rounded-2xl relative space-y-5 shadow-[0_0_20px_rgba(0,0,0,0.3)]">

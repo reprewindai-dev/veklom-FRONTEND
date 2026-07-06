@@ -20,6 +20,9 @@ import {
 import { useApi } from '@/hooks/useApi';
 import { GenomeDNA } from './GenomeDNA';
 import { ApiDnaVisualizer, MiniDnaVisualizer } from './ApiDnaVisualizer';
+import ConsensusVisualization from '@/components/vnp/ConsensusVisualization';
+import PGLIdentityLayer from '@/components/vnp/PGLIdentityLayer';
+import StakingProtocol from '@/components/vnp/StakingProtocol';
 
 interface ProberNode {
   id: string;
@@ -53,7 +56,7 @@ interface ApiScoreCard {
 
 export default function NexusProtocol() {
   const [genome, setGenome] = useState<any>(null);
-  const [subTab, setSubTab] = useState<'trust' | 'topology' | 'docs'>('trust');
+  const [subTab, setSubTab] = useState<'trust' | 'topology' | 'docs' | 'consensus' | 'identity' | 'staking'>('trust');
   const [selectedApiId, setSelectedApiId] = useState<string>('stripe-payments');
   const [docTab, setDocTab] = useState<'governance' | 'methodology'>('governance');
   const [attestationProgress, setAttestationProgress] = useState(68);
@@ -93,10 +96,11 @@ export default function NexusProtocol() {
     fetchGenome();
   }, [remoteGenome]);
 
-  // Dynamic simulation state for latency
-  const [nodes, setNodes] = useState<ProberNode[]>([]);
+  // Real node processing
   useEffect(() => {
-    if (remoteNodes && remoteNodes.length > 0) setNodes(remoteNodes);
+    if (remoteNodes) {
+      setNodes(remoteNodes);
+    }
   }, [remoteNodes]);
 
   const [apiCards, setApiCards] = useState<ApiScoreCard[]>([]);
@@ -109,35 +113,6 @@ export default function NexusProtocol() {
   };
 
   const selectedApi = apiCards.find(a => a.id === selectedApiId) || apiCards[0] || null;
-
-  // Simulating live tick
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Jitter latency slightly
-      setNodes(prev => prev.map(n => ({
-        ...n,
-        latency: Math.max(5, n.latency + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 3)),
-        throughput: Math.max(50, n.throughput + (Math.random() > 0.5 ? 5 : -5) * Math.floor(Math.random() * 4))
-      })));
-
-      // Attestation wheel progress tick
-      setAttestationProgress(prev => {
-        if (prev >= 100) {
-          setAnchorCount(ac => ac + 1);
-          setLastAnchorTime('Just now');
-          setIsAttesting(false);
-          setTimeout(() => setIsAttesting(true), 2000);
-          return 0;
-        }
-        if (prev === 0) {
-          setLastAnchorTime('1m ago');
-        }
-        return prev + 1;
-      });
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, []);
 
   if (!selectedApi && subTab === 'trust') {
     return (
@@ -173,6 +148,24 @@ export default function NexusProtocol() {
             className={`text-xs font-bold tracking-widest uppercase cursor-pointer border-b-2 py-3 px-1 transition-all ${subTab === 'docs' ? 'text-[#00E5FF] border-[#00E5FF]' : 'text-white/40 border-transparent hover:text-white/70'}`}
           >
             CHARTER & METHODOLOGY
+          </button>
+          <button 
+            onClick={() => setSubTab('consensus')}
+            className={`text-xs font-bold tracking-widest uppercase cursor-pointer border-b-2 py-3 px-1 transition-all ${subTab === 'consensus' ? 'text-[#00E5FF] border-[#00E5FF]' : 'text-white/40 border-transparent hover:text-white/70'}`}
+          >
+            CONSENSUS VECTOR
+          </button>
+          <button 
+            onClick={() => setSubTab('identity')}
+            className={`text-xs font-bold tracking-widest uppercase cursor-pointer border-b-2 py-3 px-1 transition-all ${subTab === 'identity' ? 'text-[#00E5FF] border-[#00E5FF]' : 'text-white/40 border-transparent hover:text-white/70'}`}
+          >
+            PGL LAYER
+          </button>
+          <button 
+            onClick={() => setSubTab('staking')}
+            className={`text-xs font-bold tracking-widest uppercase cursor-pointer border-b-2 py-3 px-1 transition-all ${subTab === 'staking' ? 'text-[#00E5FF] border-[#00E5FF]' : 'text-white/40 border-transparent hover:text-white/70'}`}
+          >
+            STAKING
           </button>
         </div>
         
@@ -386,33 +379,73 @@ export default function NexusProtocol() {
                     
                     {/* Node points */}
                     <div className="absolute top-[30%] left-[25%] flex flex-col items-center">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">US-WEST: {nodes[1]?.latency ?? '--'}ms</span>
+                      {nodes.find(n => n.region === 'US-WEST') ? (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
+                        </>
+                      ) : (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white/10 z-10" />
+                      )}
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">
+                        US-WEST: {nodes.find(n => n.region === 'US-WEST') ? `${nodes.find(n => n.region === 'US-WEST')?.latency}ms` : 'AWAITING NODE'}
+                      </span>
                     </div>
 
                     <div className="absolute top-[40%] left-[45%] flex flex-col items-center">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">US-EAST: {nodes[0]?.latency ?? '--'}ms</span>
+                      {nodes.find(n => n.region === 'US-EAST') ? (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
+                        </>
+                      ) : (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white/10 z-10" />
+                      )}
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">
+                        US-EAST: {nodes.find(n => n.region === 'US-EAST') ? `${nodes.find(n => n.region === 'US-EAST')?.latency}ms` : 'AWAITING NODE'}
+                      </span>
                     </div>
 
                     <div className="absolute top-[25%] left-[60%] flex flex-col items-center">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">EU-WEST: {nodes[2]?.latency ?? '--'}ms</span>
+                      {nodes.find(n => n.region === 'EU-WEST') ? (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
+                        </>
+                      ) : (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white/10 z-10" />
+                      )}
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">
+                        EU-WEST: {nodes.find(n => n.region === 'EU-WEST') ? `${nodes.find(n => n.region === 'EU-WEST')?.latency}ms` : 'AWAITING NODE'}
+                      </span>
                     </div>
 
                     <div className="absolute top-[65%] left-[80%] flex flex-col items-center">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">AP-SE: {nodes[3]?.latency ?? '--'}ms</span>
+                      {nodes.find(n => n.region === 'AP-SE') ? (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
+                        </>
+                      ) : (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white/10 z-10" />
+                      )}
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">
+                        AP-SE: {nodes.find(n => n.region === 'AP-SE') ? `${nodes.find(n => n.region === 'AP-SE')?.latency}ms` : 'AWAITING NODE'}
+                      </span>
                     </div>
 
                     <div className="absolute top-[35%] left-[85%] flex flex-col items-center">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
-                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">AP-NE: {nodes[4]?.latency ?? '--'}ms</span>
+                      {nodes.find(n => n.region === 'AP-NE') ? (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66] shadow-[0_0_8px_#00FF66] animate-ping absolute" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] z-10" />
+                        </>
+                      ) : (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white/10 z-10" />
+                      )}
+                      <span className="text-[8px] font-mono mt-1 text-white/60 bg-black/80 px-1 py-0.5 rounded border border-white/5">
+                        AP-NE: {nodes.find(n => n.region === 'AP-NE') ? `${nodes.find(n => n.region === 'AP-NE')?.latency}ms` : 'AWAITING NODE'}
+                      </span>
                     </div>
 
                     <div className="text-[9px] font-mono text-white/20 select-none uppercase tracking-widest">Global Swarm Mesh Network</div>
@@ -576,6 +609,18 @@ export default function NexusProtocol() {
             </div>
 
           </div>
+        )}
+
+        {subTab === 'consensus' && (
+          <ConsensusVisualization scores={apiCards as any} />
+        )}
+
+        {subTab === 'identity' && (
+          <PGLIdentityLayer scores={apiCards as any} />
+        )}
+
+        {subTab === 'staking' && (
+          <StakingProtocol apis={apiCards as any} />
         )}
 
       </div>

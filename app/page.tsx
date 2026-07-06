@@ -350,33 +350,39 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono uppercase tracking-widest">
                 <Globe className="w-4 h-4" />
-                Veklom Nexus Protocol (VNP) Standard
+                VNP: Global Standard
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-                The first open standard for <br />
+                Benchmark APIs with physics. <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD366] to-[#FFB800]">
-                  API trust scoring.
+                  Settle them with X402.
                 </span>
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
-                Before your autonomous agents execute and pay for a third-party API, they must evaluate provider compliance. VNP measures real-time performance across 10 dimensions—including error rates, P99 latency, and SLA stakes—publishing cryptographic scores directly to the Base ledger.
+                Before your autonomous agents execute and pay for an API, they need to know if it's real. The Veklom Nexus Protocol (VNP) is a 5-region cryptographic telemetry mesh that ranks APIs across 10 dimensions—including Geo-Adjusted Latency, Error Rates, and Security Posture. No marketing. No black boxes. Just physics.
               </p>
               <ul className="space-y-4">
                 {[
-                  { icon: ShieldCheck, text: "Open standard under W3C charter" },
-                  { icon: Award, text: "Unbiased weighted trust composite index (AAA ratings)" },
-                  { icon: Activity, text: "Live slashing & SLA stake enforcement" }
+                  { icon: ShieldCheck, text: "5-Region Trust Matrix (US, EU, AP)" },
+                  { icon: Award, text: "Unbiased 10-D Composite Scores (AAA Ratings)" },
+                  { icon: Activity, text: "Automated API Discovery & Routing" }
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-gray-300">
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-[0_0_10px_rgba(255,184,0,0.1)]">
                       <item.icon className="w-4 h-4 text-[#FFB800]" />
                     </div>
-                    <span className="text-sm font-medium">{item.text}</span>
+                    <span className="text-sm font-bold tracking-wide">{item.text}</span>
                   </li>
                 ))}
               </ul>
+              
+              <div className="pt-4">
+                <Link href="/vnp" className="inline-flex px-8 py-4 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors items-center gap-2 shadow-lg shadow-white/5">
+                  View the VNP Master Plane <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
             </div>
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-2xl opacity-50 rounded-3xl -z-10" />
@@ -420,21 +426,21 @@ export default function Home() {
               </div>
             </div>
             <div className="space-y-8 lg:pl-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono uppercase tracking-widest">
                 <Zap className="w-4 h-4" />
-                Sovereign Machine Finance
+                X402: Sovereign Settlement
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-                Financial Solvency &<br />
+                Priced, discovered, <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-[#FFB800]">
-                  VNP Micro-Stakes (x402)
+                  and settled in milliseconds.
                 </span>
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
-                Empower your agents with financial sovereignty. The x402 protocol handles micro-transactions, SLA performance bonds, and yield delegation natively. Let agents settle payments on-chain in real time, backed by cryptographic proof of reserve and secure multi-signature locks.
+                Once VNP discovers and benchmarks an API, the X402 protocol handles the financial reality. X402 natively manages micro-transactions, SLA performance bonds, and yield delegation. Every single API route is priced and metered. If a provider drops their P99 latency SLA, their Micro-Stakes are slashed automatically.
               </p>
               <div className="pt-2">
-                <Link href="/signup" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFB800]/80 font-bold transition-colors">
+                <Link href="/signup" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFB800]/80 font-bold transition-colors uppercase tracking-wider text-sm">
                   Initialize your ledger workspace <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

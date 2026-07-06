@@ -13,6 +13,7 @@ import clsx from 'clsx';
 import { motion } from 'motion/react';
 
 const WORKSPACE_SURFACES = [
+  { href: '/workspace/vnp', label: 'VNP Master Plane', icon: Activity, copy: 'Live 5-region API telemetry and SLA monitoring.' },
   { href: '/team', label: 'Team & RBAC', icon: Users, copy: 'Members, roles, SSO, SCIM, and MFA.' },
   { href: '/api-keys', label: 'API Keys', icon: KeyRound, copy: 'Issue, rotate, revoke, and audit access keys.' },
   { href: '/webhooks', label: 'Webhooks', icon: Webhook, copy: 'Workspace events and alert delivery.' },

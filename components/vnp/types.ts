@@ -2,6 +2,7 @@ export interface RegionMetric {
   p50: number;
   p95: number;
   p99: number;
+  geoAdjustedLatency: number;
   errorRate: number;
   uptime: number;
   throughput: number;
