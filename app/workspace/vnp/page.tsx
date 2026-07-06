@@ -38,17 +38,20 @@ export default function WorkspaceVNPPage() {
       return {
         id: apiDef.id,
         name: apiDef.name,
+        endpoint: `https://${apiDef.name}`,
         version: apiDef.version,
         compositeScore: baseScore,
+        x402Ready: true,
+        stabilityRating: baseScore >= 96 ? "AAA" : baseScore >= 92 ? "AA+" : baseScore >= 88 ? "AA" : "A",
         grade: baseScore >= 96 ? "AAA" : baseScore >= 92 ? "AA+" : baseScore >= 88 ? "AA" : "A",
         regions: {
-          "us-east": { p99: baseLat, p50: baseLat - 10, uptime: 99.99, errorRate: 0.01, throughput: 12000, geoAdjustedLatency: Math.max(8, baseLat - 15) },
-          "us-west": { p99: baseLat + 40, p50: baseLat + 30, uptime: 99.9, errorRate: 0.05, throughput: 11500, geoAdjustedLatency: Math.max(8, baseLat - 15 + 2) },
-          "eu-west": { p99: baseLat + 90, p50: baseLat + 80, uptime: 99.8, errorRate: 0.1, throughput: 10000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 5) },
-          "ap-northeast": { p99: baseLat + 150, p50: baseLat + 140, uptime: 99.5, errorRate: 0.2, throughput: 8000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 12) },
-          "ap-southeast": { p99: baseLat + 210, p50: baseLat + 190, uptime: 99.1, errorRate: 0.5, throughput: 6000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 20) },
+          "us-east": { p99: baseLat, p95: baseLat - 5, p50: baseLat - 10, uptime: 99.99, errorRate: 0.01, throughput: 12000, geoAdjustedLatency: Math.max(8, baseLat - 15) },
+          "us-west": { p99: baseLat + 40, p95: baseLat + 35, p50: baseLat + 30, uptime: 99.9, errorRate: 0.05, throughput: 11500, geoAdjustedLatency: Math.max(8, baseLat - 15 + 2) },
+          "eu-west": { p99: baseLat + 90, p95: baseLat + 85, p50: baseLat + 80, uptime: 99.8, errorRate: 0.1, throughput: 10000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 5) },
+          "ap-northeast": { p99: baseLat + 150, p95: baseLat + 145, p50: baseLat + 140, uptime: 99.5, errorRate: 0.2, throughput: 8000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 12) },
+          "ap-southeast": { p99: baseLat + 210, p95: baseLat + 205, p50: baseLat + 190, uptime: 99.1, errorRate: 0.5, throughput: 6000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 20) },
         }
-      };
+      } as unknown as ApiState;
     });
     
     // Sort by composite score
