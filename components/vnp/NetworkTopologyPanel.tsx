@@ -37,6 +37,7 @@ interface SwarmTransaction {
   amount: number;
   status: "SETTLED" | "ESCROWED" | "SLASHED" | "PENDING";
   signature: string;
+  proposer?: string;
 }
 export default function NetworkTopologyPanel() {
   const [selectedNodeId, setSelectedNodeId] = useState<string>("");

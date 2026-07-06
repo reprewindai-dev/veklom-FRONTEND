@@ -64,6 +64,7 @@ export default function NexusProtocol() {
   const [lastAnchorTime, setLastAnchorTime] = useState<string>('4m ago');
   const [isAttesting, setIsAttesting] = useState(true);
   const [hoveredDimIndex, setHoveredDimIndex] = useState<number | null>(null);
+  const [nodes, setNodes] = useState<ProberNode[]>([]);
 
   const { data: remoteGenome } = useApi<any>('/api/v1/nexus/genome');
   const { data: remoteNodes } = useApi<ProberNode[]>('/api/v1/nexus/nodes');
