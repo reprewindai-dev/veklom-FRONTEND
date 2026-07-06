@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
 import AmbientIntervention from "@/components/ambient/AmbientIntervention";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ["latin"] });
 const BASE = "/control-plane-next";
@@ -22,7 +23,10 @@ export const metadata: Metadata = {
     template: "%s · Veklom",
   },
   description: DESC,
-  keywords: ["Veklom", "Sovereign AI", "AI governance", "control plane", "private AI", "compliance", "AI routing"],
+  keywords: ["Veklom", "Sovereign AI", "AI governance", "control plane", "private AI", "compliance", "AI routing", "Agentic Governance", "API benchmarking", "Runtime authority", "physics-based SLAs"],
+  verification: {
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION || "",
+  },
   authors: [{ name: "Veklom" }],
   creator: "Veklom",
   publisher: "Veklom",
@@ -92,6 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AmbientIntervention />
           </AuthProvider>
         </WebMCPProvider>
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ export const metadata = {
 };
 
 const blogs = [
+  { slug: "vnp-launch-physics-based-benchmarking", title: "Veklom Nexus Protocol (VNP): Why We Replaced Legacy API Benchmarks with Physics", date: "Month 7", excerpt: "Legacy benchmarks measure uptime from a single datacenter. VNP measures physical routing latency across 5 global regions, anchoring the results into a cryptographic ledger." },
   { slug: "black-box-problem", title: "The Black Box Problem: Why 'Trust Us' AI Fails the Enterprise", date: "Month 1", excerpt: "Omniscient, tireless engineers with a blank check. Why traditional infra is blind to agent reasoning, and how to fix it." },
   { slug: "seked-semantic-kill-switch", title: "SEKED: Building a Semantic Kill Switch for Autonomous Agents", date: "Month 2", excerpt: "Moving from observed AI to governed AI. How the semantic gateway blocks unauthorized actions before the sandbox." },
   { slug: "pgl-cryptographic-passports", title: "PGL: Cryptographic Passports and the End of Anonymous Execution", date: "Month 3", excerpt: "You cannot govern what you cannot identify. Bringing SOC2 and HIPAA auditability to agentic workflows." },

@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/genai": "^2.9.0",
     "@metamask/connect-evm": "^2.1.0",
+    "@next/third-parties": "^16.2.10",
     "@openrouter/sdk": "^0.13.7",
     "@reown/appkit": "^1.8.21",
     "@reown/appkit-adapter-wagmi": "^1.8.21",
