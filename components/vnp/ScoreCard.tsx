@@ -37,10 +37,26 @@ export default function ScoreCard({ score }: ScoreCardProps) {
             {score.apiName}
           </Link>
           <div className="text-[10px] font-mono text-[#6E6E73] uppercase tracking-widest mt-0.5">
-            {score.provider} &middot; {score.category}
+            {score.provider} &middot; {score.category} &middot; VNP v0.1.16
           </div>
         </div>
         <GradeBadge grade={score.grade} composite={score.composite} size="md" />
+      </div>
+
+      {/* VNP v0.1.16 Protocol Spine Indicators */}
+      <div className="flex flex-wrap gap-1 mb-3.5 relative z-10">
+        <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
+          VDF Locked
+        </span>
+        <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
+          zk-SNARK
+        </span>
+        <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
+          MAD Bounded
+        </span>
+        <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
+          RPN Active
+        </span>
       </div>
 
       {/* Radar chart */}

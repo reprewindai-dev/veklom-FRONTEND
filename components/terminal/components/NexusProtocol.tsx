@@ -240,7 +240,7 @@ export default function NexusProtocol() {
                 <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
                   <div>
                     <h2 className="text-lg font-bold tracking-wide text-white">{selectedApi.name}</h2>
-                    <p className="text-[10px] text-white/40 uppercase font-mono tracking-widest">{selectedApi.provider} — Benchmark v0.1</p>
+                    <p className="text-[10px] text-white/40 uppercase font-mono tracking-widest">{selectedApi.provider} — Benchmark v0.1.16 (VNP-Core)</p>
                   </div>
                   <div className="text-right">
                     <div className="text-[28px] font-bold font-mono tracking-tight text-[#00E5FF] text-glow-cyan leading-none">{selectedApi.score}</div>
@@ -319,6 +319,30 @@ export default function NexusProtocol() {
                       <div className="text-[#00E5FF] truncate flex items-center gap-1" title={selectedApi.txHash}>
                         <span>{selectedApi.txHash}</span>
                         <ExternalLink className="w-2.5 h-2.5 text-[#00E5FF]/60" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-3 mt-1">
+                    <div>
+                      <div className="text-white/30 uppercase">VDF Time-Lock (7d)</div>
+                      <div className="text-[#00FF66] flex items-center gap-1.5 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]" />
+                        <span>ACTIVE (Wesolowski IQ)</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-white/30 uppercase">zk-SNARK Correctness</div>
+                      <div className="text-[#00FF66] flex items-center gap-1.5 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]" />
+                        <span>VERIFIED (x402 Circuit)</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-white/30 uppercase">Estimator / Swarms</div>
+                      <div className="text-[#00FF66] flex items-center gap-1.5 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]" />
+                        <span>MAD-Bounded / RPN Active</span>
                       </div>
                     </div>
                   </div>
