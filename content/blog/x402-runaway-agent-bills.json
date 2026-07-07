@@ -1,0 +1,7 @@
+{
+  "slug": "x402-runaway-agent-bills",
+  "title": "x402: Preventing Runaway AI Cloud Bills with Cryptographic Micropayments",
+  "excerpt": "Turning cost governance from a monthly spreadsheet into a hard runtime constraint.",
+  "content": "The greatest fear of deploying autonomous AI is the recursive loop. An agent hallucinates a failure state, retries a complex cloud deployment, fails again, and repeats this cycle 10,000 times overnight. You wake up to a $50,000 AWS bill.\n\n### The Flaw in Rate Limiting\n\nStandard API rate limits are blunt instruments. They stop loops, but they also stop legitimate high-throughput workloads. They don't understand the *value* of the execution, only the *frequency*.\n\n### The x402 Micropayment Standard\n\nVeklom introduces x402, an evolution of the HTTP 402 Payment Required status code, backed by the Base network and USDC.\n\nInstead of hoping an agent doesn't overspend, x402 gives every agent a strict, cryptographically enforced budget. Every high-risk API call or compute-heavy task requires the agent to present a valid on-chain payment proof in the `X-Payment-Proof` header.\n\nIf the agent runs out of its allocated USDC budget, the infrastructure physically rejects the execution at the ingress layer. The recursive loop hits a concrete wall. This provides deterministic FinOps control, shifting cloud spend from an unpredictable operational expense to a pre-authorized capital allocation.",
+  "publishDate": "2026-08-04T01:10:52.820Z"
+}
