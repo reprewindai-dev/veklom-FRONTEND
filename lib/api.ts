@@ -128,10 +128,16 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
         const currentPath = window.location.pathname + window.location.search;
         window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
       } else if (res.status === 403 || res.status === 401) {
-        // Ambient Interlink cAPI Node 1: Proactive Interception
-        // Instead of hard-failing, we dispatch an event to the Ambient UI.
+        const isAuthTokenError = msg.toLowerCase().includes("invalid or expired token") || 
+                                 msg.toLowerCase().includes("invalid token") || 
+                                 msg.toLowerCase().includes("token expired") || 
+                                 msg.toLowerCase().includes("not authenticated") ||
+                                 msg.toLowerCase().includes("signature has expired") ||
+                                 msg.toLowerCase().includes("credentials") ||
+                                 msg.toLowerCase().includes("unauthorized");
+
         const code = (json as any)?.code || "";
-        if (code.includes("LAW0") || msg.toLowerCase().includes("key") || msg.toLowerCase().includes("token")) {
+        if (!isAuthTokenError && (code.includes("LAW0") || msg.toLowerCase().includes("key") || msg.toLowerCase().includes("token"))) {
           // If the error specifically mentions an LLM or API key (or general execution identity missing), 
           // intercept it with the glassmorphic prompt.
           const event = new CustomEvent("AmbientIntervention", {
