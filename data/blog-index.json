@@ -1,158 +1,32 @@
 [
   {
-    "slug": "vnp-launch-physics-based-benchmarking",
-    "title": "Veklom Nexus Protocol (VNP): Why We Replaced Legacy API Benchmarks with Physics",
-    "excerpt": "Legacy benchmarks measure uptime from a single datacenter. VNP measures physical routing latency across 5 global regions, anchoring the results into a cryptographic ledger.",
-    "publishDate": "2026-06-22T20:39:39.583Z"
+    "slug": "vnp-measures-reality",
+    "title": "VNP Measures Reality: Why API Standards Need Physics, Not Marketing",
+    "excerpt": "Legacy SLA claims and marketing uptime percentages hide the micro-outages and packet loss that break AI agents. VNP introduces physical routing latency measurements as the new industry baseline.",
+    "publishDate": "2026-06-23T00:54:52.926Z"
   },
   {
-    "slug": "black-box-problem-ai-agents",
-    "title": "The Black Box Problem: Why 'Trust Us' AI Fails the Enterprise",
-    "excerpt": "Omniscient, tireless engineers with a blank check. Why traditional infra is blind to agent reasoning, and how to fix it.",
-    "publishDate": "2026-06-29T20:39:39.583Z"
+    "slug": "option-c-explained",
+    "title": "Option-C Explained: Geo-Adjusted Latency and the End of Distance-Biased API Scoring",
+    "excerpt": "Why standard averages reward centralized APIs at the expense of global clients, and how Option-C mathematically enforces regional fairness.",
+    "publishDate": "2026-06-30T00:54:52.926Z"
   },
   {
-    "slug": "seked-semantic-kill-switch",
-    "title": "SEKED: Building a Semantic Kill Switch for Autonomous Agents",
-    "excerpt": "Moving from observed AI to governed AI. How the semantic gateway blocks unauthorized actions before the sandbox.",
-    "publishDate": "2026-07-06T20:39:39.583Z"
+    "slug": "why-abi-casc-fall-short",
+    "title": "Why ABI and CASC Fall Short: Open Formula vs Proprietary Runtime vs VNP",
+    "excerpt": "A technical teardown of legacy benchmarking methodologies, explaining why proprietary telemetry indices fail to protect autonomous agent execution.",
+    "publishDate": "2026-07-07T00:54:52.926Z"
   },
   {
-    "slug": "x402-runaway-agent-bills",
-    "title": "x402: Preventing Runaway AI Cloud Bills with Cryptographic Micropayments",
-    "excerpt": "Turning cost governance from a monthly spreadsheet into a hard runtime constraint.",
-    "publishDate": "2026-07-13T20:39:39.583Z"
+    "slug": "benchmark-to-settlement",
+    "title": "From Benchmark to Settlement: How VNP Feeds X402 Micro-Stake Enforcement",
+    "excerpt": "Discover how real-time performance telemetry is directly tied to financial enforcement using performance bonds and the x402 payment rail.",
+    "publishDate": "2026-07-14T00:54:52.926Z"
   },
   {
-    "slug": "api-hall-of-fame-stripe-anthropic",
-    "title": "API Hall of Fame: Why Stripe and Anthropic Top the VNP Trust Matrix",
-    "excerpt": "We analyze the physics behind the industry's most reliable APIs and why their architecture survives the Option-C math.",
-    "publishDate": "2026-07-20T20:39:39.583Z"
-  },
-  {
-    "slug": "convergeos-multi-agent-consensus",
-    "title": "ConvergeOS: Multi-Agent Consensus as the Cure for Hallucinations",
-    "excerpt": "Why 'the model said so' isn't enough, and how PBFT-style swarm consensus ensures processing integrity.",
-    "publishDate": "2026-07-27T20:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-kubernetes-agentic-zero-trust",
-    "title": "Analyzing the Kubernetes Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Kubernetes and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-08-03T20:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-redis-agentic-zero-trust",
-    "title": "Analyzing the Redis Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Redis and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-08-10T20:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-postgresql-agentic-zero-trust",
-    "title": "Analyzing the PostgreSQL Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into PostgreSQL and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-08-17T20:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-kafka-agentic-zero-trust",
-    "title": "Analyzing the Kafka Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Kafka and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-08-24T20:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-docker-agentic-zero-trust",
-    "title": "Analyzing the Docker Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Docker and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-08-31T20:39:39.583Z"
-  },
-  {
-    "slug": "vnp-regional-latency-gap-{region}",
-    "title": "VNP Regional Deep Dive: The Latency Gap in {region}",
-    "excerpt": "A technical deep dive into us-east-1 and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-09-07T20:39:39.583Z"
-  },
-  {
-    "slug": "vnp-regional-latency-gap-{region}",
-    "title": "VNP Regional Deep Dive: The Latency Gap in {region}",
-    "excerpt": "A technical deep dive into eu-central-1 and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-09-14T20:39:39.583Z"
-  },
-  {
-    "slug": "vnp-regional-latency-gap-{region}",
-    "title": "VNP Regional Deep Dive: The Latency Gap in {region}",
-    "excerpt": "A technical deep dive into ap-southeast-1 and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-09-21T20:39:39.583Z"
-  },
-  {
-    "slug": "vnp-regional-latency-gap-{region}",
-    "title": "VNP Regional Deep Dive: The Latency Gap in {region}",
-    "excerpt": "A technical deep dive into sa-east-1 and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-09-28T20:39:39.583Z"
-  },
-  {
-    "slug": "beyond-abi-fatal-flaws-{competitor}",
-    "title": "Beyond ABI: The Fatal Flaws of {competitor} in 2026",
-    "excerpt": "A technical deep dive into Legacy SLA Monitoring and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-10-05T20:39:39.583Z"
-  },
-  {
-    "slug": "beyond-abi-fatal-flaws-{competitor}",
-    "title": "Beyond ABI: The Fatal Flaws of {competitor} in 2026",
-    "excerpt": "A technical deep dive into CASC Index and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-10-12T20:39:39.583Z"
-  },
-  {
-    "slug": "beyond-abi-fatal-flaws-{competitor}",
-    "title": "Beyond ABI: The Fatal Flaws of {competitor} in 2026",
-    "excerpt": "A technical deep dive into StatusPage.io and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-10-19T20:39:39.583Z"
-  },
-  {
-    "slug": "beyond-abi-fatal-flaws-{competitor}",
-    "title": "Beyond ABI: The Fatal Flaws of {competitor} in 2026",
-    "excerpt": "A technical deep dive into Pingdom and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-10-26T20:39:39.583Z"
-  },
-  {
-    "slug": "x402-implementation-micro-stakes-{service}",
-    "title": "x402 Implementation: Securing {service} with Micro-Stakes",
-    "excerpt": "A technical deep dive into LLM Providers and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-11-02T21:39:39.583Z"
-  },
-  {
-    "slug": "x402-implementation-micro-stakes-{service}",
-    "title": "x402 Implementation: Securing {service} with Micro-Stakes",
-    "excerpt": "A technical deep dive into Cloud SQL and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-11-09T21:39:39.583Z"
-  },
-  {
-    "slug": "x402-implementation-micro-stakes-{service}",
-    "title": "x402 Implementation: Securing {service} with Micro-Stakes",
-    "excerpt": "A technical deep dive into AWS Lambda and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-11-16T21:39:39.583Z"
-  },
-  {
-    "slug": "x402-implementation-micro-stakes-{service}",
-    "title": "x402 Implementation: Securing {service} with Micro-Stakes",
-    "excerpt": "A technical deep dive into Vercel Edge and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-11-23T21:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-kubernetes-agentic-zero-trust",
-    "title": "Analyzing the Kubernetes Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Kubernetes and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-11-30T21:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-redis-agentic-zero-trust",
-    "title": "Analyzing the Redis Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Redis and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-12-07T21:39:39.583Z"
-  },
-  {
-    "slug": "analyzing-postgresql-agentic-zero-trust",
-    "title": "Analyzing the PostgreSQL Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into PostgreSQL and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2026-12-14T21:39:39.583Z"
+    "slug": "hall-of-fame-trustworthy-api",
+    "title": "Hall of Fame: What a Truly Trustworthy API Looks Like Under VNP",
+    "excerpt": "A deep dive into the telemetry of gold-standard APIs, showing how proper multi-region engineering survives VNP's rigorous telemetry probes.",
+    "publishDate": "2026-07-21T00:54:52.926Z"
   }
 ]
