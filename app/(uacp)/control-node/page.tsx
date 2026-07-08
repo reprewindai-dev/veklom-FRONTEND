@@ -5,16 +5,16 @@ import { useState, useEffect, useRef } from "react";
 import { initialStreamState, connectStream, shouldAcceptEvent, isHeartbeatExpired, StreamMachineState } from "@/lib/covenant/machines/streamMachine";
 import { reduceRunState, RunState } from "@/lib/covenant/machines/runMachine";
 import type { SseEvent } from "@/lib/covenant/generated/sse";
-import { api } from "@/lib/api";
+import { api, apiUrl } from "@/lib/api";
 
 import { useApi } from "@/hooks/useApi";
-import { 
-  PanelCard, 
-  StatusBadge, 
-  MetricCard, 
-  ActionRow, 
-  TimelineEvent, 
-  LaunchpadCard 
+import {
+  PanelCard,
+  StatusBadge,
+  MetricCard,
+  ActionRow,
+  TimelineEvent,
+  LaunchpadCard
 } from "@/components/terminal/components/DashboardComponents";
 import Link from "next/link";
 
@@ -34,6 +34,9 @@ interface UsageData {
   total_tokens?: number;
   total_cost_usd?: number;
   period?: string;
+  active_pipelines?: number;
+  active_deployments?: number;
+  proof_count?: number;
 }
 
 interface AuditData {
@@ -44,7 +47,46 @@ interface AuditData {
     summary?: string;
     severity?: string;
   }>;
+  logs?: Array<{
+    id: string;
+    action?: string;
+    created_at: string;
+    resource?: string;
+    status?: string;
+  }>;
   total?: number;
+}
+
+interface ProbeResult<T = unknown> {
+  ok: boolean;
+  status: number | null;
+  route: string;
+  latency_ms: number;
+  data?: T;
+  error?: string;
+}
+
+interface BackendSourceState {
+  id: "byos" | "cappo";
+  label: string;
+  repo: string;
+  role: string;
+  base_url: string;
+  health: ProbeResult;
+  overview: ProbeResult;
+  source_of_truth?: ProbeResult;
+  proof_signal: string;
+  state: "healthy" | "degraded" | "needs_proof";
+}
+
+interface CanonicalBackendsData {
+  generated_at: string;
+  canonical_source_count: number;
+  healthy_source_count: number;
+  degraded_source_count: number;
+  state: "healthy" | "degraded" | "needs_proof";
+  usage: UsageData;
+  sources: BackendSourceState[];
 }
 
 interface WorkspaceData {
@@ -55,6 +97,11 @@ interface WorkspaceData {
   genome_hash?: string;
   ledger_root?: string;
   created_at?: string;
+}
+
+interface CapiExecutionStart {
+  run_id: string;
+  stream_token: string;
 }
 
 // ── Page ───────────────────────────────────────────────────────────────────────
@@ -92,7 +139,7 @@ export default function ControlNodePage() {
       setStreamState(prev => ({ ...prev, connection: "connecting", generation: prev.generation + 1, lastSequence: -1 }));
       setRunState("not_started");
 
-      const res = await api.post("/api/v1/capi/execute", {
+      const res = await api.post<CapiExecutionStart>("/api/v1/capi/execute", {
         workspace_id: workspace.data?.id || "default",
         agent_id: "agent-test",
         pgl_id: "user-test",
@@ -101,12 +148,11 @@ export default function ControlNodePage() {
         payload: {}
       });
 
-      const { run_id, stream_token } = await (res as any).json();
-      
-      const streamUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088'}/api/v1/capi/stream/${run_id}`;
-      
+      const { run_id, stream_token } = res;
+      const streamUrl = apiUrl(`/api/v1/capi/stream/${run_id}`);
+
       setStreamState(prev => ({ ...prev, connection: "connected" }));
-      
+
       await connectStream({
         url: streamUrl,
         token: stream_token,
@@ -136,43 +182,71 @@ export default function ControlNodePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const health = useApi<HealthData>("/api/v1/sys/health");
-  const usage = useApi<UsageData>("/api/v1/usage/summary");
-  const audit = useApi<AuditData>("/api/v1/audit/events?limit=5");
+  const audit = useApi<AuditData>("/api/v1/workspace/audit/logs?limit=5");
   const workspace = useApi<WorkspaceData>("/api/v1/workspace");
+  const canonical = useApi<CanonicalBackendsData>("/api/control-node/canonical-backends", {
+    refreshInterval: 15000,
+  });
 
-  const systemOperational = health.data?.status === "healthy";
+  const usageSummary: UsageData = canonical.data?.usage ?? {};
+  const systemOperational = canonical.data?.state === "healthy";
   const isWorkspaceReady = !!workspace.data?.id;
+  const proofCount = canonical.data?.usage.proof_count ?? 0;
+  const expectedProofCount = canonical.data?.canonical_source_count ?? 2;
+  const canonicalSources = canonical.data?.sources ?? [];
+  const auditRows = audit.data?.events?.map((ev) => ({
+    id: ev.id,
+    title: ev.event_type,
+    time: ev.created_at,
+    detail: ev.summary || "System event recorded.",
+    isAlert: ev.severity === "critical" || ev.severity === "high",
+  })) || audit.data?.logs?.map((log) => ({
+    id: log.id,
+    title: log.action || "audit.log",
+    time: log.created_at,
+    detail: log.resource || log.status || "Workspace audit log recorded.",
+    isAlert: log.status === "error",
+  })) || [];
 
   // Determine overall readiness verdict
   let verdictTitle = "Ready for governed production";
   let verdictSubtitle = "System healthy, identity synced, spend within budget.";
   let verdictState: 'healthy' | 'warning' | 'critical' | 'neutral' = 'healthy';
 
-  if (!systemOperational && !health.isLoading) {
-    verdictTitle = "Production readiness degraded";
-    verdictSubtitle = "System health check failed. Governed runs may fail.";
+  if (canonical.data?.state === "needs_proof" && !canonical.isLoading) {
+    verdictTitle = "Canonical backends need proof";
+    verdictSubtitle = "Veklom BYOS and CAPPO are unreachable or returned no operational proof.";
     verdictState = 'critical';
+  } else if (!systemOperational && !canonical.isLoading) {
+    verdictTitle = "Production readiness degraded";
+    verdictSubtitle = "One or more canonical backend source checks failed. Governed runs may degrade.";
+    verdictState = 'critical';
+  } else if (canonical.data?.state === "degraded") {
+    verdictTitle = "Ready with canonical backend warnings";
+    verdictSubtitle = `${proofCount}/${expectedProofCount} canonical backends returned proof. Review source-of-truth status.`;
+    verdictState = 'warning';
   } else if (!isWorkspaceReady && !workspace.isLoading) {
     verdictTitle = "Action required for production";
     verdictSubtitle = "Workspace identity missing. Governed runs blocked.";
     verdictState = 'critical';
-  } else if (audit.data?.events?.some((e) => e.severity === "high" || e.severity === "critical")) {
+  } else if (auditRows.some((e) => e.isAlert)) {
     verdictTitle = "Ready with warnings";
     verdictSubtitle = "High-priority audit events require review.";
     verdictState = 'warning';
-  } else if (health.isLoading || workspace.isLoading) {
+  } else if (workspace.isLoading || canonical.isLoading) {
     verdictTitle = "Assessing readiness...";
-    verdictSubtitle = "Syncing with Veklom runtime cluster.";
+    verdictSubtitle = "Syncing with Veklom BYOS and CAPPO canonical backends.";
     verdictState = 'neutral';
   }
 
   const fmt = (n: number | undefined) =>
     n === undefined ? "—" : n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
+  const spendToday = usageSummary.total_cost_usd;
+  const hasSpendToday = typeof spendToday === "number" && Number.isFinite(spendToday);
 
   return (
     <div className="relative p-6 md:p-10 h-full overflow-y-auto bg-[#030303] selection:bg-[#00E5FF]/30 text-white scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-      
+
       {/* Grid overlay — terminal aesthetic */}
       <div className="fixed inset-0 grid-overlay pointer-events-none opacity-60"></div>
 
@@ -181,20 +255,20 @@ export default function ControlNodePage() {
       <div className="fixed bottom-[-10%] right-[-5%] w-[50vw] h-[50vh] bg-[#00E5FF]/5 blur-[150px] rounded-full pointer-events-none"></div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto">
-        
+
         {/* 1. Assurance Header */}
         <div className="flex flex-col gap-3 mb-10 pb-8 relative">
           <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-[#00E5FF]/50 via-[#00E5FF]/10 to-transparent"></div>
-          
+
           <div className="flex items-center gap-4">
             <StatusBadge state={verdictState} text={verdictTitle.toUpperCase()} />
             <div className="h-4 w-[1px] bg-white/10"></div>
             <span className="text-white/30 text-[11px] font-mono tracking-[0.2em] uppercase">Veklom Control Node</span>
           </div>
-          
+
           <h1 className="text-white/95 text-3xl font-sans tracking-tight mt-2 font-light">{verdictTitle}</h1>
           <p className="text-[#00E5FF]/70 text-sm font-sans tracking-wide">{verdictSubtitle}</p>
-          
+
           <div className="flex flex-wrap items-center gap-8 mt-6">
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Environment</span>
@@ -204,68 +278,75 @@ export default function ControlNodePage() {
               </span>
             </div>
             <div className="flex flex-col gap-1.5">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Canonical Backends</span>
+              <span className="text-white/90 text-xs font-medium tracking-wide">
+                {canonical.isLoading ? "Syncing" : `${proofCount}/${expectedProofCount} Proof Sources`}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Policy Mode</span>
               <span className="text-white/90 text-xs font-medium tracking-wide">Zero-Trust Active</span>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Last Sync</span>
               <span className="text-[#00E5FF]/80 text-xs font-mono tracking-wider bg-[#00E5FF]/5 px-2 py-0.5 rounded border border-[#00E5FF]/20">
-                {health.data?.timestamp ? new Date(health.data.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()}
+                {canonical.data?.generated_at ? new Date(canonical.data.generated_at).toLocaleTimeString() : new Date().toLocaleTimeString()}
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col gap-8 pb-12">
-          
+
           {/* 2. Primary Action Strip */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <ActionRow 
-              type="do_now" 
-              title="Complete workspace identity" 
-              subtitle="Identity graph unavailable without PGL sync." 
-              actionText="Finish Setup" 
+            <ActionRow
+              type="do_now"
+              title="Complete workspace identity"
+              subtitle="Identity graph unavailable without PGL sync."
+              actionText="Finish Setup"
             />
-            <ActionRow 
-              type="review" 
-              title="Review GPU health degradation" 
-              subtitle="Node latency spike detected in Hetzner pool." 
-              actionText="View Infra" 
+            <ActionRow
+              type="review"
+              title="Review GPU health degradation"
+              subtitle="Node latency spike detected in Hetzner pool."
+              actionText="View Infra"
             />
-            <ActionRow 
-              type="open" 
-              title="Open Runtime Enforcement" 
-              subtitle="2 policies flagged for drift." 
-              actionText="Go to Queue" 
+            <ActionRow
+              type="open"
+              title="Open Runtime Enforcement"
+              subtitle="2 policies flagged for drift."
+              actionText="Go to Queue"
             />
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-4">
-            
+
             <div className="xl:col-span-2 flex flex-col gap-6">
               {/* 3. Live Readiness Metrics */}
               <PanelCard title="LIVE READINESS METRICS" className="min-h-[240px]">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <MetricCard 
-                    label="System Health" 
-                    value={health.isLoading ? "..." : (systemOperational ? "100%" : "72%")} 
-                    subtext={health.isLoading ? "Probing..." : (systemOperational ? "Healthy" : "Degraded")} 
+                  <MetricCard
+                    label="System Health"
+                    value={canonical.isLoading ? "..." : (systemOperational ? "100%" : "Needs Proof")}
+                    subtext={canonical.isLoading ? "Probing..." : (systemOperational ? "Canonical" : "Degraded")}
                   />
-                  <MetricCard 
-                    label="Success Rate" 
-                    value="99.8%" 
+                  <MetricCard
+                    label="Backend Proof"
+                    value={`${proofCount}/${expectedProofCount}`}
+                    subtext={canonical.data?.state || "probing"}
                   />
-                  <MetricCard 
-                    label="Total Requests" 
-                    value={fmt(usage.data?.total_requests)} 
+                  <MetricCard
+                    label="Total Requests"
+                    value={fmt(usageSummary.total_requests)}
                   />
-                  
-                  <MetricCard 
-                    label="Stream State" 
-                    value={streamState.connection === "idle" ? "Needs Proof" : streamState.connection} 
-                    subtext={streamState.error || runState} 
+
+                  <MetricCard
+                    label="Stream State"
+                    value={streamState.connection === "idle" ? "Needs Proof" : streamState.connection}
+                    subtext={streamState.error || runState}
                   />
-                  
+
                   <button onClick={testRun} className="col-span-1 border border-[#00E5FF]/30 bg-[#00E5FF]/5 rounded-lg p-3 text-[10px] text-[#00E5FF] hover:bg-[#00E5FF]/15 hover:text-white transition-all duration-300 font-mono tracking-widest uppercase flex flex-col items-center justify-center gap-2 group hover:shadow-[0_0_20px_rgba(0,229,255,0.12)]">
                     <span className="w-4 h-4 rounded-full border border-[#00E5FF]/50 flex items-center justify-center group-hover:bg-[#00E5FF]/20 transition-colors">
                       <span className="w-1.5 h-1.5 bg-[#00E5FF] rounded-full group-hover:animate-ping"></span>
@@ -273,11 +354,11 @@ export default function ControlNodePage() {
                     TEST CAPI EXEC
                   </button>
 
-                  <MetricCard 
-                    label="Spend Today" 
-                    value={usage.data?.total_cost_usd !== undefined && !Number.isNaN(usage.data.total_cost_usd) ? `$${usage.data.total_cost_usd.toFixed(4)}` : "$0.00"} 
-                    subtext={usage.data?.total_cost_usd === undefined ? "Awaiting billing signal" : undefined}
-                    empty={usage.data?.total_cost_usd === undefined} 
+                  <MetricCard
+                    label="Spend Today"
+                    value={hasSpendToday ? `$${spendToday.toFixed(4)}` : "Needs Proof"}
+                    subtext={!hasSpendToday ? "Awaiting billing signal" : undefined}
+                    empty={!hasSpendToday}
                   />
                 </div>
               </PanelCard>
@@ -340,13 +421,64 @@ export default function ControlNodePage() {
                   </div>
                 </PanelCard>
               </div>
+
+              <PanelCard title="CANONICAL BACKEND SOURCES">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {canonicalSources.length > 0 ? canonicalSources.map((source) => {
+                    const stateClass = source.state === "healthy"
+                      ? "text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/5"
+                      : source.state === "degraded"
+                        ? "text-[#FFAB00] border-[#FFAB00]/25 bg-[#FFAB00]/5"
+                        : "text-[#FF003C] border-[#FF003C]/25 bg-[#FF003C]/5";
+
+                    return (
+                      <div key={source.id} className="rounded-lg border border-[#00E5FF]/10 bg-black/30 p-4 font-mono">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm text-white/90 font-sans">{source.label}</div>
+                            <div className="mt-1 text-[10px] text-white/35">{source.repo}</div>
+                          </div>
+                          <span className={`rounded border px-2 py-1 text-[9px] uppercase tracking-widest ${stateClass}`}>
+                            {source.state.replace("_", " ")}
+                          </span>
+                        </div>
+                        <div className="mt-4 space-y-2 text-[10px] text-white/45">
+                          <div className="flex items-center justify-between gap-3">
+                            <span>Role</span>
+                            <span className="text-white/70 text-right">{source.role}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span>Health</span>
+                            <span className={source.health.ok ? "text-[#00FF66]" : "text-[#FF003C]"}>
+                              {source.health.ok ? `${source.health.status} / ${source.health.latency_ms}ms` : source.health.error || "Needs proof"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span>Overview</span>
+                            <span className={source.overview.ok ? "text-[#00FF66]" : "text-[#FFAB00]"}>
+                              {source.overview.ok ? `${source.overview.status} / ${source.overview.latency_ms}ms` : source.overview.error || "Needs proof"}
+                            </span>
+                          </div>
+                          <div className="border-t border-white/5 pt-2 text-[#00E5FF]/70 leading-relaxed">
+                            {source.proof_signal}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }) : (
+                    <div className="md:col-span-2 rounded-lg border border-dashed border-[#00E5FF]/15 bg-black/20 p-4 text-[11px] text-white/40 font-mono">
+                      Canonical backend probe pending.
+                    </div>
+                  )}
+                </div>
+              </PanelCard>
             </div>
 
             <div className="flex flex-col gap-6">
               {/* 5. Attention Queue */}
               <PanelCard title="ATTENTION QUEUE">
                 <div className="space-y-4">
-                  
+
                   {!isWorkspaceReady && !workspace.isLoading && (
                     <div className="p-3 border border-[#FF003C]/30 bg-[#FF003C]/5 rounded-lg backdrop-blur-sm">
                       <div className="flex justify-between items-start mb-2">
@@ -359,7 +491,7 @@ export default function ControlNodePage() {
                       </Link>
                     </div>
                   )}
-                  
+
                   <div className="p-3 border border-[#FFAB00]/30 bg-[#FFAB00]/5 rounded-lg backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-[#FFAB00]/90 font-medium font-sans text-sm tracking-wide">Budget Nearing Cap</span>
@@ -381,28 +513,28 @@ export default function ControlNodePage() {
               <PanelCard title="RECENT CHANGES" className="flex-1">
                 <div className="space-y-1">
                   {audit.isLoading && <div className="text-[11px] text-[#00E5FF]/50 font-mono tracking-wider animate-pulse">Scanning events log...</div>}
-                  
-                  {audit.data?.events && audit.data.events.length > 0 ? (
-                    audit.data.events.map((ev, i) => (
-                      <TimelineEvent 
+
+                  {auditRows.length > 0 ? (
+                    auditRows.map((ev, i) => (
+                      <TimelineEvent
                         key={ev.id || i}
-                        title={ev.event_type} 
-                        time={ev.created_at ? new Date(ev.created_at).toLocaleTimeString() : ""} 
-                        detail={ev.summary || "System event recorded."} 
-                        isAlert={ev.severity === 'critical' || ev.severity === 'high'}
+                        title={ev.title}
+                        time={ev.time ? new Date(ev.time).toLocaleTimeString() : ""}
+                        detail={ev.detail}
+                        isAlert={ev.isAlert}
                       />
                     ))
                   ) : (
                     <>
-                      <TimelineEvent 
-                          title="Health Check Completed" 
-                          time={new Date().toLocaleTimeString()} 
-                          detail={`Subsystems verified across control plane.`} 
+                      <TimelineEvent
+                          title="Health Check Completed"
+                          time={new Date().toLocaleTimeString()}
+                          detail={`Subsystems verified across control plane.`}
                       />
-                      <TimelineEvent 
-                          title="Initial Deploy" 
-                          time="2 HOURS AGO" 
-                          detail="Container spun up via automated Coolify pipeline. Routing verified." 
+                      <TimelineEvent
+                          title="Initial Deploy"
+                          time="2 HOURS AGO"
+                          detail="Container spun up via automated Coolify pipeline. Routing verified."
                       />
                     </>
                   )}
