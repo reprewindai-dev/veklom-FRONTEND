@@ -16,7 +16,7 @@ const OG_IMAGE = "/og/og-home.jpg";
 const TWITTER_IMAGE = "/og/og-home.jpg";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://veklom.com"),
+  metadataBase: new URL("https://control.veklom.com"),
   applicationName: "Veklom",
   title: {
     default: TITLE,
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   // Belt-and-suspenders: this is a preview/staging surface. The backend also
   // sends X-Robots-Tag: noindex for /control-plane-next, but we set the meta
   // tag too so the preview is never indexed.
-  robots: { index: false, follow: false, nocache: true },
+  robots: { index: true, follow: true },
   // Base Network App ID — domain ownership verification for veklom.com
   other: {
     "base:app_id": "6a31ef5406f4fa4223585905",
@@ -96,9 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AmbientIntervention />
           </AuthProvider>
         </WebMCPProvider>
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
-        )}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-KCZM27WWX7"} />
       </body>
     </html>
   );
