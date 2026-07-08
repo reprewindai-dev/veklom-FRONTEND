@@ -1,7 +1,28 @@
 import { NextResponse } from 'next/server';
 
 // Mock in-memory state for our pipeline error scenarios
-let mockErrorState = {
+type PipelineNodeInputs = {
+  prompt: string;
+  strict: boolean;
+  temperature?: number;
+};
+
+let mockErrorState: {
+  error_id: string;
+  timestamp: string;
+  pipeline_id: string;
+  failing_node: {
+    node_id: string;
+    node_type: string;
+    inputs: PipelineNodeInputs;
+    outputs: null;
+  };
+  error_reason: string;
+  retry_count: number;
+  max_retries: number;
+  human_handoff_status: string;
+  suggested_fix: string;
+} = {
   error_id: "err_999812",
   timestamp: new Date().toISOString(),
   pipeline_id: "pipe_alpha_44",
@@ -59,7 +80,7 @@ export async function POST(req: Request) {
       mockErrorState.failing_node.inputs = {
         ...mockErrorState.failing_node.inputs,
         temperature: 0.1
-      };
+      } as PipelineNodeInputs;
       mockErrorState.error_reason = "Resolved by operator";
 
       return NextResponse.json({
