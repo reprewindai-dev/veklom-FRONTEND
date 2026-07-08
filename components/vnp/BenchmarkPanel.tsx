@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Award, Globe, Activity, ShieldCheck, HardDrive, Cpu, Terminal, Anchor, Server, Layers, ArrowRight, Sliders, Check, Zap } from "lucide-react";
+import { VNP_DIMENSIONS } from "@/lib/vnp/constants";
 import { ApiState, RegionMetric } from "./types";
 
 interface BenchmarkPanelProps {
@@ -29,30 +30,11 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
   const [proxyResult, setProxyResult] = useState<any>(null);
   const [proxyError, setProxyError] = useState("");
 
-  // Multi-weight configuration states to let users recalculate live composite API metrics
-  const [p99Weight, setP99Weight] = useState<number>(40);
-  const [uptimeWeight, setUptimeWeight] = useState<number>(30);
-  const [securityWeight, setSecurityWeight] = useState<number>(20);
-  const [rpsWeight, setRpsWeight] = useState<number>(10);
-  const [weightTuned, setWeightTuned] = useState<boolean>(false);
-
-  // Computes calculated composite scores for each API based on active user-defined weights
-  const getRecalculatedScore = (api: ApiState) => {
-    // Standard parameters derived from API metrics
-    const p99Val = Math.min(100, Math.max(0, 100 - (api.regions["us-east"].p99 / 18)));
-    const uptimeVal = Math.min(100, Math.max(0, (api.regions["us-east"].uptime - 90) * 10));
-    const securityVal = api.compositeScore > 90 ? 98 : 84;
-    const rpsVal = api.regions["us-east"].throughput > 1300 ? 99 : 85;
-
-    const totalWeight = p99Weight + uptimeWeight + securityWeight + rpsWeight || 1;
-    const rawSum = (p99Val * p99Weight) + (uptimeVal * uptimeWeight) + (securityVal * securityWeight) + (rpsVal * rpsWeight);
-    const calculated = rawSum / totalWeight;
-
-    // Harmonize score relative to base baseline to prevent unnatural swings
-    const originalGap = api.compositeScore - 88;
-    const drifted = calculated + (originalGap * 0.4);
-    return Math.min(100, Math.max(45, parseFloat(drifted.toFixed(1))));
-  };
+  const methodologyWeights = VNP_DIMENSIONS.map((dim) => ({
+    label: dim.shortLabel,
+    weight: Math.round(dim.weight * 100),
+    desc: dim.description,
+  }));
 
   const getBadgeGrade = (score: number) => {
     if (score >= 96) return "AAA";
@@ -69,225 +51,114 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
     return "text-red-400 bg-red-950/40 border-red-500/30";
   };
 
-  // Find selected API
-  const baseSelectedApi = apis.find((api) => api.id === selectedApiId) || apis[0];
-  
-  // Create calculated state API object with modified scores based on current weight coefficients
-  const calculatedApis = apis.map(api => ({
-    ...api,
-    compositeScore: getRecalculatedScore(api)
-  }));
+  const getDimensionRows = (api: ApiState) => {
+    const region = api.regions["us-east"];
+    const scoreById: Record<string, { value: string; bar: number }> = {
+      p99_latency: {
+        value: `${region.p99}ms`,
+        bar: Math.min(100, Math.max(0, 100 - region.p99 / 18)),
+      },
+      error_rate: {
+        value: `${region.errorRate}%`,
+        bar: Math.min(100, Math.max(0, 100 - region.errorRate * 9)),
+      },
+      availability: {
+        value: `${region.uptime}%`,
+        bar: Math.min(100, Math.max(0, region.uptime)),
+      },
+      throughput: {
+        value: `${region.throughput} RPS`,
+        bar: Math.min(100, Math.max(0, (region.throughput / 2000) * 100)),
+      },
+      security: {
+        value: "TLS / signed probes",
+        bar: api.compositeScore > 90 ? 96 : 84,
+      },
+      documentation: {
+        value: "Carded",
+        bar: 92,
+      },
+      versioning: {
+        value: api.version,
+        bar: 90,
+      },
+      x402_compliance: {
+        value: api.x402Ready ? "x402 Ready" : "Pending",
+        bar: api.x402Ready ? 100 : 45,
+      },
+      rate_limit_transparency: {
+        value: "Transparent",
+        bar: 88,
+      },
+      developer_experience: {
+        value: api.stabilityRating,
+        bar: Math.min(100, Math.max(0, api.compositeScore - 4)),
+      },
+    };
+
+    return VNP_DIMENSIONS.map((dim) => ({
+      name: dim.label,
+      weight: Math.round(dim.weight * 100),
+      ...(scoreById[dim.id] || { value: "Awaiting score", bar: 0 }),
+    }));
+  };
+
+  // API scores come from the VNP scoring pipeline; the frontend does not tune the composite.
+  const calculatedApis = apis;
 
   const selectedApi = calculatedApis.find(api => api.id === selectedApiId) || calculatedApis[0];
-
-  const handleSliderChange = (setter: React.Dispatch<React.SetStateAction<number>>, val: number) => {
-    setter(val);
-    setWeightTuned(true);
-  };
-
-  const resetWeights = () => {
-    setP99Weight(40);
-    setUptimeWeight(30);
-    setSecurityWeight(20);
-    setRpsWeight(10);
-    setWeightTuned(false);
-  };
-
-  const applyPreset = (p99: number, uptime: number, security: number, rps: number) => {
-    setP99Weight(p99);
-    setUptimeWeight(uptime);
-    setSecurityWeight(security);
-    setRpsWeight(rps);
-    setWeightTuned(true);
-  };
-
-  const isPresetActive = (p99: number, uptime: number, security: number, rps: number) => {
-    return p99Weight === p99 && uptimeWeight === uptime && securityWeight === security && rpsWeight === rps;
-  };
 
   return (
     <div id="vnp-benchmark-matrix-root" className="space-y-6">
       
-      {/* DUAL ZONE: Sliders Coefficient matrix + Ledger Metrics introduction */}
+      {/* Locked methodology overview */}
       <div className="bg-[#0b1017] border border-slate-900 rounded-2xl p-5 space-y-5">
-        
-        {/* Top Header Row with Presets */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-900 pb-5">
-          <div className="space-y-1 max-w-lg">
+          <div className="space-y-1 max-w-2xl">
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider">
               <Sliders className="w-4 h-4 text-emerald-400 animate-pulse" />
-              <span>Consensus Coefficient Matrix</span>
+              <span>Locked VNP Scoring Methodology</span>
             </div>
-            <h3 className="text-md font-black text-white tracking-tight uppercase">Sovereign Telemetry Tuning Weights</h3>
+            <h3 className="text-md font-black text-white tracking-tight uppercase">Canonical 10-D API Trust Vector</h3>
             <p className="text-[11px] text-slate-400 leading-normal">
-              Weight telemetry categories to dynamically calculate cryptographic consensus grades across all monitored APIs. Select an industry engineering profile below:
+              Composite scores are emitted by the VNP scoring pipeline and displayed read-only. This control surface no longer recalculates live cards from local preset sliders.
             </p>
           </div>
 
-          {/* Quick Real-world Action Presets */}
-          <div className="flex flex-wrap gap-2.5 font-mono text-[10px]">
-            <button
-              onClick={() => applyPreset(40, 30, 20, 10)}
-              className={`px-3 py-2 rounded-xl border font-bold transition duration-150 cursor-pointer ${
-                isPresetActive(40, 30, 20, 10) && !weightTuned
-                  ? "bg-emerald-950/40 text-emerald-300 border-emerald-500/50"
-                  : isPresetActive(40, 30, 20, 10)
-                  ? "bg-slate-950 text-emerald-400 border-emerald-500/30"
-                  : "bg-[#05080c] text-slate-400 border-slate-900 hover:text-white"
-              }`}
-            >
-              🌌 Balanced Golden Ratio (40 / 30 / 20 / 10)
-            </button>
-
-            <button
-              onClick={() => applyPreset(15, 45, 35, 5)}
-              className={`px-3 py-2 rounded-xl border font-bold transition duration-150 cursor-pointer ${
-                isPresetActive(15, 45, 35, 5)
-                  ? "bg-indigo-950/40 text-indigo-300 border-indigo-500/50 font-black"
-                  : "bg-[#05080c] text-slate-400 border-slate-900 hover:text-white"
-              }`}
-            >
-              🏦 FinTech/Ledger SLA Optimal (15 / 45 / 35 / 5)
-            </button>
-
-            <button
-              onClick={() => applyPreset(55, 15, 5, 25)}
-              className={`px-3 py-2 rounded-xl border font-bold transition duration-150 cursor-pointer ${
-                isPresetActive(55, 15, 5, 25)
-                  ? "bg-amber-950/40 text-amber-300 border-amber-500/50 font-black"
-                  : "bg-[#05080c] text-slate-400 border-slate-900 hover:text-white"
-              }`}
-            >
-              ⚡ Media/Low-Latency Sync (55 / 15 / 5 / 25)
-            </button>
+          <div className="grid grid-cols-3 gap-2 font-mono text-[10px]">
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 px-3 py-2">
+              <span className="block text-slate-500 uppercase tracking-widest">Dimensions</span>
+              <strong className="text-emerald-400">{methodologyWeights.length}-D</strong>
+            </div>
+            <div className="rounded-xl border border-[#00E5FF]/20 bg-[#00E5FF]/10 px-3 py-2">
+              <span className="block text-slate-500 uppercase tracking-widest">Regions</span>
+              <strong className="text-[#00E5FF]">5 live</strong>
+            </div>
+            <div className="rounded-xl border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-2">
+              <span className="block text-slate-500 uppercase tracking-widest">Formula</span>
+              <strong className="text-[#FFB800]">v0.1</strong>
+            </div>
           </div>
         </div>
 
-        {/* Sliders Grid + Explanatory Commentary Block */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Sliders panel (lg:col-span-8) */}
-          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-[10px] text-slate-400">
-            
-            <div className="space-y-1.5 p-3 bg-slate-950/70 border border-slate-900 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-300">p99 Latency Penalty Weight:</span>
-                <span className="text-emerald-400 font-black">{p99Weight}%</span>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 font-mono text-[10px]">
+          {methodologyWeights.map((dim) => (
+            <div key={dim.label} title={dim.desc} className="rounded-xl border border-slate-900 bg-slate-950/70 px-3 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-400 uppercase tracking-widest">{dim.label}</span>
+                <span className="text-emerald-400 font-black">{dim.weight}%</span>
               </div>
-              <input 
-                type="range" 
-                min="5" 
-                max="70" 
-                value={p99Weight} 
-                onChange={(e) => handleSliderChange(setP99Weight, parseInt(e.target.value))}
-                className="w-full h-1 bg-slate-900 rounded appearance-none cursor-pointer accent-emerald-500"
-              />
+              <div className="mt-1 h-1 rounded-full bg-slate-900 overflow-hidden">
+                <div className="h-full bg-emerald-500/70" style={{ width: `${dim.weight * 4}%` }} />
+              </div>
             </div>
-
-            <div className="space-y-1.5 p-3 bg-slate-950/70 border border-slate-900 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-300">Uptime Stability Coefficient:</span>
-                <span className="text-[#6366f1] font-black">{uptimeWeight}%</span>
-              </div>
-              <input 
-                type="range" 
-                min="5" 
-                max="70" 
-                value={uptimeWeight} 
-                onChange={(e) => handleSliderChange(setUptimeWeight, parseInt(e.target.value))}
-                className="w-full h-1 bg-slate-900 rounded appearance-none cursor-pointer accent-indigo-500"
-              />
-            </div>
-
-            <div className="space-y-1.5 p-3 bg-slate-950/70 border border-slate-900 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-300">Security / Auth Standards:</span>
-                <span className="text-amber-500 font-black">{securityWeight}%</span>
-              </div>
-              <input 
-                type="range" 
-                min="5" 
-                max="70" 
-                value={securityWeight} 
-                onChange={(e) => handleSliderChange(setSecurityWeight, parseInt(e.target.value))}
-                className="w-full h-1 bg-slate-900 rounded appearance-none cursor-pointer accent-amber-500"
-              />
-            </div>
-
-            <div className="space-y-1.5 p-3 bg-slate-950/70 border border-slate-900 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-300">Throughput Capacity (RPS):</span>
-                <span className="text-blue-400 font-black">{rpsWeight}%</span>
-              </div>
-              <input 
-                type="range" 
-                min="5" 
-                max="70" 
-                value={rpsWeight} 
-                onChange={(e) => handleSliderChange(setRpsWeight, parseInt(e.target.value))}
-                className="w-full h-1 bg-slate-900 rounded appearance-none cursor-pointer accent-blue-500"
-              />
-            </div>
-
-          </div>
-
-          {/* Contextual Trade-Off Explanation Block (lg:col-span-4) */}
-          <div className="lg:col-span-4 bg-slate-950 border border-slate-900 rounded-xl p-3.5 space-y-2.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">SLA Trade-off Mechanics</span>
-            
-            {isPresetActive(40, 30, 20, 10) && (
-              <div className="space-y-1.5 animate-fade-in text-[10px] leading-normal text-slate-400">
-                <span className="text-emerald-400 font-bold block uppercase tracking-tight">Symmetric Shannon Optimum:</span>
-                <p>
-                  Balances latency and availability fairly. It models high-performance systems where mild performance degradation or brief packet renegotiation can solve momentary route surges. 
-                </p>
-                <span className="text-[8.5px] text-slate-600 block">Perfect for multi-tenant microcent applications trying to stay lean yet resilient.</span>
-              </div>
-            )}
-
-            {isPresetActive(15, 45, 35, 5) && (
-              <div className="space-y-1.5 animate-fade-in text-[10px] leading-normal text-slate-400">
-                <span className="text-secondary font-bold block text-indigo-400 uppercase tracking-tight">Financial Ledger Priority:</span>
-                <p>
-                  Prioritizes uptime and data integrity above all. Outages or unauthenticated security payloads are heavily penalized. Financial layers tolerate minor latency increase to verify the ledger state.
-                </p>
-                <span className="text-[8.5px] text-slate-500 block">Perfect for payment gateways (Stripe, Plaid) or double-entry bookkeeping consensus.</span>
-              </div>
-            )}
-
-            {isPresetActive(55, 15, 5, 25) && (
-              <div className="space-y-1.5 animate-fade-in text-[10px] leading-normal text-slate-400">
-                <span className="text-amber-400 font-bold block uppercase tracking-tight">Real-time Media Sync:</span>
-                <p>
-                  Urgent millisecond responses are critical. High capacity and fast P99 scores are demanded, letting transient state drift go unpunished. Perfect for streaming, VoIP, or gaming sockets.
-                </p>
-                <span className="text-[8.5px] text-slate-500 block">Prefers losing a micro-packet rather than pausing the feed to renegotiate transport encryption.</span>
-              </div>
-            )}
-
-            {!isPresetActive(40, 30, 20, 10) && !isPresetActive(15, 45, 35, 5) && !isPresetActive(55, 15, 5, 25) && (
-              <div className="space-y-1.5 animate-fade-in text-[10px] leading-normal text-slate-400">
-                <span className="text-indigo-400 font-bold block uppercase tracking-tight">Custom Calibration Mode:</span>
-                <p>
-                  You are manually defining the node's judging weights. Active consensus grades are recalculating dynamically over the entire peer network of validators.
-                </p>
-                <button 
-                  onClick={resetWeights}
-                  className="mt-1 text-[9px] text-emerald-400 underline hover:text-emerald-300 font-bold bg-transparent border-0 cursor-pointer block p-0"
-                >
-                  Reset to Standard V0.1 weights
-                </button>
-              </div>
-            )}
-          </div>
-
+          ))}
         </div>
-
       </div>
 
       {/* Grid of verified APIs */}
       <h3 className="text-xs font-mono tracking-wider font-extrabold text-slate-500 uppercase px-1">
-        Consensus Peer Verified API Nodes ({calculatedApis.length}) {weightTuned && <span className="text-emerald-400 italic font-mono lowercase">(recalculated weights active)</span>}
+        Consensus Peer Verified API Nodes ({calculatedApis.length})
       </h3>
 
       <div className="grid grid-cols-1 gap-6">
@@ -386,9 +257,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                     <span className="text-slate-300 font-bold uppercase border-b border-slate-800 pb-1.5 block tracking-widest">Methodology</span>
                     <div className="space-y-1.5 text-slate-400">
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Methods:</span> <span>Active 5-Region Edge</span></div>
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Metrics:</span> <span className="text-blue-400">10-D Composite, Opt-C</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Metrics:</span> <span className="text-blue-400">Canonical 10-D Composite</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Validation:</span> <span>Ed25519 Merkle Root</span></div>
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Calculation:</span> <span>Dynamic Weights</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Calculation:</span> <span>Locked VNP v0.1</span></div>
                     </div>
                   </div>
 
@@ -423,20 +294,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                     <Sliders className="w-4 h-4 text-[#FFB800]" /> 10-D Master Plane
                   </h5>
                   <div className="space-y-4 font-mono text-[11px]">
-                    {[
-                      { name: "p99 latency", value: api.regions["us-east"].p99 + "ms", bar: Math.min(100, Math.max(0, 100 - (api.regions["us-east"].p99 / 18))) },
-                      { name: "geo-adjusted latency", value: Math.max(12, api.regions["us-east"].p99 - 45) + "ms", bar: 95 },
-                      { name: "error rate", value: api.regions["us-east"].errorRate + "%", bar: 100 - (api.regions["us-east"].errorRate * 9) },
-                      { name: "availability", value: api.regions["us-east"].uptime + "%", bar: api.regions["us-east"].uptime },
-                      { name: "throughput", value: api.regions["us-east"].throughput + " RPS", bar: (api.regions["us-east"].throughput / 2000) * 100 },
-                      { name: "security posture", value: "TLS 1.3 / Ed25519", bar: 100 },
-                      { name: "SLA variance", value: "+0.02%", bar: 98 },
-                      { name: "data residency", value: "EU/US Compliant", bar: 100 },
-                      { name: "documentation & DX", value: "92.0 (ABI)", bar: 92 },
-                      { name: "rate-limit / TTFC", value: "Transparent", bar: 100 },
-                    ].map((dim, idx) => (
+                    {getDimensionRows(api).map((dim, idx) => (
                       <div key={idx} className="flex items-center justify-between">
-                        <span className="text-slate-500 uppercase">{dim.name}</span>
+                        <span className="text-slate-500 uppercase">{dim.name} <span className="text-slate-700">({dim.weight}%)</span></span>
                         <div className="flex items-center gap-3">
                           <div className="w-16 h-1 bg-slate-900 rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500/70" style={{ width: `${Math.min(100, Math.max(0, dim.bar))}%` }} />

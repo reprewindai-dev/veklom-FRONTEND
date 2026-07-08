@@ -210,7 +210,7 @@ export default function NexusProtocol() {
                     <div className="mt-3 flex flex-col gap-1">
                       <div className="flex justify-between items-center text-[8px] font-mono tracking-widest text-white/30 uppercase">
                         <span>QUALITY VECTOR SIGNATURE</span>
-                        <span className="text-[#00E5FF]/60">SCORE VECTOR</span>
+                        <span className="text-[#00E5FF]/60">10-D SEQ</span>
                       </div>
                       <MiniDnaVisualizer dimensions={api.dimensions} score={api.score} />
                     </div>
@@ -251,7 +251,7 @@ export default function NexusProtocol() {
                 {/* Methodology-backed quality vector breakdown */}
                 <div>
                   <div className="text-[10px] font-mono tracking-wider text-white/30 uppercase mb-4">
-                    METHODOLOGY-BACKED API SCORECARD VECTOR
+                    CANONICAL 10-D API SCORECARD VECTOR
                   </div>
                   
                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 items-stretch">
