@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import VeklomFooter from "@/components/marketing/VeklomFooter";
 
 export const metadata: Metadata = {
   title: "Veklom Blog | Sovereign AI Engineering & Governance",
@@ -33,7 +34,10 @@ export default function BlogLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {children}
+      <div className="min-h-[calc(100vh-64px)]">
+        {children}
+      </div>
+      <VeklomFooter />
     </>
   );
 }

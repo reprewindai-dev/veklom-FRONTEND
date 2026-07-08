@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import blogsData from "../data/blog-index.json";
+import VeklomFooter from "@/components/marketing/VeklomFooter";
 
 // Swarm Terminal is now the standalone Veklom-RealTerminal service at terminal.veklom.com
 const TERMINAL_URL = 'https://terminal.veklom.com';
@@ -687,20 +688,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5 text-center text-gray-500 text-sm bg-[#0A0A0C]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#FFB800] rounded flex items-center justify-center">
-              <span className="font-bold text-black text-xs leading-none">V</span>
-            </div>
-            <span className="font-bold font-mono tracking-wider text-white">VEKLOM</span>
-          </div>
-          <p>© 2026 Veklom Corporation. All rights reserved.</p>
-          <div className="flex items-center gap-4 text-xs">
-            <a href="mailto:support@veklom.com" className="hover:text-white transition-colors flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> support@veklom.com</a>
-          </div>
-        </div>
-      </footer>
+      <VeklomFooter />
     </main>
   );
 }

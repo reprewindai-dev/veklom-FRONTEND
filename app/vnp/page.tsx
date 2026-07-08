@@ -3,8 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import dynamicImport from "next/dynamic";
-import { ArrowRight, Activity, Shield, Globe2, Zap, Lock, Cpu, Mail, Globe, ShieldCheck } from 'lucide-react';
+import { Activity, Globe, Server, Shield, Zap, ArrowRight, Check, Search, Code, Cpu, ShieldCheck, Lock, AlertTriangle } from 'lucide-react';
 import { motion } from "framer-motion";
+import VNPFooter from "@/components/vnp/VNPFooter";
 
 const NetworkTopologyPanel = dynamicImport(
   () => import("@/components/vnp/NetworkTopologyPanel"),
@@ -67,7 +68,7 @@ export default function VNPLandingPage() {
         >
           <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-xs font-semibold uppercase tracking-wider mb-8">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            VNP v1.5 STANDALONE NOW LIVE
+            VNP v1.0 STANDALONE NOW LIVE
           </motion.div>
           
           <motion.h1 variants={fadeUpVariants} className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
@@ -145,23 +146,20 @@ export default function VNPLandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono">
-                LOCKED SPECIFICATION v0.1.5
+                LOCKED SPECIFICATION v1.0
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-                The 10-Dimensional Scoring Model
+                The 3-Dimensional Scoring Model
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
-                To prevent manipulation, VNP evaluates APIs across 10 immutable vectors. The weights are mathematically locked and transparently verifiable by any node in the global mesh.
+                To prevent manipulation, VNP evaluates APIs across 3 immutable, mathematically locked vectors transparently verifiable by any node in the global mesh.
               </p>
               
               <div className="space-y-4">
                 {[
-                  { name: 'P99 Latency (Geographically Normalized)', weight: '40%' },
-                  { name: 'Error Rate & Correctness', weight: '25%' },
-                  { name: 'Availability & Uptime', weight: '15%' },
-                  { name: 'Throughput & Capacity', weight: '8%' },
-                  { name: 'Security Posture (TLS 1.3+)', weight: '8%' },
-                  { name: 'Documentation & Versioning', weight: '4%' }
+                  { name: 'P99 Latency (Geographically Normalized)', weight: 'Primary Metric' },
+                  { name: 'Availability & Uptime', weight: 'Multiplier' },
+                  { name: 'x402 Settlement Compliance', weight: '20% Boost' }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#FFB800]/30 transition-colors">
                     <span className="font-medium text-gray-300">{item.name}</span>
@@ -226,58 +224,7 @@ export default function VNPLandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5 bg-[#0A0A0C] text-sm text-gray-500">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-6 h-6 bg-[#FFB800] rounded flex items-center justify-center">
-                <span className="font-bold text-black text-xs leading-none">V</span>
-              </div>
-              <span className="font-bold text-white font-mono tracking-wider">VEKLOM<span className="text-gray-500">_VNP</span></span>
-            </div>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              The cryptographic standard for M2M API telemetry. Governing the autonomous web with mathematical certainty.
-            </p>
-          </div>
-          
-          <div>
-            <h4 className="font-bold mb-4 text-gray-300">Protocol</h4>
-            <ul className="space-y-3">
-              <li><Link href="#" className="hover:text-white transition-colors">Methodology v0.1.5</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Governance Charter</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Slashing Mechanics</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">x402 Settlement</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-bold mb-4 text-gray-300">Developers</h4>
-            <ul className="space-y-3">
-              <li><Link href="#" className="hover:text-white transition-colors">Documentation</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Python Probe SDK</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">FastAPI Integration</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">GitHub Repository</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-bold mb-4 text-gray-300">Network</h4>
-            <ul className="space-y-3">
-              <li><Link href="#" className="hover:text-white transition-colors">Global Topology Map</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Node Operator Guide</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">API Directory</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Status & Uptime</Link></li>
-            </ul>
-          </div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-6 border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p>© {new Date().getFullYear()} Veklom Corporation. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <a href="mailto:support@veklom.com" className="hover:text-white transition-colors flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> support@veklom.com</a>
-          </div>
-        </div>
-      </footer>
+      <VNPFooter />
     </main>
   );
 }
