@@ -1,4 +1,21 @@
-# Veklom Control Plane
+# Veklom AI - Control Plane
+
+Veklom AI is a private governed AI backend that allows secure, compliant, and customizable AI workload management on your own infrastructure, offering policy control, cost management, auditing, and tenant isolation.
+
+## Core Capabilities
+- **Private AI Backend**: Veklom BYOS (Bring Your Own Server) allows organizations to run AI workloads on their own servers or cloud infrastructure, ensuring full control over data and deployment environments.
+- **Governance and Policy Control**: The platform provides detailed policy management capabilities to enforce organizational standards and compliance requirements. Teams can define rules on how AI models are used, which workloads are permitted, and what access controls are applied.
+- **Routing and Multi-Tenant Support**: Veklom supports workload routing and tenant isolation, enabling multiple teams or clients to operate securely on the same infrastructure without risk of data crossover.
+- **Cost Controls**: The platform includes cost management features that allow monitoring and controlling compute expenditure for AI workloads across tenants, helping organizations optimize resource usage and reduce unnecessary spend.
+- **Audit and Evidence Tracking**: Every AI operation can be logged for audit purposes. This ensures accountability, traceability, and evidence collection for regulatory compliance or internal reviews.
+- **API Key Management**: Veklom provides flexible API key management, making it straightforward to integrate with existing applications and control access to AI models and services.
+- **Compliance and Security**: The platform emphasizes regulatory compliance, supporting industry-standard security practices and allowing organizations to maintain audits, access controls, and secure operations on their own infrastructure.
+
+## Deployment Flexibility
+Veklom can be deployed on local servers or in private clouds, providing enterprises with maximum control over data location, security, and network configuration. This flexibility is especially valuable for organizations dealing with sensitive data or operating in highly regulated industries such as healthcare and finance.
+
+## Summary
+Veklom is designed for organizations that need a secure, multitenant, and policy-driven AI platform while maintaining full control over their infrastructure. Its key features—policy management, tenant isolation, cost controls, audit logging, and API integration—make it suitable for enterprise-grade AI operations where governance, compliance, and operational transparency are critical.
 
 The **private, tier-gated control plane** for the Veklom BYOS Backend (the sovereign side of the marketplace). Wired directly to the live FastAPI API at `https://api.veklom.com` — no mocks.
 
