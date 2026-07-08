@@ -8,11 +8,14 @@ export const metadata: Metadata = {
     title: 'Veklom Nexus Protocol (VNP) | Trust through Physics',
     description: 'VNP replaces legacy SLA monitoring with 5-region physical networking and cryptographically anchored benchmarks for AI routing.',
     type: 'website',
+    url: 'https://veklom.com/vnp',
+    images: [{ url: '/og/og-vnp.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Veklom Nexus Protocol (VNP)',
     description: 'Scores backed by physics, cryptography, and five live regions — not marketing.',
+    images: ['/og/og-vnp.jpg'],
   }
 };
 

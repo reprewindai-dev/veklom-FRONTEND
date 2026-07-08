@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@glideapps/glide-data-grid": "^6.0.3",
     "@google/genai": "^2.9.0",
     "@metamask/connect-evm": "^2.1.0",
     "@next/third-parties": "^16.2.10",
@@ -25,7 +26,7 @@
     "firebase": "^12.15.0",
     "framer-motion": "^12.41.0",
     "jspdf": "^4.2.1",
-    "lucide-react": "0.408.0",
+    "lucide-react": "^0.408.0",
     "motion": "^12.40.0",
     "next": "15.5.18",
     "porto": "^0.2.37",
@@ -33,11 +34,13 @@
     "react-code-blocks": "^0.1.6",
     "react-dom": "18.3.1",
     "react-markdown": "^10.1.0",
+    "reactflow": "^11.11.4",
     "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1",
     "swr": "2.2.5",
     "viem": "^2.53.1",
-    "wagmi": "^3.6.18"
+    "wagmi": "^3.6.18",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

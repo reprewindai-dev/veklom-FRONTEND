@@ -12,8 +12,8 @@ const TITLE = "Veklom Control Plane";
 const DESC = "Veklom — the Sovereign AI Hub. Test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.";
 // Official Veklom brand package (raster) served at the site root + /static/branding.
 // These are the exact assets the main veklom.com site uses for social cards.
-const OG_IMAGE = "/og-image.png";
-const TWITTER_IMAGE = "/twitter-card.png";
+const OG_IMAGE = "/og/og-home.jpg";
+const TWITTER_IMAGE = "/og/og-home.jpg";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://veklom.com"),
