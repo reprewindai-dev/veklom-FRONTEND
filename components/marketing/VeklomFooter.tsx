@@ -32,7 +32,7 @@ export default function VeklomFooter() {
           <div>
             <h3 className="font-bold text-white mb-4 uppercase tracking-wider text-xs">Resources</h3>
             <ul className="space-y-3 text-gray-400">
-              <li><a href="https://docs.veklom.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FFB800] transition-colors">Documentation</a></li>
+              <li><Link href="/vnp/docs" className="hover:text-[#FFB800] transition-colors">Documentation</Link></li>
               <li><Link href="/blog" className="hover:text-[#FFB800] transition-colors">Engineering Blog</Link></li>
               <li><a href="https://status.veklom.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FFB800] transition-colors">System Status</a></li>
               <li><a href="mailto:support@veklom.com" className="hover:text-[#FFB800] transition-colors">Support</a></li>

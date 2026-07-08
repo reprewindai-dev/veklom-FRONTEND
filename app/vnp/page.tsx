@@ -43,7 +43,7 @@ export default function VNPLandingPage() {
             <a href="#protocol" className="hover:text-white transition-colors">The Protocol</a>
             <a href="#methodology" className="hover:text-white transition-colors">Methodology</a>
             <a href="#network" className="hover:text-white transition-colors">Global Mesh</a>
-            <Link href="https://docs.veklom.com/vnp" className="hover:text-white transition-colors">Documentation</Link>
+            <Link href="/vnp/docs" className="hover:text-white transition-colors">Documentation</Link>
           </div>
           <div className="flex items-center gap-6 text-sm font-medium">
             <Link href="/workspace" className="text-gray-400 hover:text-white transition-colors">Access Workspace</Link>
@@ -83,10 +83,10 @@ export default function VNPLandingPage() {
           </motion.p>
           
           <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/workspace" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
-              Access the Protocol <ArrowRight className="w-5 h-5" />
+            <Link href="/vnp/docs" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
+              Open Docs Hub <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="#methodology" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-lg hover:bg-white/10 transition-colors flex items-center justify-center">
+            <Link href="/vnp/methodology" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-lg hover:bg-white/10 transition-colors flex items-center justify-center">
               Read the Methodology
             </Link>
           </motion.div>
@@ -145,21 +145,21 @@ export default function VNPLandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono">
-                LOCKED SPECIFICATION v1.0
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono">
+                LOCKED SPECIFICATION v1.0 - UPDATED JULY 7
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-                The 3-Dimensional Scoring Model
+                The Weighted API Scoring Model
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
-                To prevent manipulation, VNP evaluates APIs across 3 immutable, mathematically locked vectors transparently verifiable by any node in the global mesh.
+                To prevent manipulation, VNP evaluates APIs through a published benchmark-card doctrine: benchmark details, purpose, data provenance, methodology, limitations, targeted risks, validation, interpretation, and resources are documented for every scored endpoint.
               </p>
               
               <div className="space-y-4">
                 {[
-                  { name: 'P99 Latency (Geographically Normalized)', weight: 'Primary Metric' },
-                  { name: 'Availability & Uptime', weight: 'Multiplier' },
-                  { name: 'x402 Settlement Compliance', weight: '20% Boost' }
+                  { name: 'Benchmark Details & Scope', weight: 'Carded' },
+                  { name: 'Data Provenance & Validation', weight: 'Signed' },
+                  { name: 'Methodology, Risks & Limits', weight: 'Locked' }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#FFB800]/30 transition-colors">
                     <span className="font-medium text-gray-300">{item.name}</span>

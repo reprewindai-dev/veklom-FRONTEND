@@ -65,6 +65,7 @@ export default function Home() {
             <a href="#problem" className="hover:text-white transition-colors">The Problem</a>
             <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
             <a href="#vnp" className="hover:text-white transition-colors">VNP Spec</a>
+            <Link href="/vnp/docs" className="hover:text-white transition-colors">VNP Docs</Link>
             <Link href="/blog" className="hover:text-white transition-colors font-medium text-brand-300">Blog</Link>
             <a href="#deployment" className="hover:text-white transition-colors">Deployment</a>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
@@ -362,7 +363,7 @@ export default function Home() {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono uppercase tracking-widest">
                 <Globe className="w-4 h-4" />
-                VNP: Global Standard
+                VNP: Global Standard - Docs Updated July 7
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
                 Benchmark APIs with physics. <br />
@@ -371,12 +372,12 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
-                Before your autonomous agents execute and pay for an API, they need to know if it's real. The Veklom Nexus Protocol (VNP) is a 5-region cryptographic telemetry mesh that ranks APIs across 10 dimensions—including Geo-Adjusted Latency, Error Rates, and Security Posture. No marketing. No black boxes. Just physics.
+                Before your autonomous agents execute and pay for an API, they need to know if it is real. The Veklom Nexus Protocol (VNP) is a 5-region cryptographic telemetry mesh with benchmark-card documentation for scope, data provenance, methodology, limitations, targeted risks, validation, and interpretation. No marketing. No black boxes. Just physics.
               </p>
               <ul className="space-y-4">
                 {[
                   { icon: ShieldCheck, text: "5-Region Trust Matrix (US, EU, AP)" },
-                  { icon: Award, text: "Unbiased 10-D Composite Scores (AAA Ratings)" },
+                  { icon: Award, text: "Unbiased weighted composite scores (AAA ratings)" },
                   { icon: Activity, text: "Automated API Discovery & Routing" }
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-gray-300">
@@ -389,7 +390,10 @@ export default function Home() {
               </ul>
               
               <div className="pt-4">
-                <Link href="/vnp" className="inline-flex px-8 py-4 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors items-center gap-2 shadow-lg shadow-white/5">
+                <Link href="/vnp/docs" className="inline-flex px-8 py-4 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors items-center gap-2 shadow-lg shadow-white/5">
+                  Open the VNP Docs Hub <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link href="/vnp" className="ml-0 mt-4 sm:ml-4 sm:mt-0 inline-flex px-8 py-4 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-lg hover:bg-white/10 transition-colors items-center gap-2">
                   View the VNP Master Plane <ArrowRight className="w-5 h-5" />
                 </Link>
               </div>
@@ -450,8 +454,8 @@ export default function Home() {
                 Once VNP discovers and benchmarks an API, the X402 protocol handles the financial reality. X402 natively manages micro-transactions, SLA performance bonds, and yield delegation. Every single API route is priced and metered. If a provider drops their P99 latency SLA, their Micro-Stakes are slashed automatically.
               </p>
               <div className="pt-2">
-                <Link href="/signup" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFB800]/80 font-bold transition-colors uppercase tracking-wider text-sm">
-                  Initialize your ledger workspace <ArrowRight className="w-4 h-4" />
+                <Link href="/vnp/x402" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFB800]/80 font-bold transition-colors uppercase tracking-wider text-sm">
+                  Read the x402 settlement docs <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>

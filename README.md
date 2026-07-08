@@ -1,94 +1,124 @@
-# Veklom AI - Control Plane
+# Veklom Control Plane
 
-Veklom AI is a private governed AI backend that allows secure, compliant, and customizable AI workload management on your own infrastructure, offering policy control, cost management, auditing, and tenant isolation.
+Production frontend for the Veklom sovereign AI control plane and Veklom Nexus Protocol surfaces.
 
-## Core Capabilities
-- **Private AI Backend**: Veklom BYOS (Bring Your Own Server) allows organizations to run AI workloads on their own servers or cloud infrastructure, ensuring full control over data and deployment environments.
-- **Governance and Policy Control**: The platform provides detailed policy management capabilities to enforce organizational standards and compliance requirements. Teams can define rules on how AI models are used, which workloads are permitted, and what access controls are applied.
-- **Routing and Multi-Tenant Support**: Veklom supports workload routing and tenant isolation, enabling multiple teams or clients to operate securely on the same infrastructure without risk of data crossover.
-- **Cost Controls**: The platform includes cost management features that allow monitoring and controlling compute expenditure for AI workloads across tenants, helping organizations optimize resource usage and reduce unnecessary spend.
-- **Audit and Evidence Tracking**: Every AI operation can be logged for audit purposes. This ensures accountability, traceability, and evidence collection for regulatory compliance or internal reviews.
-- **API Key Management**: Veklom provides flexible API key management, making it straightforward to integrate with existing applications and control access to AI models and services.
-- **Compliance and Security**: The platform emphasizes regulatory compliance, supporting industry-standard security practices and allowing organizations to maintain audits, access controls, and secure operations on their own infrastructure.
+## Live Domains
 
-## Deployment Flexibility
-Veklom can be deployed on local servers or in private clouds, providing enterprises with maximum control over data location, security, and network configuration. This flexibility is especially valuable for organizations dealing with sensitive data or operating in highly regulated industries such as healthcare and finance.
+- Public application: `https://veklom.com`
+- VNP standard and docs entry: `https://veklom.com/vnp`
+- Developer surface: `https://veklom.dev`
+- Backend API: `https://api.veklom.com`
 
-## Summary
-Veklom is designed for organizations that need a secure, multitenant, and policy-driven AI platform while maintaining full control over their infrastructure. Its key features—policy management, tenant isolation, cost controls, audit logging, and API integration—make it suitable for enterprise-grade AI operations where governance, compliance, and operational transparency are critical.
+The app is deployed through Coolify, not Vercel. The frontend is a standalone Next.js service that talks to the live FastAPI backend through same-origin API rewrites and the canonical backend URL.
 
-The **private, tier-gated control plane** for the Veklom BYOS Backend (the sovereign side of the marketplace). Wired directly to the live FastAPI API at `https://api.veklom.com` — no mocks.
+## What This Repo Owns
 
-The public marketplace demo is a separate app and is **not touched** by this project.
+- Main Veklom landing page and monetization flow.
+- `/vnp` standalone Veklom Nexus Protocol surface.
+- Local VNP docs hub under `/vnp/docs` and the `(docs)` pages.
+- UACP control-plane routes, including Nexus Protocol, runtime, governance, staking, incidents, and workspace surfaces.
+- Tier-gated SaaS control-plane modules for billing, usage, routing, audit, governance, security, team, subscriptions, deployments, and admin.
+- Frontend API proxy routes that connect the app to the production backend without exposing secrets.
+
+## VNP Positioning
+
+VNP is the API benchmark and routing standard for machine-consumable trust. It is not an LLM benchmark card clone.
+
+The VNP card surface must stay true to:
+
+- The selected API being scored.
+- The live VNP methodology and scoring engine.
+- Signed probe data and regional evidence.
+- x402 settlement and performance-bond logic.
+- Veklom's deployed Coolify and backend topology.
+
+Reference material such as BenchmarkCards or the prototype repo can guide documentation structure and visual seriousness, but the source of truth is this codebase, the VNP scoring implementation, and the live backend contracts.
 
 ## Stack
 
-- **Next.js 14** (App Router) + **TypeScript**
-- **Tailwind CSS** for styling, dark sovereign theme
-- **SWR** for data fetching with auto-revalidation
-- **lucide-react** for icons
-- Auth: JWT (Bearer) against `POST /api/v1/auth/login`
-- Tier model: Free / Starter / Pro / Sovereign / Enterprise — resolved from `/api/v1/subscriptions/current` + `/api/v1/auth/me`
+- Next.js App Router
+- React 18
+- TypeScript
+- Tailwind CSS
+- SWR and React Query for frontend data flows
+- JWT auth against the live backend
+- Coolify deployment with Docker/Nixpacks-compatible output
 
-## Modules (and tier gates)
+## Backend Contract
 
-| Group | Module | Min tier | Backend routes used |
-|---|---|---|---|
-| Ops | Overview | Starter | `/wallet/balance`, `/workspace/overview`, `/command-center/activity-feed`, `/audit` |
-| Ops | Token Wallet | Starter | `/wallet/*` |
-| Ops | Usage Analytics | Pro | `/billing/usage`, `/billing/breakdown`, `/insights/summary` |
-| Ops | Billing | Starter | `/billing/invoices`, `/subscriptions/portal` |
-| Ops | Smart Routing | Pro | `/routing/*`, `/ai/routing/tier` |
-| Ops | Autonomous Jobs | Pro | `/autonomous/*` |
-| Ops | Insights | Pro | `/insights/*` |
-| Governance | Audit Log | Pro | `/audit`, `/audit/compliance-report` |
-| Governance | Budget Caps | Pro | `/budget`, `/budget/forecast` |
-| Governance | Kill Switch | Sovereign | `/cost/kill-switch`, `/cost/kill-switch/status` |
-| Governance | Compliance | Sovereign | `/compliance/*` |
-| Governance | Locker Security | Sovereign | `/locker/security/*`, `/locker/monitoring/*` |
-| Governance | Content Safety | Pro | `/content-safety/*` |
-| Governance | Privacy Controls | Sovereign | `/config` |
-| Governance | Security Center | Sovereign | `/security/*` |
-| Governance | Governance | Sovereign | `/governance/*` |
-| Account | Team & RBAC | Pro | `/team/*` |
-| Account | API Keys | Starter | `/auth/api-keys` |
-| Account | Webhooks | Pro | `/webhooks/*` |
-| Account | Subscription | Free | `/subscriptions/*` |
-| Account | Workspace | Starter | `/workspace/*` |
-| Vendor | Onboarding | Starter | `/vendors/onboard`, `/vendors/me/listings` |
-| Vendor | My Listings | Starter | `/listings/*`, `/vendors/me/listings` |
-| Vendor | Payouts | Starter | `/payouts/*` |
-| Vendor | Stripe Connect | Starter | `/stripe/connect/*` |
-| Admin | Admin (superuser) | n/a (superuser flag) | `/admin/*` |
-
-Locked modules render an upsell card linking to `/subscriptions`. Admin is hidden entirely unless `me.is_superuser`.
-
-## Local dev
+Primary backend:
 
 ```bash
-cp .env.example .env.local
-# Optional: point at staging
-# NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com
-
-npm install
-npm run dev
-# open http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com
 ```
 
-## Publish and Deploy
+Production client code should call same-origin routes where possible, for example:
 
-The user-owned target repo is `reprewindai-dev/veklom-control-plane`.
+```ts
+fetch("/api/v1/auth/me")
+```
 
-### Deployment Architecture
-This application is designed to be deployed as a standalone service (via Coolify or Vercel). It does NOT run inside the FastAPI backend.
+The frontend proxy and rewrite layer route those calls to the canonical backend. Do not add mock production endpoints or fake API fallbacks.
 
-1. Deploy the `veklom-control-plane` repository to Coolify (using the included `Dockerfile` or Nixpacks).
-2. Set the environment variable `NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com` in your Coolify/Vercel settings.
-3. Configure the backend's CORS (`_CORS_ORIGIN_REGEX`) to allow your frontend domain (e.g. `https://control.veklom.com`).
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Default local dev port:
+
+```bash
+http://localhost:3002
+```
+
+Useful routes:
+
+- `http://localhost:3002`
+- `http://localhost:3002/vnp`
+- `http://localhost:3002/vnp/docs`
+- `http://localhost:3002/nexus`
+
+## Production Build
+
+Required checks before pushing:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+The build emits standalone output for Coolify. Use the included `Dockerfile` or Coolify's build flow, with environment variables configured in Coolify secrets.
+
+## Coolify Deployment Notes
+
+Coolify should provide:
+
+- `NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com`
+- Any wallet, Reown, or marketplace public IDs required by the frontend.
+- Server-side secrets only through Coolify environment management.
+
+The app should be routed by Coolify/Traefik to:
+
+- `veklom.com`
+- `www.veklom.com`
+- `veklom.dev` when attached as the developer surface
+
+Do not document Vercel as the deployment target for this repo.
+
+## Security Rules
+
+- No secrets in source.
+- No fake production APIs.
+- No unsafe token logging.
+- No untrusted HTML injection.
+- Auth and tier gates must remain tied to backend state.
+- Admin surfaces must remain hidden unless backend user state grants superuser access.
 
 ## Notes
 
-- The control plane is API-only and stateless — all state lives in the BYOS Backend.
-- Tokens are kept in `localStorage` under `veklom.access_token` / `veklom.refresh_token`.
-- If the backend returns a 401, the auth context clears tokens and the user is bounced to `/login`.
-- Sovereign/Enterprise modules can be revealed without payment when `me.is_superuser` is true (the admin clause). The tier badge still reflects the real tier.
+- PGL Genome DNA is a separate identity/lineage concept and should not be removed just because the VNP API scoring visual moved away from DNA/helix imagery.
+- The VNP API benchmark card should remain methodology-backed and API-specific.
+- Public docs belong inside the app under `/vnp/docs`, not an external docs domain.

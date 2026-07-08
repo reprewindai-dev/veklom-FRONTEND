@@ -53,6 +53,9 @@ export default function VNPDocsLayout({
             <span className="font-bold tracking-wider text-lg font-mono">VEKLOM<span className="text-gray-500">_VNP</span></span>
           </Link>
           <div className="flex items-center gap-6 text-sm font-medium">
+            <Link href="/vnp/docs" className="text-gray-400 hover:text-white transition-colors">Docs Hub</Link>
+            <Link href="/vnp/directory" className="text-gray-400 hover:text-white transition-colors">Directory</Link>
+            <Link href="/vnp/status" className="text-gray-400 hover:text-white transition-colors">Status</Link>
             <Link href="/workspace" className="text-gray-400 hover:text-white transition-colors">Access Workspace</Link>
           </div>
         </div>

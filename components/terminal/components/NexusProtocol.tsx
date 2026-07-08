@@ -210,7 +210,7 @@ export default function NexusProtocol() {
                     <div className="mt-3 flex flex-col gap-1">
                       <div className="flex justify-between items-center text-[8px] font-mono tracking-widest text-white/30 uppercase">
                         <span>QUALITY VECTOR SIGNATURE</span>
-                        <span className="text-[#00E5FF]/60">10-D SEQ</span>
+                        <span className="text-[#00E5FF]/60">SCORE VECTOR</span>
                       </div>
                       <MiniDnaVisualizer dimensions={api.dimensions} score={api.score} />
                     </div>
@@ -248,12 +248,14 @@ export default function NexusProtocol() {
                   </div>
                 </div>
 
-                {/* 10-Dimensional Vector Breakdown */}
+                {/* Methodology-backed quality vector breakdown */}
                 <div>
-                  <div className="text-[10px] font-mono tracking-wider text-white/30 uppercase mb-4">10-DIMENSIONAL QUALITY VECTOR SPECIFICATION</div>
+                  <div className="text-[10px] font-mono tracking-wider text-white/30 uppercase mb-4">
+                    METHODOLOGY-BACKED API SCORECARD VECTOR
+                  </div>
                   
                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 items-stretch">
-                    {/* DNA Helix Map column */}
+                    {/* Benchmark card vector column */}
                     <div className="xl:col-span-2">
                       <ApiDnaVisualizer
                         dimensions={selectedApi.dimensions}
@@ -595,8 +597,8 @@ export default function NexusProtocol() {
                       STATUS: Formula v0.1 Locked until 2027-06-22. Changing requires 2/3 TSC supermajority + 60-day review.
                     </div>
 
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-4">1. The 10-Dimensional Scoring Formula</h2>
-                    <p>The composite score is calculated as a weighted sum of ten normalized dimensions:</p>
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-4">1. Canonical Scoring Formula</h2>
+                    <p>The composite score is calculated from the scoring dimensions emitted for the selected API by the active VNP methodology and signed measurement pipeline:</p>
                     
                     <div className="space-y-2.5 my-3">
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]">

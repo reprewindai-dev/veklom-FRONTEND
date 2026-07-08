@@ -12,7 +12,7 @@ export default function MethodologyPage() {
           VNP SPECIFICATION v1.0
         </div>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
-          The 3-Dimensional Scoring Model
+          The Weighted API Scoring Model
         </h1>
         <p className="text-xl text-gray-400 leading-relaxed mb-8">
           The Veklom Nexus Protocol abandons easily manipulated metrics. We measure what matters to the Machine-to-Machine (M2M) economy using cryptographically secure Active Network Metrology.
