@@ -24,10 +24,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { VNP_DIMENSIONS, VNP_REGIONS, VNP_GRADE_BANDS, CONFIDENCE_THRESHOLDS, NORMALIZATION } from "@/lib/vnp/constants";
+import { VNP_METHODOLOGY_TAGLINE, VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
 import type { VNPDimensionId } from "@/lib/vnp/types";
 
 export default function MethodologyPanel() {
-  const [expandedSection, setExpandedSection] = useState<string | null>("dimensions");
+  const [expandedSection, setExpandedSection] = useState<string | null>("verification");
 
   const toggle = (id: string) =>
     setExpandedSection((prev) => (prev === id ? null : id));
@@ -40,13 +41,13 @@ export default function MethodologyPanel() {
           <BookOpen className="w-5 h-5 text-[#FFB800]" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-white">VNP Methodology v0.1</h2>
+          <h2 className="text-lg font-semibold text-white">{VNP_METHODOLOGY_VERSION}</h2>
           <p className="text-[11px] text-[#6E6E73]">
-            Locked specification — open, community-governed, real-time API benchmark scoring for machine-consumable trust
+            {VNP_METHODOLOGY_TAGLINE}
           </p>
         </div>
         <span className="ml-auto px-2 py-0.5 rounded border text-[9px] font-mono font-bold uppercase tracking-widest bg-[#FFB800]/10 text-[#FFB800] border-[#FFB800]/30">
-          v0.1.0 LOCKED
+          v1.0
         </span>
       </div>
 
@@ -54,7 +55,7 @@ export default function MethodologyPanel() {
       <div className="p-4 rounded-xl border border-[#FFB800]/20 bg-[#FFB800]/[0.03] mb-4">
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#FFB800] mb-2">Normative Document Stack</div>
         <div className="grid grid-cols-3 gap-3">
-          <DocRef title="Methodology Specification v0.1" status="LOCKED" desc="Dimensions, weights, formulas, anti-gaming" />
+          <DocRef title="VNP Methodology v1.0" status="ACTIVE" desc="Verification stack, evidence status, anti-gaming" />
           <DocRef title="Governance Charter v1.0" status="OPEN COMMENT" desc="BGB/TSC model, WGs, elections, disputes" />
           <DocRef title="WABCG Charter" status="PUBLISHED" desc="W3C Community Group interim governance" />
         </div>
@@ -79,17 +80,52 @@ export default function MethodologyPanel() {
         ))}
       </div>
 
-      {/* 1. DIMENSIONS */}
+      {/* 1. VERIFICATION STACK */}
+      <Section
+        id="verification"
+        label={VNP_VERIFICATION_STACK_TITLE}
+        icon={Scale}
+        expanded={expandedSection === "verification"}
+        onToggle={() => toggle("verification")}
+      >
+        <div className="space-y-2">
+          <p className="text-[11px] text-[#A1A1A6] mb-3">
+            Public VNP cards now describe evidence sections and implementation status instead of exposing stale dimension claims.
+            A capability is only marked Live when the backend route proves it.
+          </p>
+          <div className="space-y-1.5">
+            {VNP_VERIFICATION_STACK.map((section) => (
+              <div key={section.label} className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A] hover:border-[#333] transition-colors">
+                <div className="col-span-4">
+                  <div className="text-[11px] text-white font-medium">{section.label}</div>
+                  <div className="text-[9px] text-[#6E6E73]">{section.description}</div>
+                </div>
+                <div className="col-span-3 text-center">
+                  <div className="text-[10px] font-mono text-[#FFB800] font-bold">{section.status}</div>
+                  <div className="text-[8px] text-[#6E6E73]">status</div>
+                </div>
+                <div className="col-span-5 text-[10px] text-[#A1A1A6]">
+                  {section.label === "Agent/runtime enforcement"
+                    ? "CAPPO /v1/exec, ExecutionIdentityV1, PGL certificates, LAW 0 enforcement"
+                    : "BYOS/VNP route evidence is shown only when returned by the backend."}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* 2. INTERNAL SCORE SIGNALS */}
       <Section
         id="dimensions"
-        label="10-Dimension Scoring Model"
+        label="Internal Score Signals"
         icon={Scale}
         expanded={expandedSection === "dimensions"}
         onToggle={() => toggle("dimensions")}
       >
         <div className="space-y-2">
           <p className="text-[11px] text-[#A1A1A6] mb-3">
-            Each API is measured across 10 dimensions with asymmetric weights summing to 1.0.
+            Each API score is rendered from backend-emitted measurement signals with asymmetric weights summing to 1.0.
             Direction-aware normalization maps raw measurements to 0–100 scores.
             The weighting is intentionally asymmetric: p99 latency highest because outliers break agent pipelines,
             error/correctness next because fast-but-wrong is unusable.
@@ -133,7 +169,7 @@ export default function MethodologyPanel() {
           <div className="mt-3 p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A] font-mono text-[10px]">
             <div className="text-[#6E6E73] mb-1">{"// Composite Score Formula"}</div>
             <div className="text-[#A1A1A6]">
-              {"VNP_Score = Σ(weight_i × normalized_score_i) for i ∈ [1..10]"}
+              {"VNP_Score = Σ(weight_i × normalized_score_i) for backend-emitted score signals"}
             </div>
             <div className="text-[#6E6E73] mt-1">
               {"// Rounded to 1 decimal place. Weight sum validated at runtime: 1.000"}
@@ -719,7 +755,7 @@ export default function MethodologyPanel() {
               <div className="text-[11px] font-semibold text-[#37C9EC] mb-2">Days 31–60: Measure & Anchor</div>
               <div className="text-[10px] text-[#6E6E73] space-y-0.5">
                 <div>• Select 20–50 initial APIs</div>
-                <div>• Implement all 10 dimensions</div>
+            <div>• Implement the full v1.0 verification stack</div>
                 <div>• Start continuous measurement</div>
                 <div>• Build operator + public dashboards</div>
                 <div>• Implement dispute Tier 1 & 2</div>

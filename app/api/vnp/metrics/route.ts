@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const API_BASE = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 
 export async function GET() {
   try {

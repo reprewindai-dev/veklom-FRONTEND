@@ -23,6 +23,7 @@ import { ApiDnaVisualizer, MiniDnaVisualizer } from './ApiDnaVisualizer';
 import ConsensusVisualization from '@/components/vnp/ConsensusVisualization';
 import PGLIdentityLayer from '@/components/vnp/PGLIdentityLayer';
 import StakingProtocol from '@/components/vnp/StakingProtocol';
+import { VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK_TITLE } from '@/lib/vnp/methodology';
 
 interface ProberNode {
   id: string;
@@ -210,7 +211,7 @@ export default function NexusProtocol() {
                     <div className="mt-3 flex flex-col gap-1">
                       <div className="flex justify-between items-center text-[8px] font-mono tracking-widest text-white/30 uppercase">
                         <span>QUALITY VECTOR SIGNATURE</span>
-                        <span className="text-[#00E5FF]/60">10-D SEQ</span>
+                        <span className="text-[#00E5FF]/60">VNP v1.0</span>
                       </div>
                       <MiniDnaVisualizer dimensions={api.dimensions} score={api.score} />
                     </div>
@@ -240,7 +241,7 @@ export default function NexusProtocol() {
                 <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
                   <div>
                     <h2 className="text-lg font-bold tracking-wide text-white">{selectedApi.name}</h2>
-                    <p className="text-[10px] text-white/40 uppercase font-mono tracking-widest">{selectedApi.provider} — Benchmark v0.1.16 (VNP-Core)</p>
+                    <p className="text-[10px] text-white/40 uppercase font-mono tracking-widest">{selectedApi.provider} — {VNP_METHODOLOGY_VERSION}</p>
                   </div>
                   <div className="text-right">
                     <div className="text-[28px] font-bold font-mono tracking-tight text-[#00E5FF] text-glow-cyan leading-none">{selectedApi.score}</div>
@@ -251,7 +252,7 @@ export default function NexusProtocol() {
                 {/* Methodology-backed quality vector breakdown */}
                 <div>
                   <div className="text-[10px] font-mono tracking-wider text-white/30 uppercase mb-4">
-                    CANONICAL 10-D API SCORECARD VECTOR
+                    {VNP_VERIFICATION_STACK_TITLE}
                   </div>
                   
                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 items-stretch">
@@ -327,24 +328,24 @@ export default function NexusProtocol() {
                   
                   <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-3 mt-1">
                     <div>
-                      <div className="text-white/30 uppercase">VDF Time-Lock (7d)</div>
-                      <div className="text-[#00FF66] flex items-center gap-1.5 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]" />
-                        <span>ACTIVE (Wesolowski IQ)</span>
+                      <div className="text-white/30 uppercase">Time-Lock Disclosure</div>
+                      <div className="text-amber-300 flex items-center gap-1.5 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                        <span>Methodology Target</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-white/30 uppercase">zk-SNARK Correctness</div>
+                      <div className="text-white/30 uppercase">x402 Settlement Evidence</div>
                       <div className="text-[#00FF66] flex items-center gap-1.5 font-bold">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]" />
-                        <span>VERIFIED (x402 Circuit)</span>
+                        <span>Connected</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-white/30 uppercase">Estimator / Swarms</div>
+                      <div className="text-white/30 uppercase">Agent/runtime enforcement</div>
                       <div className="text-[#00FF66] flex items-center gap-1.5 font-bold">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66]" />
-                        <span>MAD-Bounded / RPN Active</span>
+                        <span>Connected / Auth Required</span>
                       </div>
                     </div>
                   </div>
@@ -529,7 +530,7 @@ export default function NexusProtocol() {
                   <BookOpen className="w-5 h-5 text-[#00E5FF]" />
                   <div>
                     <div className="text-xs font-bold text-white/80">Methodology Spec</div>
-                    <div className="text-[9px] text-white/40 font-mono">Formula v0.1 — 100% LOCKED</div>
+                    <div className="text-[9px] text-white/40 font-mono">VNP Methodology v1.0</div>
                   </div>
                 </button>
               </div>
@@ -542,7 +543,7 @@ export default function NexusProtocol() {
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-[#00E5FF]" />
                   <span className="text-xs font-bold uppercase tracking-wider text-white/80">
-                    {docTab === 'governance' ? 'GOVERNANCE_CHARTER_V1.0.md' : 'METHODOLOGY_SPEC_V0.1.md'}
+                    {docTab === 'governance' ? 'GOVERNANCE_CHARTER_V1.0.md' : 'VNP_METHODOLOGY_V1.0.md'}
                   </span>
                 </div>
                 <span className="text-[8px] font-mono text-white/40 uppercase">Read-Only Secure Buffer</span>
@@ -592,9 +593,9 @@ export default function NexusProtocol() {
                   </>
                 ) : (
                   <>
-                    <h1 className="text-lg font-bold text-white border-b border-white/10 pb-2">VNP Methodology Specification v0.1</h1>
+                    <h1 className="text-lg font-bold text-white border-b border-white/10 pb-2">VNP Methodology v1.0</h1>
                     <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded text-emerald-200/80 mb-4 font-mono text-[10px]">
-                      STATUS: Formula v0.1 Locked until 2027-06-22. Changing requires 2/3 TSC supermajority + 60-day review.
+                      STATUS: Methodology Target where backend evidence is not yet wired. Live labels require route-backed proof.
                     </div>
 
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-4">1. Canonical Scoring Formula</h2>

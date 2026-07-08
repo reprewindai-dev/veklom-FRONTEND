@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:vnp-copy": "node scripts/check-vnp-public-copy.mjs"
   },
   "dependencies": {
     "@glideapps/glide-data-grid": "^6.0.3",

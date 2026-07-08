@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { BenchmarkApiEntry } from "@/lib/vnp/types";
 import { computeLeaderboard } from "@/lib/vnp/scoring";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const API_BASE = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 
 export async function GET() {
   try {
@@ -22,7 +22,7 @@ export async function GET() {
 
     return NextResponse.json({
       protocol: "VNP",
-      version: "0.1.0",
+      version: "VNP Methodology v1.0",
       generatedAt: new Date().toISOString(),
       count: leaderboard.length,
       scores: leaderboard.map((s) => ({

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Search, Database, Cpu, Wallet, CheckCircle2, Activity } from 'lucide-react';
+import { Search, Cpu, Wallet, CheckCircle2, Activity, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface RealtimeMetric {
@@ -10,18 +10,25 @@ interface RealtimeMetric {
   measured_at: string;
 }
 
+interface RealtimeDirectoryResponse {
+  realtime_metrics?: Record<string, RealtimeMetric>;
+}
+
 export default function DirectoryPage() {
   const [realtimeData, setRealtimeData] = useState<Record<string, RealtimeMetric>>({});
+  const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRealtime = async () => {
       try {
-        const res = await api.get('/api/v1/vnp/directory/realtime');
+        const res = await api.get<RealtimeDirectoryResponse>('/api/v1/vnp/directory/realtime');
         if (res.realtime_metrics) {
           setRealtimeData(res.realtime_metrics);
+          setLastError(null);
         }
       } catch (err) {
         console.error("Failed to fetch realtime metrics", err);
+        setLastError("Disconnected");
       }
     };
 
@@ -35,18 +42,15 @@ export default function DirectoryPage() {
       title: "AI Infrastructure",
       icon: Cpu,
       apis: [
-        { id: "openai", name: "OpenAI GPT-4o", status: "VNP Certified", stake: "$50,000", defaultLatency: "142ms" },
-        { id: "anthropic", name: "Anthropic Claude 3.5", status: "VNP Certified", stake: "$50,000", defaultLatency: "189ms" },
-        { id: "pinecone", name: "Pinecone Vector DB", status: "VNP Certified", stake: "$10,000", defaultLatency: "42ms" },
+        { id: "openai", name: "OpenAI API", status: "Live", stake: "x402 Connected", defaultLatency: "Awaiting probe" },
+        { id: "anthropic", name: "Anthropic API", status: "Live", stake: "x402 Connected", defaultLatency: "Awaiting probe" },
       ]
     },
     {
       title: "Financial & Web3",
       icon: Wallet,
       apis: [
-        { id: "stripe", name: "Stripe Issuing", status: "VNP Certified", stake: "$100,000", defaultLatency: "89ms" },
-        { id: "alchemy", name: "Alchemy Base RPC", status: "VNP Certified", stake: "$25,000", defaultLatency: "35ms" },
-        { id: "coinbase", name: "Coinbase Exchange", status: "Evaluating (34/60 Days)", stake: "Pending", defaultLatency: "112ms" },
+        { id: "stripe", name: "Stripe API", status: "Live", stake: "x402 Connected", defaultLatency: "Awaiting probe" },
       ]
     }
   ];
@@ -63,9 +67,15 @@ export default function DirectoryPage() {
             </span>
             LIVE PHYSICAL PROBES
           </span>
+          {lastError && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {lastError}
+            </span>
+          )}
         </div>
         <p className="text-xl text-gray-400 leading-relaxed mb-8">
-          The definitive registry of M2M endpoints governed by x402 SLA Performance Bonds.
+          Live physical probe readings from the VNP backend for OpenAI, Anthropic, and Stripe.
         </p>
       </div>
 
@@ -91,7 +101,8 @@ export default function DirectoryPage() {
                 {category.apis.map((api, j) => {
                   const liveData = realtimeData[api.id];
                   const latencyDisplay = liveData ? `${liveData.latency_ms}ms` : api.defaultLatency;
-                  const isUp = liveData ? liveData.is_up : true;
+                  const isUp = liveData ? liveData.is_up : false;
+                  const statusLabel = liveData ? (isUp ? api.status : "Disconnected") : "Config Incomplete";
 
                   return (
                     <div key={j} className="bg-white/5 border border-white/10 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#FFB800]/30 transition-colors cursor-pointer group">
@@ -103,13 +114,13 @@ export default function DirectoryPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-2">
-                          {api.status === "VNP Certified" ? (
+                          {statusLabel === "Live" ? (
                             <span className="inline-flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded">
-                              <CheckCircle2 className="w-3 h-3" /> {api.status}
+                              <CheckCircle2 className="w-3 h-3" /> {statusLabel}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded">
-                              {api.status}
+                              {statusLabel}
                             </span>
                           )}
                         </div>
@@ -118,13 +129,13 @@ export default function DirectoryPage() {
                       <div className="flex items-center gap-8 text-sm">
                         <div className="flex flex-col items-end">
                           <span className="text-gray-500 text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
-                            {liveData && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>}
-                            Global P99
+                            {liveData && <span className={`w-1.5 h-1.5 rounded-full ${isUp ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></span>}
+                            Physical Probe
                           </span>
                           <span className="font-mono text-white">{latencyDisplay}</span>
                         </div>
                         <div className="flex flex-col items-end">
-                          <span className="text-gray-500 text-xs uppercase tracking-wider mb-1">Active Stake</span>
+                          <span className="text-gray-500 text-xs uppercase tracking-wider mb-1">Settlement</span>
                           <span className="font-mono text-[#FFB800] font-bold">{api.stake}</span>
                         </div>
                       </div>

@@ -3,6 +3,7 @@
 import { Activity, ExternalLink, FileCheck } from "lucide-react";
 import type { VNPScore } from "@/lib/vnp/types";
 import { gradeForScore, VNP_DIMENSIONS } from "@/lib/vnp/constants";
+import { VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
 import GradeBadge from "./GradeBadge";
 import ConfidenceBadge from "./ConfidenceBadge";
 import RegionalBreakdown from "./RegionalBreakdown";
@@ -51,7 +52,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.18em] text-[#3EE7A2]">
             <FileCheck className="h-3 w-3" />
-            <span>VNP API Trust Standard v0.1</span>
+            <span>{VNP_METHODOLOGY_VERSION}</span>
           </div>
           <Link
             href={`/benchmarks/${score.apiId}`}
@@ -60,22 +61,22 @@ export default function ScoreCard({ score }: ScoreCardProps) {
             {score.apiName}
           </Link>
           <div className="text-[10px] font-mono text-[#6E6E73] uppercase tracking-widest mt-0.5">
-            {score.provider} &middot; {score.category} &middot; VNP v0.1.16
+            {score.provider} &middot; {score.category} &middot; API telemetry scorecard
           </div>
         </div>
         <GradeBadge grade={score.grade} composite={score.composite} size="md" />
       </div>
 
-      {/* VNP v0.1.16 Protocol Spine Indicators */}
+      {/* VNP verification spine indicators */}
       <div className="flex flex-wrap gap-1 mb-4 relative z-10">
         <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
-          10-D SEQ
+          Physical Measurements
         </span>
         <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
-          Weighted Composite
+          Signed Telemetry
         </span>
         <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
-          5 Region Normalization
+          Route Beacons
         </span>
         <span className="inline-flex items-center gap-1 rounded bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 px-1.5 py-0.5 text-[7.5px] font-bold font-mono text-[#3EE7A2] uppercase tracking-wider">
           {hasAnchor ? "Base Anchor" : "Merkle Pending Anchor"}
@@ -89,7 +90,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
             <Activity className="h-3 w-3 text-[#37C9EC]" />
             Quality Vector Signature
           </span>
-          <span className="text-[#37C9EC]/70">Canonical {VNP_DIMENSIONS.length}-D</span>
+          <span className="text-[#37C9EC]/70">{VNP_VERIFICATION_STACK_TITLE}</span>
         </div>
         <svg
           viewBox={`0 0 ${width} ${height}`}

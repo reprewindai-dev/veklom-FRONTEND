@@ -24,6 +24,14 @@ The app is deployed through Coolify, not Vercel. The frontend is a standalone Ne
 
 VNP is the API benchmark and routing standard for machine-consumable trust. It is not an LLM benchmark card clone.
 
+Current public methodology: `VNP Methodology v1.0`.
+
+Core public language:
+
+- Cryptographic API telemetry for the machine-to-machine economy.
+- VNP v1.0 Verification Stack.
+- Physical measurements, signed telemetry, route beacons, robust scoring, x402 settlement evidence, PGL audit trails, and agent/runtime enforcement.
+
 The VNP card surface must stay true to:
 
 - The selected API being scored.
@@ -46,10 +54,17 @@ Reference material such as BenchmarkCards or the prototype repo can guide docume
 
 ## Backend Contract
 
-Primary backend:
+Primary VNP/x402/PGL backend:
 
 ```bash
 NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com
+VBB_BACKEND_URL=https://api.veklom.com
+```
+
+Governed runtime backend:
+
+```bash
+CAPPO_BACKEND_URL=https://cappo.veklom.com
 ```
 
 Production client code should call same-origin routes where possible, for example:
@@ -59,6 +74,15 @@ fetch("/api/v1/auth/me")
 ```
 
 The frontend proxy and rewrite layer route those calls to the canonical backend. Do not add mock production endpoints or fake API fallbacks.
+
+VNP routes wired by this frontend:
+
+- `/api/v1/vnp/metrics` -> BYOS backend physical probe, validator, score, and settlement metrics.
+- `/api/v1/vnp/directory/realtime` -> BYOS backend `vnp_metrics_realtime` readings for OpenAI, Anthropic, and Stripe probes.
+- `/api/v1/beacon/topology` -> BYOS five-node VNP topology frame.
+- `/api/v1/x402/*` -> BYOS x402 payment, config, verification, and settlement surfaces.
+- `/v1/exec` -> CAPPO governed runtime execution.
+- `/api/vnp/methodology` -> frontend aggregation of BYOS VNP methodology plus CAPPO runtime methodology.
 
 ## Local Development
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Award, Globe, Activity, ShieldCheck, HardDrive, Cpu, Terminal, Anchor, Server, Layers, ArrowRight, Sliders, Check, Zap } from "lucide-react";
-import { VNP_DIMENSIONS } from "@/lib/vnp/constants";
 import { ApiState, RegionMetric } from "./types";
+import { VNP_METHODOLOGY_TAGLINE, VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
 
 interface BenchmarkPanelProps {
   apis: ApiState[];
@@ -30,12 +30,6 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
   const [proxyResult, setProxyResult] = useState<any>(null);
   const [proxyError, setProxyError] = useState("");
 
-  const methodologyWeights = VNP_DIMENSIONS.map((dim) => ({
-    label: dim.shortLabel,
-    weight: Math.round(dim.weight * 100),
-    desc: dim.description,
-  }));
-
   const getBadgeGrade = (score: number) => {
     if (score >= 96) return "AAA";
     if (score >= 92) return "AA+";
@@ -51,55 +45,43 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
     return "text-red-400 bg-red-950/40 border-red-500/30";
   };
 
-  const getDimensionRows = (api: ApiState) => {
+  const getVerificationRows = (api: ApiState) => {
     const region = api.regions["us-east"];
-    const scoreById: Record<string, { value: string; bar: number }> = {
-      p99_latency: {
+    const rows: Record<string, { value: string; bar: number }> = {
+      "Physical measurements": {
         value: `${region.p99}ms`,
         bar: Math.min(100, Math.max(0, 100 - region.p99 / 18)),
       },
-      error_rate: {
-        value: `${region.errorRate}%`,
-        bar: Math.min(100, Math.max(0, 100 - region.errorRate * 9)),
-      },
-      availability: {
-        value: `${region.uptime}%`,
-        bar: Math.min(100, Math.max(0, region.uptime)),
-      },
-      throughput: {
-        value: `${region.throughput} RPS`,
-        bar: Math.min(100, Math.max(0, (region.throughput / 2000) * 100)),
-      },
-      security: {
-        value: "TLS / signed probes",
+      "Signed telemetry": {
+        value: "Ed25519 path",
         bar: api.compositeScore > 90 ? 96 : 84,
       },
-      documentation: {
-        value: "Carded",
-        bar: 92,
-      },
-      versioning: {
-        value: api.version,
+      "Route beacons": {
+        value: "5 regions",
         bar: 90,
       },
-      x402_compliance: {
-        value: api.x402Ready ? "x402 Ready" : "Pending",
+      "Robust scoring": {
+        value: `${api.compositeScore}`,
+        bar: Math.min(100, Math.max(0, api.compositeScore)),
+      },
+      "x402 settlement evidence": {
+        value: api.x402Ready ? "Connected" : "Config incomplete",
         bar: api.x402Ready ? 100 : 45,
       },
-      rate_limit_transparency: {
-        value: "Transparent",
-        bar: 88,
+      "PGL audit trails": {
+        value: "Genome linked",
+        bar: 92,
       },
-      developer_experience: {
-        value: api.stabilityRating,
-        bar: Math.min(100, Math.max(0, api.compositeScore - 4)),
+      "Agent/runtime enforcement": {
+        value: "CAPPO auth required",
+        bar: 72,
       },
     };
 
-    return VNP_DIMENSIONS.map((dim) => ({
-      name: dim.label,
-      weight: Math.round(dim.weight * 100),
-      ...(scoreById[dim.id] || { value: "Awaiting score", bar: 0 }),
+    return VNP_VERIFICATION_STACK.map((section) => ({
+      name: section.label,
+      status: section.status,
+      ...(rows[section.label] || { value: "Awaiting evidence", bar: 0 }),
     }));
   };
 
@@ -111,45 +93,42 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
   return (
     <div id="vnp-benchmark-matrix-root" className="space-y-6">
       
-      {/* Locked methodology overview */}
+      {/* Methodology overview */}
       <div className="bg-[#0b1017] border border-slate-900 rounded-2xl p-5 space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-900 pb-5">
           <div className="space-y-1 max-w-2xl">
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider">
               <Sliders className="w-4 h-4 text-emerald-400 animate-pulse" />
-              <span>Locked VNP Scoring Methodology</span>
+              <span>{VNP_METHODOLOGY_VERSION}</span>
             </div>
-            <h3 className="text-md font-black text-white tracking-tight uppercase">Canonical 10-D API Trust Vector</h3>
+            <h3 className="text-md font-black text-white tracking-tight uppercase">{VNP_VERIFICATION_STACK_TITLE}</h3>
             <p className="text-[11px] text-slate-400 leading-normal">
-              Composite scores are emitted by the VNP scoring pipeline and displayed read-only. This control surface no longer recalculates live cards from local preset sliders.
+              {VNP_METHODOLOGY_TAGLINE}. Composite scores are emitted by the VNP scoring pipeline and displayed read-only.
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-2 font-mono text-[10px]">
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 px-3 py-2">
-              <span className="block text-slate-500 uppercase tracking-widest">Dimensions</span>
-              <strong className="text-emerald-400">{methodologyWeights.length}-D</strong>
+              <span className="block text-slate-500 uppercase tracking-widest">Stack</span>
+              <strong className="text-emerald-400">v1.0</strong>
             </div>
             <div className="rounded-xl border border-[#00E5FF]/20 bg-[#00E5FF]/10 px-3 py-2">
-              <span className="block text-slate-500 uppercase tracking-widest">Regions</span>
-              <strong className="text-[#00E5FF]">5 live</strong>
+              <span className="block text-slate-500 uppercase tracking-widest">Telemetry</span>
+              <strong className="text-[#00E5FF]">Live</strong>
             </div>
             <div className="rounded-xl border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-2">
-              <span className="block text-slate-500 uppercase tracking-widest">Formula</span>
-              <strong className="text-[#FFB800]">v0.1</strong>
+              <span className="block text-slate-500 uppercase tracking-widest">Runtime</span>
+              <strong className="text-[#FFB800]">Auth Required</strong>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 font-mono text-[10px]">
-          {methodologyWeights.map((dim) => (
-            <div key={dim.label} title={dim.desc} className="rounded-xl border border-slate-900 bg-slate-950/70 px-3 py-2">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-2 font-mono text-[10px]">
+          {VNP_VERIFICATION_STACK.map((section) => (
+            <div key={section.label} title={section.description} className="rounded-xl border border-slate-900 bg-slate-950/70 px-3 py-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-slate-400 uppercase tracking-widest">{dim.label}</span>
-                <span className="text-emerald-400 font-black">{dim.weight}%</span>
-              </div>
-              <div className="mt-1 h-1 rounded-full bg-slate-900 overflow-hidden">
-                <div className="h-full bg-emerald-500/70" style={{ width: `${dim.weight * 4}%` }} />
+                <span className="text-slate-400 uppercase tracking-widest">{section.shortLabel}</span>
+                <span className="text-emerald-400 font-black">{section.status}</span>
               </div>
             </div>
           ))}
@@ -158,7 +137,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
 
       {/* Grid of verified APIs */}
       <h3 className="text-xs font-mono tracking-wider font-extrabold text-slate-500 uppercase px-1">
-        Consensus Peer Verified API Nodes ({calculatedApis.length})
+        VNP API Telemetry Cards ({calculatedApis.length})
       </h3>
 
       <div className="grid grid-cols-1 gap-6">
@@ -188,7 +167,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                     </h4>
                     <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-slate-400 font-mono">v1.0.0</span>
                   </div>
-                  <p className="text-xs text-slate-500 font-medium">Live API reality, measured across five regions, scored in public, verified by proof.</p>
+                  <p className="text-xs text-slate-500 font-medium">API telemetry measured across five regions and published through the VNP v1.0 verification stack.</p>
                 </div>
 
                 <div className="flex flex-col items-end">
@@ -257,9 +236,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                     <span className="text-slate-300 font-bold uppercase border-b border-slate-800 pb-1.5 block tracking-widest">Methodology</span>
                     <div className="space-y-1.5 text-slate-400">
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Methods:</span> <span>Active 5-Region Edge</span></div>
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Metrics:</span> <span className="text-blue-400">Canonical 10-D Composite</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Metrics:</span> <span className="text-blue-400">{VNP_VERIFICATION_STACK_TITLE}</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Validation:</span> <span>Ed25519 Merkle Root</span></div>
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Calculation:</span> <span>Locked VNP v0.1</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Method:</span> <span>{VNP_METHODOLOGY_VERSION}</span></div>
                     </div>
                   </div>
 
@@ -267,8 +246,8 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                   <div className="space-y-2">
                     <span className="text-slate-300 font-bold uppercase border-b border-slate-800 pb-1.5 block tracking-widest">Targeted Risks</span>
                     <div className="space-y-1.5 text-slate-400">
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Categories:</span> <span className="text-amber-400">Financial Slashing</span></div>
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Pot. Harm:</span> <span>Agentic Extinction</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Categories:</span> <span className="text-amber-400">Runaway Cost</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Pot. Harm:</span> <span>Unsafe Agent Action</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Risk Atlas:</span> <span>High-Freq Timeout</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Audience:</span> <span>Enterprise AI Orgs</span></div>
                     </div>
@@ -288,15 +267,15 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-900/50">
-                {/* 10-D Master Plane table */}
+                {/* Verification stack table */}
                 <div className="lg:col-span-5 p-6 bg-[#0a0a0a]">
                   <h5 className="text-[11px] text-slate-400 font-mono font-bold tracking-widest uppercase mb-5 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-[#FFB800]" /> 10-D Master Plane
+                    <Sliders className="w-4 h-4 text-[#FFB800]" /> {VNP_VERIFICATION_STACK_TITLE}
                   </h5>
                   <div className="space-y-4 font-mono text-[11px]">
-                    {getDimensionRows(api).map((dim, idx) => (
+                    {getVerificationRows(api).map((dim, idx) => (
                       <div key={idx} className="flex items-center justify-between">
-                        <span className="text-slate-500 uppercase">{dim.name} <span className="text-slate-700">({dim.weight}%)</span></span>
+                        <span className="text-slate-500 uppercase">{dim.name} <span className="text-slate-700">({dim.status})</span></span>
                         <div className="flex items-center gap-3">
                           <div className="w-16 h-1 bg-slate-900 rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500/70" style={{ width: `${Math.min(100, Math.max(0, dim.bar))}%` }} />
@@ -368,7 +347,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                   <span className="text-emerald-400">5 / 5 Nodes Reporting</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span>Methodology: VNP v0.1.5 · Locked</span>
+                  <span>{VNP_METHODOLOGY_VERSION}</span>
                   <span className="text-white/40">No synthetic data. Missing regions stay NULL.</span>
                 </div>
               </div>
@@ -554,7 +533,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
             </div>
             <h3 className="text-sm font-black text-slate-100 uppercase tracking-tight">Secure Tunnel Proxy Tester</h3>
             <p className="text-[11px] text-slate-400 leading-normal">
-              Execute a real proxy request to the selected API <strong className="text-emerald-400">"{selectedApi.name}"</strong>. VNP will route the request through our high-performance metric proxy, split the microcent payment escrow, and log the direct real-time latency feedback into region profiles!
+              Execute a proxy request to the selected API <strong className="text-emerald-400">"{selectedApi.name}"</strong>. VNP records route telemetry and only displays settlement evidence when the BYOS backend returns it.
             </p>
           </div>
 
@@ -641,7 +620,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl font-bold cursor-pointer transition flex items-center justify-center gap-1.5 uppercase font-mono tracking-wider"
             >
               <Zap className="w-4 h-4 text-indigo-300 animate-pulse" />
-              <span>{isProxying ? "Routing Secure Escrow Tunnel..." : "Send Request Through Real VNP Proxy Gateway"}</span>
+              <span>{isProxying ? "Routing Gateway Request..." : "Send Request Through VNP Gateway"}</span>
             </button>
 
             {/* Proxy sandbox outputs */}

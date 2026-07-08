@@ -3,6 +3,7 @@
 import React from "react";
 import { Award, FileCheck } from "lucide-react";
 import { VNP_DIMENSIONS } from "@/lib/vnp/constants";
+import { VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
 
 interface DimensionScore {
   name: string;
@@ -112,9 +113,9 @@ export const ApiDnaVisualizer: React.FC<ApiDnaVisualizerProps> = ({
       <div className="relative w-full flex items-center justify-between border-b border-white/5 pb-2.5 font-mono text-[10px] tracking-wider text-white/40">
         <div className="flex items-center gap-1.5">
           <FileCheck size={13} className="text-[#00E5FF]" />
-          <span className="uppercase">VNP METHODOLOGY SCORECARD</span>
+          <span className="uppercase">{VNP_METHODOLOGY_VERSION}</span>
         </div>
-        <div className="text-glow-cyan text-[#00E5FF] font-bold">{points.length}-D SEQ</div>
+        <div className="text-glow-cyan text-[#00E5FF] font-bold">v1.0 Stack</div>
       </div>
 
       <div className="relative flex-grow flex flex-col justify-center gap-4 py-3 w-full">
@@ -123,7 +124,7 @@ export const ApiDnaVisualizer: React.FC<ApiDnaVisualizerProps> = ({
             <div className="min-w-0">
               <div className="text-[15px] font-bold text-white/85 truncate">{apiName}</div>
               <div className="mt-0.5 text-[9px] font-mono uppercase tracking-[0.18em] text-white/35">
-                Canonical API trust vector
+                API telemetry verification stack
               </div>
             </div>
             <div className="shrink-0 rounded border border-[#00FF66]/25 bg-[#00FF66]/10 px-2.5 py-1 text-right font-mono">
@@ -134,7 +135,7 @@ export const ApiDnaVisualizer: React.FC<ApiDnaVisualizerProps> = ({
 
           <div className="mb-1 flex items-center justify-between text-[8.5px] font-mono uppercase tracking-[0.18em] text-white/30">
             <span>Quality Vector Signature</span>
-            <span className="text-[#00E5FF]/70">Locked VNP v0.1</span>
+            <span className="text-[#00E5FF]/70">{VNP_VERIFICATION_STACK_TITLE}</span>
           </div>
 
           <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible rounded border border-white/5 bg-black/45">
@@ -262,11 +263,11 @@ export const ApiDnaVisualizer: React.FC<ApiDnaVisualizerProps> = ({
       <div className="relative w-full grid grid-cols-3 gap-2 border-t border-white/5 pt-2.5">
         <div className="rounded bg-white/[0.03] border border-white/5 px-2 py-1.5">
           <div className="text-[8px] font-mono text-white/30 uppercase">Method</div>
-          <div className="text-[9px] font-bold text-[#00E5FF]">VNP v0.1</div>
+          <div className="text-[9px] font-bold text-[#00E5FF]">VNP v1.0</div>
         </div>
         <div className="rounded bg-white/[0.03] border border-white/5 px-2 py-1.5">
-          <div className="text-[8px] font-mono text-white/30 uppercase">Dimensions</div>
-          <div className="text-[9px] font-bold text-[#00FF66]">{points.length} canonical</div>
+          <div className="text-[8px] font-mono text-white/30 uppercase">Stack</div>
+          <div className="text-[9px] font-bold text-[#00FF66]">Verified</div>
         </div>
         <div className="rounded bg-white/[0.03] border border-white/5 px-2 py-1.5">
           <div className="text-[8px] font-mono text-white/30 uppercase">Target</div>

@@ -150,7 +150,7 @@ export default function SimulatorPanel() {
     let isSuccess = true;
     
     try {
-      // 1. Fire to the real cAPI backend with real-time SSE streaming
+      // 1. Fire to the real CAPPO governed runtime backend with real-time SSE streaming
       const receipt = await executeGovernedAction({
         agent_id: 'agent-001',
         pgl_id: 'PGL_TEST_SIG',

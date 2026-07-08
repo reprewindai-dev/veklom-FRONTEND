@@ -2,13 +2,27 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   const vnpData = {
-    methodology_version: "v0.1.5",
-    methodology_url: "https://control.veklom.com/vnp/methodology",
+    methodology_version: "VNP Methodology v1.0",
+    methodology_url: "https://veklom.com/vnp/docs/methodology",
     license: "VNP Open Standard (CC BY-ND 4.0)",
     data_mode: "provisional",
+    tagline: "Cryptographic API telemetry for the machine-to-machine economy",
+    verification_stack: [
+      { section: "Physical measurements", status: "Live" },
+      { section: "Signed telemetry", status: "Partially Implemented" },
+      { section: "Route beacons", status: "Connected" },
+      { section: "Robust scoring", status: "Partially Implemented" },
+      { section: "x402 settlement evidence", status: "Connected" },
+      { section: "PGL audit trails", status: "Connected" },
+      { section: "Agent/runtime enforcement", status: "Auth Required" }
+    ],
+    backends: {
+      byos: "https://api.veklom.com",
+      cappo: "https://cappo.veklom.com/v1/exec"
+    },
     last_anchor: new Date().toISOString(),
     merkle_root: "0x8f2d9c4b7e1a3f6d5c2b9a8e7f6d5c4b3a2e1f0d9c8b7a6f5e4d3c2b1a0f9e8d",
-    x402_settlement_enabled: true,
+    x402_settlement_enabled: "Connected",
     tracked_apis_count: 12,
     api_feed: [
       {
@@ -39,7 +53,7 @@ export async function GET() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Cache-Control': 'public, max-age=30',
-      'X-VNP-Methodology': 'v0.1'
+      'X-VNP-Methodology': 'VNP Methodology v1.0'
     }
   });
 }

@@ -163,7 +163,7 @@ export default function NetworkTopologyPanel() {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <Radio className="w-5 h-5 text-emerald-400 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-              <span className="text-sm font-sans tracking-wide text-white/90">Veklom Gateway &amp; x402 Settlement Swarm</span>
+              <span className="text-sm font-sans tracking-wide text-white/90">Veklom Gateway &amp; x402 Settlement Evidence</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[9px] text-emerald-300 uppercase tracking-widest bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]">
@@ -176,7 +176,7 @@ export default function NetworkTopologyPanel() {
           </div>
 
           <div className="text-right flex flex-col items-end gap-1">
-            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC ROUTE PAYMENTS (REAL)</span>
+            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC Route Payments: Connected</span>
             <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded px-3 py-1 flex items-center gap-2 backdrop-blur-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_5px_#34d399]"></span>
               <span className="text-emerald-400 font-mono text-sm tracking-tight">{totalSettledUsd.toFixed(2)} $SETTLED</span>
@@ -354,7 +354,7 @@ export default function NetworkTopologyPanel() {
         <div className="space-y-2 mt-4">
           <div className="flex items-center gap-2 text-[10px] text-cyan-500/50 uppercase tracking-widest pb-2 border-b border-cyan-900/20">
             <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-            <span>VNP Ledger Trace &amp; x402 Proof of Reserve</span>
+            <span>VNP Ledger Trace &amp; x402 Evidence Feed</span>
           </div>
           <div className="h-[75px] overflow-y-auto font-mono text-[10px] leading-relaxed text-slate-300 space-y-1.5 scrollbar-thin scrollbar-thumb-cyan-900/50 p-2 bg-[#03070c]/50 rounded border border-cyan-900/10 inset-shadow">
             {eventsLog.length === 0 ? (
@@ -472,10 +472,10 @@ export default function NetworkTopologyPanel() {
               <button
                 onClick={triggerAttestationChallenge}
                 className="py-3 px-2 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 rounded-xl border border-rose-900/50 hover:border-rose-500/40 transition-all duration-300 flex flex-col items-center justify-center gap-1.5 group"
-                title="Force-triggers anomalous payload from validator-eu-west-1 to fire automatic Slashing penalty"
+                title="Requests a backend challenge for the selected node when the route is authorized"
               >
                 <Flame className="w-4 h-4 text-rose-500 group-hover:animate-bounce shadow-[0_0_10px_rgba(244,63,94,0.2)] rounded-full" />
-                <span className="text-[9px] font-mono uppercase tracking-widest">Slashing Attest</span>
+                <span className="text-[9px] font-mono uppercase tracking-widest">Challenge Attest</span>
               </button>
 
               <button
@@ -498,7 +498,7 @@ export default function NetworkTopologyPanel() {
           <div className="flex items-center justify-between border-b border-cyan-900/20 pb-3 mb-3">
             <span className="text-[9px] text-cyan-100/50 font-mono uppercase tracking-[0.2em] flex items-center gap-2">
               <Database className="w-3.5 h-3.5 text-indigo-400" />
-              x402 Micropayment Ledger
+              x402 Evidence Ledger
             </span>
             <span className="text-[8px] bg-indigo-950/30 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded uppercase tracking-widest animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.2)]">
               Anchor RLS

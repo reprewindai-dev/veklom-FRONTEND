@@ -149,7 +149,7 @@ If the agent runs out of its allocated USDC budget, the infrastructure physicall
     content: 
 `Not all APIs are created equal. When subjected to the Veklom Nexus Protocol (VNP) and our 5-region global edge probes, the cracks in legacy infrastructure immediately show.
 
-However, two providers consistently peg the needle on the 10-D Trust Matrix: **Stripe** and **Anthropic**.
+However, two providers consistently peg the needle on the VNP Methodology v1.0 verification stack: **Stripe** and **Anthropic**.
 
 ### Stripe: The Gold Standard of API Stability
 
@@ -262,7 +262,7 @@ When autonomous agents interact with ${tech}, they generate highly unpredictable
 
 ### Integrating with VNP
 
-By mapping ${tech} into the VNP 10-D Trust Matrix, we can observe the exact physics of its failure modes. 
+By mapping ${tech} into the VNP VNP Methodology v1.0 verification stack, we can observe the exact physics of its failure modes. 
 
 \`\`\`mermaid
 pie title "${tech} Failure Modes"

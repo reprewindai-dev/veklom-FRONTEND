@@ -14,7 +14,6 @@ const TOP_APIS = [
   { id: "veklom-cappo", name: "cappo.veklom.com", version: "v1.0" },
   { id: "veklom-pgl", name: "pgl.veklom.com", version: "v1.0" },
   { id: "veklom-gpc", name: "gpc.veklom.com", version: "v3.0" },
-  { id: "veklom-capi", name: "capi.veklom.com", version: "v1.0" },
   
   // Real Third-Party Dependencies
   { id: "api-stripe", name: "api.stripe.com/v1/charges", version: "v1.0" },
@@ -79,13 +78,13 @@ export default function WorkspaceVNPPage() {
               API Trust Network
             </h1>
             <p className="text-sm text-ink-400 max-w-3xl">
-              Live physics-verified telemetry for top infrastructure endpoints. Route your agents to healthy nodes and slash providers who fail SLAs on the x402 ledger.
+              VNP Methodology v1.0 telemetry for top infrastructure endpoints. Route agents with signed measurements, PGL audit trails, and x402 settlement evidence when backend receipts are connected.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] px-3 py-1.5 rounded text-[10px] font-mono font-bold text-emerald-400">
               <CheckCircle size={12} />
-              Live 5-Region Edge Polling
+              Demo Mode / 5-Region Edge View
             </span>
           </div>
         </div>

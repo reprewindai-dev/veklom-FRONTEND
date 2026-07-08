@@ -2,7 +2,7 @@ export type CanonicalBackendId = "byos" | "cappo";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
-  | "capi-settlement-ledger";
+  | "governed-runtime";
 
 export type CanonicalBackendAuthMode = "forward-bearer" | "server-api-key";
 
@@ -22,20 +22,17 @@ const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
 export function canonicalBackends(): CanonicalBackendConfig[] {
   const byosUrl =
-    process.env.VBB_BACKEND_URL ||
-    process.env.BYOS_BACKEND_URL ||
     process.env.BACKEND_URL ||
     "https://api.veklom.com";
 
   const cappoUrl =
     process.env.CAPPO_BACKEND_URL ||
-    process.env.CAPPO_API_URL ||
-    "https://api.cappo.veklom.com";
+    "https://cappo.veklom.com";
 
   return [
     {
       id: "byos",
-      label: "Veklom BYOS backend",
+      label: "veklom BYOS backend",
       repo: "veklom-byos-backend",
       role: "sovereign-control-plane",
       baseUrl: trimTrailingSlash(byosUrl),
@@ -46,9 +43,9 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     },
     {
       id: "cappo",
-      label: "CAPPO backend",
+      label: "Cappo backend",
       repo: "cappo-backend",
-      role: "capi-settlement-ledger",
+      role: "governed-runtime",
       baseUrl: trimTrailingSlash(cappoUrl),
       healthPath: "/health",
       overviewPath: "/v1/vnp/metrics",

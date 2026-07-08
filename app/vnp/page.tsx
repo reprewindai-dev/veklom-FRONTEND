@@ -68,13 +68,13 @@ export default function VNPLandingPage() {
         >
           <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-xs font-semibold uppercase tracking-wider mb-8">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            VNP v1.0 STANDALONE NOW LIVE
+            VNP Methodology v1.0
           </motion.div>
           
           <motion.h1 variants={fadeUpVariants} className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
             Cryptographically Verifiable <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FFE6A8] to-[#FFB800]">
-              Telemetry for the M2M Economy.
+              API telemetry for the M2M Economy.
             </span>
           </motion.h1>
           
@@ -133,7 +133,7 @@ export default function VNPLandingPage() {
               </div>
               <h3 className="text-xl font-bold mb-3">SLA Performance Bonds</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                VNP enables Smart Contract Settlement (x402). If an API provider violates their P99 latency SLA, their Micro-Stakes are autonomously slashed and yielded to the consumer.
+                VNP connects to real x402 USDC route payments and settlement evidence through the BYOS backend. Enforcement status is shown from backend-backed receipts and ledger events.
               </p>
             </div>
           </div>
@@ -146,10 +146,10 @@ export default function VNPLandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono">
-                LOCKED SPECIFICATION v1.0 - UPDATED JULY 7
+                VNP Methodology v1.0 - UPDATED JULY 7
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-                The Weighted API Scoring Model
+                VNP v1.0 Verification Stack
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
                 To prevent manipulation, VNP evaluates APIs through a published benchmark-card doctrine: benchmark details, purpose, data provenance, methodology, limitations, targeted risks, validation, interpretation, and resources are documented for every scored endpoint.
@@ -157,9 +157,13 @@ export default function VNPLandingPage() {
               
               <div className="space-y-4">
                 {[
-                  { name: 'Benchmark Details & Scope', weight: 'Carded' },
-                  { name: 'Data Provenance & Validation', weight: 'Signed' },
-                  { name: 'Methodology, Risks & Limits', weight: 'Locked' }
+                  { name: 'Physical measurements', weight: 'Live' },
+                  { name: 'Signed telemetry', weight: 'Partial' },
+                  { name: 'Route beacons', weight: 'Connected' },
+                  { name: 'Robust scoring', weight: 'Partial' },
+                  { name: 'x402 settlement evidence', weight: 'Connected' },
+                  { name: 'PGL audit trails', weight: 'Connected' },
+                  { name: 'Agent/runtime enforcement', weight: 'Auth Required' }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#FFB800]/30 transition-colors">
                     <span className="font-medium text-gray-300">{item.name}</span>
@@ -174,7 +178,7 @@ export default function VNPLandingPage() {
               <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
                 <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-mono text-gray-400">LIVE DEMO: VNP_TOPOLOGY_MESH</span>
+                  <span className="text-xs font-mono text-gray-400">DEMO MODE: VNP_TOPOLOGY_MESH</span>
                 </div>
                 <div className="h-[500px] overflow-hidden p-6 relative bg-[#060608]">
                   <div className="transform scale-[0.85] origin-top-left w-[117%] h-[117%] pointer-events-none">
