@@ -29,8 +29,6 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Type check + build
-        env:
-          NEXT_PUBLIC_API_BASE_URL: https://api.veklom.com
         run: npm run build
 
       - name: Report build size
@@ -50,6 +48,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/veklom-deploy
+          test -s ~/.ssh/veklom-deploy
           chmod 600 ~/.ssh/veklom-deploy
           ssh-keyscan -H 5.78.135.11 >> ~/.ssh/known_hosts
 
@@ -60,8 +59,14 @@ jobs:
             APP=/data/coolify/applications/tvxcsezs2ypd8tjuj6ic9gih
             cd \$APP
             git pull origin main
+            COMMIT=\$(git rev-parse HEAD)
+            if grep -q '^SOURCE_COMMIT=' .env; then
+              sed -i \"s/^SOURCE_COMMIT=.*/SOURCE_COMMIT=\$COMMIT/\" .env
+            else
+              printf '\\nSOURCE_COMMIT=%s\\n' \"\$COMMIT\" >> .env
+            fi
             docker build \
-              --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com \
+              --build-arg NEXT_PUBLIC_API_BASE_URL= \
               -t tvxcsezs2ypd8tjuj6ic9gih:latest .
             sed -i \"s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/\" docker-compose.yaml
             docker compose -f docker-compose.yaml up -d
