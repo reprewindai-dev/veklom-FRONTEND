@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CAPI_RUNTIME_URL, capiAuthHeaderValue, CAPI_EXECUTION_PATH } from "@/lib/capi-runtime";
 
-const CAPPO_BACKEND_URL = process.env.CAPPO_BACKEND_URL || "https://cappo.veklom.com";
-const CAPPO_ADMIN_KEY = process.env.CAPPO_API_KEY || "";
+const CAPPO_BACKEND_URL = CAPI_RUNTIME_URL;
+const CAPPO_ADMIN_KEY = capiAuthHeaderValue();
 
 async function proxyExec(req: NextRequest) {
   const url = new URL(req.url);
@@ -14,7 +15,7 @@ async function proxyExec(req: NextRequest) {
   }
 
   try {
-    const response = await fetch(`${CAPPO_BACKEND_URL.replace(/\/+$/, "")}/v1/exec${url.search}`, {
+    const response = await fetch(`${CAPPO_BACKEND_URL.replace(/\/+$/, "")}${CAPI_EXECUTION_PATH}${url.search}`, {
       method: req.method,
       headers,
       body: req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
@@ -33,7 +34,7 @@ async function proxyExec(req: NextRequest) {
     });
   } catch (err: any) {
     return NextResponse.json(
-      { error: "CAPPO governed execution unavailable", detail: err?.message || String(err) },
+      { error: "interlink-cAPI governed execution unavailable", detail: err?.message || String(err) },
       { status: 502 },
     );
   }

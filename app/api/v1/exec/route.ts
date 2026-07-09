@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CAPI_RUNTIME_URL, capiAuthHeaderValue, CAPI_EXECUTION_PATH } from "@/lib/capi-runtime";
 
-const CAPPO_BACKEND_URL = process.env.CAPPO_BACKEND_URL || "https://cappo.veklom.com";
-const CAPPO_ADMIN_KEY = process.env.CAPPO_API_KEY || process.env.CAPPO_BACKEND_API_KEY || "";
+const CAPPO_BACKEND_URL = CAPI_RUNTIME_URL;
+const CAPPO_ADMIN_KEY = capiAuthHeaderValue();
 const MAX_EXEC_BODY_BYTES = 512 * 1024;
 
 type RateLimitBucket = {
@@ -41,7 +42,7 @@ function validateRequest(req: NextRequest): NextResponse | null {
   const contentType = req.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
     return NextResponse.json(
-      { error: "Cappo execution requires application/json" },
+      { error: "interlink-cAPI execution requires application/json" },
       { status: 415 },
     );
   }
@@ -81,7 +82,7 @@ async function proxyExec(req: NextRequest) {
 
   try {
     const response = await fetch(
-      `${CAPPO_BACKEND_URL.replace(/\/+$/, "")}/v1/exec${url.search}`,
+      `${CAPPO_BACKEND_URL.replace(/\/+$/, "")}${CAPI_EXECUTION_PATH}${url.search}`,
       {
         method: "POST",
         headers: forwardedHeaders(req),
@@ -102,9 +103,9 @@ async function proxyExec(req: NextRequest) {
       headers: responseHeaders,
     });
   } catch (err) {
-    const detail = err instanceof Error ? err.message.slice(0, 180) : "Cappo execution proxy failed";
+    const detail = err instanceof Error ? err.message.slice(0, 180) : "interlink-cAPI execution proxy failed";
     return NextResponse.json(
-      { error: "CAPPO governed execution unavailable", detail },
+      { error: "interlink-cAPI governed execution unavailable", detail },
       { status: 502 },
     );
   }

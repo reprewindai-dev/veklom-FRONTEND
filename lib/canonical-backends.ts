@@ -1,3 +1,9 @@
+import {
+  CAPI_RUNTIME_LABEL,
+  CAPI_RUNTIME_REPO,
+  CAPI_RUNTIME_URL,
+} from "@/lib/capi-runtime";
+
 export type CanonicalBackendId = "byos" | "cappo";
 
 export type CanonicalBackendRole =
@@ -25,9 +31,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     process.env.BACKEND_URL ||
     "https://api.veklom.com";
 
-  const cappoUrl =
-    process.env.CAPPO_BACKEND_URL ||
-    "https://cappo.veklom.com";
+  const capiUrl = CAPI_RUNTIME_URL;
 
   return [
     {
@@ -43,13 +47,13 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     },
     {
       id: "cappo",
-      label: "Cappo backend",
-      repo: "cappo-backend",
+      label: CAPI_RUNTIME_LABEL,
+      repo: CAPI_RUNTIME_REPO,
       role: "governed-runtime",
-      baseUrl: trimTrailingSlash(cappoUrl),
-      healthPath: "/health",
-      overviewPath: "/v1/vnp/metrics",
-      sourceOfTruthPath: "/api/v1/platform/pulse",
+      baseUrl: trimTrailingSlash(capiUrl),
+      healthPath: "/api/state",
+      overviewPath: "/api/state",
+      sourceOfTruthPath: "/api/audit",
       authMode: "server-api-key",
     },
   ];

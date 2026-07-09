@@ -4,6 +4,7 @@ import {
   canonicalBackends,
   canonicalBackendUrl,
 } from "@/lib/canonical-backends";
+import { capiAuthHeaderValue } from "@/lib/capi-runtime";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ function backendHeaders(
   const headers = authHeaders(req) as Record<string, string>;
 
   if (backend.authMode === "server-api-key") {
-    const apiKey = process.env.CAPPO_API_KEY || process.env.CAPPO_BACKEND_API_KEY;
+    const apiKey = capiAuthHeaderValue();
     if (apiKey) {
       headers["X-API-Key"] = apiKey;
     }
