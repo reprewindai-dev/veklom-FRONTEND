@@ -53,9 +53,20 @@ interface SwarmMapProps {
   agents: AgentNode[];
   onAgentUpdate?: (id: string, updatedFields: Partial<AgentNode>) => void;
   isDemoMode?: boolean;
+  sourceProof?: {
+    state: "verified" | "empty" | "needs_proof" | "error";
+    source: string;
+    reason: string;
+    generated_at: string;
+    routes: {
+      registry: string;
+      health: string;
+      metrics: string;
+    };
+  };
 }
 
-export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false }: SwarmMapProps) {
+export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, sourceProof }: SwarmMapProps) {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('agent') || null;
@@ -332,6 +343,26 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false }: 
 
   return (
     <div className="relative w-full h-full flex flex-col bg-void-black grid-overlay select-none overflow-hidden">
+      {sourceProof && (
+        <div className={`flex items-start gap-2 border-b px-4 py-2 font-mono text-[10px] uppercase tracking-widest ${
+          sourceProof.state === "verified"
+            ? "border-matrix-emerald/20 bg-matrix-emerald/5 text-matrix-emerald"
+            : "border-hazard-amber/25 bg-hazard-amber/5 text-hazard-amber"
+        }`}>
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="font-bold">Source: {sourceProof.source}</span>
+              <span>State: {sourceProof.state}</span>
+              <span>Registry: {sourceProof.routes.registry}</span>
+              <span>UTC {sourceProof.generated_at.substring(11, 19)}</span>
+            </div>
+            <div className="mt-1 normal-case tracking-normal text-white/55">
+              {sourceProof.reason}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* 0. Swarm Status Strip */}
       <div className="flex items-center gap-6 px-4 py-2 border-b border-white/[0.08] bg-[#030303] z-10 font-mono text-[10px] text-white/50 uppercase tracking-widest shrink-0">
@@ -482,6 +513,26 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false }: 
         onWheel={handleWheel}
         className="flex-grow relative cursor-grab active:cursor-grabbing overflow-hidden outline-none"
       >
+        {agents.length === 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center p-6 pointer-events-none">
+            <div className="max-w-lg border border-hazard-amber/25 bg-black/85 p-5 text-center font-mono shadow-[0_0_40px_rgba(0,0,0,0.75)]">
+              <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-hazard-amber/70" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-white">
+                No Registered Swarm Nodes
+              </h3>
+              <p className="mt-2 text-[11px] leading-relaxed text-white/55">
+                BYOS returned no authoritative agent records for this workspace. The map is intentionally empty; no local, simulated, or generated agents are being shown.
+              </p>
+              {sourceProof && (
+                <div className="mt-3 border border-white/10 bg-white/[0.03] p-2 text-left text-[10px] text-white/50">
+                  <div>proof.state: {sourceProof.state}</div>
+                  <div>proof.source: {sourceProof.source}</div>
+                  <div>route: {sourceProof.routes.registry}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <svg
           className="w-full h-full absolute inset-0"
           pointerEvents="all"
