@@ -25,6 +25,20 @@ export default function RunSpine({ runs, selectedRunId, onSelectRun, isFocusedFr
   // If no deep link, we just default to runs[0].
   const isDeepLinked = !!selectedRunId;
   const selectedRun = isDeepLinked ? runs.find(r => r.id === selectedRunId) : runs[0];
+  const [lastCommittedId, setLastCommittedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState(false);
+  const playLockSound = useLockSound();
+  const isCompleted = selectedRun?.status === 'completed';
+  const isFailed = selectedRun?.status === 'failed';
+  const isRunning = selectedRun?.status === 'running';
+  const selectedRunHasEvidenceHash = Boolean(selectedRun?.hash && !selectedRun.hash.startsWith('unverified:'));
+
+  useEffect(() => {
+    if (selectedRun && isCompleted && selectedRun.id !== lastCommittedId) {
+      setLastCommittedId(selectedRun.id);
+      playLockSound();
+    }
+  }, [selectedRun, isCompleted, lastCommittedId, playLockSound]);
 
   if (!selectedRun) {
     return (
@@ -51,22 +65,6 @@ export default function RunSpine({ runs, selectedRunId, onSelectRun, isFocusedFr
     { name: 'Redis Lua' as SpineStep, icon: Database, color: '#FFAB00', label: 'LUA_STATE_LOCK' },
     { name: 'Attestation' as SpineStep, icon: Key, color: '#00FF66', label: 'STATE_ATTEST_SEAL' },
   ];
-
-  // Helper check for attestation states
-  const isCompleted = selectedRun.status === 'completed';
-  const isFailed = selectedRun.status === 'failed';
-  const isRunning = selectedRun.status === 'running';
-
-  const [lastCommittedId, setLastCommittedId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState(false);
-  const playLockSound = useLockSound();
-
-  useEffect(() => {
-    if (isCompleted && selectedRun.id !== lastCommittedId) {
-      setLastCommittedId(selectedRun.id);
-      playLockSound();
-    }
-  }, [selectedRun.id, isCompleted, lastCommittedId]);
 
   return (
     <div className="w-full h-full flex flex-col bg-[#030303] select-none">
@@ -174,8 +172,18 @@ export default function RunSpine({ runs, selectedRunId, onSelectRun, isFocusedFr
               </h2>
             <div className="flex gap-4 text-[10px] text-white/50 border-b border-white/10 pb-3.5">
               <span>Duration: <strong className="text-white">{selectedRun.duration}</strong></span>
-              <span>Evidence hashes: <strong className="text-matrix-emerald">{selectedRun.evidenceCount} Sealed</strong></span>
-              <span>Consensus Slot: <strong className="text-white">#{selectedRun.hash.substring(3, 10)}</strong></span>
+              <span>
+                Evidence hashes: <strong className={selectedRunHasEvidenceHash ? "text-matrix-emerald" : "text-[#ffab00]"}>
+                  {selectedRunHasEvidenceHash ? `${selectedRun.evidenceCount} Sealed` : "Needs proof"}
+                </strong>
+              </span>
+              <span>
+                {selectedRunHasEvidenceHash ? (
+                  <>Consensus Slot: <strong className="text-white">#{selectedRun.hash.substring(3, 10)}</strong></>
+                ) : (
+                  <>Consensus Slot: <strong className="text-[#ffab00]">Not emitted</strong></>
+                )}
+              </span>
             </div>
           </div>
 
