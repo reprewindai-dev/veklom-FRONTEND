@@ -9,7 +9,7 @@ import {
   Unlock, History, Eye, AlertTriangle, Layers, KeyRound, ChevronRight,
   Sparkles, Database, ChevronDown, ChevronUp, Info, Zap, TestTube2
 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api, getToken } from '@/lib/api';
 
 const Pipeline = dynamic(
   () => import('@/components/pipeline/Pipeline').then(m => ({ default: m.Pipeline })),
@@ -56,7 +56,7 @@ interface LedgerBlock {
   action: string;
   vnpStake: string;
   evidenceHash: string;
-  status: 'SUCCESS' | 'SLASHED';
+  status: 'SUCCESS' | 'SLASHED' | 'NEEDS_PROOF';
 }
 
 type ExecState = 'idle' | 'gateway' | 'inferring' | 'success' | 'blocked' | 'error';
@@ -99,10 +99,7 @@ const GATEWAY_PHASES = [
   { name: 'x402 Token Swap',   passMsg: 'Static secret swapped with short-lived nonce.',      failMsg: 'Swap aborted — policy veto upstream.' },
 ];
 
-const INITIAL_LEDGER: LedgerBlock[] = [
-  { index: 1045, timestamp: '22:12:04 UTC', prevHash: '0x8f2d5e3c1b4a9f', hash: '0x9a3e2c1b8f4d5e', action: 'GOVERNED_RUN',         vnpStake: '+12 VNP (SLA Yield)', evidenceHash: 'sha256(0x9d2e1b4a...)', status: 'SUCCESS' },
-  { index: 1044, timestamp: '21:45:18 UTC', prevHash: '0x7e1d5c2b3a8f4e', hash: '0x8f2d5e3c1b4a9f', action: 'GOVERNED_RUN',         vnpStake: '+8 VNP (SLA Yield)',  evidenceHash: 'sha256(0x8c3b1a2f...)', status: 'SUCCESS' },
-];
+const INITIAL_LEDGER: LedgerBlock[] = [];
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
@@ -137,7 +134,7 @@ export default function PlaygroundPage() {
   const [costB, setCostB]                 = useState<number | null>(null);
 
   // Identity vault
-  const [nonce, setNonce]                 = useState('UACP_NONCE.X402_VALID_4AF3B861A7C20');
+  const [nonce, setNonce]                 = useState('');
   const [isRotating, setIsRotating]       = useState(false);
 
   // VNP ledger
@@ -146,7 +143,7 @@ export default function PlaygroundPage() {
   const [slashedStake, setSlashedStake]   = useState(0);
   const [floatingVal, setFloatingVal]     = useState<string | null>(null);
   const [floatingColor, setFloatingColor] = useState('text-green-400');
-  const [lastStatus, setLastStatus]       = useState('🛡️ SLA verified');
+  const [lastStatus, setLastStatus]       = useState('No backend run yet');
 
   const logEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
@@ -155,15 +152,7 @@ export default function PlaygroundPage() {
   useEffect(() => {
     api<ModelDef[]>('/api/v1/ai/models').then(data => {
       if (Array.isArray(data)) setModels(data);
-    }).catch(() => {
-      // Backend unreachable — show static fallback so UI still renders
-      setModels([
-        { id: 'llama3.2:latest',          provider: 'ollama',      name: 'Ollama Llama 3.2 3B',       context_window: 32768,  cost_per_1k_input: 0.0 },
-        { id: 'llama-3.1-8b-instant',     provider: 'groq',        name: 'Groq Llama 3.1 8B',         context_window: 131072, cost_per_1k_input: 0.00005 },
-        { id: 'gemini-2.5-flash',         provider: 'gemini',      name: 'Gemini 2.5 Flash',          context_window: 1000000, cost_per_1k_input: 0.0003 },
-        { id: 'gpt-4o-mini',              provider: 'openai',      name: 'GPT-4o Mini',               context_window: 128000, cost_per_1k_input: 0.00015 },
-      ]);
-    });
+    }).catch(() => setModels([]));
   }, []);
 
   // Load real wallet balance
@@ -189,14 +178,13 @@ export default function PlaygroundPage() {
   }, [modelAId, modelBId]);
 
   // Append ledger block
-  const appendLedger = (action: string, stake: string, status: 'SUCCESS' | 'SLASHED') => {
+  const appendLedger = (action: string, stake: string, status: LedgerBlock['status'], evidenceHash?: string) => {
+    if (!evidenceHash) return;
     setLedger(prev => {
       const last = prev[0];
-      const hex  = Math.random().toString(16).substring(2, 10);
-      const eHex = Math.random().toString(16).substring(2, 10);
-      return [{ index: last.index + 1, timestamp: new Date().toLocaleTimeString() + ' UTC',
-        prevHash: last.hash, hash: `0x${hex}e3c1`, action, vnpStake: stake,
-        evidenceHash: `sha256(0x${eHex}...)`, status }, ...prev];
+      return [{ index: last ? last.index + 1 : 1, timestamp: new Date().toISOString(),
+        prevHash: last?.hash || '', hash: evidenceHash, action, vnpStake: stake,
+        evidenceHash, status }, ...prev];
     });
   };
 
@@ -249,6 +237,8 @@ export default function PlaygroundPage() {
     setRunId(Date.now());
 
     try {
+      let capiEvidenceHash = '';
+
       if (isSim) {
         // ── SIMULATION PATH — threat scenario test ──
         const scenario = THREAT_SCENARIOS[threat!];
@@ -260,8 +250,7 @@ export default function PlaygroundPage() {
           setSlashedStake(250);
           setFloatingVal('-250 VNP');
           setFloatingColor('text-red-500 font-bold');
-          setLastStatus('💥 SLA Breach: Slashed 250 VNP');
-          appendLedger('SLA_BREACH_SLASH', '-250 VNP (Slashed)', 'SLASHED');
+          setLastStatus('Simulation blocked. No backend ledger write.');
           return;
         }
       } else {
@@ -271,65 +260,52 @@ export default function PlaygroundPage() {
           return;
         }
 
-        // Build real gateway trace from cAPI execute (SSE)
+        // Build real gateway trace from cAPI execute.
         setLogs(p => [...p, '[GATEWAY] Initiating cAPI inline execution...']);
-        
-        try {
-          // Try real cAPI SSE first
-          const capiRes = await fetch('/api/v1/capi/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('veklom_token') || ''}` },
-            body: JSON.stringify({ agent_id: 'playground', pgl_id: 'valid_pgl', target_protocol: 'mcp', action: 'prompt_run', payload: { prompt: userPrompt } }),
-            signal: AbortSignal.timeout(8000),
-          });
 
-          if (capiRes.body && capiRes.ok) {
-            const reader = capiRes.body.getReader();
-            const decoder = new TextDecoder();
-            const traceArr: PhaseTrace[] = [];
-            let done = false;
-            let phase = 0;
-
-            while (!done) {
-              const { value, done: d } = await reader.read();
-              done = d;
-              if (value) {
-                const chunk = decoder.decode(value, { stream: true });
-                for (const line of chunk.split('\n')) {
-                  if (!line.startsWith('data: ')) continue;
-                  try {
-                    const evt = JSON.parse(line.substring(6));
-                    if (evt.type === 'log') {
-                      phase = evt.phase ?? phase + 1;
-                      const phaseDef = GATEWAY_PHASES[Math.min(phase - 1, GATEWAY_PHASES.length - 1)];
-                      const phTrace: PhaseTrace = {
-                        phase, name: phaseDef?.name ?? `Phase ${phase}`,
-                        status: evt.text?.includes('FAIL') ? 'fail' : 'pass',
-                        summary: evt.text, duration_ms: 80, detail: {},
-                      };
-                      traceArr.push(phTrace);
-                      setTrace([...traceArr]);
-                      setLogs(p => [...p, `[GATEWAY] ${evt.text}`]);
-                    }
-                  } catch { /* skip malformed */ }
-                }
-              }
-            }
-            // If cAPI returned without a trace, fill in passed phases
-            if (traceArr.length === 0) throw new Error('empty trace');
-          } else {
-            throw new Error('capi_unavailable');
-          }
-        } catch {
-          // cAPI not available yet — show all-pass gateway trace so user still sees the concept
-          // but DO run real inference below
-          const traceArr: PhaseTrace[] = GATEWAY_PHASES.map((ph, i) => ({
-            phase: i + 1, name: ph.name, status: 'pass' as const,
-            summary: ph.passMsg, duration_ms: 80 + i * 20, detail: {},
-          }));
-          setTrace(traceArr);
-          setLogs(p => [...p, '[GATEWAY] cAPI pipeline: all 5 moats cleared.']);
+        const token = getToken();
+        const capiRes = await fetch('/api/v1/capi/execute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ agent_id: 'playground', pgl_id: 'valid_pgl', target_protocol: 'mcp', action: 'prompt_run', payload: { prompt: userPrompt } }),
+          signal: AbortSignal.timeout(12000),
+        });
+        const capiPayload = await capiRes.json().catch(() => ({}));
+        if (!capiRes.ok) {
+          throw new Error(capiPayload?.error || capiPayload?.detail || `cAPI execute failed: HTTP ${capiRes.status}`);
         }
+        if (capiPayload?.status === 'error') {
+          throw new Error(capiPayload?.error || 'cAPI returned error status');
+        }
+
+        capiEvidenceHash = capiPayload?.evidence_hash || capiPayload?.result?.evidence_hash || '';
+        const backendTrace = Array.isArray(capiPayload?.trace)
+          ? capiPayload.trace
+          : Array.isArray(capiPayload?.result?.trace)
+          ? capiPayload.result.trace
+          : [];
+        const traceArr: PhaseTrace[] = backendTrace.length
+          ? backendTrace.map((item: any, index: number) => ({
+              phase: Number(item.phase ?? index + 1),
+              name: String(item.name ?? item.stage ?? `cAPI Phase ${index + 1}`),
+              status: item.status === 'error' || item.ok === false ? 'fail' : 'pass',
+              summary: String(item.summary ?? item.message ?? item.status ?? 'cAPI phase returned.'),
+              duration_ms: Number(item.duration_ms ?? item.latency_ms ?? 0),
+              detail: typeof item === 'object' && item ? item : {},
+            }))
+          : [{
+              phase: 1,
+              name: 'cAPI Execute',
+              status: 'pass',
+              summary: capiEvidenceHash ? `Evidence hash emitted: ${capiEvidenceHash}` : 'cAPI accepted the governed request without an evidence hash.',
+              duration_ms: 0,
+              detail: capiPayload,
+            }];
+        setTrace(traceArr);
+        setLogs(p => [...p, `[GATEWAY] cAPI returned ${traceArr.length} proof phase(s).`]);
       }
 
       // ── Dispatch to real inference ──
@@ -358,9 +334,10 @@ export default function PlaygroundPage() {
       setExecState('success');
       setFloatingVal('+10 VNP');
       setFloatingColor('text-green-400 font-bold');
-      setLastStatus('🛡️ SLA verified');
-      appendLedger('GOVERNED_RUN', '+10 VNP (SLA Yield)', 'SUCCESS');
-      setLogs(p => [...p, '[SYSTEM] Execution settled. VNP yield credited. Audit record written.']);
+      const auditEvidence = capiEvidenceHash || String(resultA?.audit_id || resultB?.audit_id || '');
+      setLastStatus(auditEvidence ? 'Backend audit recorded' : 'Needs backend evidence hash');
+      appendLedger('GOVERNED_RUN', auditEvidence ? 'Backend audit recorded' : 'Needs proof', auditEvidence ? 'SUCCESS' : 'NEEDS_PROOF', auditEvidence);
+      setLogs(p => [...p, auditEvidence ? '[SYSTEM] Execution settled with backend evidence.' : '[SYSTEM] Inference returned without backend evidence hash.']);
 
     } catch (err: any) {
       setExecState('error');
@@ -373,7 +350,7 @@ export default function PlaygroundPage() {
     setExecState('idle'); setIsSimulation(false); setActiveThreat(null);
     setTrace(null); setLogs([]); setResultA(null); setResultB(null);
     setSlashedStake(0); setFloatingVal(null); setExecError(null);
-    setLastStatus('🛡️ SLA verified');
+    setLastStatus('No backend run yet');
   };
 
   const handleExportAudit = () => {
@@ -390,8 +367,7 @@ export default function PlaygroundPage() {
   const handleRotateNonce = () => {
     setIsRotating(true);
     setTimeout(() => {
-      const hex = Math.random().toString(16).substring(2, 15).toUpperCase();
-      setNonce(`UACP_NONCE.X402_VALID_${hex}`);
+      setNonce('');
       setIsRotating(false);
     }, 900);
   };
@@ -730,10 +706,10 @@ export default function PlaygroundPage() {
                 <span className="text-[8px] text-gray-500 uppercase">Model sees (shielded)</span>
                 <div className="text-[9px] font-mono text-cyan-400 mt-1.5 bg-cyan-950/20 p-1.5 rounded border border-cyan-500/10 break-all leading-relaxed">
                   {execState === 'success' && activeThreat === 'credentials'
-                    ? <span className="text-yellow-400 font-bold">AWS_KEY_REDACTED: [UACP_SHIELD_MASK_******]</span>
+                    ? <span className="text-yellow-400 font-bold">Simulation redaction preview</span>
                     : execState === 'success'
-                    ? <span className="text-green-400">{nonce}</span>
-                    : <span className="text-gray-600 italic">Shielded. Swap fires at runtime.</span>
+                    ? <span className="text-green-400">{nonce || 'No nonce emitted by backend response'}</span>
+                    : <span className="text-gray-600 italic">Waiting for backend receipt.</span>
                   }
                 </div>
               </div>
@@ -741,8 +717,8 @@ export default function PlaygroundPage() {
                 <span className="text-[8px] text-[#b8860b] uppercase font-bold">cAPI Gateway dispatch</span>
                 <div className="text-[9px] font-mono text-gray-400 mt-1.5 bg-[#b8860b]/5 p-1.5 rounded border border-[#b8860b]/10 break-all">
                   {execState === 'success'
-                    ? <span className="text-[#b8860b] font-bold">RESOLVED: X-Veklom-Receipt-ID: 402_RC_A7C20…</span>
-                    : 'GATEWAY: Secrets locked in secure cAPI memory.'}
+                    ? <span className="text-[#b8860b] font-bold">Backend receipt required for this panel.</span>
+                    : 'GATEWAY: No backend receipt yet.'}
                 </div>
               </div>
               <button onClick={handleRotateNonce} disabled={isRotating}
@@ -766,15 +742,20 @@ export default function PlaygroundPage() {
             </AnimatePresence>
             <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-3">
               <span className="text-[10px] font-bold text-white tracking-widest flex items-center gap-1.5">
-                <Coins className="w-3.5 h-3.5 text-orange-400 animate-pulse" /> 4. SLA LEDGER
+                <Coins className="w-3.5 h-3.5 text-orange-400 animate-pulse" /> 4. BACKEND EVIDENCE
               </span>
-              <span className="text-[9px] text-orange-400 font-mono">VNP_CHAIN</span>
+              <span className="text-[9px] text-orange-400 font-mono">NO LOCAL FAKE HASHES</span>
             </div>
             <div className={`p-2 rounded-lg border text-[8.5px] mb-3 ${slashedStake > 0 ? 'border-red-500/20 bg-red-500/[0.02]' : 'border-white/5'}`}>
               <span className="text-[8px] text-gray-500 uppercase block">Last run</span>
               <span className={`font-bold block ${slashedStake > 0 ? 'text-red-500 animate-pulse' : 'text-green-400'}`}>{lastStatus}</span>
             </div>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
+              {ledger.length === 0 && (
+                <div className="p-3 rounded border border-white/5 bg-black/30 text-[9px] text-gray-500">
+                  No backend evidence rows recorded in this browser session.
+                </div>
+              )}
               {ledger.map(block => {
                 const slashed = block.status === 'SLASHED';
                 return (
