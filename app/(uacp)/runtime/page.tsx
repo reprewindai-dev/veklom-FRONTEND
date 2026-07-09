@@ -6,10 +6,17 @@ import { useApi } from "@/hooks/useApi";
 import { ShieldCheck, Activity, AlertTriangle, ShieldAlert } from "lucide-react";
 
 interface VnpMetrics {
-  total_staked: number;
-  active_bonds: number;
-  yield_rate: string;
-  slashed_total: number;
+  network_status?: string;
+  active_validators?: number;
+  active_apis?: number;
+  total_probes_recorded?: number;
+  total_physical_probes_recorded?: number;
+  total_slashed_minor?: number;
+  avg_composite_score?: number;
+  settlement_entries?: number;
+  trustBeaconStatus?: string;
+  blockAnchoredStatus?: string;
+  timestamp?: string;
 }
 
 interface AuditLog {
@@ -21,9 +28,10 @@ interface AuditLog {
 }
 
 export default function RuntimePage() {
-  const { data: metrics, isLoading: loadingMetrics } = useApi<VnpMetrics>("/api/v1/vnp/metrics");
-  const { data: logsData, isLoading: loadingLogs } = useApi<{ events: AuditLog[] }>("/api/v1/vnp/audit-logs");
-  const logs = logsData?.events || [];
+  const { data: metrics, error: metricsError, isLoading: loadingMetrics } = useApi<VnpMetrics>("/api/v1/vnp/metrics");
+  const { data: logsData, error: logsError, isLoading: loadingLogs } = useApi<{ events?: AuditLog[] } | AuditLog[]>("/api/v1/vnp/audit-logs");
+  const logs = Array.isArray(logsData) ? logsData : logsData?.events || [];
+  const sourceProblem = metricsError || logsError;
 
   return (
     <div className="p-6 space-y-6 min-h-full">
@@ -32,12 +40,24 @@ export default function RuntimePage() {
         <h1 className="text-xl font-bold font-mono tracking-wider uppercase text-[#00FF66]">Runtime Enforcement</h1>
       </div>
 
+      <div className={`border rounded-xl p-4 font-mono text-[11px] ${
+        sourceProblem ? "border-[#ffab00]/30 bg-[#ffab00]/5 text-[#ffab00]" : "border-[#00FF66]/20 bg-[#00FF66]/5 text-[#00FF66]"
+      }`}>
+        <div className="uppercase tracking-widest font-black">
+          {sourceProblem ? "Needs proof" : "Verified BYOS runtime telemetry"}
+        </div>
+        <div className="mt-1 text-white/55">
+          Source routes: /api/v1/vnp/metrics and /api/v1/vnp/audit-logs
+          {metrics?.timestamp ? ` · backend timestamp ${metrics.timestamp}` : ""}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Total VNP Staked", value: loadingMetrics ? "..." : (metrics?.total_staked || 0), icon: Activity, color: "text-[#00FF66]" },
-          { label: "Active Performance Bonds", value: loadingMetrics ? "..." : (metrics?.active_bonds || 0), icon: ShieldCheck, color: "text-electric-cyan" },
-          { label: "Current Yield Rate", value: loadingMetrics ? "..." : (metrics?.yield_rate || "0%"), icon: Activity, color: "text-[#b8860b]" },
-          { label: "Total Slashed", value: loadingMetrics ? "..." : (metrics?.slashed_total || 0), icon: AlertTriangle, color: "text-laser-red" },
+          { label: "Network Status", value: loadingMetrics ? "..." : (metrics?.network_status || "needs proof"), icon: Activity, color: "text-[#00FF66]" },
+          { label: "Active APIs", value: loadingMetrics ? "..." : (metrics?.active_apis ?? "needs proof"), icon: ShieldCheck, color: "text-electric-cyan" },
+          { label: "Physical Probes", value: loadingMetrics ? "..." : (metrics?.total_physical_probes_recorded ?? metrics?.total_probes_recorded ?? "needs proof"), icon: Activity, color: "text-[#b8860b]" },
+          { label: "Slashed Minor", value: loadingMetrics ? "..." : (metrics?.total_slashed_minor ?? "needs proof"), icon: AlertTriangle, color: "text-laser-red" },
         ].map((kpi, idx) => (
           <div key={idx} className="bg-black/60 border border-white/[0.07] rounded-xl p-4 overflow-hidden">
             <div className="flex items-center justify-between mb-2">
@@ -52,7 +72,7 @@ export default function RuntimePage() {
       <div className="bg-black/60 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
         <div className="p-5 border-b border-white/10 flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-[#00FF66]" />
-          <h2 className="text-sm font-mono font-bold tracking-widest uppercase text-white/80">VNP Audit Logs</h2>
+          <h2 className="text-sm font-mono font-bold tracking-widest uppercase text-white/80">Runtime Audit Logs</h2>
         </div>
         <div className="p-0">
           {loadingLogs ? (
