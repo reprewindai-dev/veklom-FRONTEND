@@ -66,6 +66,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
 
   // History is local operator telemetry only. It starts empty until real scans finish in this browser.
   const [history, setHistory] = useState<any[]>(() => {
+    if (typeof window === 'undefined') return [];
     try {
       const saved = localStorage.getItem('veklom_sweep_history');
       if (saved) {

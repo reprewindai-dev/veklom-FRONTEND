@@ -18,6 +18,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
   runId
 }) => {
   const [riskHistory, setRiskHistory] = useState<{ runId: string; riskLevel: RiskLevel }[]>(() => {
+    if (typeof window === 'undefined') return [];
     try {
       const saved = localStorage.getItem('veklom_run_risk_history');
       if (saved) {
