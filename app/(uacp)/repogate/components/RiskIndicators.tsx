@@ -26,15 +26,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
     } catch (e) {
       console.error('Error reading risk history', e);
     }
-    // Pre-seed matching the EvidenceLedger's pre-seeded runs
-    return [
-      { runId: 'RUN_18FA', riskLevel: 'HIGH' },
-      { runId: 'RUN_191B', riskLevel: 'LOW' },
-      { runId: 'RUN_204A', riskLevel: 'MEDIUM' },
-      { runId: 'RUN_211C', riskLevel: 'MEDIUM' },
-      { runId: 'RUN_225M', riskLevel: 'CRITICAL' },
-      { runId: 'run_8fa29d', riskLevel: 'CRITICAL' }, // Initial default run
-    ];
+    return [];
   });
 
   // Track run completion to dynamically log finished run statistics

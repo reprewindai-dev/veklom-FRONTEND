@@ -64,7 +64,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
     }
   }, [isCompleted, runId]);
 
-  // Pre-seed some beautiful realistic baseline runs when there is no data in localStorage.
+  // History is local operator telemetry only. It starts empty until real scans finish in this browser.
   const [history, setHistory] = useState<any[]>(() => {
     try {
       const saved = localStorage.getItem('veklom_sweep_history');
@@ -74,13 +74,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
     } catch (e) {
       console.error('Error loading history from localStorage:', e);
     }
-    return [
-      { name: '18FA', critical: 3, warning: 5 },
-      { name: '191B', critical: 0, warning: 1 },
-      { name: '204A', critical: 2, warning: 3 },
-      { name: '211C', critical: 1, warning: 4 },
-      { name: '225M', critical: 4, warning: 6 },
-    ];
+    return [];
   });
 
   // Track run completion to dynamically log finished run statistics
@@ -247,7 +241,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
     textOut += `AUDIT SIGNATURE CANONICAL SHA-256 PROOF\n`;
     textOut += `${thinLine}\n`;
     textOut += `Verification Hash: ${auditHash}\n`;
-    textOut += `Status:            TAMPER-PROOF-VERIFIED (Sealed by Rust cryptosystems)\n`;
+    textOut += `Status:            CLIENT TRACE HASH (Derived from BYOS response)\n`;
     textOut += `${borderLine}\n`;
 
     const txtString = `data:text/plain;charset=utf-8,${encodeURIComponent(textOut)}`;
@@ -501,7 +495,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
       doc.setTextColor(120, 120, 120);
-      doc.text("CRITICAL STATUS: TAMPER-PROOF VERIFIED • DIGITAL COMPLIANCE MATRIX", 20, y + 20);
+      doc.text("STATUS: CLIENT TRACE HASH DERIVED FROM BYOS RESPONSE", 20, y + 20);
 
       y += 24 + 10;
 
@@ -778,7 +772,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                 <div className="flex items-center space-x-1.5">
                   <span className="text-[9px] font-mono text-[#00FF41] uppercase tracking-widest font-bold flex items-center">
                     <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                    Status: Tamper-Proof-Verified
+                    Status: Client Trace Hash
                   </span>
                 </div>
 
