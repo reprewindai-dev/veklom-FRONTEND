@@ -69,11 +69,6 @@ const nextConfig = {
         destination: "/treasury",
         permanent: false,
       },
-      {
-        source: "/governance",
-        destination: "/governance",
-        permanent: false,
-      },
       // Keep old /terminal route working but now it renders the new page
       // (app/(uacp)/terminal/page.tsx already handles /terminal)
     ];
