@@ -54,7 +54,10 @@ jobs:
 
       - name: Pull, Build, and Swap on Server
         run: |
-          ssh -i ~/.ssh/veklom-deploy root@5.78.135.11 "
+          ssh -i ~/.ssh/veklom-deploy \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=20 \
+            root@5.78.135.11 "
             set -e
             APP=/data/coolify/applications/tvxcsezs2ypd8tjuj6ic9gih
             cd \$APP
@@ -65,7 +68,7 @@ jobs:
             else
               printf '\\nSOURCE_COMMIT=%s\\n' \"\$COMMIT\" >> .env
             fi
-            docker build \
+            docker build --progress=plain \
               --build-arg NEXT_PUBLIC_API_BASE_URL= \
               -t tvxcsezs2ypd8tjuj6ic9gih:latest .
             sed -i \"s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/\" docker-compose.yaml
