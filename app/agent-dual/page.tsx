@@ -204,6 +204,7 @@ function AgentDuelApp() {
   const [m2mStrategy, setM2mStrategy] = useState<'smart' | 'martingale' | 'tie-hunt' | 'random'>('smart');
   const [m2mLogs, setM2mLogs] = useState<{ id: string; time: string; msg: string; type: 'info' | 'success' | 'warn' | 'error' | 'metric' }[]>([]);
   const [m2mSpeed, setM2mSpeed] = useState<number>(1);
+  const [isAuthorizingWager, setIsAuthorizingWager] = useState<boolean>(false);
 
   // Computed properties for 100% downstream compatibility
   const wagerAmount = Number((bets.player + bets.banker + bets.tie).toFixed(2));
@@ -691,13 +692,13 @@ function AgentDuelApp() {
   };
 
   const handleClearBets = () => {
-    if (phase !== 'idle') return;
+    if (phase !== 'idle' || isAuthorizingWager) return;
     setBets({ player: 0, banker: 0, tie: 0 });
     playSfx(330, 0.15, 'sine', 0.1);
   };
 
   const placeSingleLaneBet = (lane: BetLane) => {
-    if (phase !== 'idle') return;
+    if (phase !== 'idle' || isAuthorizingWager) return;
     if (activeChip > bankroll) {
       addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
       return;
@@ -712,7 +713,7 @@ function AgentDuelApp() {
 
   const removeLaneBet = (lane: BetLane, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    if (phase !== 'idle') return;
+    if (phase !== 'idle' || isAuthorizingWager) return;
     setBets((prev) => ({
       ...prev,
       [lane]: 0,
@@ -1565,7 +1566,7 @@ function AgentDuelApp() {
 
   // Launch routing crash loop
   const initiateRoute = async () => {
-    if (phase === 'running') return;
+    if (phase === 'running' || isAuthorizingWager) return;
     if (!duelRouteState?.liveGameplayEnabled) {
       addNotification('collapse', 'Live Duel Execution Disabled', duelRouteState?.proof.reason || 'BYOS duel wager/session/outcome endpoints need production proof.');
       return;
@@ -1590,16 +1591,24 @@ function AgentDuelApp() {
       return;
     }
 
-    addNotification(
-      'tx_success',
-      'Consensus Check',
-      'Requesting dual authorization signature...'
-    );
-
     // Call backend to lock wager
+    setIsAuthorizingWager(true);
     try {
+      addNotification(
+        'tx_success',
+        'Wallet Payment Authorization',
+        `Open Coinbase/Base and approve the $${totalWager.toFixed(2)} USDC wager. The round starts only after BYOS accepts the signed payment.`
+      );
+      addM2mLog(`Manual wager authorization requested: $${totalWager.toFixed(2)} USDC on ${betsToSubmit[0].type.toUpperCase()}.`, "info");
+
       const signature = await signWager(totalWager);
       const bet = betsToSubmit[0];
+      addNotification(
+        'tx_success',
+        'Wallet Approved',
+        'Signature received. Locking the wager against the BYOS Agent Duel endpoint...'
+      );
+
       const res = await fetch(`${API_BASE_URL}/wager`, {
         method: 'POST',
         headers: {
@@ -1614,10 +1623,11 @@ function AgentDuelApp() {
           wallet_address: wallet.address
         })
       });
-      const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.detail || data.message || 'Wager placement rejected by consensus rules.');
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.detail || data?.message || `Wager placement rejected by BYOS (${res.status}).`);
       }
+      addM2mLog(`BYOS wager locked: ${bet.type.toUpperCase()} $${bet.amount.toFixed(2)} USDC.`, "success");
 
       // Set engine states
       setPhase('running');
@@ -1655,8 +1665,8 @@ function AgentDuelApp() {
 
       addNotification(
         'tx_success',
-        'Quantum Wager Locked',
-        `Locked $${totalWager.toFixed(2)} USDC on Duel Routing Board.`
+        'Wager Locked - Route Starting',
+        `BYOS accepted $${totalWager.toFixed(2)} USDC on ${bet.type.toUpperCase()}. Multiplier is now live.`
       );
 
       // Play starting hum
@@ -1694,9 +1704,13 @@ function AgentDuelApp() {
       }, 50);
 
     } catch (err: any) {
-      addNotification('collapse', 'Wager Rejected', err.message || 'Payment gateway returned 402.');
+      const message = err.message || 'Payment gateway returned 402.';
+      addNotification('collapse', 'Wager Rejected', message);
+      addM2mLog(`Manual wager rejected: ${message}`, "error");
       setPhase('idle');
       return;
+    } finally {
+      setIsAuthorizingWager(false);
     }
   };
 
@@ -2705,21 +2719,21 @@ function AgentDuelApp() {
                       </div>
                       <div className="flex gap-1.5 shrink-0">
                         <button 
-                          disabled={phase !== 'idle'} 
+                          disabled={phase !== 'idle' || isAuthorizingWager} 
                           onClick={handleRebet}
                           className="px-2.5 py-1 border border-white/10 hover:border-blue-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-350 disabled:opacity-30"
                         >
                           Rebet Prev
                         </button>
                         <button 
-                          disabled={phase !== 'idle'} 
+                          disabled={phase !== 'idle' || isAuthorizingWager} 
                           onClick={handleDoubleBets}
                           className="px-2.5 py-1 border border-white/10 hover:border-amber-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-355 disabled:opacity-30"
                         >
                           Double
                         </button>
                         <button 
-                          disabled={phase !== 'idle'} 
+                          disabled={phase !== 'idle' || isAuthorizingWager} 
                           onClick={handleClearBets}
                           className="px-2.5 py-1 border border-red-500/10 hover:border-red-500/30 rounded bg-red-500/5 hover:bg-red-500/10 transition-colors font-mono text-[9px] uppercase font-bold text-red-400 disabled:opacity-30"
                         >
@@ -2741,7 +2755,7 @@ function AgentDuelApp() {
                         return (
                           <button
                             key={chip.value}
-                            disabled={phase !== 'idle'}
+                            disabled={phase !== 'idle' || isAuthorizingWager}
                             onClick={() => {
                               setActiveChip(chip.value);
                               playSfx(523, 0.04, 'sine', 0.08);
@@ -2771,7 +2785,7 @@ function AgentDuelApp() {
                         bets.player > 0
                           ? 'bg-blue-500/5 border-blue-500 shadow-md shadow-blue-500/5'
                           : 'bg-[#0d0f16] border-white/5 hover:border-blue-500/20'
-                      } ${phase !== 'idle' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      } ${phase !== 'idle' || isAuthorizingWager ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-black font-sans text-blue-400 tracking-wider">⚡ AGENT A (Vector)</span>
@@ -2805,7 +2819,7 @@ function AgentDuelApp() {
                         bets.tie > 0
                           ? 'bg-emerald-500/5 border-emerald-500 shadow-md shadow-emerald-500/5'
                           : 'bg-[#0d0f16] border-white/5 hover:border-emerald-500/20'
-                      } ${phase !== 'idle' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      } ${phase !== 'idle' || isAuthorizingWager ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-black font-sans text-emerald-400 tracking-wider">🤝 TIE</span>
@@ -2839,7 +2853,7 @@ function AgentDuelApp() {
                         bets.banker > 0
                           ? 'bg-amber-500/5 border-amber-500 shadow-md shadow-amber-500/5'
                           : 'bg-[#0d0f16] border-white/5 hover:border-amber-500/20'
-                      } ${phase !== 'idle' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      } ${phase !== 'idle' || isAuthorizingWager ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-black font-sans text-amber-500 tracking-wider">🌀 AGENT B (Switch)</span>
@@ -2887,10 +2901,10 @@ function AgentDuelApp() {
                         <button
                           id="btn-trigger-route"
                           onClick={initiateRoute}
-                          disabled={bankroll <= 0 || wagerAmount <= 0}
+                          disabled={bankroll <= 0 || wagerAmount <= 0 || isAuthorizingWager}
                           className="w-full md:w-auto py-3 px-10 bg-gradient-to-br from-blue-600 to-indigo-800 hover:from-blue-500 hover:to-indigo-700 disabled:opacity-40 rounded-lg text-white font-sans font-extrabold text-sm uppercase tracking-widest transition-all shadow-lg shadow-blue-900/40 select-none cursor-pointer flex items-center justify-center gap-2 border border-blue-500/35"
                         >
-                          <Play className="w-4 h-4 fill-white text-white" /> Initiate Route Trace
+                          <Play className="w-4 h-4 fill-white text-white" /> {isAuthorizingWager ? 'Authorizing Payment...' : 'Initiate Route Trace'}
                         </button>
                       ) : (
                         <button
@@ -2915,22 +2929,22 @@ function AgentDuelApp() {
                     onDisconnect={handleWalletDisconnect}
                   />
 
-                  {/* M2M SYSTEM AUTOMATION & HFT BOT CONSOLE */}
+                  {/* Optional automated wager console */}
                   <div className="bg-[#0b0c10] border border-white/10 rounded-lg p-5 font-mono space-y-4 shadow-lg shadow-emerald-500/5">
                     <div className="flex items-center justify-between border-b border-white/5 pb-2">
                       <div className="flex items-center gap-1.5 text-slate-350">
                         <Cpu className={`w-4 h-4 text-emerald-400 ${m2mEnabled ? 'animate-spin' : ''}`} />
-                        <span className="text-xs font-bold uppercase tracking-wider">M2M Automated HFT Bot</span>
+                        <span className="text-xs font-bold uppercase tracking-wider">Optional Auto-Wager Routine</span>
                       </div>
                       <button
                         onClick={() => {
                           const newState = !m2mEnabled;
                           setM2mEnabled(newState);
                           if (newState) {
-                            addM2mLog("HFT Core spawned. Automated network bidding initiated...", "success");
+                            addM2mLog("Auto-wager routine enabled. Wallet approvals are still required for paid wagers.", "success");
                             playSfx(523, 0.1, 'sine', 0.15);
                           } else {
-                            addM2mLog("HFT Core halted by user sign-off.", "warn");
+                            addM2mLog("Auto-wager routine paused by user.", "warn");
                             playSfx(330, 0.1, 'sine', 0.15);
                           }
                         }}
@@ -2940,9 +2954,12 @@ function AgentDuelApp() {
                             : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
                         }`}
                       >
-                        {m2mEnabled ? '● Bot Active' : '○ Bot Dormant'}
+                        {m2mEnabled ? 'Auto-Wager On' : 'Auto-Wager Off'}
                       </button>
                     </div>
+                    <p className="text-[10px] leading-relaxed text-slate-500">
+                      Manual play does not require this routine. It only suggests repeat wager cycles; Coinbase/Base approval and BYOS acceptance remain required before each paid round starts.
+                    </p>
 
                     {/* Strategy Selector */}
                     <div className="space-y-1.5">
@@ -3046,9 +3063,10 @@ function AgentDuelApp() {
                       <span>// Protocol Rules</span>
                     </div>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>Choose Vector North [⚡] or Quiet Switch [🌀] as your primary lane racer.</li>
-                      <li>Initiate route. Multiplier grows exponentially.</li>
-                      <li>Ensure you Eject before the random network collapse occurs. If hijacked, staked USDC is forfeited.</li>
+                      <li>Select one chip, then exactly one lane: Agent A, Tie, or Agent B.</li>
+                      <li>Press Initiate Route Trace and approve the Coinbase/Base payment authorization.</li>
+                      <li>The round starts only after BYOS verifies and locks that signed wager.</li>
+                      <li>Eject before network collapse. If the route crashes first, the locked stake is forfeited.</li>
                     </ul>
                   </div>
                 </div>
