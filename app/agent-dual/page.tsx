@@ -161,13 +161,13 @@ export default function App() {
   });
 
   // 3. Web3 Escrow Facilitator state
-  const [escrow, setEscrow] = useState<EscrowState>({
+  const escrow: EscrowState = {
     totalSecuredUsdc: 145890.30,
     facilitatorFeePercent: 1.50,
     gasPriceGwei: 15,
     contractAddress: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     veklomVerified: true
-  });
+  };
 
   // 4. Game states
   const [bankroll, setBankroll] = useState(250); // Synchronised with wallet.balanceUsdc
@@ -640,30 +640,6 @@ export default function App() {
       'Wallet Decoupled', 
       'Identity registry context cleared from workspace.'
     );
-  };
-
-  const handleFaucetDeposit = () => {
-    // Faucet claims
-    setWallet((prev) => ({ ...prev, balanceUsdc: prev.balanceUsdc + 250 }));
-    addNotification(
-      'tx_success',
-      'Gas Faucet Dispensed',
-      '+$250 USDC test-fuel credited to wallet.'
-    );
-    playSfx(587, 0.2, 'sine', 0.1);
-  };
-
-  const handleEscrowDeposit = (amount: number) => {
-    setEscrow((prev) => ({ ...prev, totalSecuredUsdc: prev.totalSecuredUsdc + amount }));
-    if (wallet.connected) {
-      setWallet((prev) => ({ ...prev, balanceUsdc: Math.max(0, prev.balanceUsdc - amount) }));
-    }
-    addNotification(
-      'tx_success',
-      'Escrow Collateral Boosted',
-      `Locked $${amount} USDC securely in registry.`
-    );
-    playSfx(659, 0.25, 'triangle', 0.15);
   };
 
   const handleRebet = () => {
@@ -2324,6 +2300,38 @@ export default function App() {
           </div>
 
           <main className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+            <div className="bg-[#0d0f16] border border-white/10 rounded-lg p-4 shadow-lg shadow-blue-900/5">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500">Agent Duel Proof State</div>
+                  <div className="text-sm text-white mt-1">
+                    {duelRouteState?.proof.reason || 'Loading BYOS and cAPI duel proof state...'}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1 font-mono">
+                    Live gameplay: {duelRouteState?.liveGameplayEnabled ? 'verified' : 'disabled until session, wager, and outcome endpoints are proven'}
+                  </div>
+                </div>
+                <div className="lg:ml-auto flex flex-wrap gap-2">
+                  {duelRouteState?.proof.probes.map((probe) => (
+                    <span
+                      key={probe.route}
+                      className={`px-2 py-1 rounded border text-[10px] font-mono ${
+                        probe.state === 'verified'
+                          ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                          : probe.state === 'needs_endpoint'
+                            ? 'border-rose-500/30 text-rose-300 bg-rose-500/10'
+                            : probe.state === 'needs_proof'
+                              ? 'border-amber-500/30 text-amber-300 bg-amber-500/10'
+                              : 'border-red-500/30 text-red-300 bg-red-500/10'
+                      }`}
+                      title={probe.detail || probe.route}
+                    >
+                      {probe.route} · {probe.status}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             {/* TAB CONTENT: ARENA */}
             {activeTab === 'arena' && (
@@ -2864,7 +2872,6 @@ export default function App() {
                     wallet={wallet}
                     onConnect={handleWalletConnect}
                     onDisconnect={handleWalletDisconnect}
-                    onRefreshBalance={handleFaucetDeposit}
                   />
 
                   {/* M2M SYSTEM AUTOMATION & HFT BOT CONSOLE */}
@@ -3024,9 +3031,9 @@ export default function App() {
                       dApp Escrow Collaterals & Settlement Pool
                     </h2>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      This application operates asynchronously under the standard <span className="text-white">x402 Facilitator Protocol</span>. 
-                      Collateral allocations and settlement cycles are logged permanently on the Base Mainnet blockchain. 
-                      Every wager committed during the Agent Duel game interacts directly with the on-chain escrow, triggering automatic distribution of prizes when players eject prior to network crash bounds.
+                      This view tracks the <span className="text-white">x402 Facilitator Protocol</span> routes required for Agent Duel.
+                      Current production proof is read-only until BYOS returns verified session, wager, and outcome endpoints.
+                      No local escrow, payout, or on-chain settlement is treated as live without route proof.
                     </p>
 
                     <div className="bg-[#050608] p-4 rounded-lg border border-white/5 space-y-3">
@@ -3064,7 +3071,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <FacilitatorBlock escrow={escrow} onDepositCollateral={handleEscrowDeposit} />
+                  <FacilitatorBlock escrow={escrow} />
                 </div>
 
               </div>
@@ -3115,6 +3122,7 @@ export default function App() {
                   onSimulatePeerEject={handleSimulatePeerEject}
                   isSimulatedPeerActive={isSimulatedPeerActive}
                   onStartDuelCountdown={handleStartDuelCountdown}
+                  liveGameplayEnabled={!!duelRouteState?.liveGameplayEnabled}
                 />
               </div>
             )}
@@ -3130,7 +3138,7 @@ export default function App() {
                       <h2 className="text-sm font-bold text-white uppercase tracking-wider">// Base Mainnet L2 Sandboxed Ledger Explorer</h2>
                     </div>
                     <p className="text-xs text-slate-400">
-                      Real-time transactional audit log for the Veklom x402 Game Engine. All consensus stakes, ejections, and settlements are permanently logged with zero latency.
+                      Route-backed audit view for the Veklom x402 Game Engine. Transaction rows remain empty until BYOS returns verified wager history.
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/30 px-3 py-1.5 rounded text-blue-400 text-xs">
@@ -3152,15 +3160,15 @@ export default function App() {
                   
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Contract Transactions</span>
-                    <span className="text-lg font-bold text-blue-400 block mt-1">{(roundFeed.length + 1547).toLocaleString()}</span>
-                    <span className="text-[9px] text-slate-400 mt-0.5 block">Total verified executions</span>
+                    <span className="text-lg font-bold text-blue-400 block mt-1">{roundFeed.length.toLocaleString()}</span>
+                    <span className="text-[9px] text-slate-400 mt-0.5 block">Verified BYOS history rows</span>
                   </div>
 
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">x402 Pool Liquidity</span>
-                    <span className="text-lg font-bold text-amber-500 block mt-1">${(145890.30 + (wallet.address ? 250 : 0)).toLocaleString(undefined, {minimumFractionDigits: 2})} USDC</span>
+                    <span className="text-lg font-bold text-amber-500 block mt-1">Needs proof</span>
                     <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
-                      Verified Escrow OK
+                      Waiting for BYOS wager settlement endpoint
                     </span>
                   </div>
 
@@ -3198,10 +3206,10 @@ export default function App() {
                   <div className="px-5 py-4 border-b border-white/10 bg-[#0a0c12] flex items-center justify-between">
                     <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                       <Activity className="w-4 h-4 text-blue-400" />
-                      Verified L2 Transaction Ledger ({roundFeed.length} Game Rounds logged this session)
+                      BYOS Wager History Ledger ({roundFeed.length} verified rows)
                     </h3>
                     <span className="text-[9px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase font-bold">
-                      Real-time Feed
+                      Route-backed Feed
                     </span>
                   </div>
 
@@ -3210,7 +3218,7 @@ export default function App() {
                       <div className="max-w-md mx-auto space-y-2">
                         <p className="text-slate-400 font-bold uppercase tracking-wide">// No Transaction Ledger Records Yet</p>
                         <p className="text-slate-500 text-[11px] leading-relaxed">
-                          Place a chip on the betting grid and trigger a round trace inside the <span className="text-blue-400">Cyber Arena</span>. Complete transactions will automatically appear here on Basescan in real time!
+                          BYOS has not returned verified wager history for this wallet yet. Local generated tx hashes are not shown as settlement proof.
                         </p>
                       </div>
                     </div>

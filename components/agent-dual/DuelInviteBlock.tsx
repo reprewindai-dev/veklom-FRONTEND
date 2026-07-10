@@ -18,6 +18,7 @@ interface DuelInviteBlockProps {
   onSimulatePeerEject: () => void;
   isSimulatedPeerActive: boolean;
   onStartDuelCountdown: () => void;
+  liveGameplayEnabled: boolean;
 }
 
 export function DuelInviteBlock({
@@ -31,6 +32,7 @@ export function DuelInviteBlock({
   onSimulatePeerEject,
   isSimulatedPeerActive,
   onStartDuelCountdown,
+  liveGameplayEnabled,
 }: DuelInviteBlockProps) {
   const [joinInput, setJoinInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -45,6 +47,7 @@ export function DuelInviteBlock({
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!liveGameplayEnabled) return;
     if (joinInput.trim()) {
       onJoinDuel(joinInput.trim().toUpperCase());
     }
@@ -84,9 +87,8 @@ export function DuelInviteBlock({
       {!activeDuel ? (
         <div className="space-y-4">
           <p className="text-xs text-slate-400 leading-relaxed">
-            Invite another connected wallet to a real-time <span className="text-purple-400 font-bold">head-to-head duel</span>! 
-            You will stake USDC in the exact same consensus round loop, watch the packet sequence stream in unison, and eject independently. 
-            The highest surviving ejector secures the ultimate bragging rights and claims a non-dilutive staking bonus.
+            Agent Duel multiplayer requires verified BYOS session, wager, and outcome endpoints before live stake execution is enabled.
+            Current route proof is shown above; local peer simulation is disabled in production control mode.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -103,9 +105,12 @@ export function DuelInviteBlock({
               <button
                 id="btn-create-duel-lobby"
                 onClick={onCreateDuel}
-                className="w-full bg-purple-600/90 text-white hover:bg-purple-600 font-bold uppercase tracking-wider text-[11px] py-2 rounded transition-all duration-150 flex items-center justify-center gap-1.5"
+                disabled={!liveGameplayEnabled}
+                className={`w-full font-bold uppercase tracking-wider text-[11px] py-2 rounded transition-all duration-150 flex items-center justify-center gap-1.5 ${
+                  liveGameplayEnabled ? 'bg-purple-600/90 text-white hover:bg-purple-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" /> Initialize Lobby
+                <Plus className="w-3.5 h-3.5" /> {liveGameplayEnabled ? 'Initialize Lobby' : 'Needs Endpoint'}
               </button>
             </div>
 
@@ -126,13 +131,17 @@ export function DuelInviteBlock({
                     type="text"
                     value={joinInput}
                     onChange={(e) => setJoinInput(e.target.value)}
+                    disabled={!liveGameplayEnabled}
                     placeholder="DUEL-XXXX"
                     className="flex-1 bg-[#090b11] border border-white/10 rounded px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-purple-500 uppercase"
                   />
                   <button
                     id="btn-join-duel-lobby"
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase text-[11px] px-3.5 rounded transition-colors flex items-center justify-center"
+                    disabled={!liveGameplayEnabled}
+                    className={`font-bold uppercase text-[11px] px-3.5 rounded transition-colors flex items-center justify-center ${
+                      liveGameplayEnabled ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
                   >
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
@@ -146,9 +155,9 @@ export function DuelInviteBlock({
               <Coins className="w-3.5 h-3.5 text-purple-400" /> Duel PVP Staking Protocols:
             </h4>
             <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-500">
-              <li>Both players synchronize to the exact same pre-shuffled consensus stream sequence.</li>
-              <li>Ejections are resolved independently. Ejecting too early secures safe gains but might lose the Duel; waiting too long can trigger a total crash loss!</li>
-              <li>You can open this page in a second browser window or tab to play against yourself in real-time.</li>
+              <li>Read routes are allowed to display BYOS leaderboard and history proof.</li>
+              <li>Write routes must prove session creation, wager lock, and outcome settlement before gameplay unlocks.</li>
+              <li>No simulated peer or local settlement is accepted as production proof.</li>
             </ul>
           </div>
         </div>
@@ -178,9 +187,12 @@ export function DuelInviteBlock({
                 <button
                   id="btn-simulate-peer-duel"
                   onClick={onToggleSimulatePeer}
-                  className="bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/30 font-bold uppercase text-[10px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5"
+                  disabled={!liveGameplayEnabled}
+                  className={`border font-bold uppercase text-[10px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5 ${
+                    liveGameplayEnabled ? 'bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border-purple-500/30' : 'bg-slate-800 text-slate-500 border-white/10 cursor-not-allowed'
+                  }`}
                 >
-                  <Cpu className="w-3.5 h-3.5" /> Simulate Peer
+                  <Cpu className="w-3.5 h-3.5" /> Needs Endpoint
                 </button>
               )}
               <button
@@ -315,11 +327,11 @@ export function DuelInviteBlock({
                       </div>
                     </div>
 
-                    {/* Simulation Controller controls */}
-                    {isSimulatedPeerActive && activeDuel.status === 'lobby' && (
+                    {/* Local controller controls only unlock after live backend gameplay is proven. */}
+                    {liveGameplayEnabled && isSimulatedPeerActive && activeDuel.status === 'lobby' && (
                       <div className="bg-purple-500/10 border border-purple-500/20 p-2 rounded space-y-1.5">
                         <span className="text-[8px] font-mono text-purple-400 uppercase tracking-widest block font-bold">
-                          // Simulate Peer Bet:
+                          // Peer Bet Controls:
                         </span>
                         <div className="flex gap-1">
                           <button
@@ -453,15 +465,15 @@ export function DuelInviteBlock({
                 </div>
               </div>
 
-              {/* Simulated peer ejection controls */}
-              {isSimulatedPeerActive && peerPlayer && peerPlayer.status === 'ready' && (
+              {/* Peer ejection controls only unlock after live backend gameplay is proven. */}
+              {liveGameplayEnabled && isSimulatedPeerActive && peerPlayer && peerPlayer.status === 'ready' && (
                 <div className="bg-purple-950/40 border border-purple-500/20 p-2.5 rounded flex items-center justify-between gap-4">
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-mono text-purple-400 uppercase font-bold tracking-wider block">
-                      // Local Simulated Controller:
+                      // Peer Controller:
                     </span>
                     <p className="text-[11px] text-slate-400">
-                      As local developer, you can click here to eject the simulated Peer in real-time.
+                      Use this control only after BYOS live gameplay routes are verified.
                     </p>
                   </div>
                   <button

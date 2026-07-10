@@ -11,30 +11,14 @@ interface WalletBlockProps {
   wallet: WalletState;
   onConnect: (address: string, realEthBalance?: number) => void;
   onDisconnect: () => void;
-  onRefreshBalance: () => void;
 }
 
-export function WalletBlock({ wallet, onConnect, onDisconnect, onRefreshBalance }: WalletBlockProps) {
+export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProps) {
   const [addressInput, setAddressInput] = useState('0x6a20f24cc341f72c2f573eb5');
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
-
-  const handleSimulatedConnect = () => {
-    if (!addressInput.startsWith('0x') || addressInput.length < 10) {
-      setErrorMessage('Please enter a valid Base Hex address (starts with 0x)');
-      return;
-    }
-    setErrorMessage('');
-    setIsVerifying(true);
-    
-    // Simulate smart verification chain via veklom-id.vercel.app
-    setTimeout(() => {
-      setIsVerifying(false);
-      onConnect(addressInput);
-    }, 1200);
-  };
 
   const handleWeb3Connect = async () => {
     if (!hasEthereum) {
@@ -156,7 +140,7 @@ export function WalletBlock({ wallet, onConnect, onDisconnect, onRefreshBalance 
               <div className="w-full border-t border-white/5"></div>
             </div>
             <span className="relative px-3 bg-[#0d0f16] text-[9px] font-mono text-slate-500 uppercase tracking-widest">
-              Or Manual Faucet Registry
+              Manual registry unavailable
             </span>
           </div>
 
@@ -170,25 +154,16 @@ export function WalletBlock({ wallet, onConnect, onDisconnect, onRefreshBalance 
                 type="text"
                 value={addressInput}
                 onChange={(e) => setAddressInput(e.target.value)}
+                readOnly
                 placeholder="0x..."
                 className="flex-1 bg-[#050608] border border-white/10 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
               />
               <button
                 id="btn-verify-wallet"
-                onClick={handleSimulatedConnect}
-                disabled={isVerifying}
-                className="bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-50 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded transition-all duration-150 flex items-center gap-1.5 font-sans border border-white/5"
+                disabled
+                className="bg-slate-800 text-slate-500 disabled:opacity-50 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded transition-all duration-150 flex items-center gap-1.5 font-sans border border-white/5 cursor-not-allowed"
               >
-                {isVerifying ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Querying...
-                  </>
-                ) : (
-                  <>
-                    Authenticate
-                  </>
-                )}
+                Needs BYOS Auth
               </button>
             </div>
             {errorMessage && (
@@ -244,12 +219,12 @@ export function WalletBlock({ wallet, onConnect, onDisconnect, onRefreshBalance 
                 <span className="text-xl font-bold font-mono text-white">
                   ${wallet.balanceUsdc.toLocaleString()}
                 </span>
-                <button 
-                  onClick={onRefreshBalance}
-                  title="Claim free faucet test funds" 
-                  className="text-[9px] font-mono text-blue-400 hover:underline hover:text-blue-300"
+                <button
+                  disabled
+                  title="Balance must come from BYOS wallet history"
+                  className="text-[9px] font-mono text-slate-500 cursor-not-allowed"
                 >
-                  Faucet+
+                  Needs proof
                 </button>
               </div>
             </div>
@@ -273,7 +248,7 @@ export function WalletBlock({ wallet, onConnect, onDisconnect, onRefreshBalance 
               </tr>
               <tr className="border-b border-white/5">
                 <td className="py-1 text-slate-500 uppercase">Veklom ID State:</td>
-                <td className="py-1 text-right text-emerald-400 uppercase font-bold">Active Verified</td>
+                <td className="py-1 text-right text-amber-400 uppercase font-bold">Wallet signature only</td>
               </tr>
               <tr>
                 <td className="py-1 text-slate-500 uppercase">Settlement standard:</td>
