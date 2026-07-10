@@ -105,6 +105,20 @@ const INITIAL_CHALLENGES: DailyChallenge[] = [
 
 const API_BASE_URL = '/api/v1/duel';
 
+interface DuelRouteState {
+  generated_at: string;
+  source: { byos: string; covenant: string };
+  proof: {
+    state: 'verified' | 'partial' | 'error';
+    reason: string;
+    probes: Array<{ route: string; state: 'verified' | 'needs_proof' | 'needs_endpoint' | 'error'; status: number; detail?: string }>;
+  };
+  capabilities: Record<string, string>;
+  liveGameplayEnabled: boolean;
+  leaderboard: LeaderboardEntry[];
+  history: any[];
+}
+
 export default function App() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   // 1. Navigation tab state
@@ -208,6 +222,7 @@ export default function App() {
   const [roundFeed, setRoundFeed] = useState<WagerTransaction[]>([]);
   const [lastTenCrashes, setLastTenCrashes] = useState<number[]>([1.45, 2.10, 1.12, 3.50, 1.85, 1.20, 5.40, 1.05, 2.30, 1.60]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(INITIAL_LEADERBOARD);
+  const [duelRouteState, setDuelRouteState] = useState<DuelRouteState | null>(null);
 
   // Replay state
   const [lastLostRound, setLastLostRound] = useState<{
@@ -536,22 +551,24 @@ export default function App() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/leaderboard`);
+      const res = await fetch('/agent-duel/state', { cache: 'no-store' });
       const data = await res.json();
-      if (data.success && data.leaderboard) {
+      setDuelRouteState(data);
+      if (Array.isArray(data.leaderboard)) {
         setLeaderboard(data.leaderboard);
       }
     } catch (e) {
-      console.warn("Failed to fetch leaderboard from backend:", e);
+      console.warn("Failed to fetch Agent Duel proof state:", e);
     }
   };
 
   const fetchHistory = async (address: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/player/${address}/history`);
+      const res = await fetch('/agent-duel/state', { cache: 'no-store' });
       const data = await res.json();
-      if (data.success && data.wagers) {
-        const mappedFeed: WagerTransaction[] = data.wagers.map((w: any) => ({
+      setDuelRouteState(data);
+      if (Array.isArray(data.history)) {
+        const mappedFeed: WagerTransaction[] = data.history.map((w: any) => ({
           id: w.id.toString(),
           txHash: w.session_id,
           timestamp: new Date(w.created_at).toLocaleTimeString(),
@@ -1413,9 +1430,7 @@ export default function App() {
     
     const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
     if (!wallet.connected || !hasEthereum) {
-      // Local dev mode test proof bypass format
-      const testProof = `test_proof_valid_${Math.random().toString(36).substring(2, 10)}`;
-      return testProof;
+      throw new Error("Live x402 wallet signature required. No local test proof is generated.");
     }
 
     try {
@@ -1477,14 +1492,18 @@ export default function App() {
 
       return btoa(JSON.stringify(payload));
     } catch (err) {
-      console.error("MetaMask sign failed, falling back to dev test proof", err);
-      return `test_proof_fallback_${Math.random().toString(36).substring(2, 10)}`;
+      console.error("Wallet sign failed", err);
+      throw new Error("Wallet signature failed; wager not submitted.");
     }
   };
 
   // Launch routing crash loop
   const initiateRoute = async () => {
     if (phase === 'running') return;
+    if (!duelRouteState?.liveGameplayEnabled) {
+      addNotification('collapse', 'Live Duel Execution Disabled', duelRouteState?.proof.reason || 'BYOS duel wager/session/outcome endpoints need production proof.');
+      return;
+    }
     
     const totalWager = Number((bets.player + bets.banker + bets.tie).toFixed(2));
     if (totalWager <= 0) {

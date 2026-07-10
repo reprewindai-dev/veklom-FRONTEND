@@ -21,7 +21,7 @@ export interface LeaderboardEntry {
   totalWonUsdc: number;
   bestMultiplier: number;
   streak: number;
-  agentPreference: 'Vector North' | 'Quiet Switch' | 'Balanced';
+  agentPreference: string;
 }
 
 export interface WagerTransaction {
