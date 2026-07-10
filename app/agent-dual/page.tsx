@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSignTypedData } from 'wagmi';
 import { WalletState, LeaderboardEntry, WagerTransaction, EscrowState, PushNotification, TelemetryPacket, TelemetryDuelHand, DailyChallenge, getPacketDetails, DuelSession, DuelPlayer } from '@/components/agent-dual/types';
 import { ArenaChart } from '@/components/agent-dual/ArenaChart';
 import { WalletBlock } from '@/components/agent-dual/WalletBlock';
@@ -18,6 +19,7 @@ import { ChallengesBlock } from '@/components/agent-dual/ChallengesBlock';
 import { QuantumReplayModal } from '@/components/agent-dual/QuantumReplayModal';
 import { DuelInviteBlock } from '@/components/agent-dual/DuelInviteBlock';
 import { FlameMeter } from '@/components/agent-dual/FlameMeter';
+import { WalletProviders } from './WalletProviders';
 import { 
   Flame, 
   Coins, 
@@ -116,8 +118,10 @@ interface DuelRouteState {
   history: any[];
 }
 
-export default function App() {
+function AgentDuelApp() {
+  const { signTypedDataAsync } = useSignTypedData();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionToken, setActiveSessionToken] = useState<string | null>(null);
   // 1. Navigation tab state
   const [activeTab, setActiveTab] = useState<'arena' | 'escrow' | 'challenges' | 'duel' | 'explorer'>('arena');
 
@@ -542,7 +546,8 @@ export default function App() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch('/agent-duel/state', { cache: 'no-store' });
+      const stateUrl = wallet.address ? `/agent-duel/state?wallet=${encodeURIComponent(wallet.address)}` : '/agent-duel/state';
+      const res = await fetch(stateUrl, { cache: 'no-store' });
       const data = await res.json();
       setDuelRouteState(data);
       if (Array.isArray(data.leaderboard)) {
@@ -555,7 +560,7 @@ export default function App() {
 
   const fetchHistory = async (address: string) => {
     try {
-      const res = await fetch('/agent-duel/state', { cache: 'no-store' });
+      const res = await fetch(`/agent-duel/state?wallet=${encodeURIComponent(address)}`, { cache: 'no-store' });
       const data = await res.json();
       setDuelRouteState(data);
       if (data.capabilities?.readHistory !== 'verified') {
@@ -614,6 +619,7 @@ export default function App() {
       }));
       setBankroll(backendBalance);
       setActiveSessionId(data.session_id);
+      setActiveSessionToken(data.session_token);
 
       addNotification(
         'tx_success', 
@@ -633,6 +639,8 @@ export default function App() {
 
   const handleWalletDisconnect = () => {
     setWallet((prev) => ({ ...prev, connected: false, address: null }));
+    setActiveSessionId(null);
+    setActiveSessionToken(null);
     addNotification(
       'collapse', 
       'Wallet Decoupled', 
@@ -1396,19 +1404,44 @@ export default function App() {
   };
 
   const signWager = async (amount: number) => {
-    const fromAddr = wallet.address || "0x6a20f24cc341f72c2f573eb5";
+    if (!wallet.address) {
+      throw new Error("Wallet address required before signing a wager.");
+    }
+    const fromAddr = wallet.address;
     const toAddr = "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970"; // Treasury address
     const rawAmount = Math.round(amount * 1_000_000).toString(); // USDC decimals
     
-    const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
-    if (!wallet.connected || !hasEthereum) {
+    if (!wallet.connected) {
       throw new Error("Live x402 wallet signature required. No local test proof is generated.");
     }
 
     try {
       const nonce = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
       const now = Math.floor(Date.now() / 1000);
-      
+      const domain = {
+        name: 'USD Coin',
+        version: '2',
+        chainId: 8453,
+        verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      } as const;
+      const types = {
+        TransferWithAuthorization: [
+          { name: 'from', type: 'address' },
+          { name: 'to', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'validAfter', type: 'uint256' },
+          { name: 'validBefore', type: 'uint256' },
+          { name: 'nonce', type: 'bytes32' },
+        ],
+      } as const;
+      const message = {
+        from: fromAddr as `0x${string}`,
+        to: toAddr as `0x${string}`,
+        value: BigInt(rawAmount),
+        validAfter: BigInt(now),
+        validBefore: BigInt(now + 3600),
+        nonce: nonce as `0x${string}`,
+      };
       const typedData = {
         types: {
           EIP712Domain: [
@@ -1443,10 +1476,24 @@ export default function App() {
         },
       };
 
-      const signature = await (window as any).ethereum.request({
-        method: 'dash_signTypedData_v4' in (window as any).ethereum ? 'dash_signTypedData_v4' : 'eth_signTypedData_v4',
-        params: [fromAddr, JSON.stringify(typedData)],
-      });
+      let signature: `0x${string}` | string;
+      try {
+        signature = await signTypedDataAsync({
+          domain,
+          types,
+          primaryType: 'TransferWithAuthorization',
+          message,
+        });
+      } catch (wagmiError) {
+        const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
+        if (!hasEthereum) {
+          throw wagmiError;
+        }
+        signature = await (window as any).ethereum.request({
+          method: 'eth_signTypedData_v4',
+          params: [fromAddr, JSON.stringify(typedData)],
+        });
+      }
 
       const payload = {
         payload: {
@@ -1486,6 +1533,10 @@ export default function App() {
       addNotification('collapse', 'Execution Blocked', 'Insufficient USDC balance to fulfill stake.');
       return;
     }
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      addNotification('collapse', 'Execution Blocked', 'Connect a wallet-backed BYOS session before placing a wager.');
+      return;
+    }
 
     addNotification(
       'tx_success',
@@ -1507,13 +1558,14 @@ export default function App() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'payment-signature': signature
+            'payment-signature': signature,
+            'x-duel-session-token': activeSessionToken
           },
           body: JSON.stringify({
-            session_id: activeSessionId || 'd7b752bc-07b7-52bc-07b7-52bc07b752bc',
+            session_id: activeSessionId,
             bet_type: bet.type,
             wager_amount_usdc: bet.amount,
-            wallet_address: wallet.address || '0x6a20f24cc341f72c2f573eb5'
+            wallet_address: wallet.address
           })
         });
         const data = await res.json();
@@ -1603,15 +1655,22 @@ export default function App() {
     }
   };
 
-  const handleRoundOutcome = async (winner: 'A' | 'B' | null) => {
+  const handleRoundOutcome = async (winner: 'A' | 'B' | null, finalMulti: number) => {
     try {
+      if (!activeSessionId || !activeSessionToken) {
+        throw new Error('Missing BYOS duel session; outcome not recorded.');
+      }
       const finalOutcome = winner === 'A' ? 'player' : winner === 'B' ? 'banker' : 'tie';
       const res = await fetch(`${API_BASE_URL}/outcome`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken
+        },
         body: JSON.stringify({
-          session_id: activeSessionId || 'd7b752bc-07b7-52bc-07b7-52bc07b752bc',
-          outcome: finalOutcome
+          session_id: activeSessionId,
+          outcome: finalOutcome,
+          payout_multiplier: finalMulti
         })
       });
       const data = await res.json();
@@ -1638,7 +1697,7 @@ export default function App() {
   };
 
   const triggerCrash = (finalMulti: number) => {
-    handleRoundOutcome(roundWinner);
+    handleRoundOutcome(roundWinner, finalMulti);
     if (activeDuel) {
       setPhase('crashed');
       setMultiplier(finalMulti);
@@ -1976,6 +2035,8 @@ export default function App() {
     setChartPoints([]);
     setRoundFeed([]);
     setLastTenCrashes([]);
+    setActiveSessionId(null);
+    setActiveSessionToken(null);
     setNotifications([]);
     setLeaderboard(INITIAL_LEADERBOARD);
     setM2mEnabled(false);
@@ -2239,7 +2300,7 @@ export default function App() {
                     {duelRouteState?.proof.reason || 'Loading BYOS and cAPI duel proof state...'}
                   </div>
                   <div className="text-[10px] text-slate-500 mt-1 font-mono">
-                    Live gameplay: {duelRouteState?.liveGameplayEnabled ? 'verified' : 'disabled until session, wager, and outcome endpoints are proven'}
+                    Gameplay persistence: {duelRouteState?.liveGameplayEnabled ? 'verified' : 'disabled until session, wager, and outcome endpoints are proven'}
                   </div>
                 </div>
                 <div className="lg:ml-auto flex flex-wrap gap-2">
@@ -3311,5 +3372,13 @@ export default function App() {
         replayData={lastLostRound}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <WalletProviders>
+      <AgentDuelApp />
+    </WalletProviders>
   );
 }

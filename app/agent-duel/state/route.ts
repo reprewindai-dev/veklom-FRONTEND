@@ -63,15 +63,18 @@ async function probeJson(base: string, route: string, init?: RequestInit): Promi
   }
 }
 
-export async function GET() {
-  const [leaderboardProbe, historyProbe, sessionProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
+function walletFromRequest(request: Request): string {
+  const url = new URL(request.url);
+  const wallet = url.searchParams.get("wallet") || "0x3a74772e925b54f7dad7fd95c9ba30825033f970";
+  return /^0x[a-fA-F0-9]{40}$/.test(wallet) ? wallet.toLowerCase() : "0x3a74772e925b54f7dad7fd95c9ba30825033f970";
+}
+
+export async function GET(request: Request) {
+  const walletAddress = walletFromRequest(request);
+  const [proofProbe, leaderboardProbe, historyProbe, wagerProbe, x402Probe, covenantProbe] = await Promise.all([
+    probeJson(BYOS_API_BASE, "/api/v1/duel/proof"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/leaderboard"),
-    probeJson(BYOS_API_BASE, "/api/v1/duel/player/0x3a74772e925b54f7dad7fd95c9ba30825033f970/history"),
-    probeJson(BYOS_API_BASE, "/api/v1/duel/session/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wallet_address: "0x3a74772e925b54f7dad7fd95c9ba30825033f970" }),
-    }),
+    probeJson(BYOS_API_BASE, `/api/v1/duel/player/${walletAddress}/history`),
     probeJson(BYOS_API_BASE, "/api/v1/duel/wager", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,7 +89,39 @@ export async function GET() {
     probeJson(CAPI_RUNTIME_URL, "/api/state"),
   ]);
 
-  const probes = [leaderboardProbe, historyProbe, sessionProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe].map(({ data, ...probe }) => probe);
+  const proofCapabilities = proofProbe.state === "verified" ? proofProbe.data?.capabilities || {} : {};
+  const probeResults: ProbeResult[] = [
+    proofProbe,
+    leaderboardProbe,
+    historyProbe,
+    {
+      route: "/api/v1/duel/session/create",
+      state: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state === "verified" ? "needs_proof" : proofProbe.state,
+      status: proofProbe.status,
+      detail: proofCapabilities.session_create === "verified" ? "Postgres-backed session endpoint present" : "Session persistence not proven",
+    },
+    {
+      route: "/api/v1/duel/wager",
+      state: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
+      status: wagerProbe.status,
+      detail: proofCapabilities.wager_persist === "verified" ? "Signed wager persistence endpoint present" : wagerProbe.detail,
+    },
+    {
+      route: "/api/v1/duel/outcome",
+      state: proofCapabilities.outcome_persist === "verified" ? "verified" : proofProbe.state === "verified" ? "needs_proof" : proofProbe.state,
+      status: proofProbe.status,
+      detail: proofCapabilities.outcome_persist === "verified" ? "Outcome persistence endpoint present" : "Outcome persistence not proven",
+    },
+    {
+      route: "agent_duel_wagers.settlement_tx_hash",
+      state: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
+      status: proofProbe.status,
+      detail: proofCapabilities.settlement === "verified" ? "At least one wager has settlement tx proof" : "No on-chain settlement tx hash has been recorded yet",
+    },
+    x402Probe,
+    covenantProbe,
+  ];
+  const probes = probeResults.map(({ data, ...probe }) => probe);
   const endpointGaps = probes.filter((probe) => probe.state === "needs_endpoint").length;
   const proofGaps = probes.filter((probe) => probe.state === "needs_proof").length;
   const hardFailures = probes.filter((probe) => probe.state === "error").length;
@@ -96,6 +131,10 @@ export async function GET() {
   const history = historyProbe.state === "verified" && Array.isArray(historyProbe.data?.wagers)
     ? historyProbe.data.wagers
     : [];
+  const persistenceVerified =
+    proofCapabilities.session_create === "verified" &&
+    proofCapabilities.wager_persist === "verified" &&
+    proofCapabilities.outcome_persist === "verified";
 
   return NextResponse.json({
     generated_at: new Date().toISOString(),
@@ -103,6 +142,7 @@ export async function GET() {
       byos: trimSlash(BYOS_API_BASE),
       covenant: trimSlash(CAPI_RUNTIME_URL),
     },
+    wallet: walletAddress,
     proof: {
       state: hardFailures > 0 ? "error" : endpointGaps > 0 || proofGaps > 0 ? "partial" : "verified",
       reason:
@@ -110,25 +150,26 @@ export async function GET() {
           ? "One or more Agent Duel sources failed."
           : endpointGaps > 0
             ? "BYOS exposes duel read routes, but wager/session/outcome write endpoints need production implementation."
-            : proofGaps > 0
-              ? "Agent Duel routes require authenticated proof before live gameplay can be enabled."
-              : "All Agent Duel sources returned live route-backed data.",
+            : persistenceVerified
+              ? "Agent Duel session, signed wager, and outcome persistence are route-backed; on-chain settlement remains separately marked until a settlement tx hash is recorded."
+              : proofGaps > 0
+                ? "Agent Duel routes require authenticated proof before live gameplay can be enabled."
+                : "All Agent Duel sources returned live route-backed data.",
       probes,
     },
     capabilities: {
       readLeaderboard: leaderboardProbe.state,
       readHistory: historyProbe.state,
-      createSession: sessionProbe.state,
-      placeWager: wagerProbe.state,
-      settleOutcome: outcomeProbe.state,
+      createSession: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state,
+      placeWager: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
+      settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : proofProbe.state,
+      settlement: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
       x402Discovery: x402Probe.state,
       covenantState: covenantProbe.state,
     },
-    liveGameplayEnabled:
-      sessionProbe.state === "verified" &&
-      wagerProbe.state === "verified" &&
-      outcomeProbe.state === "verified",
+    liveGameplayEnabled: persistenceVerified,
     leaderboard,
     history,
+    proofSource: proofProbe.state === "verified" ? proofProbe.data : null,
   });
 }

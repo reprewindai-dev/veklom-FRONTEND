@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { WalletState } from './types';
 import { Wallet, ShieldCheck, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAccount, useConnect, useConnectors, useDisconnect, useSwitchChain } from 'wagmi';
 
 interface WalletBlockProps {
   wallet: WalletState;
@@ -17,12 +18,39 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
   const [addressInput, setAddressInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const lastConnectedAddress = useRef<string | null>(null);
+  const { address, chainId, isConnected } = useAccount();
+  const connectors = useConnectors();
+  const { connectAsync } = useConnect();
+  const { disconnectAsync } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
 
   const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
 
-  const handleWeb3Connect = async () => {
+  useEffect(() => {
+    if (!isConnected || !address) {
+      return;
+    }
+    const normalized = address.toLowerCase();
+    if (lastConnectedAddress.current === normalized) {
+      return;
+    }
+    lastConnectedAddress.current = normalized;
+    onConnect(address, 0);
+  }, [address, isConnected, onConnect]);
+
+  useEffect(() => {
+    if (!isConnected || !address || chainId === 8453) {
+      return;
+    }
+    switchChainAsync({ chainId: 8453 }).catch((err) => {
+      setErrorMessage(err?.message || 'Connected wallet must switch to Base Mainnet.');
+    });
+  }, [address, chainId, isConnected, switchChainAsync]);
+
+  const handleInjectedFallback = async () => {
     if (!hasEthereum) {
-      setErrorMessage('No web3 browser wallet (MetaMask, Coinbase Wallet etc.) detected.');
+      setErrorMessage('No injected browser wallet detected. Open the wallet selector or use Base App / Coinbase Wallet.');
       return;
     }
     setErrorMessage('');
@@ -83,6 +111,39 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
     }
   };
 
+  const handleWeb3Connect = async () => {
+    setErrorMessage('');
+    setIsVerifying(true);
+    try {
+      const connector =
+        connectors.find((item) => item.id.toLowerCase().includes('base')) ||
+        connectors.find((item) => item.id.toLowerCase().includes('coinbase')) ||
+        connectors.find((item) => item.id.toLowerCase().includes('injected')) ||
+        connectors[0];
+      if (!connector) {
+        throw new Error('No wallet connector is available in this browser session.');
+      }
+      await connectAsync({ connector, chainId: 8453 });
+    } catch (err: any) {
+      await handleInjectedFallback();
+      if (err?.message) {
+        setErrorMessage(err.message);
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    lastConnectedAddress.current = null;
+    try {
+      await disconnectAsync();
+    } catch {
+      // The local session still needs to be cleared even if the wallet provider is already disconnected.
+    }
+    onDisconnect();
+  };
+
   return (
     <div id="wallet-terminal" className="bg-[#0d0f16] border border-white/10 rounded-lg p-5 relative overflow-hidden shadow-lg shadow-blue-900/5">
       {/* Background cyber accent */}
@@ -117,21 +178,21 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
               {isVerifying ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Verifying Chain Signature...
+              Opening Wallet Connector...
                 </>
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                  Connect Browser Web3 Wallet
+                  Connect Base / Web3 Wallet
                 </>
               )}
             </button>
             <div className="flex items-center gap-2 text-[9px] font-mono text-slate-500 uppercase tracking-wider justify-center">
-              <span>Supports MetaMask</span>
+              <span>Base App</span>
               <span className="text-slate-700">•</span>
               <span>Coinbase Wallet</span>
               <span className="text-slate-700">•</span>
-              <span>Rabby / OKX</span>
+              <span>MetaMask / Injected</span>
             </div>
           </div>
 
@@ -205,7 +266,7 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
             </div>
             <button
                id="wallet-disconnect-link"
-              onClick={onDisconnect}
+              onClick={handleDisconnect}
               className="text-[10px] font-mono text-red-400 hover:text-red-300 underline uppercase"
             >
               Disconnect

@@ -11,6 +11,7 @@
     "test:vnp-copy": "node scripts/check-vnp-public-copy.mjs"
   },
   "dependencies": {
+    "@base-org/account": "^2.5.7",
     "@glideapps/glide-data-grid": "^6.0.3",
     "@google/genai": "^2.9.0",
     "@metamask/connect-evm": "^2.1.0",
