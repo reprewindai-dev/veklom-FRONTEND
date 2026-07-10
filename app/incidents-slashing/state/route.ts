@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const BYOS_API_BASE = process.env.BYOS_API_BASE_URL || "https://api.veklom.com";
 
 type ProbeState = "verified" | "needs_proof" | "error";

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { CAPI_RUNTIME_URL } from "@/lib/capi-runtime";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const BYOS_API_BASE =
   process.env.BYOS_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
