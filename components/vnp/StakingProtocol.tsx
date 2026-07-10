@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 import { api, fetcher } from "@/lib/api";
-import { ethers } from "ethers";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -77,6 +76,23 @@ interface StakingMarket {
   outcome?: string | null;
 }
 
+interface StakingRouteState {
+  generated_at: string;
+  source: string;
+  proof: {
+    state: "verified" | "partial" | "error";
+    reason: string;
+    probes: Array<{ route: string; state: "verified" | "needs_proof" | "error"; status: number; detail?: string }>;
+  };
+  staking: any;
+  markets: StakingMarket[];
+  marketProof: { state: "verified" | "needs_proof" | "error"; reason: string };
+  writeActions: {
+    verifierRegistration: { route: string; state: string };
+    stakePlacement: { route: string; state: string };
+  };
+}
+
 // ============ Main Component ============
 
 interface StakingProtocolProps {
@@ -84,34 +100,25 @@ interface StakingProtocolProps {
 }
 
 export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
-  // ---- Markets ----
-  const { data: marketData, mutate: mutateMarkets } = useSWR<StakingMarket[]>(
-    "/api/v1/x402/staking/markets",
-    fetcher,
-    { refreshInterval: 10000 },
-  );
-  const markets = Array.isArray(marketData) ? marketData : [];
-
-  // ---- Backend State ----
-  const { data: stateData } = useSWR<any>(
-    "/api/v1/x402/staking/state",
+  const { data: stakingRoute, mutate: mutateStakingRoute } = useSWR<StakingRouteState>(
+    "/staking-protocol/state",
     fetcher,
     { refreshInterval: 10000 },
   );
 
+  const stateData = stakingRoute?.staking;
+  const markets = Array.isArray(stakingRoute?.markets) ? stakingRoute.markets : [];
   const providers: ProviderBondView[] = stateData?.providers || [];
-  const protocolStats = stateData?.protocolStats || {
-    totalValueBonded: 0, activeApis: 0, activeVerifiers: 0, totalPenalties: 0, settlementRate: 100, epochsProcessed: 0
-  };
+  const protocolStats = stateData?.protocolStats || {};
   const settlements: EpochSettlement[] = stateData?.settlements || [];
   const verifiers: VerifierNode[] = stateData?.verifiers || [];
   const kdeCurves = stateData?.kdeCurves || {};
   const VNP_PARAMS = {
-    k: stateData?.vnpParams?.k ?? 3,
-    lambda: stateData?.vnpParams?.lambda ?? 2.0,
-    challengeTierA: stateData?.vnpParams?.challengeTierA || { min: 10, max: 500 },
-    challengeTierB: stateData?.vnpParams?.challengeTierB || { min: 1000, max: 50000 },
-    consensusWeights: stateData?.vnpParams?.consensusWeights || { kde: 0.6, historical: 0.3, shadow: 0.1 }
+    k: stateData?.vnpParams?.k,
+    lambda: stateData?.vnpParams?.lambda,
+    challengeTierA: stateData?.vnpParams?.challengeTierA,
+    challengeTierB: stateData?.vnpParams?.challengeTierB,
+    consensusWeights: stateData?.vnpParams?.consensusWeights,
   };
 
   // ---- KDE for selected API ----
@@ -139,58 +146,6 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
     }
   }, [markets, selectedMarketId]);
 
-  // ---- Wallet Registration ----
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  const connectWallet = async () => {
-    if (typeof (window as any).ethereum === "undefined") {
-      alert("Please install MetaMask to connect your wallet.");
-      return;
-    }
-    try {
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      setWalletAddress(address);
-    } catch (err) {
-      console.error("Failed to connect wallet", err);
-    }
-  };
-
-  const registerAsVerifier = async () => {
-    if (!walletAddress) return;
-    setIsRegistering(true);
-    try {
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-      const signer = await provider.getSigner();
-      
-      const message = `Register Veklom Verifier Node\nAddress: ${walletAddress}\nNonce: ${Date.now()}`;
-      const signature = await signer.signMessage(message);
-      
-      const res = await api<{ success: boolean; message?: string }>("/api/v1/x402/staking/register-verifier", {
-        body: {
-          message,
-          signature,
-          asn: "AS12345", // Mock ASN for v1
-          region: "us-east-1"
-        }
-      });
-      
-      if (res.success) {
-        alert("Successfully registered as a Verifier Node!");
-      } else {
-        alert("Registration failed: " + res.message);
-      }
-    } catch (err) {
-      console.error("Failed to register", err);
-      alert("Error during registration.");
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
   const handleStake = useCallback(async () => {
     if (!selectedMarketId || stakePending) return;
     const amount = parseFloat(stakeAmount);
@@ -202,32 +157,52 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
     setStakeResult(null);
     try {
       const res = await api<{ success: boolean; new_balance: number; volume: number; yesPrice: number; noPrice: number }>(
-        "/api/v1/x402/staking/stake",
+        "/api/v1/benchmarks/staking/stake",
         { body: { market_id: selectedMarketId, outcome: stakeOutcome, amount } },
       );
       setStakeResult({ ok: true, msg: `Staked $${amount.toFixed(2)} on ${stakeOutcome}. New balance: $${res.new_balance.toFixed(2)}` });
-      mutateMarkets();
+      mutateStakingRoute();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Stake failed";
       setStakeResult({ ok: false, msg });
     } finally {
       setStakePending(false);
     }
-  }, [selectedMarketId, stakeAmount, stakeOutcome, stakePending, mutateMarkets]);
+  }, [selectedMarketId, stakeAmount, stakeOutcome, stakePending, mutateStakingRoute]);
 
   const stakeNum = parseFloat(stakeAmount) || 0;
   const netStake = Math.round(stakeNum * (1 - 0.025));
 
   return (
     <div className="space-y-8 relative">
-      {/* COMING SOON OVERLAY */}
-      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl">
-        <div className="text-center p-8 bg-[#0D0D0D] border border-[#FFB800]/30 rounded-2xl shadow-2xl">
-          <Globe className="w-12 h-12 text-[#FFB800] mx-auto mb-4 opacity-80" />
-          <h2 className="text-3xl font-mono text-white mb-2">STAKING PROTOCOL</h2>
-          <p className="text-[#A1A1A6] font-mono uppercase tracking-widest">Coming Soon</p>
-          <p className="text-sm text-[#A1A1A6] mt-4 max-w-md">Decentralized prediction markets for API benchmarking (PolyMarket-style) are currently in development.</p>
+      <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#A1A1A6]">Staking Proof State</div>
+            <div className="text-sm text-white mt-1">{stakingRoute?.proof.reason || "Loading BYOS staking proof..."}</div>
+          </div>
+          <div className="lg:ml-auto flex flex-wrap gap-2">
+            {stakingRoute?.proof.probes.map((probe) => (
+              <span
+                key={probe.route}
+                className={`px-2 py-1 rounded border text-[10px] font-mono ${
+                  probe.state === "verified"
+                    ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                    : probe.state === "needs_proof"
+                      ? "border-amber-500/30 text-amber-300 bg-amber-500/10"
+                      : "border-rose-500/30 text-rose-300 bg-rose-500/10"
+                }`}
+              >
+                {probe.route} · {probe.status}
+              </span>
+            ))}
+          </div>
         </div>
+        {stakingRoute?.marketProof.state !== "verified" && (
+          <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+            {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
+          </div>
+        )}
       </div>
       {/* Protocol Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -262,7 +237,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           |S<sub>o</sub>(t) - S<sub>p</sub>| {"<="} k{"*"}&sigma;(t) ;{" "}
           <span className="text-rose-400">&lambda;</span> {"*"} (|S<sub>o</sub>(t) - S<sub>p</sub>| - k{"*"}&sigma;(t)){" "}
           <span className="text-[#A1A1A6]">otherwise {"}"}</span>
-          <span className="text-[#A1A1A6] ml-4">{"// k="}{VNP_PARAMS.k}{", λ="}{VNP_PARAMS.lambda}</span>
+          <span className="text-[#A1A1A6] ml-4">{"// k="}{VNP_PARAMS.k ?? "—"}{", λ="}{VNP_PARAMS.lambda ?? "—"}</span>
         </div>
       </div>
 
@@ -457,7 +432,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <span className="text-[10px] font-mono text-[#A1A1A6]">Lightweight Challenge</span>
             </div>
             <div className="space-y-1.5 text-xs text-[#A1A1A6]">
-              <div><span className="text-white font-mono">Stake: ${VNP_PARAMS.challengeTierA.min} - ${VNP_PARAMS.challengeTierA.max} USDC</span></div>
+              <div><span className="text-white font-mono">Stake: {fmtUSD(VNP_PARAMS.challengeTierA?.min)} - {fmtUSD(VNP_PARAMS.challengeTierA?.max)} USDC</span></div>
               <div>Evidence: Signed request/response pair + latency + timestamp</div>
               <div>Resolution: Auto-checked against verifier distribution</div>
               <div>Speed: Sub-second (smart contract validation)</div>
@@ -471,7 +446,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <span className="text-[10px] font-mono text-[#A1A1A6]">Escalation</span>
             </div>
             <div className="space-y-1.5 text-xs text-[#A1A1A6]">
-              <div><span className="text-white font-mono">Stake: ${VNP_PARAMS.challengeTierB.min} - ${VNP_PARAMS.challengeTierB.max} USDC</span></div>
+              <div><span className="text-white font-mono">Stake: {fmtUSD(VNP_PARAMS.challengeTierB?.min)} - {fmtUSD(VNP_PARAMS.challengeTierB?.max)} USDC</span></div>
               <div>Trigger: Deviation {">"} X&sigma; AND contradicts consensus</div>
               <div>Resolution: Commit-reveal + deeper audit</div>
               <div>Speed: 6-48 hours (KDE consensus + governance review)</div>
