@@ -56,8 +56,12 @@ function TreasuryContent() {
   const reason = searchParams.get("reason");
   const returnTo = searchParams.get("returnTo") || "/runtime";
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState<"wallet" | "keys" | "webhooks" | "settings">("wallet");
+  // Tab State — initialize from ?tab= query param (sidebar deep-links use this)
+  const tabParam = searchParams.get("tab");
+  const initialTab = (["wallet", "keys", "webhooks", "settings"].includes(tabParam ?? "") 
+    ? tabParam 
+    : "wallet") as "wallet" | "keys" | "webhooks" | "settings";
+  const [activeTab, setActiveTab] = useState<"wallet" | "keys" | "webhooks" | "settings">(initialTab);
 
   // Wallet Data
   const balance = useApi<any>("/api/v1/wallet/balance");
