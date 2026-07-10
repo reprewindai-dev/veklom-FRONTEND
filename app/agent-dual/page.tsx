@@ -118,6 +118,8 @@ interface DuelRouteState {
   history: any[];
 }
 
+type BetLane = 'player' | 'banker' | 'tie';
+
 function AgentDuelApp() {
   const { signTypedDataAsync } = useSignTypedData();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -650,6 +652,15 @@ function AgentDuelApp() {
 
   const handleRebet = () => {
     if (phase !== 'idle') return;
+    const previousActiveBets = [
+      previousBets.player > 0,
+      previousBets.banker > 0,
+      previousBets.tie > 0,
+    ].filter(Boolean).length;
+    if (previousActiveBets !== 1) {
+      addNotification('collapse', 'Rebet Failed', 'Previous wager is not a single-lane stake.');
+      return;
+    }
     const totalProposed = Number((previousBets.player + previousBets.banker + previousBets.tie).toFixed(2));
     if (totalProposed > bankroll) {
       addNotification('collapse', 'Rebet Failed', 'Insufficient balance to repeat previous bets.');
@@ -661,6 +672,10 @@ function AgentDuelApp() {
 
   const handleDoubleBets = () => {
     if (phase !== 'idle') return;
+    if (activeBetEntries().length !== 1) {
+      addNotification('collapse', 'Double Failed', 'Choose exactly one lane before doubling.');
+      return;
+    }
     const proposedBets = {
       player: Number((bets.player * 2).toFixed(2)),
       banker: Number((bets.banker * 2).toFixed(2)),
@@ -679,6 +694,38 @@ function AgentDuelApp() {
     if (phase !== 'idle') return;
     setBets({ player: 0, banker: 0, tie: 0 });
     playSfx(330, 0.15, 'sine', 0.1);
+  };
+
+  const placeSingleLaneBet = (lane: BetLane) => {
+    if (phase !== 'idle') return;
+    if (activeChip > bankroll) {
+      addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
+      return;
+    }
+    setBets({
+      player: lane === 'player' ? activeChip : 0,
+      banker: lane === 'banker' ? activeChip : 0,
+      tie: lane === 'tie' ? activeChip : 0,
+    });
+    playSfx(880, 0.05, 'sine', 0.15);
+  };
+
+  const removeLaneBet = (lane: BetLane, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (phase !== 'idle') return;
+    setBets((prev) => ({
+      ...prev,
+      [lane]: 0,
+    }));
+    playSfx(330, 0.08, 'sine', 0.1);
+  };
+
+  const activeBetEntries = (): Array<{ type: BetLane; amount: number }> => {
+    return ([
+      { type: 'player' as const, amount: bets.player },
+      { type: 'banker' as const, amount: bets.banker },
+      { type: 'tie' as const, amount: bets.tie },
+    ]).filter((bet) => bet.amount > 0);
   };
 
   // --- REAL-TIME PVP DUEL CONVENIENCE HANDLERS ---
@@ -1529,6 +1576,11 @@ function AgentDuelApp() {
       addNotification('collapse', 'Pre-flight Check Failed', 'Please place at least one micropayment chip on the betting board.');
       return;
     }
+    const betsToSubmit = activeBetEntries();
+    if (betsToSubmit.length !== 1) {
+      addNotification('collapse', 'Pre-flight Check Failed', 'Choose exactly one lane: Agent A, Agent B, or Tie.');
+      return;
+    }
     if (totalWager > bankroll) {
       addNotification('collapse', 'Execution Blocked', 'Insufficient USDC balance to fulfill stake.');
       return;
@@ -1547,31 +1599,24 @@ function AgentDuelApp() {
     // Call backend to lock wager
     try {
       const signature = await signWager(totalWager);
-      
-      const betsToSubmit = [];
-      if (bets.player > 0) betsToSubmit.push({ type: 'player', amount: bets.player });
-      if (bets.banker > 0) betsToSubmit.push({ type: 'banker', amount: bets.banker });
-      if (bets.tie > 0) betsToSubmit.push({ type: 'tie', amount: bets.tie });
-      
-      for (const bet of betsToSubmit) {
-        const res = await fetch(`${API_BASE_URL}/wager`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'payment-signature': signature,
-            'x-duel-session-token': activeSessionToken
-          },
-          body: JSON.stringify({
-            session_id: activeSessionId,
-            bet_type: bet.type,
-            wager_amount_usdc: bet.amount,
-            wallet_address: wallet.address
-          })
-        });
-        const data = await res.json();
-        if (!data.success) {
-          throw new Error(data.message || 'Wager placement rejected by consensus rules.');
-        }
+      const bet = betsToSubmit[0];
+      const res = await fetch(`${API_BASE_URL}/wager`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'payment-signature': signature,
+          'x-duel-session-token': activeSessionToken
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          bet_type: bet.type,
+          wager_amount_usdc: bet.amount,
+          wallet_address: wallet.address
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.detail || data.message || 'Wager placement rejected by consensus rules.');
       }
 
       // Set engine states
@@ -2656,7 +2701,7 @@ function AgentDuelApp() {
                         <h3 className="text-xs font-bold font-mono text-slate-400 uppercase tracking-widest">
                           // Micropayment Chip Selector
                         </h3>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">Pick active chip, then tap Routing board below to stack stakes</p>
+                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">Pick a chip, then choose exactly one lane: Agent A, Agent B, or Tie</p>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
                         <button 
@@ -2721,16 +2766,7 @@ function AgentDuelApp() {
                     
                     {/* PLAYER NEON AREA */}
                     <div
-                      onClick={() => {
-                        if (phase !== 'idle') return;
-                        const proposed = Number((bets.player + activeChip).toFixed(2));
-                        if (proposed + bets.banker + bets.tie > bankroll) {
-                          addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
-                          return;
-                        }
-                        setBets((prev) => ({ ...prev, player: proposed }));
-                        playSfx(880, 0.05, 'sine', 0.15);
-                      }}
+                      onClick={() => placeSingleLaneBet('player')}
                       className={`p-4 rounded-lg border text-left transition-all relative ${
                         bets.player > 0
                           ? 'bg-blue-500/5 border-blue-500 shadow-md shadow-blue-500/5'
@@ -2751,24 +2787,20 @@ function AgentDuelApp() {
                       </div>
 
                       {bets.player > 0 && (
-                        <div className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-blue-500 border border-white/30 text-[8px] font-black font-mono text-white flex items-center justify-center animate-bounce">
-                          •
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => removeLaneBet('player', event)}
+                          className="absolute -top-2 right-2 h-6 min-w-10 px-2 rounded bg-blue-500 border border-white/30 text-[9px] font-black font-mono text-white flex items-center justify-center shadow-md shadow-blue-500/20 hover:bg-blue-400"
+                          title="Remove Agent A stake"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
 
                     {/* TIE EQUILIBRIUM NEON AREA */}
                     <div
-                      onClick={() => {
-                        if (phase !== 'idle') return;
-                        const proposed = Number((bets.tie + activeChip).toFixed(2));
-                        if (proposed + bets.player + bets.banker > bankroll) {
-                          addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
-                          return;
-                        }
-                        setBets((prev) => ({ ...prev, tie: proposed }));
-                        playSfx(880, 0.05, 'sine', 0.15);
-                      }}
+                      onClick={() => placeSingleLaneBet('tie')}
                       className={`p-4 rounded-lg border text-left transition-all relative ${
                         bets.tie > 0
                           ? 'bg-emerald-500/5 border-emerald-500 shadow-md shadow-emerald-500/5'
@@ -2789,24 +2821,20 @@ function AgentDuelApp() {
                       </div>
 
                       {bets.tie > 0 && (
-                        <div className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-emerald-500 border border-white/30 text-[8px] font-black font-mono text-white flex items-center justify-center animate-bounce">
-                          •
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => removeLaneBet('tie', event)}
+                          className="absolute -top-2 right-2 h-6 min-w-10 px-2 rounded bg-emerald-500 border border-white/30 text-[9px] font-black font-mono text-white flex items-center justify-center shadow-md shadow-emerald-500/20 hover:bg-emerald-400"
+                          title="Remove Tie stake"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
 
                     {/* BANKER NEON AREA */}
                     <div
-                      onClick={() => {
-                        if (phase !== 'idle') return;
-                        const proposed = Number((bets.banker + activeChip).toFixed(2));
-                        if (proposed + bets.player + bets.tie > bankroll) {
-                          addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
-                          return;
-                        }
-                        setBets((prev) => ({ ...prev, banker: proposed }));
-                        playSfx(880, 0.05, 'sine', 0.15);
-                      }}
+                      onClick={() => placeSingleLaneBet('banker')}
                       className={`p-4 rounded-lg border text-left transition-all relative ${
                         bets.banker > 0
                           ? 'bg-amber-500/5 border-amber-500 shadow-md shadow-amber-500/5'
@@ -2827,9 +2855,14 @@ function AgentDuelApp() {
                       </div>
 
                       {bets.banker > 0 && (
-                        <div className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-amber-500 border border-white/30 text-[8px] font-black font-mono text-white flex items-center justify-center animate-bounce">
-                          •
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => removeLaneBet('banker', event)}
+                          className="absolute -top-2 right-2 h-6 min-w-10 px-2 rounded bg-amber-500 border border-white/30 text-[9px] font-black font-mono text-black flex items-center justify-center shadow-md shadow-amber-500/20 hover:bg-amber-400"
+                          title="Remove Agent B stake"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
 
@@ -2839,7 +2872,7 @@ function AgentDuelApp() {
                   <div className="bg-[#0d0f16] border border-white/10 p-5 rounded-lg flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-blue-900/5">
                     <div className="w-full md:w-auto">
                       <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2 font-bold">
-                        Combined Stake Allocation
+                        Active Single-Lane Stake
                       </span>
                       <div className="text-sm font-black font-mono text-white flex items-baseline gap-2">
                         <span className="text-lg text-amber-500">${wagerAmount.toFixed(2)} USDC</span> staked on this cycle
