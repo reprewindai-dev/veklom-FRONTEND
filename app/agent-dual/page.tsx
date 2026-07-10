@@ -407,6 +407,16 @@ function AgentDuelApp() {
     };
   }, [m2mEnabled, phase, multiplier, bankroll, m2mStrategy, m2mSpeed]);
 
+  useEffect(() => {
+    if (activeDuel || m2mEnabled || (phase !== 'crashed' && phase !== 'ejected')) return;
+
+    const resetTimer = window.setTimeout(() => {
+      prepareNextSinglePlayerRound('auto');
+    }, 4500);
+
+    return () => window.clearTimeout(resetTimer);
+  }, [activeDuel, m2mEnabled, phase]);
+
   // Audio helper function to execute synthesizer sound events
   const playSfx = (freq: number, duration: number, type: OscillatorType = 'sine', volume = 0.15, delay = 0) => {
     try {
@@ -451,6 +461,25 @@ function AgentDuelApp() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
     setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
+  };
+
+  const prepareNextSinglePlayerRound = (source: 'auto' | 'manual' = 'manual') => {
+    if (timerId.current) {
+      clearInterval(timerId.current);
+      timerId.current = null;
+    }
+    if (activeDuel) return;
+    setPhase('idle');
+    setMultiplier(1.0);
+    setChartPoints([]);
+    setActiveHand(null);
+    setVisiblePacketsCount(0);
+    setRoundWinner(null);
+    setBets({ player: 0, banker: 0, tie: 0 });
+    crashAt.current = 1.0;
+    if (source === 'manual') {
+      addNotification('tx_success', 'Next Round Ready', 'Choose one chip and one lane to start another BYOS-backed wager.');
+    }
   };
 
   const updateChallengeProgress = (
@@ -2897,7 +2926,15 @@ function AgentDuelApp() {
                     </div>
 
                     <div className="w-full md:w-auto shrink-0">
-                      {phase !== 'running' ? (
+                      {phase === 'crashed' || phase === 'ejected' ? (
+                        <button
+                          id="btn-next-agent-duel-round"
+                          onClick={() => prepareNextSinglePlayerRound('manual')}
+                          className="w-full md:w-auto py-3 px-10 bg-gradient-to-br from-emerald-600 to-teal-800 hover:from-emerald-500 hover:to-teal-700 rounded-lg text-white font-sans font-extrabold text-sm uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/30 select-none cursor-pointer flex items-center justify-center gap-2 border border-emerald-500/35"
+                        >
+                          <RefreshCw className="w-4 h-4 text-white" /> Next Round
+                        </button>
+                      ) : phase !== 'running' ? (
                         <button
                           id="btn-trigger-route"
                           onClick={initiateRoute}
