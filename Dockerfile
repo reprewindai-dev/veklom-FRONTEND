@@ -17,6 +17,8 @@ COPY . .
 # Build args that get baked into the Next.js bundle at build time
 ARG NEXT_PUBLIC_API_BASE_URL=""
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS=--max-old-space-size=1536
 
 
 RUN npm run build
