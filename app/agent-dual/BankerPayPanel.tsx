@@ -18,12 +18,11 @@ import {
   useAccount,
   useConnect,
   useDisconnect,
+  usePublicClient,
   useSendTransaction,
-  useWaitForTransactionReceipt,
 } from "wagmi";
 import { parseUnits, encodeFunctionData } from "viem";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.veklom.com";
+import { api } from "@/lib/api";
 
 // Base Mainnet USDC contract
 const USDC_CONTRACT = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
@@ -78,6 +77,7 @@ export function BankerPayPanel() {
   const [paymentId, setPaymentId] = useState<number | null>(null);
 
   const { sendTransactionAsync } = useSendTransaction();
+  const publicClient = usePublicClient({ chainId: 8453 });
 
   const addLog = (msg: string) =>
     setLog((prev) => [...prev, `[${new Date().toISOString().slice(11, 19)}] ${msg}`]);
@@ -97,6 +97,10 @@ export function BankerPayPanel() {
       handleError("Wrong network. Switch your wallet to Base Mainnet (chain ID 8453).");
       return;
     }
+    if (!publicClient) {
+      handleError("Base Mainnet RPC client is not ready. Refresh the page and reconnect your wallet.");
+      return;
+    }
 
     setError(null);
     setScoreResult(null);
@@ -108,24 +112,22 @@ export function BankerPayPanel() {
       setStep("preparing");
       addLog(`Preparing payment: ${AMOUNT_USDC} USDC → ${TREASURY.slice(0, 10)}...`);
 
-      const prepareRes = await fetch(`${API_BASE}/api/v1/banker/pay/prepare`, {
+      const paymentObjectId = Date.now();
+      const prepared = await api<{
+        id: number;
+        payment_object_type: string;
+        payment_object_id: number;
+        status: string;
+      }>("/api/v1/banker/pay/prepare", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           payment_object_type: "x402_score_proof",
-          payment_object_id: Date.now(), // unique per session
+          payment_object_id: paymentObjectId,
           to_address: TREASURY,
           amount: parseFloat(AMOUNT_USDC),
           asset: "USDC",
-        }),
+        },
       });
-
-      if (!prepareRes.ok) {
-        const err = await prepareRes.json().catch(() => ({}));
-        throw new Error(`Prepare failed: ${err.detail || prepareRes.status}`);
-      }
-
-      const prepared = await prepareRes.json();
       setPaymentId(prepared.id);
       addLog(`✅ Payment prepared. ID: ${prepared.id} | Status: ${prepared.status}`);
 
@@ -151,50 +153,45 @@ export function BankerPayPanel() {
 
       // ── STEP 3: Confirm payment (record tx proof in DB) ───────────────────
       setStep("confirming");
-      addLog(`Waiting for confirmation and recording proof...`);
+      addLog(`Waiting for Base receipt and recording proof...`);
 
-      // Give Base a few seconds to index the tx before confirming
-      await new Promise((r) => setTimeout(r, 4000));
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+      if (receipt.status !== "success") {
+        throw new Error(`Base transaction failed on-chain: ${hash}`);
+      }
 
-      const confirmRes = await fetch(`${API_BASE}/api/v1/banker/pay/confirm`, {
+      const confirmed = await api<{ status: string }>("/api/v1/banker/pay/confirm", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           payment_object_type: "x402_score_proof",
-          payment_object_id: prepared.payment_object_id || prepared.id,
+          payment_object_id: prepared.payment_object_id || paymentObjectId,
           tx_hash: hash,
           chain_id: 8453,
-        }),
+          block_number: Number(receipt.blockNumber),
+          gas_used: Number(receipt.gasUsed),
+        },
       });
-
-      if (!confirmRes.ok) {
-        const err = await confirmRes.json().catch(() => ({}));
-        // Non-fatal: tx is already sent, we still have the hash
-        addLog(`⚠️ Confirm endpoint returned ${confirmRes.status}: ${err.detail || "unknown"} — proceeding with tx_hash.`);
-      } else {
-        const confirmed = await confirmRes.json();
-        addLog(`✅ Payment confirmed in DB. Status: ${confirmed.status}`);
-      }
+      addLog(`✅ Payment confirmed in DB. Status: ${confirmed.status}`);
 
       // ── STEP 4: Call /score with tx_hash as X-PAYMENT proof ──────────────
       setStep("scoring");
       addLog(`Calling /api/v1/x402/score with X-PAYMENT: ${hash.slice(0, 18)}...`);
 
-      const scoreRes = await fetch(`${API_BASE}/api/v1/x402/score`, {
+      const scoreData = await api<{
+        trust_score?: number;
+        grade?: string;
+        breakdown?: Record<string, number>;
+      }>("/api/v1/x402/score", {
         method: "POST",
+        body: { subject: address },
         headers: {
-          "Content-Type": "application/json",
           "X-Payment": hash,
           "X-Veklom-Receipt-ID": hash,
         },
-        body: JSON.stringify({ subject: address }),
       });
-
-      const scoreData = await scoreRes.json();
-
-      if (!scoreRes.ok) {
-        addLog(`⚠️ Score endpoint: ${scoreRes.status} — ${JSON.stringify(scoreData)}`);
-      }
 
       setScoreResult({
         trust_score: scoreData.trust_score ?? 0,
@@ -209,7 +206,7 @@ export function BankerPayPanel() {
     } catch (e: any) {
       handleError(e?.message || String(e));
     }
-  }, [isConnected, address, chain, sendTransactionAsync]);
+  }, [isConnected, address, chain, publicClient, sendTransactionAsync]);
 
   // ── Find the Base Account connector ──────────────────────────────────────
   const baseAccountConnector = connectors.find((c) => c.id === "baseAccount");
