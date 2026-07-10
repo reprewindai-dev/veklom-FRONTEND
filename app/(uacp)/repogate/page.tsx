@@ -5,9 +5,6 @@ import { TerminalEvent, VerifiedFinding, RiskLevel, RiskGateScan, PolicyResult }
 import { 
   DEFAULT_RULES, 
   calculateCanonicalHash, 
-  generateFilesForRepo, 
-  scanFilesForFindings, 
-  determineOverallRisk,
   VeklomAudioEngine,
   announceSpeech
 } from './utils';
@@ -36,33 +33,34 @@ import {
   Tablet
 } from 'lucide-react';
 
-// Preset options for quick operator testing
+const EMPTY_SCAN: RiskGateScan = {
+  run_id: '',
+  agent_id: '',
+  status: 'idle',
+  repo_url: '',
+  repo_owner: '',
+  repo_name: '',
+  default_branch: '',
+  risk_level: 'SAFE',
+  tree_truncated: false,
+  files_seen: 0,
+  created_at: ''
+};
+
+// Preset options for quick operator input. Risk is determined by BYOS scan output.
 const REPO_PRESETS = [
-  { url: 'https://github.com/veklom-ai/core-kernel', name: 'veklom-ai/core-kernel', desc: 'Critical Risk: Native Platform Core' },
-  { url: 'https://github.com/expressjs/express', name: 'expressjs/express', desc: 'Safe Level: Router Framework Baseline' },
-  { url: 'https://github.com/stripe/stripe-node', name: 'stripe/stripe-node', desc: 'High Risk: Financial Integrations Module' },
-  { url: 'https://github.com/kubernetes/kubernetes', name: 'kubernetes/kubernetes', desc: 'Truncated Scan: Complex Cluster Matrix' }
+  { url: 'https://github.com/expressjs/express', name: 'expressjs/express', desc: 'Public GitHub repository' },
+  { url: 'https://github.com/stripe/stripe-node', name: 'stripe/stripe-node', desc: 'Public GitHub repository' },
+  { url: 'https://github.com/kubernetes/kubernetes', name: 'kubernetes/kubernetes', desc: 'Public GitHub repository' }
 ];
 
 export default function App() {
   // Input URL
-  const [repoUrl, setRepoUrl] = useState('https://github.com/veklom-ai/core-kernel');
+  const [repoUrl, setRepoUrl] = useState('');
   const [errorText, setErrorText] = useState('');
 
   // Scanning State
-  const [scanState, setScanState] = useState<RiskGateScan>({
-    run_id: 'run_8fa29d',
-    agent_id: 'agent_041',
-    status: 'idle',
-    repo_url: 'https://github.com/veklom-ai/core-kernel',
-    repo_owner: 'veklom-ai',
-    repo_name: 'core-kernel',
-    default_branch: 'main',
-    risk_level: 'CRITICAL',
-    tree_truncated: false,
-    files_seen: 16,
-    created_at: new Date().toISOString()
-  });
+  const [scanState, setScanState] = useState<RiskGateScan>(EMPTY_SCAN);
 
   // Distracted user/Aura state variables
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -75,12 +73,9 @@ export default function App() {
   // Events & Findings lists
   const [events, setEvents] = useState<TerminalEvent[]>([]);
   const [findings, setFindings] = useState<VerifiedFinding[]>([]);
-  const [scannedFilesList, setScannedFilesList] = useState<string[]>(() => {
-    const { paths } = generateFilesForRepo('https://github.com/veklom-ai/core-kernel');
-    return paths;
-  });
+  const [scannedFilesList, setScannedFilesList] = useState<string[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  const [dbPoolCount, setDbPoolCount] = useState(12);
+  const [dbPoolCount] = useState(0);
   const [apiFindingsCache, setApiFindingsCache] = useState<VerifiedFinding[]>([]);
 
   // Operator Decision Intercept Modal States
@@ -167,7 +162,7 @@ export default function App() {
 
     const timestamp = new Date().toISOString();
     const newEvent: TerminalEvent = {
-      id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `evt_${Date.now()}`,
       run_id: scanState.run_id,
       agent_id: scanState.agent_id,
       event_type: type,
@@ -175,16 +170,13 @@ export default function App() {
       policy_result: policy,
       message: message,
       timestamp: timestamp,
-      hash: '', // secure cryptographic placeholder
+      hash: '',
       sequence_no: events.length + 1,
       log_level: logLevel || determinedLevel
     };
 
     setEvents(prev => {
-      const updated = [...prev, newEvent];
-      // Sync DB Pool mock movements for added realism
-      setDbPoolCount(Math.min(15, Math.max(1, 12 + (updated.length % 3) - (updated.length % 2))));
-      return updated;
+      return [...prev, newEvent];
     });
 
     return newEvent;
@@ -336,7 +328,7 @@ export default function App() {
           event_type: 'client.trace.hash',
           target: '',
           policy_result: 'none',
-          message: 'Client evidence hash generated from the BYOS scan response.',
+          message: 'Client evidence hash generated from the BYOS scan response displayed in this browser.',
           timestamp: now,
           hash: '',
           sequence_no: derivedEvents.length + 1,
@@ -359,159 +351,6 @@ export default function App() {
     }
   };
 
-  // Scan execution step controller
-  useEffect(() => {
-    if (scanState.status === 'idle') return;
-
-    const timeout = setTimeout(() => {
-      const runId = scanState.run_id;
-      const agentId = scanState.agent_id;
-
-      // STEP 0: System Mounting log
-      if (scanState.status === 'fetching' && currentStepIndex === 0) {
-        setEvents([
-          {
-            id: `evt_init_${Date.now()}`,
-            run_id: runId,
-            agent_id: agentId,
-            event_type: 'system.init',
-            target: '',
-            policy_result: 'none',
-            message: 'Mounting routing policy protocols under global registry gate...',
-            timestamp: new Date().toISOString(),
-            hash: '',
-            sequence_no: 1,
-            log_level: 'INFO'
-          }
-        ]);
-        setCurrentStepIndex(1);
-        return;
-      }
-
-      // STEP 1: Fetching Repository Metadata
-      if (currentStepIndex === 1) {
-        emitEvent(
-          'git.fetch', 
-          `Querying GitHub REST tree payload: github.com/${scanState.repo_owner}/${scanState.repo_name}`
-        );
-        setCurrentStepIndex(2);
-        return;
-      }
-
-      // STEP 2: Loading File Tree structures
-      if (currentStepIndex === 2) {
-        emitEvent(
-          'system.init',
-          `Default branch identified: '${scanState.default_branch}' (verified payload)`
-        );
-        
-        const truncationWarning = scanState.tree_truncated 
-          ? `WARNING: Repository matches large recursive matrix. Tree is truncated: true (Partial Coverage)`
-          : `Success: Mapped default tree structure containing ${scannedFilesList.length} component paths`;
-
-        emitEvent(
-          scanState.tree_truncated ? 'git.tree.warning' : 'system.init',
-          truncationWarning
-        );
-
-        // Transition scan state to scanning files
-        setScanState(prev => ({ ...prev, status: 'scanning' }));
-        setCurrentStepIndex(3);
-        return;
-      }
-
-      // STEP 3: Scanning folders and analyzing paths sequentially
-      if (scanState.status === 'scanning' && currentStepIndex >= 3) {
-        const fileIndex = currentStepIndex - 3;
-        
-        // Scan Completed Checklist
-        if (fileIndex >= scannedFilesList.length) {
-          emitEvent('ledger.seal', `GPC core evaluation completed. Generating stable BTreeMap ledger proof...`);
-          setScanState(prev => ({ ...prev, status: 'completed' }));
-          setCurrentStepIndex(-1);
-
-          // Complete sound/voice cues
-          if (audioEnabled) {
-            audioEngine.playChime('complete');
-          }
-          if (speechEnabled) {
-            announceSpeech("Governance tree check finished. Sovereign ledger hash safely verified and sealed.");
-          }
-          return;
-        }
-
-        const path = scannedFilesList[fileIndex];
-        emitEvent('git.fetch', `Checking path verification rules for: ${path}`, path);
-
-        // Check file for predefined rules matching
-        const matchFinding = scanFilesForFindings([path], runId)[0];
-        if (matchFinding) {
-          // Rule matched
-          emitEvent(
-            'finding.alert',
-            `MATCH DETECTED: '${matchFinding.matched_rule}' violations intercepted.`,
-            path
-          );
-
-          emitEvent(
-            'policy.gate.triggered',
-            `Policy mandate: [${matchFinding.policy_result.toUpperCase()}]`,
-            path,
-            matchFinding.policy_result
-          );
-
-          // Append to visible findings board
-          setFindings(prev => [...prev, matchFinding]);
-
-          // Human approval required logic
-          if (
-            matchFinding.policy_result === 'human_approval_required' ||
-            matchFinding.policy_result === 'escalate_to_security'
-          ) {
-            // STOP scan and display full-view intercept overlay for operator manual review
-            setScanState(prev => ({ ...prev, status: 'awaiting_decision' }));
-            setActiveInterceptedFinding(matchFinding);
-            setIsModalOpen(true);
-
-            // Alarms sound and warning speak readouts
-            if (audioEnabled) {
-              audioEngine.playChime('alert');
-            }
-            if (speechEnabled) {
-              announceSpeech(`Global policy violation warning on path: ${matchFinding.path}. operator signature required.`);
-            }
-            return;
-          }
-
-          // Automated blocked actions logic (like blocked_env_boundary)
-          if (matchFinding.policy_result === 'blocked_env_boundary') {
-            emitEvent(
-              'file.access.blocked',
-              `CONTAINMENT ACTIVE: mutations strictly denied. isolated environment seal enforced.`,
-              path,
-              'blocked_env_boundary'
-            );
-
-            // Play warning sound even if no modal opens, to keep operator alert
-            if (audioEnabled) {
-              audioEngine.playChime('alert');
-            }
-            if (speechEnabled) {
-              announceSpeech(`Direct infrastructure mutation blocked for path: ${matchFinding.path}`);
-            }
-          }
-        }
-
-        // Increment to scan next asset path
-        setCurrentStepIndex(prev => prev + 1);
-        return;
-      }
-
-    }, 800); // streamlined sweep delay for snappy PC, tablet and phone execution
-
-    return () => clearTimeout(timeout);
-  }, [scanState.status, currentStepIndex, scannedFilesList, scanState]);
-
   // Handle user decision submitted from intercept modal
   const handleOperatorDecision = (decision: 'APPROVED' | 'ESCALATED' | 'BLOCKED', note: string) => {
     setIsModalOpen(false);
@@ -526,19 +365,18 @@ export default function App() {
 
     // Audio status confirmation log
     if (speechEnabled) {
-      announceSpeech(`Operator signature signature: action ${decision} validated. Resuming sweep.`);
+      announceSpeech(`Operator decision ${decision} recorded in local evidence view. Backend decision endpoint is not yet available.`);
     }
 
-    // Continue scanning next file
     setScanState(prev => ({
       ...prev,
-      status: 'scanning',
+      status: 'completed',
       decision: decision,
       decision_note: note,
       decision_at: new Date().toISOString()
     }));
     
-    setCurrentStepIndex(prev => prev + 1);
+    setCurrentStepIndex(-1);
     setActiveInterceptedFinding(null);
   };
 
@@ -636,7 +474,7 @@ export default function App() {
                 type="text"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder="github.com/veklom-ai/core-kernel"
+                placeholder="github.com/organization/repository"
                 onKeyDown={(e) => { if(e.key === 'Enter') startGovernedReview(); }}
                 className="bg-transparent border-0 outline-none text-xs w-full font-mono text-gray-100 placeholder-neutral-700 focus:ring-0 focus:outline-none"
                 title="Press enter to launch scan workflow"
@@ -795,7 +633,7 @@ export default function App() {
         <footer className="h-auto md:h-14 border-t border-[#333] flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 md:px-10 py-3 md:py-0 font-mono text-[9px] md:text-[10px] text-[#666] uppercase tracking-[0.2em] bg-[#0A0A0A] gap-2 select-text">
           <span className="flex items-center">
             <Clock className="w-3.5 h-3.5 text-[#333] mr-1.5 shrink-0" />
-            Server Time: 2026-06-05 04:25:56 UTC
+            Last Scan: {scanState.created_at ? new Date(scanState.created_at).toLocaleString() : 'Needs proof'}
           </span>
           
           {/* Responsive device optimization helper info trace */}

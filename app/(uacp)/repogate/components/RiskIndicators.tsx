@@ -17,25 +17,19 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
   filesScanned,
   runId
 }) => {
-  const [riskHistory, setRiskHistory] = useState<{ runId: string; riskLevel: RiskLevel }[]>(() => {
+  const [riskHistory, setRiskHistory] = useState<{ runId: string; riskLevel: RiskLevel }[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const saved = localStorage.getItem('veklom_run_risk_history');
       if (saved) {
-        return JSON.parse(saved);
+        setRiskHistory(JSON.parse(saved));
       }
     } catch (e) {
       console.error('Error reading risk history', e);
     }
-    // Pre-seed matching the EvidenceLedger's pre-seeded runs
-    return [
-      { runId: 'RUN_18FA', riskLevel: 'HIGH' },
-      { runId: 'RUN_191B', riskLevel: 'LOW' },
-      { runId: 'RUN_204A', riskLevel: 'MEDIUM' },
-      { runId: 'RUN_211C', riskLevel: 'MEDIUM' },
-      { runId: 'RUN_225M', riskLevel: 'CRITICAL' },
-      { runId: 'run_8fa29d', riskLevel: 'CRITICAL' }, // Initial default run
-    ];
-  });
+  }, []);
 
   // Track run completion to dynamically log finished run statistics
   useEffect(() => {
@@ -56,7 +50,9 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
       }
 
       try {
-        localStorage.setItem('veklom_run_risk_history', JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('veklom_run_risk_history', JSON.stringify(updated));
+        }
       } catch (err) {
         console.error('Error writing risk history', err);
       }

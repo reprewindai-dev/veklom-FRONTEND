@@ -64,24 +64,19 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
     }
   }, [isCompleted, runId]);
 
-  // Pre-seed some beautiful realistic baseline runs when there is no data in localStorage.
-  const [history, setHistory] = useState<any[]>(() => {
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const saved = localStorage.getItem('veklom_sweep_history');
       if (saved) {
-        return JSON.parse(saved);
+        setHistory(JSON.parse(saved));
       }
     } catch (e) {
       console.error('Error loading history from localStorage:', e);
     }
-    return [
-      { name: '18FA', critical: 3, warning: 5 },
-      { name: '191B', critical: 0, warning: 1 },
-      { name: '204A', critical: 2, warning: 3 },
-      { name: '211C', critical: 1, warning: 4 },
-      { name: '225M', critical: 4, warning: 6 },
-    ];
-  });
+  }, []);
 
   // Track run completion to dynamically log finished run statistics
   useEffect(() => {
@@ -128,7 +123,9 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
       }
       
       try {
-        localStorage.setItem('veklom_sweep_history', JSON.stringify(updatedHistory));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('veklom_sweep_history', JSON.stringify(updatedHistory));
+        }
       } catch (e) {
         console.error(e);
       }
@@ -680,18 +677,13 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
     }
   };
 
-  // Handler to clear history back to base demo
+  // Handler to clear local browser history.
   const handleResetHistory = () => {
-    const defaultHist = [
-      { name: '18FA', critical: 3, warning: 5 },
-      { name: '191B', critical: 0, warning: 1 },
-      { name: '204A', critical: 2, warning: 3 },
-      { name: '211C', critical: 1, warning: 4 },
-      { name: '225M', critical: 4, warning: 6 },
-    ];
-    setHistory(defaultHist);
+    setHistory([]);
     try {
-      localStorage.setItem('veklom_sweep_history', JSON.stringify(defaultHist));
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('veklom_sweep_history');
+      }
     } catch {}
   };
 
@@ -817,64 +809,70 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
               </div>
 
               <div className="w-full h-[180px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={history}
-                    margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
-                  >
-                    <CartesianGrid stroke="#1a1a1a" strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="#444"
-                      fontSize={9}
-                      fontFamily="monospace"
-                      tickLine={false}
-                    />
-                    <YAxis 
-                      stroke="#444"
-                      fontSize={9}
-                      fontFamily="monospace"
-                      tickLine={false}
-                      allowDecimals={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend 
-                      verticalAlign="top" 
-                      height={24} 
-                      iconSize={8}
-                      iconType="circle"
-                      wrapperStyle={{
-                        fontFamily: 'monospace',
-                        fontSize: '9px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px',
-                        paddingBottom: '5px'
-                      }}
-                      formatter={(value) => {
-                        const color = value === 'critical' ? 'text-red-400 font-bold' : 'text-[#FF6B00] font-bold';
-                        return <span className={color}>{value === 'critical' ? 'CRITICAL / ERROR' : 'WARNINGS'}</span>;
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="critical" 
-                      name="critical"
-                      stroke="#ef4444" 
-                      strokeWidth={2}
-                      activeDot={{ r: 5 }}
-                      dot={{ r: 2 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="warning" 
-                      name="warning"
-                      stroke="#FF6B00" 
-                      strokeWidth={2}
-                      activeDot={{ r: 5 }}
-                      dot={{ r: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {history.length === 0 ? (
+                  <div className="flex h-full items-center justify-center border border-dashed border-[#333] bg-[#050505] text-center font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                    Needs proof: no completed BYOS Repo Risk Gate runs in local history.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={history}
+                      margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                    >
+                      <CartesianGrid stroke="#1a1a1a" strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="#444"
+                        fontSize={9}
+                        fontFamily="monospace"
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        stroke="#444"
+                        fontSize={9}
+                        fontFamily="monospace"
+                        tickLine={false}
+                        allowDecimals={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend 
+                        verticalAlign="top" 
+                        height={24} 
+                        iconSize={8}
+                        iconType="circle"
+                        wrapperStyle={{
+                          fontFamily: 'monospace',
+                          fontSize: '9px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '1px',
+                          paddingBottom: '5px'
+                        }}
+                        formatter={(value) => {
+                          const color = value === 'critical' ? 'text-red-400 font-bold' : 'text-[#FF6B00] font-bold';
+                          return <span className={color}>{value === 'critical' ? 'CRITICAL / ERROR' : 'WARNINGS'}</span>;
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="critical" 
+                        name="critical"
+                        stroke="#ef4444" 
+                        strokeWidth={2}
+                        activeDot={{ r: 5 }}
+                        dot={{ r: 2 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="warning" 
+                        name="warning"
+                        stroke="#FF6B00" 
+                        strokeWidth={2}
+                        activeDot={{ r: 5 }}
+                        dot={{ r: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
           </>
