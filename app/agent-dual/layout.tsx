@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     "x402:payTo": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     "x402:network": "eip155:8453",
     "x402:discovery": "https://api.veklom.com/.well-known/x402.json",
+    "base:builder_code": "bc_jjmuug9i",
+    "base:builder_data_suffix": "0x62635f6a6a6d75756739690b0080218021802180218021802180218021",
+    "erc8021:dataSuffix": "0x62635f6a6a6d75756739690b0080218021802180218021802180218021",
     "veklom:service": "agent-duel",
     "veklom:wallet-identity": "base-account",
   }

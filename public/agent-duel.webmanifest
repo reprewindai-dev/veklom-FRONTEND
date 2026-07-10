@@ -8,6 +8,17 @@
   "background_color": "#050608",
   "theme_color": "#050608",
   "categories": ["games", "finance", "productivity"],
+  "base": {
+    "builder_code": "bc_jjmuug9i",
+    "builder_data_suffix": "0x62635f6a6a6d75756739690b0080218021802180218021802180218021",
+    "chain_id": 8453,
+    "primary_url": "https://control.veklom.com/agent-dual"
+  },
+  "x402": {
+    "discovery": "https://api.veklom.com/.well-known/x402.json",
+    "pay_to": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
+    "network": "eip155:8453"
+  },
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
