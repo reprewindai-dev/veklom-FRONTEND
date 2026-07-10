@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { TerminalEvent, VerifiedFinding, RiskLevel, RiskGateScan, PolicyResult } from './types';
@@ -79,6 +80,7 @@ export default function App() {
   });
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [dbPoolCount, setDbPoolCount] = useState(12);
+  const [apiFindingsCache, setApiFindingsCache] = useState<VerifiedFinding[]>([]);
 
   // Operator Decision Intercept Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
