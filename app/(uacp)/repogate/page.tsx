@@ -1,11 +1,12 @@
-"use client";
-
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { TerminalEvent, VerifiedFinding, RiskLevel, RiskGateScan, PolicyResult } from './types';
 import { 
   DEFAULT_RULES, 
   calculateCanonicalHash, 
+  generateFilesForRepo, 
+  scanFilesForFindings, 
+  determineOverallRisk,
   VeklomAudioEngine,
   announceSpeech
 } from './utils';
@@ -34,26 +35,32 @@ import {
   Tablet
 } from 'lucide-react';
 
+// Preset options for quick operator testing
+const REPO_PRESETS = [
+  { url: 'https://github.com/veklom-ai/core-kernel', name: 'veklom-ai/core-kernel', desc: 'Critical Risk: Native Platform Core' },
+  { url: 'https://github.com/expressjs/express', name: 'expressjs/express', desc: 'Safe Level: Router Framework Baseline' },
+  { url: 'https://github.com/stripe/stripe-node', name: 'stripe/stripe-node', desc: 'High Risk: Financial Integrations Module' },
+  { url: 'https://github.com/kubernetes/kubernetes', name: 'kubernetes/kubernetes', desc: 'Truncated Scan: Complex Cluster Matrix' }
+];
+
 export default function App() {
   // Input URL
-  const [repoUrl, setRepoUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState('https://github.com/veklom-ai/core-kernel');
   const [errorText, setErrorText] = useState('');
 
   // Scanning State
   const [scanState, setScanState] = useState<RiskGateScan>({
-    run_id: '',
-    agent_id: '',
+    run_id: 'run_8fa29d',
+    agent_id: 'agent_041',
     status: 'idle',
-    repo_url: '',
-    repo_owner: '',
-    repo_name: '',
-    default_branch: '',
-    risk_level: 'SAFE',
+    repo_url: 'https://github.com/veklom-ai/core-kernel',
+    repo_owner: 'veklom-ai',
+    repo_name: 'core-kernel',
+    default_branch: 'main',
+    risk_level: 'CRITICAL',
     tree_truncated: false,
-    files_seen: 0,
-    created_at: new Date().toISOString()
+    files_seen: 16
   });
-  const [clockText, setClockText] = useState('');
 
   // Distracted user/Aura state variables
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -66,24 +73,19 @@ export default function App() {
   // Events & Findings lists
   const [events, setEvents] = useState<TerminalEvent[]>([]);
   const [findings, setFindings] = useState<VerifiedFinding[]>([]);
-  const [scannedFilesList, setScannedFilesList] = useState<string[]>([]);
+  const [scannedFilesList, setScannedFilesList] = useState<string[]>(() => {
+    const { paths } = generateFilesForRepo('https://github.com/veklom-ai/core-kernel');
+    return paths;
+  });
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  const [dbPoolCount] = useState(0);
-  const [apiFindingsCache, setApiFindingsCache] = useState<VerifiedFinding[]>([]);
+  const [dbPoolCount, setDbPoolCount] = useState(12);
 
   // Operator Decision Intercept Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeInterceptedFinding, setActiveInterceptedFinding] = useState<VerifiedFinding | null>(null);
 
   // Stable audit hash representation
-  const [auditHash, setAuditHash] = useState('0'.repeat(64));
-
-  useEffect(() => {
-    const tick = () => setClockText(new Date().toISOString());
-    tick();
-    const interval = window.setInterval(tick, 1000);
-    return () => window.clearInterval(interval);
-  }, []);
+  const [auditHash, setAuditHash] = useState('6f8e9a2b5c1d7e4f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f');
 
   // Multi-Channel Notification triggers (when waiting for human authorization)
   useEffect(() => {
@@ -132,6 +134,17 @@ export default function App() {
     updateHash();
   }, [events]);
 
+  // Handle preset repository selection
+  const handleSelectPreset = (url: string) => {
+    setRepoUrl(url);
+    setErrorText('');
+    
+    // Animate audio signal for feedback
+    if (audioEnabled) {
+      audioEngine.playChime('start');
+    }
+  };
+
   // Helper: Append a new event sequentially with sequence control
   const emitEvent = (
     type: string,
@@ -166,6 +179,8 @@ export default function App() {
 
     setEvents(prev => {
       const updated = [...prev, newEvent];
+      // Sync DB Pool mock movements for added realism
+      setDbPoolCount(Math.min(15, Math.max(1, 12 + (updated.length % 3) - (updated.length % 2))));
       return updated;
     });
 
@@ -343,7 +358,7 @@ export default function App() {
 
   // Scan execution step controller
   useEffect(() => {
-    if (scanState.status === 'idle' || scanState.status === 'completed' || scanState.status === 'awaiting_decision') return;
+    if (scanState.status === 'idle') return;
 
     const timeout = setTimeout(() => {
       const runId = scanState.run_id;
@@ -408,7 +423,7 @@ export default function App() {
         
         // Scan Completed Checklist
         if (fileIndex >= scannedFilesList.length) {
-          emitEvent('client.trace.hash', `Client evidence hash generated from the BYOS scan response.`);
+          emitEvent('ledger.seal', `GPC core evaluation completed. Generating stable BTreeMap ledger proof...`);
           setScanState(prev => ({ ...prev, status: 'completed' }));
           setCurrentStepIndex(-1);
 
@@ -426,7 +441,7 @@ export default function App() {
         emitEvent('git.fetch', `Checking path verification rules for: ${path}`, path);
 
         // Check file for predefined rules matching
-        const matchFinding = apiFindingsCache.find(f => f.path === path);
+        const matchFinding = scanFilesForFindings([path], runId)[0];
         if (matchFinding) {
           // Rule matched
           emitEvent(
@@ -573,7 +588,7 @@ export default function App() {
                 Repo Risk Gate
               </span>
               <span className="hidden sm:inline-block text-[8px] sm:text-[9px] text-gray-500 uppercase tracking-wider bg-neutral-900 border border-neutral-800/60 px-1.5 py-0.5 rounded">
-                Live BYOS
+                Dev Scope
               </span>
             </div>
           </div>
@@ -676,6 +691,34 @@ export default function App() {
           </div>
         </div>
 
+        {/* Preset selections list bar - responsive wraps for phone viewport */}
+        <div className="px-4 sm:px-6 md:px-10 py-3 sm:py-4 bg-[#080808] border-b border-[#222] flex flex-col sm:flex-row items-start sm:items-center gap-3 select-none">
+          <span className="font-mono text-[9px] text-gray-500 uppercase tracking-widest shrink-0 flex items-center space-x-1 font-bold">
+            <Compass className="w-3 h-3 text-[#555]" />
+            <span>Target Scenarios:</span>
+          </span>
+          <div className="flex flex-wrap items-center gap-2 w-full">
+            {REPO_PRESETS.map((p) => {
+              const isActive = repoUrl === p.url;
+              return (
+                <button
+                  key={p.url}
+                  onClick={() => handleSelectPreset(p.url)}
+                  title={p.desc}
+                  disabled={scanState.status === 'fetching' || scanState.status === 'scanning' || scanState.status === 'awaiting_decision'}
+                  className={`text-[10px] font-mono px-3 py-2 border transition-all cursor-pointer touch-manipulation flex-1 sm:flex-none text-center ${
+                    isActive 
+                      ? 'border-[#FF6B00] text-[#FF6B00] bg-[#FF6B00]/5 font-black' 
+                      : 'border-[#222] text-[#666] hover:text-gray-300 hover:border-[#444]'
+                  }`}
+                >
+                  {p.name.split('/')[1]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Mobile Landscape/Portrait View Selectors (Only visible below md: breakpoint) */}
         <div className="md:hidden flex border-b border-[#333] bg-[#0A0A0A] font-mono select-none">
           <button
@@ -749,7 +792,7 @@ export default function App() {
         <footer className="h-auto md:h-14 border-t border-[#333] flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 md:px-10 py-3 md:py-0 font-mono text-[9px] md:text-[10px] text-[#666] uppercase tracking-[0.2em] bg-[#0A0A0A] gap-2 select-text">
           <span className="flex items-center">
             <Clock className="w-3.5 h-3.5 text-[#333] mr-1.5 shrink-0" />
-            Browser Time: {clockText || 'syncing'}
+            Server Time: 2026-06-05 04:25:56 UTC
           </span>
           
           {/* Responsive device optimization helper info trace */}

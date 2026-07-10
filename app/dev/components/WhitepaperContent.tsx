@@ -1,58 +1,86 @@
 "use client";
 
-import { CheckCircle2, Shield, Activity, Lock, Database } from "lucide-react";
+import React, { useState } from "react";
+import { CheckCircle2, Shield, Activity, Lock, Database, Copy, Check, Terminal, Globe, Zap, Cpu } from "lucide-react";
 
 export default function WhitepaperContent() {
+  const [copied, setCopied] = useState(false);
+  const installCmd = "curl -sSf https://api.veklom.com/install.sh | sh";
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(installCmd);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="max-w-4xl py-12 px-6 lg:px-12">
-      <div className="mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3EE7A2]/10 border border-[#3EE7A2]/20 text-[#3EE7A2] text-xs font-mono font-bold uppercase tracking-widest mb-6">
-          <Shield className="w-4 h-4" />
-          Veklom Developer Platform
+    <div className="max-w-4xl py-12 px-6 lg:px-12 text-[#c9c5cf] font-sans selection:bg-[#f05a70]/30 selection:text-white">
+      
+      {/* Doc Head */}
+      <div className="mb-12 border-b border-[#2a2630] pb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f05a70]/10 border border-[#f05a70]/20 text-[#f05a70] text-[10px] font-mono font-bold uppercase tracking-widest mb-6">
+          <Shield className="w-3.5 h-3.5" />
+          VEKLOM DEVELOPER PORTAL
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">
-          Sovereign AI Accountability
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#f2f2f5] mb-4 tracking-tight font-sans leading-tight">
+          Sovereign AI Fleet Codex
         </h1>
-        <p className="text-xl text-[#A1A1A6] leading-relaxed">
-          A Governance Framework for the Veklom Infrastructure.
+        <p className="text-base text-[#918d98] font-mono leading-relaxed mb-8">
+          The definitive machine-readable contract suite for PGL, SEKED, CAPI, and VNP.
         </p>
+
+        {/* Crabfleet style SSH installer */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-[#06080d] border border-[#1c2030] rounded-xl p-3.5 font-mono text-xs max-w-2xl shadow-[0_4px_18px_rgba(0,0,0,.45)]">
+          <div className="flex items-center gap-2 text-[#7e8ba3] shrink-0 select-none">
+            <Terminal className="w-4 h-4 text-[#f05a70]" />
+            <span>$</span>
+          </div>
+          <code className="text-[#e6edf3] flex-1 truncate select-all">{installCmd}</code>
+          <button 
+            onClick={handleCopy}
+            className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              copied 
+                ? "bg-[#34d399]/10 border-[#34d399]/30 text-[#34d399]" 
+                : "bg-white/5 border-white/10 hover:border-[#f05a70] hover:text-[#f05a70] text-[#918d98]"
+            }`}
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
       </div>
 
       {/* Chapter 1 */}
       <section id="strategic-imperative" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          1. The Strategic Imperative: "Trust Us" to "Show Us" AI
+        <h2 className="text-xl font-bold text-[#f2f2f5] mb-6 border-b border-[#2a2630] pb-3 flex items-center gap-2">
+          <span className="text-[#f05a70] font-mono">01.</span> The Strategic Imperative
         </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
-          <p className="text-lg leading-relaxed mb-6">
-            The transition from experimental AI implementations to governed production environments marks a critical shift in enterprise technology. In the initial wave of AI adoption, organizations relied on "trust-based" models, where the internal logic of an agent was largely opaque.
+        <div className="space-y-4 text-[#c9c5cf] leading-relaxed text-sm">
+          <p>
+            The transition from experiment loops to autonomous, machine-to-machine production systems requires the abandonment of "trust-based" opaque models. Ungoverned agent behaviors inherit sweeping permissions, lack replayable audit logic, and generate unconstrained execution spend.
           </p>
-          <div className="bg-[#111] border border-[#3EE7A2]/30 p-6 rounded-xl my-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Shield className="w-24 h-24 text-[#3EE7A2]" />
-            </div>
-            <h4 className="text-[#3EE7A2] font-semibold mb-2 flex items-center gap-2 relative z-10">
-              <Lock className="w-5 h-5" />
-              Core Value Proposition
+          <div className="bg-[#100b0d] border border-[#f05a70]/20 p-5 rounded-xl my-6 relative overflow-hidden">
+            <h4 className="text-[#f05a70] font-mono font-bold text-xs mb-1 uppercase tracking-wider flex items-center gap-1.5">
+              <Lock className="w-4 h-4" /> Core Principle
             </h4>
-            <p className="text-white text-lg relative z-10">
-              Sovereignty is the ability to maintain absolute control and oversight over AI execution; Veklom turns that from a policy aspiration into a technical property of the stack.
+            <p className="text-white text-xs leading-relaxed font-mono">
+              Sovereignty is the absolute runtime enforcement of quality, schema, and economic boundaries at the gateway level. You cannot govern what you cannot verify.
             </p>
           </div>
-          <h3 className="text-xl font-bold text-white mt-10 mb-4">Systemic Vulnerabilities in Ungoverned AI</h3>
-          <div className="grid gap-4 my-6">
+          <h3 className="text-sm font-mono font-bold uppercase text-[#f2f2f5] tracking-wider mt-8 mb-3">Systemic Security Vulnerabilities</h3>
+          <div className="grid gap-3">
             {[
-              { title: "Absence of Audit Trails", desc: "No replayable record of the decision-making process. The 'why' remains unknown, creating an unrecoverable gap in forensics." },
-              { title: "Unconstrained Access", desc: "Agents inherit broad sweeping permissions with no dedicated policy layer to enforce conditions, leading to unauthorized exfiltration." },
-              { title: "Runaway Costs", desc: "Without spend controls at the execution layer, a single agent loop can burn thousands in API calls." }
+              { title: "Visual Shell Drift", desc: "AI writing code guess-formats components, leading to broken frames and monad errors." },
+              { title: "Ghost Tool Execution", desc: "No runtime gating for execution layers, allowing unauthorized file writes or database overrides." },
+              { title: "Spend Slashes", desc: "Inability to govern per-completion spend in real-time, resulting in runaway API charges." }
             ].map((v, i) => (
-              <div key={i} className="flex gap-4 p-5 rounded-lg border border-[#242424] bg-[#0A0A0A]">
-                <div className="mt-1 w-6 h-6 rounded-full bg-[#FF5C6C]/10 flex items-center justify-center shrink-0">
-                  <div className="w-2 h-2 rounded-full bg-[#FF5C6C]" />
+              <div key={i} className="flex gap-4 p-4 rounded-lg border border-[#2a2630] bg-[#100b0d]/50">
+                <div className="mt-1 w-5 h-5 rounded-full bg-[#f05a70]/10 border border-[#f05a70]/30 flex items-center justify-center shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#f05a70]" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold mb-1">{v.title}</h4>
-                  <p className="text-sm">{v.desc}</p>
+                  <h4 className="text-white font-bold text-xs mb-1 font-mono">{v.title}</h4>
+                  <p className="text-[11px] text-[#918d98] leading-relaxed">{v.desc}</p>
                 </div>
               </div>
             ))}
@@ -62,40 +90,39 @@ export default function WhitepaperContent() {
 
       {/* Chapter 2 */}
       <section id="pgl-identity" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          2. PGL: Establishing Immutable Agent Identity
+        <h2 className="text-xl font-bold text-[#f2f2f5] mb-6 border-b border-[#2a2630] pb-3 flex items-center gap-2">
+          <span className="text-[#f05a70] font-mono">02.</span> PGL IdentityRAG
         </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
-          <p className="mb-6">
-            In any governance framework, identity is the cornerstone of accountability. Treating an AI agent as a transient or ephemeral process leads to a lack of responsibility.
+        <div className="space-y-4 text-[#c9c5cf] leading-relaxed text-sm">
+          <p>
+            Standard SaaS products rely on user-interactive cookies. A machine-readable agent system requires signed JWT credentials mapping back to static workspaces via cross-cluster **IdentityRAG (PGL)**.
           </p>
-          <div className="p-4 bg-white/[0.02] border border-white/10 rounded-lg text-white font-mono text-sm my-6 border-l-4 border-l-[#37C9EC]">
-            You cannot govern what you cannot identify; PGL turns agents from ephemeral processes into governed identities with accountable histories.
+          <div className="p-4 bg-[#06080d] border-l-2 border-[#3b82f6] rounded text-[#918d98] font-mono text-xs leading-relaxed">
+            By extracting claims dynamically from bearer credentials starting with the `vk_key_` token parser, Zero-Trust middleware continuous resolves auth states.
           </div>
           
-          <h3 className="text-xl font-bold text-white mt-10 mb-6">Comparative Accountability Model</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
+          <h3 className="text-sm font-mono font-bold uppercase text-[#f2f2f5] tracking-wider mt-8 mb-4">PGL Identity Architecture Matrix</h3>
+          <div className="overflow-x-auto border border-[#2a2630] rounded-lg">
+            <table className="w-full text-xs text-left border-collapse font-mono">
               <thead>
-                <tr className="border-b border-[#333] text-white">
-                  <th className="p-4 font-semibold">Feature</th>
-                  <th className="p-4 font-semibold text-[#FF5C6C]">Standard Agent Access</th>
-                  <th className="p-4 font-semibold text-[#3EE7A2]">PGL-Governed Access</th>
+                <tr className="border-b border-[#2a2630] text-white bg-[#06080d]">
+                  <th className="p-3">Parameter</th>
+                  <th className="p-3 text-[#f05a70]">Legacy Context</th>
+                  <th className="p-3 text-[#34d399]">IdentityRAG (PGL)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#222]">
+              <tbody className="divide-y divide-[#2a2630] bg-[#100b0d]/20">
                 {[
-                  ["Identification", "Anonymous or ephemeral process", "Attributed, certified identity"],
-                  ["Visibility", "Unmonitored tool calls", "Lineage-tracked execution"],
-                  ["Forensics", "Impossible to reconstruct", "Comprehensive 'Who did what' records"],
-                  ["Persistence", "Reset after every session", "Stable across workspaces & dev/stage/prod"],
-                  ["Compliance", "Non-compliant", "Designed to support SOC2, HIPAA, ISO27001"]
+                  ["Tenant Resolution", "Client-supplied body parameters", "JWT payload-derived Claims mapping"],
+                  ["Session Uptime", "Short-lived ephemeral sessions", "Continuous ZK-attested secure key chains"],
+                  ["Trace Integrity", "Weak local telemetry files", "Sha256 hash chains written off the hotpath"],
+                  ["Integration", "Hardcoded credentials", "Symmetric AES Fernet decryption on fetch"]
                 ].map((row, i) => (
                   <tr key={i} className="hover:bg-white/[0.02]">
-                    <td className="p-4 font-mono text-white/70">{row[0]}</td>
-                    <td className="p-4 text-white/50">{row[1]}</td>
-                    <td className="p-4 text-white/90 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#3EE7A2]" /> {row[2]}
+                    <td className="p-3 text-[#918d98] font-semibold">{row[0]}</td>
+                    <td className="p-3 text-[#918d98]/70">{row[1]}</td>
+                    <td className="p-3 text-white flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399]" /> {row[2]}
                     </td>
                   </tr>
                 ))}
@@ -107,161 +134,74 @@ export default function WhitepaperContent() {
 
       {/* Chapter 3 */}
       <section id="seked-policy" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          3. SEKED: The Policy Authority
+        <h2 className="text-xl font-bold text-[#f2f2f5] mb-6 border-b border-[#2a2630] pb-3 flex items-center gap-2">
+          <span className="text-[#f05a70] font-mono">03.</span> SEKED Policy Guardrails
         </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
-          <p className="mb-6">
-            Autonomous systems require a "Rule of Law" decoupled from the applications themselves. Veklom’s SEKED engine moves policy authority to the execution layer.
+        <div className="space-y-4 text-[#c9c5cf] leading-relaxed text-sm">
+          <p>
+            Autonomous operators must execute within rigid, decoupled policies. The **SEKED Policy Engine** provides compile-time and runtime check gates preventing context exfiltration, malformed schema writes, or PII leaks.
           </p>
-          <div className="p-5 bg-gradient-to-r from-[#111] to-transparent border border-white/10 rounded-lg my-6">
-            <strong className="text-white block mb-2">The SEKED Gatekeeper:</strong>
-            SEKED is to agents what an API gateway + WAF + OPA are to microservices: a mandatory chokepoint where policy is enforced and measured, not just described.
-          </div>
-          <h3 className="text-xl font-bold text-white mt-10 mb-4">The Governed Logic Flow</h3>
-          <div className="bg-[#0A0A0A] border border-[#242424] rounded-xl p-6 font-mono text-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-[#FFB800] via-[#3EE7A2] to-[#37C9EC]" />
-            <ol className="space-y-4 list-decimal list-inside text-white/80">
-              <li><strong className="text-[#FFB800]">Plan Generation:</strong> Agent formulates structured intent.</li>
-              <li><strong className="text-[#3EE7A2]">SEKED Validation:</strong> Plan submitted for decision measurement.</li>
-              <li><strong className="text-[#3EE7A2]">Policy Enforcement:</strong> Scanned against constraints (PHI/PII/Environment).</li>
-              <li><strong className="text-[#37C9EC]">Final Resolution:</strong> Proceed to sandbox, or engage Kill Switch.</li>
+          <div className="bg-[#06080d] border border-[#2a2630] p-5 rounded-xl font-mono text-xs text-white/80 space-y-3">
+            <div className="flex items-center gap-2 border-b border-[#2a2630] pb-2 text-[#f05a70] font-bold">
+              <Cpu className="w-4 h-4" /> SEKED Enforcement Stages
+            </div>
+            <ol className="space-y-2.5 list-decimal list-inside text-[#918d98]">
+              <li><span className="text-white font-bold">Plan Sniffing:</span> Structured intent parsed from execution queue.</li>
+              <li><span className="text-white font-bold">PII/PHI Sanitization:</span> Regex screening filters database variables.</li>
+              <li><span className="text-white font-bold">Schema Gating:</span> Rejects generic empty schemas <code className="bg-white/5 px-1">{"{}"}</code>.</li>
+              <li><span className="text-white font-bold">Sandbox Isolation:</span> Code executes inside micro-virtual env.</li>
             </ol>
           </div>
         </div>
       </section>
 
-      {/* Chapters 4, 5, 6, 7 */}
-      <section id="replayable-evidence" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          4. Replayable Evidence
+      {/* Chapter 4 */}
+      <section id="interlink-capi" className="mb-20 scroll-mt-24">
+        <h2 className="text-xl font-bold text-[#f2f2f5] mb-6 border-b border-[#2a2630] pb-3 flex items-center gap-2">
+          <span className="text-[#f05a70] font-mono">04.</span> Interlink CAPI & Swarm
         </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
+        <div className="space-y-4 text-[#c9c5cf] leading-relaxed text-sm">
           <p>
-            Veklom turns every significant agent action into a signed, hashed, immutable packet that can be replayed and presented as audit evidence; it’s designed for "Show us" audits.
+            The main operating surface decouples the backend headlessly from the Next.js control plane. Standard routing rules configured via the Traefik configuration file map subdomains dynamically to internal container ports:
           </p>
-          <ul className="mt-4 space-y-2">
-            <li><strong>Sha256-Hashed (Integrity):</strong> Detecting tampering.</li>
-            <li><strong>Immutable (Append-Only):</strong> Permanent history.</li>
-            <li><strong>Signed (Attribution):</strong> Cryptographic proof of PGL identity.</li>
-          </ul>
-        </div>
-      </section>
-
-      <section id="operational-economic" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          5. ConvergeOS & x402
-        </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
-          <h3 className="text-xl font-bold text-white mt-6 mb-2">ConvergeOS (Operational Guardrails)</h3>
-          <p>Rejects or quarantines malformed outputs before they hit production by enforcing Schema and Quality convergence.</p>
-          
-          <h3 className="text-xl font-bold text-white mt-8 mb-2">x402 (Economic Guardrails)</h3>
-          <p>x402 turns cost governance into a runtime constraint. Agents pay for execution routes using USDC on Base. Runaway spend is eliminated by atomic micropayments.</p>
-        </div>
-      </section>
-
-      <section id="nexus-protocol" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          6. The Veklom Nexus Protocol
-        </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
-          <p>Nexus is how Veklom determines whether a given model, stack, or agent framework is production-worthy under governance.</p>
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="p-4 border border-[#242424] rounded-lg bg-[#111]">
-              <Activity className="w-5 h-5 text-[#37C9EC] mb-2" />
-              <div className="text-white font-bold text-sm">Policy Adherence</div>
-            </div>
-            <div className="p-4 border border-[#242424] rounded-lg bg-[#111]">
-              <Database className="w-5 h-5 text-[#37C9EC] mb-2" />
-              <div className="text-white font-bold text-sm">Evidence Integrity</div>
-            </div>
+          <div className="bg-[#06080d] border border-[#2a2630] rounded-xl p-4 font-mono text-[11px] text-[#e6edf3] overflow-x-auto shadow-[0_4px_18px_rgba(0,0,0,.45)]">
+            <div className="text-[#7c8597] mb-2"># Traefik routing configuration (Dynamic)</div>
+            <div>http:</div>
+            <div className="pl-4">routers:</div>
+            <div className="pl-8">veklom-api:</div>
+            <div className="pl-12">rule: <span className="text-[#a6e3a1]">"Host(`api.veklom.com`)"</span></div>
+            <div className="pl-12">service: veklom-api</div>
+            <div className="pl-8">veklom-control:</div>
+            <div className="pl-12">rule: <span className="text-[#a6e3a1]">"Host(`control.veklom.com`)"</span></div>
+            <div className="pl-12">service: veklom-control</div>
           </div>
         </div>
       </section>
 
-      <section id="sovereign-ai" className="mb-20 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          7. Sovereign AI Blueprint
+      {/* Chapter 5 */}
+      <section id="x402-vnp" className="mb-32 scroll-mt-24">
+        <h2 className="text-xl font-bold text-[#f2f2f5] mb-6 border-b border-[#2a2630] pb-3 flex items-center gap-2">
+          <span className="text-[#f05a70] font-mono">05.</span> x402 & Micro-Stakes (VNP)
         </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
+        <div className="space-y-4 text-[#c9c5cf] leading-relaxed text-sm">
           <p>
-            Veklom doesn’t compete with agent frameworks; it governs them. LangChain, CrewAI, and homegrown orchestrators become "BYOS" (Bring Your Own Stack) systems plugged into the Veklom governance fabric.
+            Under the **x402 Protocol**, every completion requires cryptographic payment proof using USDC. If an agent breaches SLA commitments, micro-stakes (VNP) are slashed instantly off the hot-path.
           </p>
-          <p className="mt-4 font-semibold text-white">
-            That is exactly what Sovereign AI means in practice: ownership and control over AI execution, not just over data or infrastructure.
-          </p>
-        </div>
-      </section>
-
-      {/* Chapter 8 */}
-      <section id="agent-duel-colosseum" className="mb-32 scroll-mt-24">
-        <h2 className="text-2xl font-bold text-white mb-6 border-b border-[#242424] pb-4">
-          8. Agent Duel Colosseum: Economic Stress-Testing & Sovereign Verification
-        </h2>
-        <div className="prose prose-invert max-w-none text-[#A1A1A6]">
-          <p className="text-lg leading-relaxed mb-6">
-            Testing an autonomous agent in a closed, simulated sandbox is a necessary first step, but it is fundamentally insufficient. Simulated environments fail to replicate the key characteristics of real production environments: adversarial tool interactions, race conditions, continuous zero-trust authentication, and economic resource constraints.
-          </p>
-          <p className="text-lg leading-relaxed mb-6">
-            <strong>The Colosseum Concept:</strong> The Veklom Agent Duel gaming section is not a gimmick—it is the first real-world, high-fidelity adversarial testbed for autonomous agents. To validate that an agent is safe and robust enough for production-grade enterprise operations, we place it in a low-stakes, highly competitive PvP (Player vs. Player) duel. Here, agents compete under real-world economic constraints, settling wagers on-chain via the <strong>x402 Ledger</strong> at a micro-payment scale.
-          </p>
-
-          <div className="bg-[#111] border border-[#3EE7A2]/20 p-6 rounded-xl my-8 relative overflow-hidden">
-            <h4 className="text-[#3EE7A2] font-semibold mb-3 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#3EE7A2]" />
-              High-Fidelity Economic Stress Testing
-            </h4>
-            <p className="text-white text-sm leading-relaxed">
-              If an agent can navigate zero-trust middleware, operate under continuous authorization checks, adapt to live transaction pricing, and successfully complete its objective while defending its SLA performance bond (VNP Micro-Stakes) in an adversarial PvP arena, it is proven to be safe for production. This is physical proof of cognitive reliability.
-            </p>
-          </div>
-
-          <h3 className="text-xl font-bold text-white mt-10 mb-6">The Sovereign AI Developer Stack</h3>
-          <div className="grid md:grid-cols-2 gap-6 my-6">
-            <div className="p-5 rounded-lg border border-[#242424] bg-[#0A0A0A]">
-              <h4 className="text-white font-bold mb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#3EE7A2]" />
-                Ollama 24/7 Sovereign Core
-              </h4>
-              <p className="text-xs text-[#A1A1A6] leading-relaxed">
-                Everything inside Veklom runs natively through Ollama on local/edge infrastructure first. This serves as the 24/7 baseline cognitive router, ensuring that data never leaves your secure zone for routine logic.
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="p-4 border border-[#2a2630] rounded-lg bg-[#06080d] hover:border-[#f05a70]/50 transition-colors">
+              <Zap className="w-5 h-5 text-[#f05a70] mb-2" />
+              <div className="text-white font-mono font-bold text-xs mb-1">USDC Gas Delegation</div>
+              <p className="text-[11px] text-[#918d98] leading-relaxed">Pay per inference completion token directly to Base address.</p>
             </div>
-
-            <div className="p-5 rounded-lg border border-[#242424] bg-[#0A0A0A]">
-              <h4 className="text-white font-bold mb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#37C9EC]" />
-                Bring Your Own Key (BYOK)
-              </h4>
-              <p className="text-xs text-[#A1A1A6] leading-relaxed">
-                Elite high-adopted engines (OpenAI, Anthropic, Groq) are strictly Bring Your Own Key. Developer keys are kept absolutely private and secure, letting you reserve high-cost commercial models exclusively for complex reasoning.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg border border-[#242424] bg-[#0A0A0A]">
-              <h4 className="text-white font-bold mb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#FFB800]" />
-                Amphoteric Edge Runtime
-              </h4>
-              <p className="text-xs text-[#A1A1A6] leading-relaxed">
-                The Interlink-cAPI (Nodelink) sits at the secure network boundary. It dynamically changes languages between TCP and HTTP, buffering outbound agent instructions during Starlink latency spikes (up to 40ms) and replaying on connection.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg border border-[#242424] bg-[#0A0A0A]">
-              <h4 className="text-white font-bold mb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-[#FF5C6C]" />
-                PGL IdentityRAG
-              </h4>
-              <p className="text-xs text-[#A1A1A6] leading-relaxed">
-                Continuous authorization of agent actions is enforced via JWT claims rehydration, mapping signed client payloads directly to secure multi-tenant workspaces.
-              </p>
+            <div className="p-4 border border-[#2a2630] rounded-lg bg-[#06080d] hover:border-[#f05a70]/50 transition-colors">
+              <Activity className="w-5 h-5 text-[#3b82f6] mb-2" />
+              <div className="text-white font-mono font-bold text-xs mb-1">VNP Ledger logging</div>
+              <p className="text-[11px] text-[#918d98] leading-relaxed">Off-hotpath append-only snapshots preventing latency issues.</p>
             </div>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
-

@@ -92,11 +92,11 @@ export const TerminalTrace: React.FC<TerminalTraceProps> = ({
         <div className="flex items-center justify-between sm:justify-end space-x-4">
           <span className="flex items-center text-[10px] text-[#00FF41] font-mono tracking-wider">
             <span className="w-2 h-2 bg-[#00FF41] rounded-full mr-2 animate-pulse"></span>
-            BYOS_REPOGATE_ACTIVE
+            AXUM_ROUTER_ACTIVE
           </span>
           <span className="flex items-center text-[10px] text-[#999] font-mono tracking-wider space-x-1">
             <Database className="w-3 h-3 text-[#666]" />
-            <span>DB POOL: NOT EXPOSED</span>
+            <span>POSTGRES: {dbPoolCount}/15</span>
           </span>
         </div>
       </div>

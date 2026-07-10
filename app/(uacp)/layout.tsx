@@ -62,7 +62,7 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase">Veklom Control Plane</span>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase">UACP V5 Control Plane</span>
           </div>
           <div className="h-4 w-px bg-white/20" />
           <div className="flex items-center gap-4 font-mono text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded border border-white/10">

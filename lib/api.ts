@@ -86,6 +86,7 @@ export function apiUrl(path: string, query?: RequestOpts["query"]): string {
 export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Accept": "application/json",
+    ...(opts.headers || {}),
   };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (!opts.unauth) {
@@ -172,12 +173,11 @@ function safeJson(t: string) {
 }
 
 api.get = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'GET' });
-api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, { 
+api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, {
   ...opts, 
   method: 'POST',
-  body: body ? JSON.stringify(body) : undefined,
+  body,
   headers: {
-    'Content-Type': 'application/json',
     ...(opts?.headers || {})
   }
 });
