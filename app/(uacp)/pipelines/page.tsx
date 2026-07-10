@@ -94,6 +94,28 @@ function PipelinesPageContent() {
           ) : null}
         </div>
       )}
+      {runs.length === 0 ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center bg-[#030303] p-6 font-mono">
+          <div className="max-w-xl border border-[#ffab00]/25 bg-[#ffab00]/5 p-5 text-[#ffab00]">
+            <div className="mb-2 text-xs font-black uppercase tracking-widest">
+              {proof?.state ? proof.state.replace("_", " ") : "Needs proof"}
+            </div>
+            <p className="text-xs leading-relaxed text-white/60">
+              {proof?.reason || "BYOS returned no governed pipeline runs for this workspace."}
+            </p>
+            {proof?.routes ? (
+              <div className="mt-3 grid gap-1 text-[10px] text-white/35">
+                {Object.entries(proof.routes).map(([name, route]) => (
+                  <div key={name} className="flex justify-between gap-4 border-t border-white/5 pt-1">
+                    <span className="uppercase">{name}</span>
+                    <span className="text-right text-white/55">{route}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : (
       <div className="min-h-0 flex-1">
         <RunSpine
           runs={runs}
@@ -102,6 +124,7 @@ function PipelinesPageContent() {
           isFocusedFromTerminal={fromTerminal && !!runIdParam}
         />
       </div>
+      )}
     </div>
   );
 }
