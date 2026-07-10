@@ -111,7 +111,13 @@ export async function GET(request: Request) {
       route: "/api/v1/duel/wager",
       state: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
       status: wagerProbe.status,
-      detail: proofCapabilities.wager_persist === "verified" ? "Signed wager persistence endpoint present" : wagerProbe.detail,
+      detail: proofCapabilities.wager_persist === "verified" ? "Legacy signed wager persistence endpoint present" : wagerProbe.detail,
+    },
+    {
+      route: "/api/v1/duel/wager/prepare",
+      state: proofCapabilities.wager_prepare === "verified" ? "verified" : "needs_proof",
+      status: proofProbe.status,
+      detail: proofCapabilities.wager_prepare === "verified" ? "BYOS prepares idempotent Base Account payment jobs" : "BYOS has not proven idempotent wager preparation",
     },
     {
       route: "/api/v1/duel/outcome",
@@ -124,6 +130,12 @@ export async function GET(request: Request) {
       state: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
       status: proofProbe.status,
       detail: proofCapabilities.settlement === "verified" ? "At least one wager has settlement tx proof" : "No on-chain settlement tx hash has been recorded yet",
+    },
+    {
+      route: "/api/v1/duel/wagers/{wager_id}/settlement-proof",
+      state: proofCapabilities.settlement_proof_ingest === "verified" ? "verified" : "needs_proof",
+      status: proofProbe.status,
+      detail: proofCapabilities.settlement_proof_ingest === "verified" ? "BYOS verifies Base receipts before accepting settlement proof" : "Settlement proof ingest has not been proven",
     },
     x402Probe,
     covenantProbe,
@@ -158,7 +170,7 @@ export async function GET(request: Request) {
           : endpointGaps > 0
             ? "BYOS exposes duel read routes, but wager/session/outcome write endpoints need production implementation."
             : persistenceVerified
-              ? "Agent Duel session, signed wager, and outcome persistence are route-backed; on-chain settlement remains separately marked until a settlement tx hash is recorded."
+              ? "Agent Duel sessions, wager preparation, and outcome persistence are route-backed; frontend Base Account sends and settlement receipt proof stay separately marked until a real tx hash is recorded."
               : proofGaps > 0
                 ? "Agent Duel routes require authenticated proof before live gameplay can be enabled."
                 : "All Agent Duel sources returned live route-backed data.",
@@ -171,7 +183,10 @@ export async function GET(request: Request) {
       sessionAuth: proofCapabilities.session_auth === "siwe" ? "siwe" : "needs_proof",
       multiplayerLobby: proofCapabilities.multiplayer_lobbies === "verified" ? "verified" : lobbiesProbe.state,
       placeWager: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
+      wagerPrepare: proofCapabilities.wager_prepare === "verified" ? "verified" : "needs_proof",
+      frontendBaseAccountSend: proofCapabilities.frontend_base_account_send === "verified" ? "verified" : "needs_proof",
       settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : outcomeProbe.state,
+      settlementProofIngest: proofCapabilities.settlement_proof_ingest === "verified" ? "verified" : "needs_proof",
       settlement: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
       x402Discovery: x402Probe.state,
       covenantState: covenantProbe.state,

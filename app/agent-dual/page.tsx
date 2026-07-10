@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useSignMessage, useSignTypedData } from 'wagmi';
+import { useSignMessage, useSendTransaction } from 'wagmi';
+import { encodeFunctionData } from 'viem';
 import { WalletState, LeaderboardEntry, WagerTransaction, EscrowState, PushNotification, TelemetryPacket, TelemetryDuelHand, DailyChallenge, getPacketDetails, DuelSession, DuelPlayer } from '@/components/agent-dual/types';
 import { ArenaChart } from '@/components/agent-dual/ArenaChart';
 import { WalletBlock } from '@/components/agent-dual/WalletBlock';
@@ -20,6 +21,7 @@ import { QuantumReplayModal } from '@/components/agent-dual/QuantumReplayModal';
 import { DuelInviteBlock } from '@/components/agent-dual/DuelInviteBlock';
 import { FlameMeter } from '@/components/agent-dual/FlameMeter';
 import { WalletProviders } from './WalletProviders';
+import { BankerPayPanel } from './BankerPayPanel';
 import { 
   Flame, 
   Coins, 
@@ -142,8 +144,8 @@ type BackendLobby = {
 };
 
 function AgentDuelApp() {
-  const { signTypedDataAsync } = useSignTypedData();
   const { signMessageAsync } = useSignMessage();
+  const { sendTransactionAsync } = useSendTransaction();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeSessionToken, setActiveSessionToken] = useState<string | null>(null);
   // 1. Navigation tab state
@@ -1614,117 +1616,93 @@ function AgentDuelApp() {
     };
   };
 
-  const signWager = async (amount: number) => {
-    if (!wallet.address) {
-      throw new Error("Wallet address required before signing a wager.");
+  const waitForSettlementProof = async (wagerId: string, txHash: string) => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      throw new Error("Missing signed BYOS session for settlement confirmation.");
     }
-    const fromAddr = wallet.address;
-    const toAddr = "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970"; // Treasury address
-    const rawAmount = Math.round(amount * 1_000_000).toString(); // USDC decimals
-    
-    if (!wallet.connected) {
-      throw new Error("Live x402 wallet signature required. No local test proof is generated.");
+    let lastMessage = "Settlement proof is pending Base confirmation.";
+    for (let attempt = 0; attempt < 18; attempt += 1) {
+      const res = await fetch(`${API_BASE_URL}/wagers/${encodeURIComponent(wagerId)}/settlement-proof`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken,
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          wallet_address: wallet.address,
+          settlement_tx_hash: txHash,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) return data;
+      lastMessage = data?.detail || data?.message || `Settlement proof rejected by BYOS (${res.status}).`;
+      if (![404, 409, 502].includes(res.status)) {
+        throw new Error(lastMessage);
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 5000));
+    }
+    throw new Error(lastMessage);
+  };
+
+  const sendBaseAccountWager = async (bet: { type: BetLane; amount: number }) => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      throw new Error("Connect a signed Base Account session before placing a wager.");
+    }
+    const idempotencyKey = `${activeSessionId}:${bet.type}:${bet.amount}:${Date.now()}:${crypto.randomUUID()}`;
+    const prepareRes = await fetch(`${API_BASE_URL}/wager/prepare`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-duel-session-token': activeSessionToken,
+      },
+      body: JSON.stringify({
+        session_id: activeSessionId,
+        wallet_address: wallet.address,
+        bet_type: bet.type,
+        wager_amount_usdc: bet.amount,
+        idempotency_key: idempotencyKey,
+      }),
+    });
+    const prepared = await prepareRes.json().catch(() => null);
+    if (!prepareRes.ok || !prepared?.success) {
+      throw new Error(prepared?.detail || prepared?.message || `Wager prepare rejected by BYOS (${prepareRes.status}).`);
     }
 
-    try {
-      const nonce = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      const now = Math.floor(Date.now() / 1000);
-      const domain = {
-        name: 'USD Coin',
-        version: '2',
-        chainId: 8453,
-        verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-      } as const;
-      const types = {
-        TransferWithAuthorization: [
-          { name: 'from', type: 'address' },
-          { name: 'to', type: 'address' },
-          { name: 'value', type: 'uint256' },
-          { name: 'validAfter', type: 'uint256' },
-          { name: 'validBefore', type: 'uint256' },
-          { name: 'nonce', type: 'bytes32' },
-        ],
-      } as const;
-      const message = {
-        from: fromAddr as `0x${string}`,
-        to: toAddr as `0x${string}`,
-        value: BigInt(rawAmount),
-        validAfter: BigInt(now),
-        validBefore: BigInt(now + 3600),
-        nonce: nonce as `0x${string}`,
-      };
-      const typedData = {
-        types: {
-          EIP712Domain: [
-            { name: 'name', type: 'string' },
-            { name: 'version', type: 'string' },
-            { name: 'chainId', type: 'uint256' },
-            { name: 'verifyingContract', type: 'address' },
-          ],
-          TransferWithAuthorization: [
-            { name: 'from', type: 'address' },
+    const settlement = prepared.settlement;
+    const usdcContract = settlement.usdc_contract as `0x${string}`;
+    const treasury = settlement.to as `0x${string}`;
+    const valueMicroUsdc = BigInt(settlement.value_micro_usdc);
+    const data = encodeFunctionData({
+      abi: [
+        {
+          name: 'transfer',
+          type: 'function',
+          stateMutability: 'nonpayable',
+          inputs: [
             { name: 'to', type: 'address' },
             { name: 'value', type: 'uint256' },
-            { name: 'validAfter', type: 'uint256' },
-            { name: 'validBefore', type: 'uint256' },
-            { name: 'nonce', type: 'bytes32' },
           ],
+          outputs: [{ name: '', type: 'bool' }],
         },
-        primaryType: 'TransferWithAuthorization' as const,
-        domain: {
-          name: 'USD Coin',
-          version: '2',
-          chainId: 8453, // Base Mainnet
-          verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        },
-        message: {
-          from: fromAddr,
-          to: toAddr,
-          value: rawAmount,
-          validAfter: now,
-          validBefore: now + 3600,
-          nonce: nonce,
-        },
-      };
+      ],
+      functionName: 'transfer',
+      args: [treasury, valueMicroUsdc],
+    });
 
-      let signature: `0x${string}` | string;
-      try {
-        signature = await signTypedDataAsync({
-          domain,
-          types,
-          primaryType: 'TransferWithAuthorization',
-          message,
-        });
-      } catch (wagmiError) {
-        const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
-        if (!hasEthereum) {
-          throw wagmiError;
-        }
-        signature = await (window as any).ethereum.request({
-          method: 'eth_signTypedData_v4',
-          params: [fromAddr, JSON.stringify(typedData)],
-        });
-      }
-
-      const payload = {
-        payload: {
-          authorization: {
-            from: fromAddr,
-            to: toAddr,
-            value: rawAmount,
-            validAfter: String(now),
-            validBefore: String(now + 3600),
-            nonce: nonce,
-          },
-          signature,
-        },
-      };
-
-      return btoa(JSON.stringify(payload));
-    } catch (err) {
-      console.error("Wallet sign failed", err);
-      throw new Error("Wallet signature failed; wager not submitted.");
-    }
+    const txHash = await sendTransactionAsync({
+      to: usdcContract,
+      data,
+      value: BigInt(0),
+      chainId: 8453,
+    });
+    const proof = await waitForSettlementProof(prepared.wager_id, txHash);
+    return {
+      wager_id: prepared.wager_id,
+      tx_hash: txHash,
+      settlement_proof: proof.settlement_proof,
+      status: proof.wager?.status || 'locked',
+    };
   };
 
   // Launch routing crash loop
@@ -1759,38 +1737,19 @@ function AgentDuelApp() {
     try {
       addNotification(
         'tx_success',
-        'Wallet Payment Authorization',
-        `Open Coinbase/Base and approve the $${totalWager.toFixed(2)} USDC wager. The round starts only after BYOS accepts the signed payment.`
+        'Base Account Payment',
+        `Approve the $${totalWager.toFixed(2)} USDC transfer in Base Account. The round starts only after BYOS verifies the Base transaction receipt.`
       );
-      addM2mLog(`Manual wager authorization requested: $${totalWager.toFixed(2)} USDC on ${betsToSubmit[0].type.toUpperCase()}.`, "info");
-
-      const signature = await signWager(totalWager);
       const bet = betsToSubmit[0];
+      addM2mLog(`Base Account wager send requested: $${totalWager.toFixed(2)} USDC on ${bet.type.toUpperCase()}.`, "info");
       addNotification(
         'tx_success',
-        'Wallet Approved',
-        'Signature received. Locking the wager against the BYOS Agent Duel endpoint...'
+        'BYOS Payment Prepared',
+        'Creating an idempotent BYOS wager row before the Base Account transfer opens.'
       );
 
-      const res = await fetch(`${API_BASE_URL}/wager`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'payment-signature': signature,
-          'x-duel-session-token': activeSessionToken
-        },
-        body: JSON.stringify({
-          session_id: activeSessionId,
-          bet_type: bet.type,
-          wager_amount_usdc: bet.amount,
-          wallet_address: wallet.address
-        })
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.success) {
-        throw new Error(data?.detail || data?.message || `Wager placement rejected by BYOS (${res.status}).`);
-      }
-      addM2mLog(`BYOS wager locked: ${bet.type.toUpperCase()} $${bet.amount.toFixed(2)} USDC.`, "success");
+      const data = await sendBaseAccountWager(bet);
+      addM2mLog(`BYOS verified Base settlement: ${bet.type.toUpperCase()} $${bet.amount.toFixed(2)} USDC (${data.tx_hash}).`, "success");
 
       if (activeDuel?.status === 'lobby') {
         const readyRes = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(activeDuel.id)}/ready`, {
@@ -3156,7 +3115,7 @@ function AgentDuelApp() {
                       </button>
                     </div>
                     <p className="text-[10px] leading-relaxed text-slate-500">
-                      Manual play does not require this routine. It only suggests repeat wager cycles; Coinbase/Base approval and BYOS acceptance remain required before each paid round starts.
+                      Manual play does not require this routine. It only suggests repeat wager cycles; Base Account approval and BYOS receipt verification remain required before each paid round starts.
                     </p>
 
                     {/* Strategy Selector */}
@@ -3262,8 +3221,8 @@ function AgentDuelApp() {
                     </div>
                     <ul className="list-disc pl-4 space-y-1">
                       <li>Select one chip, then exactly one lane: Agent A, Tie, or Agent B.</li>
-                      <li>Press Initiate Route Trace and approve the Coinbase/Base payment authorization.</li>
-                      <li>The round starts only after BYOS verifies and locks that signed wager.</li>
+                      <li>Press Initiate Route Trace and approve the Base Account USDC transfer.</li>
+                      <li>The round starts only after BYOS verifies the Base receipt and locks that wager.</li>
                       <li>Eject before network collapse. If the route crashes first, the locked stake is forfeited.</li>
                     </ul>
                   </div>
@@ -3630,6 +3589,10 @@ export default function App() {
   return (
     <WalletProviders>
       <AgentDuelApp />
+      {/* Banker Pay Panel — real on-chain payment to /x402/score */}
+      <div style={{ padding: '32px 16px', maxWidth: 660, margin: '0 auto' }}>
+        <BankerPayPanel />
+      </div>
     </WalletProviders>
   );
 }
