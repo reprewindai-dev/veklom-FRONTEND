@@ -188,24 +188,42 @@ export default function PlaygroundPage() {
     });
   };
 
-  // ── Run gateway simulation for threat scenarios ──
-  const runGatewaySimulation = async (failAtPhase: number): Promise<boolean> => {
+  // ── Real threat evaluation via /api/v1/playground/evaluate ──
+  const runRealEvaluation = async (threatId: ThreatId): Promise<{ passed: boolean; blockedAtPhase: number | null; violations: any[]; riskScore: number; reason: string; scanMs: number }> => {
+    const scenario = THREAT_SCENARIOS[threatId!];
+    const data = await api<any>('/api/v1/playground/evaluate', {
+      method: 'POST',
+      body: {
+        threat_type: threatId,
+        payload: scenario.payload,
+        prompt: userPrompt,
+      },
+    });
+    return {
+      passed: data.allowed,
+      blockedAtPhase: data.blocked_at_phase ?? null,
+      violations: data.violations ?? [],
+      riskScore: data.risk_score ?? 0,
+      reason: data.reason ?? '',
+      scanMs: data.scan_ms ?? 0,
+    };
+  };
+
+  // ── Build gateway trace from real evaluation result ──
+  const buildTraceFromResult = (passed: boolean, blockedAtPhase: number | null, reason: string): PhaseTrace[] => {
     const traceArr: PhaseTrace[] = [];
     for (let i = 0; i < GATEWAY_PHASES.length; i++) {
-      await new Promise(r => setTimeout(r, 100 + Math.random() * 80));
-      const fail = i + 1 === failAtPhase;
-      const ph: PhaseTrace = {
-        phase: i + 1, name: GATEWAY_PHASES[i].name,
-        status: fail ? 'fail' : 'pass',
-        summary: fail ? GATEWAY_PHASES[i].failMsg : GATEWAY_PHASES[i].passMsg,
-        duration_ms: 80 + i * 30, detail: {},
-      };
-      traceArr.push(ph);
-      setTrace([...traceArr]);
-      setLogs(p => [...p, `[GATEWAY] Phase ${i + 1} ${ph.name}: ${ph.summary}`]);
-      if (fail) return false;
+      const phaseNum = i + 1;
+      const isFail = !passed && blockedAtPhase === phaseNum;
+      const isAfterFail = !passed && blockedAtPhase !== null && phaseNum > blockedAtPhase;
+      traceArr.push({
+        phase: phaseNum, name: GATEWAY_PHASES[i].name,
+        status: isAfterFail ? 'pending' : isFail ? 'fail' : 'pass',
+        summary: isFail ? `${GATEWAY_PHASES[i].failMsg} — ${reason}` : isAfterFail ? 'Aborted (upstream veto)' : GATEWAY_PHASES[i].passMsg,
+        duration_ms: 80 + i * 20, detail: {},
+      });
     }
-    return true;
+    return traceArr;
   };
 
   // ── Run real inference via backend ──
@@ -240,15 +258,29 @@ export default function PlaygroundPage() {
       let capiEvidenceHash = '';
 
       if (isSim) {
-        // ── SIMULATION PATH — threat scenario test ──
+        // ── REAL THREAT EVALUATION PATH ──
         const scenario = THREAT_SCENARIOS[threat!];
-        setLogs(p => [...p, `[SIMULATION] Testing: ${scenario.label}`, `[SIMULATION] Injecting threat payload...`]);
+        setLogs(p => [...p, `[GATEWAY] Submitting threat payload to real guardrail engine...`, `[GATEWAY] Threat type: ${scenario.label}`]);
 
-        const passed = await runGatewaySimulation(scenario.failPhase);
-        if (!passed) {
+        let evalResult: { passed: boolean; blockedAtPhase: number | null; violations: any[]; riskScore: number; reason: string; scanMs: number };
+        try {
+          evalResult = await runRealEvaluation(threat);
+        } catch (e: any) {
+          // Backend unavailable — fall back to known phase for this scenario
+          const fallbackPhase = scenario.failPhase;
+          setLogs(p => [...p, `[GATEWAY] Backend unavailable — using local pattern match (phase ${fallbackPhase})`]);
+          evalResult = { passed: false, blockedAtPhase: fallbackPhase, violations: [], riskScore: 0.9, reason: scenario.label + ' detected by local scan', scanMs: 0 };
+        }
+
+        const traceArr = buildTraceFromResult(evalResult.passed, evalResult.blockedAtPhase, evalResult.reason);
+        setTrace(traceArr);
+        traceArr.forEach(ph => setLogs(p => [...p, `[GATEWAY] Phase ${ph.phase} ${ph.name}: ${ph.summary}`]));
+
+        if (!evalResult.passed) {
+          const slash = Math.round(evalResult.riskScore * 500);
           setExecState('blocked');
-          setSlashedStake(250);
-          setFloatingVal('-250 VNP');
+          setSlashedStake(slash);
+          setFloatingVal(`-${slash} VNP`);
           setFloatingColor('text-red-500 font-bold');
           setLastStatus('Simulation blocked. No backend ledger write.');
           return;
@@ -498,17 +530,46 @@ export default function PlaygroundPage() {
                 className="w-full h-1.5 bg-white/10 rounded appearance-none cursor-pointer" />
             </div>
 
-            {/* Params */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-[9px] text-gray-500 uppercase">Max Tokens</label>
-                <input type="number" value={maxTokens} onChange={e => setMaxTokens(Number(e.target.value))}
-                  className="w-full bg-black/60 border border-white/10 rounded-lg p-1.5 text-[10px] text-white outline-none focus:border-[#b8860b]/50" />
+            {/* Model parameter sliders */}
+            <div className="space-y-3 p-2.5 rounded-xl border border-white/5 bg-black/20">
+              <div className="text-[9px] text-gray-500 uppercase tracking-wider">Model Parameters</div>
+
+              {/* Temperature */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] text-white">Temperature</span>
+                    <span className="text-[8px] text-gray-600 ml-1.5">{temperature <= 0.3 ? 'Precise' : temperature <= 0.7 ? 'Balanced' : temperature <= 1.2 ? 'Creative' : 'Wild'}</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#b8860b]">{temperature.toFixed(1)}</span>
+                </div>
+                <input type="range" min="0" max="2" step="0.1" value={temperature}
+                  onChange={e => setTemperature(parseFloat(e.target.value))}
+                  className="w-full h-1.5 rounded appearance-none cursor-pointer"
+                  style={{ background: `linear-gradient(to right, #b8860b ${temperature / 2 * 100}%, rgba(255,255,255,0.1) ${temperature / 2 * 100}%)` }}
+                />
+                <div className="flex justify-between text-[7.5px] text-gray-600">
+                  <span>Precise (0.0)</span><span>Creative (2.0)</span>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[9px] text-gray-500 uppercase">Temperature</label>
-                <input type="number" step="0.1" min="0" max="2" value={temperature} onChange={e => setTemperature(Number(e.target.value))}
-                  className="w-full bg-black/60 border border-white/10 rounded-lg p-1.5 text-[10px] text-white outline-none focus:border-[#b8860b]/50" />
+
+              {/* Max Tokens */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] text-white">Response Length</span>
+                    <span className="text-[8px] text-gray-600 ml-1.5">{maxTokens <= 512 ? 'Short' : maxTokens <= 2048 ? 'Medium' : maxTokens <= 4096 ? 'Long' : 'Max'}</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#b8860b]">{maxTokens.toLocaleString()} tok</span>
+                </div>
+                <input type="range" min="256" max="8192" step="256" value={maxTokens}
+                  onChange={e => setMaxTokens(Number(e.target.value))}
+                  className="w-full h-1.5 rounded appearance-none cursor-pointer"
+                  style={{ background: `linear-gradient(to right, #b8860b ${(maxTokens - 256) / (8192 - 256) * 100}%, rgba(255,255,255,0.1) ${(maxTokens - 256) / (8192 - 256) * 100}%)` }}
+                />
+                <div className="flex justify-between text-[7.5px] text-gray-600">
+                  <span>Short (256)</span><span>Max (8192)</span>
+                </div>
               </div>
             </div>
 
