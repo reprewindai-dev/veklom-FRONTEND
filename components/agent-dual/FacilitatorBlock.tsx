@@ -77,7 +77,7 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
           </div>
         </div>
 
-        {/* Stake deposit simulation */}
+        {/* Disabled until BYOS exposes a settlement write endpoint. */}
         <div id="facilitator-collateral-action" className="space-y-2">
           <div className="flex justify-between items-center">
             <label className="text-[11px] font-mono text-slate-400 uppercase tracking-widest block font-medium">

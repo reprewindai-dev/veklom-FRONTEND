@@ -42,7 +42,6 @@ import {
   Check
 } from 'lucide-react';
 
-// Pre-seeded competitive players for realism
 const INITIAL_LEADERBOARD: LeaderboardEntry[] = [];
 
 const INITIAL_CHALLENGES: DailyChallenge[] = [
@@ -220,7 +219,7 @@ export default function App() {
   // 5. Historical lists & Telemetry push notifications
   const [notifications, setNotifications] = useState<PushNotification[]>([]);
   const [roundFeed, setRoundFeed] = useState<WagerTransaction[]>([]);
-  const [lastTenCrashes, setLastTenCrashes] = useState<number[]>([1.45, 2.10, 1.12, 3.50, 1.85, 1.20, 5.40, 1.05, 2.30, 1.60]);
+  const [lastTenCrashes, setLastTenCrashes] = useState<number[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(INITIAL_LEADERBOARD);
   const [duelRouteState, setDuelRouteState] = useState<DuelRouteState | null>(null);
 
@@ -1163,7 +1162,7 @@ export default function App() {
         clearInterval(timerId.current);
         setPhase('ejected');
         setVisiblePacketsCount(3);
-        setLastTenCrashes((prev) => [...prev.slice(1), crashAt.current]);
+        setLastTenCrashes((prev) => [...prev, crashAt.current].slice(-10));
         
         const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
         
@@ -1643,7 +1642,7 @@ export default function App() {
 
   const triggerCrash = (finalMulti: number) => {
     handleRoundOutcome(roundWinner);
-    setLastTenCrashes((prev) => [...prev.slice(1), finalMulti]);
+    setLastTenCrashes((prev) => [...prev, finalMulti].slice(-10));
 
     if (activeDuel) {
       setPhase('crashed');
@@ -1824,7 +1823,7 @@ export default function App() {
           clearInterval(timerId.current);
           setPhase('ejected');
           setVisiblePacketsCount(3);
-          setLastTenCrashes((prev) => [...prev.slice(1), crashAt.current]);
+          setLastTenCrashes((prev) => [...prev, crashAt.current].slice(-10));
           
           const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
           
@@ -1869,7 +1868,7 @@ export default function App() {
     clearInterval(timerId.current);
     setPhase('ejected');
     setVisiblePacketsCount(3); // reveal final packets
-    setLastTenCrashes((prev) => [...prev.slice(1), crashAt.current]);
+    setLastTenCrashes((prev) => [...prev, crashAt.current].slice(-10));
 
     const totalWager = Number((bets.player + bets.banker + bets.tie).toFixed(2));
     
@@ -2368,7 +2367,7 @@ export default function App() {
                     </div>
                   )}
                   
-                  {/* Real-time Multiplier Trend Index */}
+                  {/* Route-backed multiplier trend index */}
                   <div id="multiplier-trend-panel" className="bg-[#0b0c10] border border-white/10 rounded-lg p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-blue-500/5">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5">
@@ -2376,7 +2375,7 @@ export default function App() {
                         <span className="text-white font-bold uppercase font-mono tracking-wider text-[11px]">Consensus Trend Index</span>
                       </div>
                       <span className="text-slate-400 text-[10px] block font-sans">
-                        Last 10 round multiplier outcomes of the Veklom protocol.
+                        BYOS round history only; empty until live gameplay endpoints are proven.
                       </span>
                     </div>
                     
@@ -2384,69 +2383,85 @@ export default function App() {
                       {/* Trend line SVG sparkline */}
                       <div className="flex items-center gap-2 bg-[#0d0f16] border border-white/5 rounded px-3 py-1.5 shrink-0">
                         <div className="text-[9px] font-mono text-slate-500 uppercase leading-none text-right">
-                          <span className="text-emerald-400 font-bold block">{Math.max(...lastTenCrashes).toFixed(1)}x</span>
-                          <span className="text-slate-600 block mt-1">Trend</span>
+                          <span className="text-amber-400 font-bold block">
+                            {lastTenCrashes.length > 0 ? `${Math.max(...lastTenCrashes).toFixed(1)}x` : 'Needs proof'}
+                          </span>
+                          <span className="text-slate-600 block mt-1">BYOS</span>
                         </div>
-                        <svg className="w-24 h-8 overflow-visible" viewBox="0 0 100 30" id="trend-sparkline-svg">
-                          <line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 2" />
-                          <path
-                            d={(() => {
+                        {lastTenCrashes.length > 0 ? (
+                          <svg className="w-24 h-8 overflow-visible" viewBox="0 0 100 30" id="trend-sparkline-svg">
+                            <line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 2" />
+                            <path
+                              d={(() => {
+                                const transformed = lastTenCrashes.map(v => Math.log(v));
+                                const minT = Math.min(...transformed);
+                                const maxT = Math.max(...transformed);
+                                const rangeT = maxT - minT || 1;
+                                const denominator = Math.max(lastTenCrashes.length - 1, 1);
+                                return lastTenCrashes.map((val, idx) => {
+                                  const x = (idx / denominator) * 100;
+                                  const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
+                                  return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
+                                }).join(' ');
+                              })()}
+                              fill="none"
+                              stroke="#3b82f6"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                            />
+                            {lastTenCrashes.map((val, idx) => {
                               const transformed = lastTenCrashes.map(v => Math.log(v));
                               const minT = Math.min(...transformed);
                               const maxT = Math.max(...transformed);
                               const rangeT = maxT - minT || 1;
-                              return lastTenCrashes.map((val, idx) => {
-                                const x = (idx / 9) * 100;
-                                const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
-                                return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
-                              }).join(' ');
-                            })()}
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
-                          />
-                          {lastTenCrashes.map((val, idx) => {
-                            const transformed = lastTenCrashes.map(v => Math.log(v));
-                            const minT = Math.min(...transformed);
-                            const maxT = Math.max(...transformed);
-                            const rangeT = maxT - minT || 1;
-                            const x = (idx / 9) * 100;
-                            const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
-                            const isNewest = idx === 9;
-                            return (
-                              <circle
-                                key={idx}
-                                cx={x}
-                                cy={y}
-                                r={isNewest ? 3 : 1.5}
-                                fill={isNewest ? '#f43f5e' : val >= 2.0 ? '#10b981' : '#3b82f6'}
-                                className={isNewest ? 'animate-ping' : ''}
-                              />
-                            );
-                          })}
-                        </svg>
+                              const denominator = Math.max(lastTenCrashes.length - 1, 1);
+                              const x = (idx / denominator) * 100;
+                              const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
+                              const isNewest = idx === lastTenCrashes.length - 1;
+                              return (
+                                <circle
+                                  key={idx}
+                                  cx={x}
+                                  cy={y}
+                                  r={isNewest ? 3 : 1.5}
+                                  fill={isNewest ? '#f43f5e' : val >= 2.0 ? '#10b981' : '#3b82f6'}
+                                  className={isNewest ? 'animate-ping' : ''}
+                                />
+                              );
+                            })}
+                          </svg>
+                        ) : (
+                          <div className="w-24 h-8 flex items-center justify-center text-[9px] font-mono text-slate-500 uppercase border border-dashed border-white/10 rounded">
+                            No history
+                          </div>
+                        )}
                       </div>
 
                       {/* Pill list of results */}
                       <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-full sm:max-w-[340px] md:max-w-none scrollbar-none">
-                        {lastTenCrashes.map((val, idx) => (
-                          <div 
-                            key={idx} 
-                            className={`px-2 py-1 rounded text-[10px] font-bold font-mono border transition-all hover:scale-105 duration-200 shrink-0 ${
-                              val >= 2.0 
-                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                                : val >= 1.2
-                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                                : 'bg-red-500/10 border-red-500/20 text-red-400'
-                            }`}
-                            title={`Round ${idx + 1}`}
-                          >
-                            {val.toFixed(2)}x
+                        {lastTenCrashes.length > 0 ? (
+                          lastTenCrashes.map((val, idx) => (
+                            <div
+                              key={idx}
+                              className={`px-2 py-1 rounded text-[10px] font-bold font-mono border transition-all hover:scale-105 duration-200 shrink-0 ${
+                                val >= 2.0
+                                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                  : val >= 1.2
+                                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+                              }`}
+                              title={`Round ${idx + 1}`}
+                            >
+                              {val.toFixed(2)}x
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-2.5 py-1 rounded border border-amber-500/20 bg-amber-500/10 text-amber-300 text-[10px] font-bold font-mono uppercase shrink-0">
+                            Awaiting BYOS proof
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </div>

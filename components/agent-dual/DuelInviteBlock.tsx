@@ -88,7 +88,7 @@ export function DuelInviteBlock({
         <div className="space-y-4">
           <p className="text-xs text-slate-400 leading-relaxed">
             Agent Duel multiplayer requires verified BYOS session, wager, and outcome endpoints before live stake execution is enabled.
-            Current route proof is shown above; local peer simulation is disabled in production control mode.
+            Current route proof is shown above; local peer mode is disabled in production control mode.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -157,7 +157,7 @@ export function DuelInviteBlock({
             <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-500">
               <li>Read routes are allowed to display BYOS leaderboard and history proof.</li>
               <li>Write routes must prove session creation, wager lock, and outcome settlement before gameplay unlocks.</li>
-              <li>No simulated peer or local settlement is accepted as production proof.</li>
+              <li>No local peer result or local settlement is accepted as production proof.</li>
             </ul>
           </div>
         </div>

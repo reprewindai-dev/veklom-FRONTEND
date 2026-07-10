@@ -47,7 +47,7 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
   // (Optional) Step 4: Player 3rd Card Draw Decision
   // (Optional) Step 5: Banker 3rd Card Draw Decision
   // Step 6: Final score evaluation
-  // Step 7: Flight simulation & crash breakdown
+  // Step 7: Flight replay & crash breakdown
   
   interface ReplayStep {
     id: number;
@@ -60,7 +60,7 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
       playerScore: number;
       bankerScore: number;
       visibleCount: number; // number of packets visible (1 to 3) in active lanes
-      phase: 'setup' | 'initial_deal' | 'deal_complete' | 'rule_check' | 'final_reveal' | 'simulation';
+      phase: 'setup' | 'initial_deal' | 'deal_complete' | 'rule_check' | 'final_reveal' | 'replay';
     };
   }
 
@@ -250,11 +250,11 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
       }
     });
 
-    // Step 7: Flight Simulation
+    // Step 7: Flight replay
     steps.push({
       id: stepCount++,
-      title: "Cyber Crash Simulation",
-      description: "Analysis of the flight multiplier and user's decision timing.",
+      title: "Cyber Crash Replay",
+      description: "Review of the flight multiplier and user's decision timing.",
       ruleDetail: ejectedMulti 
         ? `You ejected at ${ejectedMulti.toFixed(2)}x, but lost because the winning lane did not match your bet. The crash occurred at ${finalMulti.toFixed(2)}x.`
         : `The system crashed at ${finalMulti.toFixed(2)}x. You did not eject in time, resulting in a total loss.`,
@@ -264,7 +264,7 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
         playerScore: hand.playerScore,
         bankerScore: hand.bankerScore,
         visibleCount: 3,
-        phase: 'simulation'
+        phase: 'replay'
       }
     });
 
@@ -589,7 +589,7 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
                     className="py-1.5 px-4 bg-blue-500 hover:bg-blue-400 active:scale-95 text-black rounded font-mono text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
-                    title={isPlaying ? "Pause simulation" : "Play simulation"}
+                    title={isPlaying ? "Pause replay" : "Play replay"}
                   >
                     {isPlaying ? (
                       <>
