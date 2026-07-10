@@ -168,7 +168,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
           </div>
 
           {/* Risk Comparison Summary Card */}
-          {previousLevel && (
+          {previousLevel && previousRun && (
             <div className="bg-[#090909] p-3 border border-[#1b1b1b] rounded flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-[11px] animate-[fadeIn_0.2s_ease-out]">
               <div className="flex flex-col">
                 <span className="text-[#666] uppercase text-[9px] tracking-wider font-bold">Risk Drift Delta</span>

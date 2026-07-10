@@ -60,7 +60,8 @@ export default function App() {
     default_branch: 'main',
     risk_level: 'CRITICAL',
     tree_truncated: false,
-    files_seen: 16
+    files_seen: 16,
+    created_at: new Date().toISOString()
   });
 
   // Distracted user/Aura state variables
