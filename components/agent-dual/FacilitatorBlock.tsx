@@ -3,23 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
 import { EscrowState } from './types';
-import { Shield, Coins, ExternalLink, Flame, Info, CheckCircle2 } from 'lucide-react';
+import { Shield, Coins, ExternalLink, Flame, Info } from 'lucide-react';
 
 interface FacilitatorBlockProps {
   escrow: EscrowState;
 }
 
 export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
-  const [depositAmount, setDepositAmount] = useState('250');
-  const [depositSuccess, setDepositSuccess] = useState(false);
-
-  const handleApplyStake = () => {
-    setDepositSuccess(true);
-    setTimeout(() => setDepositSuccess(false), 2500);
-  };
-
   return (
     <div id="facilitator-security-card" className="bg-[#0d0f16] border border-white/10 rounded-lg p-5 relative shadow-lg shadow-blue-900/5">
       <div className="absolute top-0 left-0 w-1/3 h-1 bg-gradient-to-r from-blue-600 to-indigo-800" />
@@ -94,15 +85,15 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
               <input
                 id="escrow-inject-input"
                 type="number"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
+                value=""
+                readOnly
+                disabled
                 placeholder="0"
-                className="w-full bg-[#050608] border border-white/10 rounded pl-8 pr-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#050608] border border-white/10 rounded pl-8 pr-3 py-2 text-xs font-mono text-slate-500 focus:outline-none cursor-not-allowed"
               />
             </div>
             <button
               id="btn-escrow-deposit"
-              onClick={handleApplyStake}
               disabled
               className="bg-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors duration-150 flex items-center gap-1 font-sans cursor-not-allowed"
             >
@@ -110,11 +101,9 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
             </button>
           </div>
 
-          {depositSuccess && (
-            <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1 mt-1 animate-pulse">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Collateral writes require a verified BYOS endpoint.
-            </p>
-          )}
+          <p className="text-[10px] text-amber-400 font-mono mt-1">
+            Collateral writes require a verified BYOS settlement endpoint.
+          </p>
         </div>
       </div>
     </div>

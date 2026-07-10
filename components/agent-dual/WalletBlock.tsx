@@ -14,7 +14,7 @@ interface WalletBlockProps {
 }
 
 export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProps) {
-  const [addressInput, setAddressInput] = useState('0x6a20f24cc341f72c2f573eb5');
+  const [addressInput, setAddressInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -62,7 +62,7 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
       }
 
       // Fetch real balance
-      let realEth = 0.145;
+      let realEth = 0;
       try {
         const hexBal = await (window as any).ethereum.request({
           method: 'eth_getBalance',

@@ -14,7 +14,6 @@ import { WalletBlock } from '@/components/agent-dual/WalletBlock';
 import { FacilitatorBlock } from '@/components/agent-dual/FacilitatorBlock';
 import { LeaderboardBlock } from '@/components/agent-dual/LeaderboardBlock';
 import { NotificationCenter } from '@/components/agent-dual/NotificationCenter';
-import { RustCodeViewer } from '@/components/agent-dual/RustCodeViewer';
 import { ChallengesBlock } from '@/components/agent-dual/ChallengesBlock';
 import { QuantumReplayModal } from '@/components/agent-dual/QuantumReplayModal';
 import { DuelInviteBlock } from '@/components/agent-dual/DuelInviteBlock';
@@ -30,7 +29,6 @@ import {
   Activity, 
   RefreshCw,
   Award,
-  BookOpen,
   Cpu,
   Sparkles,
   Eye,
@@ -121,25 +119,19 @@ interface DuelRouteState {
 export default function App() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   // 1. Navigation tab state
-  const [activeTab, setActiveTab] = useState<'arena' | 'escrow' | 'rust-specs' | 'challenges' | 'duel' | 'explorer'>('arena');
+  const [activeTab, setActiveTab] = useState<'arena' | 'escrow' | 'challenges' | 'duel' | 'explorer'>('arena');
 
   // 1b. Duel Invite Real-time States
   const [activeDuel, setActiveDuel] = useState<DuelSession | null>(null);
   const [isSimulatedPeerActive, setIsSimulatedPeerActive] = useState<boolean>(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
-  // 1bb. Base Chain Live Simulation States
-  const [blockHeight, setBlockHeight] = useState<number>(18429104);
+  // 1bb. Base Chain audit search state. Chain metadata is displayed only when returned by BYOS.
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
 
-  // Live increment blocks with real L2 speed (~2s)
   useEffect(() => {
     fetchLeaderboard();
-    const timer = setInterval(() => {
-      setBlockHeight((prev) => prev + 1);
-    }, 2000);
-    return () => clearInterval(timer);
   }, []);
 
   // 1c. Configurable CRT Scanline States
@@ -155,13 +147,13 @@ export default function App() {
     network: "Base Mainnet",
     verificationDomain: "veklom-id.vercel.app",
     connected: false,
-    balanceEth: 0.145,
-    balanceUsdc: 250 // Starting faucet balance in USDC
+    balanceEth: 0,
+    balanceUsdc: 0
   });
 
   // 3. Web3 Escrow Facilitator state
   const escrow: EscrowState = {
-    totalSecuredUsdc: 145890.30,
+    totalSecuredUsdc: 0,
     facilitatorFeePercent: 1.50,
     gasPriceGwei: 15,
     contractAddress: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
@@ -169,7 +161,7 @@ export default function App() {
   };
 
   // 4. Game states
-  const [bankroll, setBankroll] = useState(250); // Synchronised with wallet.balanceUsdc
+  const [bankroll, setBankroll] = useState(0);
   const [roundIndex, setRoundIndex] = useState(1);
   const [winStreak, setWinStreak] = useState(0);
   const [bestMulti, setBestMulti] = useState(0);
@@ -280,7 +272,7 @@ export default function App() {
     if (wallet.connected) {
       setBankroll(wallet.balanceUsdc);
     } else {
-      setBankroll(bankroll === 250 ? 250 : bankroll); // Keep current bankroll to allow micro payout increments
+      setBankroll(0);
     }
   }, [wallet.connected, wallet.balanceUsdc]);
 
@@ -566,19 +558,26 @@ export default function App() {
       const res = await fetch('/agent-duel/state', { cache: 'no-store' });
       const data = await res.json();
       setDuelRouteState(data);
+      if (data.capabilities?.readHistory !== 'verified') {
+        setRoundFeed([]);
+        setLastTenCrashes([]);
+        return;
+      }
+
       if (Array.isArray(data.history)) {
         const mappedFeed: WagerTransaction[] = data.history.map((w: any) => ({
-          id: w.id.toString(),
-          txHash: w.session_id,
-          timestamp: new Date(w.created_at).toLocaleTimeString(),
+          id: String(w.id ?? w.tx_hash ?? w.session_id),
+          txHash: String(w.tx_hash ?? w.transaction_hash ?? w.session_id ?? ''),
+          timestamp: w.created_at ? new Date(w.created_at).toLocaleTimeString() : '',
           agent: w.bet_type === 'player' ? 'A' : 'B',
-          wagerAmount: w.wager_amount_usdc,
-          multiplier: w.payout_multiplier || 0,
-          payout: w.payout_usdc || 0,
+          wagerAmount: Number(w.wager_amount_usdc ?? w.amount_usdc ?? 0),
+          multiplier: Number(w.payout_multiplier ?? w.multiplier ?? 0),
+          payout: Number(w.payout_usdc ?? w.payout ?? 0),
           status: w.outcome === 'won' ? 'success' : w.outcome === 'lost' ? 'crashed' : 'pending',
           network: 'Base'
-        }));
+        })).filter((tx: WagerTransaction) => tx.txHash.length > 0);
         setRoundFeed(mappedFeed);
+        setLastTenCrashes(mappedFeed.map((tx) => tx.multiplier).filter((value) => value > 0).slice(-10));
       }
     } catch (e) {
       console.warn("Failed to fetch history from backend:", e);
@@ -747,7 +746,7 @@ export default function App() {
               updatedPlayers[data.address] = {
                 address: data.address,
                 connected: true,
-                balanceUsdc: data.balanceUsdc || 250,
+                balanceUsdc: Number(data.balanceUsdc ?? 0),
                 bets: { player: 0, banker: 0, tie: 0 },
                 wagerAmount: 0,
                 ejected: false,
@@ -777,7 +776,7 @@ export default function App() {
               updatedPlayers[data.address] = {
                 address: data.address,
                 connected: true,
-                balanceUsdc: data.balanceUsdc || 250,
+                balanceUsdc: Number(data.balanceUsdc ?? 0),
                 bets: { player: 0, banker: 0, tie: 0 },
                 wagerAmount: 0,
                 ejected: false,
@@ -1076,7 +1075,7 @@ export default function App() {
           updatedPlayers[peerAddress] = {
             address: peerAddress,
             connected: true,
-            balanceUsdc: 250,
+            balanceUsdc: 0,
             bets: { player: 0, banker: 0, tie: 0 },
             wagerAmount: 0,
             ejected: false,
@@ -1162,8 +1161,6 @@ export default function App() {
         clearInterval(timerId.current);
         setPhase('ejected');
         setVisiblePacketsCount(3);
-        setLastTenCrashes((prev) => [...prev, crashAt.current].slice(-10));
-        
         const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
         
         const myPayout = finalDuelState.players[myAddress]?.payout || 0;
@@ -1642,8 +1639,6 @@ export default function App() {
 
   const triggerCrash = (finalMulti: number) => {
     handleRoundOutcome(roundWinner);
-    setLastTenCrashes((prev) => [...prev, finalMulti].slice(-10));
-
     if (activeDuel) {
       setPhase('crashed');
       setMultiplier(finalMulti);
@@ -1675,20 +1670,6 @@ export default function App() {
         } else {
           setBankroll(newBalance);
         }
-
-        const txHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-        const newTx: WagerTransaction = {
-          id: Math.random().toString(),
-          txHash,
-          timestamp: new Date().toLocaleTimeString(),
-          agent: selectedAgent,
-          wagerAmount: totalWager,
-          multiplier: finalMulti,
-          payout: myPayout,
-          status: isActualWin ? 'success' : 'crashed',
-          network: wallet.network
-        };
-        setRoundFeed((prevFeed) => [newTx, ...prevFeed]);
 
         addNotification(
           isActualWin ? 'tx_success' : 'collapse',
@@ -1749,21 +1730,6 @@ export default function App() {
     // Clear current bets
     setBets({ player: 0, banker: 0, tie: 0 });
 
-    // Save history
-    const txHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    const newTx: WagerTransaction = {
-      id: Math.random().toString(),
-      txHash,
-      timestamp: new Date().toLocaleTimeString(),
-      agent: bets.player >= bets.banker ? 'A' : 'B',
-      wagerAmount: totalWager,
-      multiplier: finalMulti,
-      payout: 0,
-      status: 'crashed',
-      network: wallet.network
-    };
-    setRoundFeed((prev) => [newTx, ...prev]);
-
     // Update streak stats
     setWinStreak(0);
     setRoundIndex((r) => r + 1);
@@ -1823,8 +1789,6 @@ export default function App() {
           clearInterval(timerId.current);
           setPhase('ejected');
           setVisiblePacketsCount(3);
-          setLastTenCrashes((prev) => [...prev, crashAt.current].slice(-10));
-          
           const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
           
           const myPayout = finalDuelState.players[myAddress]?.payout || 0;
@@ -1868,8 +1832,6 @@ export default function App() {
     clearInterval(timerId.current);
     setPhase('ejected');
     setVisiblePacketsCount(3); // reveal final packets
-    setLastTenCrashes((prev) => [...prev, crashAt.current].slice(-10));
-
     const totalWager = Number((bets.player + bets.banker + bets.tie).toFixed(2));
     
     // Calculate Payout based on real telemetry outcome!
@@ -1945,21 +1907,6 @@ export default function App() {
     // Clear current bets
     setBets({ player: 0, banker: 0, tie: 0 });
 
-    // Save history
-    const txHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    const newTx: WagerTransaction = {
-      id: Math.random().toString(),
-      txHash,
-      timestamp: new Date().toLocaleTimeString(),
-      agent: bets.player >= bets.banker ? 'A' : 'B',
-      wagerAmount: totalWager,
-      multiplier: finalMulti,
-      payout: totalPayout,
-      status: 'success',
-      network: wallet.network
-    };
-    setRoundFeed((prev) => [newTx, ...prev]);
-
     // Update Daily Challenges on ejection finish
     if (isActualWin) {
       updateChallengeProgress('streak', winStreak + 1, 'max');
@@ -2014,8 +1961,8 @@ export default function App() {
   const handleResetSimulator = () => {
     if (timerId.current) clearInterval(timerId.current);
     if (botTimerId.current) clearTimeout(botTimerId.current);
-    setWallet((prev) => ({ ...prev, balanceUsdc: 250 }));
-    setBankroll(250);
+    setWallet((prev) => ({ ...prev, balanceUsdc: 0 }));
+    setBankroll(0);
     setRoundIndex(1);
     setWinStreak(0);
     setBestMulti(0);
@@ -2028,11 +1975,12 @@ export default function App() {
     setMultiplier(1.0);
     setChartPoints([]);
     setRoundFeed([]);
+    setLastTenCrashes([]);
     setNotifications([]);
     setLeaderboard(INITIAL_LEADERBOARD);
     setM2mEnabled(false);
     setM2mLogs([]);
-    addNotification('tx_success', 'Simulator Reset', 'Telemetry metrics flushed to baseline parameters.');
+    addNotification('tx_success', 'Local Setup Reset', 'Local controls returned to unproven baseline state.');
     playSfx(440, 0.3, 'sine', 0.1);
   };
 
@@ -2148,17 +2096,11 @@ export default function App() {
                 </button>
 
                 {showDisplaySettings && (
-                  <div className="absolute right-0 mt-2 w-64 bg-[#0a0c12]/95 border border-white/10 rounded-md p-4 shadow-xl z-50 font-sans backdrop-blur-md">
+                  <div className="absolute right-0 mt-2 w-64 bg-[#0a0c12] border border-white/10 rounded-md p-4 shadow-xl z-50 font-sans">
                     <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
                       <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 font-mono uppercase">
                         <Settings className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '6s' }} /> Display Config
                       </span>
-                      <button 
-                        onClick={() => setShowDisplaySettings(false)}
-                        className="text-slate-500 hover:text-slate-300 text-xs font-bold px-1.5 py-0.5 rounded border border-white/5 bg-white/5"
-                      >
-                        ✕
-                      </button>
                     </div>
 
                     <div className="space-y-4">
@@ -2204,7 +2146,7 @@ export default function App() {
                       )}
 
                       <div className="border-t border-white/5 pt-2 text-[10px] text-slate-500 leading-relaxed font-mono">
-                        Adjusting CRT scanlines controls grid pattern density to enhance legibility and eye comfort.
+                        Adjusting CRT scanlines changes the overlay opacity applied across this Agent Duel surface.
                       </div>
                     </div>
                   </div>
@@ -2255,16 +2197,6 @@ export default function App() {
               {challenges.filter(c => c.completed && !c.claimed).length > 0 && (
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
               )}
-            </button>
-            <button
-              onClick={() => setActiveTab('rust-specs')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors border ${
-                activeTab === 'rust-specs'
-                  ? "bg-white/5 border-white/10 text-white font-semibold"
-                  : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-blue-400" /> Rust Architecture
             </button>
             <button
               id="btn-tab-duel"
@@ -3104,25 +3036,6 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB CONTENT: RUST CODE ARCHITECTURE */}
-            {activeTab === 'rust-specs' && (
-              <div id="tab-rust-view" className="space-y-4">
-                <div className="bg-[#0d0f16] border border-white/10 p-5 rounded-lg space-y-2 shadow-lg shadow-blue-900/5">
-                  <h2 className="text-base font-bold text-white uppercase font-sans flex items-center gap-2">
-                    <Coins className="w-5 h-5 text-blue-400" />
-                    High-Performance Multi-File Rust backend Configs
-                  </h2>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Below is the live code preview of the clean, production-grade Rust architecture designed for local and containerized deployments. 
-                    This layout leverages the <span className="text-white">Axum Web Framework</span> for lightweight asynchronous routing, 
-                    <span className="text-white">SQLx</span> for asynchronous PostgreSQL connections, and standard <span className="text-white">Tracing Telemetry</span> JSON formatting.
-                  </p>
-                </div>
-
-                <RustCodeViewer />
-              </div>
-            )}
-
             {/* TAB CONTENT: CONSENSUS DUEL */}
             {activeTab === 'duel' && (
               <div id="tab-duel-view" className="space-y-6">
@@ -3156,9 +3069,9 @@ export default function App() {
                       Route-backed audit view for the Veklom x402 Game Engine. Transaction rows remain empty until BYOS returns verified wager history.
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/30 px-3 py-1.5 rounded text-blue-400 text-xs">
-                    <Cpu className="w-3.5 h-3.5 animate-spin" />
-                    <span>L2 Gas: <span className="font-bold">0.005 Gwei ($0.00003)</span></span>
+                  <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded text-amber-300 text-xs">
+                    <Cpu className="w-3.5 h-3.5" />
+                    <span>Gas telemetry: <span className="font-bold">Needs proof</span></span>
                   </div>
                 </div>
 
@@ -3166,10 +3079,9 @@ export default function App() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Base Block Height</span>
-                    <span className="text-lg font-bold text-white block mt-1">#{blockHeight.toLocaleString()}</span>
-                    <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      Secured (L2 Instant)
+                    <span className="text-lg font-bold text-amber-400 block mt-1">Needs proof</span>
+                    <span className="text-[9px] text-slate-400 font-semibold mt-0.5 block flex items-center gap-1">
+                      Waiting for BYOS transaction metadata
                     </span>
                   </div>
                   
@@ -3189,8 +3101,8 @@ export default function App() {
 
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Settlement Time</span>
-                    <span className="text-lg font-bold text-white block mt-1">~2.0 Seconds</span>
-                    <span className="text-[9px] text-slate-400 mt-0.5 block">Average Base block interval</span>
+                    <span className="text-lg font-bold text-amber-400 block mt-1">Needs proof</span>
+                    <span className="text-[9px] text-slate-400 mt-0.5 block">Returned by settlement history endpoint</span>
                   </div>
                 </div>
 
@@ -3263,9 +3175,6 @@ export default function App() {
                               );
                             })
                             .map((tx, idx) => {
-                              const block = blockHeight - (idx * 3) - 1;
-                              const secondsAgo = (idx * 5) + 3;
-                              const formattedAge = secondsAgo < 60 ? `${secondsAgo}s ago` : `${Math.floor(secondsAgo / 60)}m ${secondsAgo % 60}s ago`;
                               const isWin = tx.payout > tx.wagerAmount;
                               
                               return (
@@ -3314,18 +3223,18 @@ export default function App() {
 
                                   {/* Block Height */}
                                   <td className="py-3.5 px-4 font-mono text-slate-400">
-                                    #{block.toLocaleString()}
+                                    BYOS
                                   </td>
 
                                   {/* Age */}
                                   <td className="py-3.5 px-4 text-slate-400 font-sans">
-                                    {formattedAge}
+                                    {tx.timestamp || 'BYOS'}
                                   </td>
 
                                   {/* From */}
                                   <td className="py-3.5 px-4 font-mono">
                                     <span className="text-slate-400 select-all">
-                                      {wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : '0xMyWalletAddress...'}
+                                      {wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'Needs wallet proof'}
                                     </span>
                                   </td>
 
@@ -3354,31 +3263,31 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Bytecode Argument Decoder Section (Provides extreme technical authenticity) */}
+                {/* BYOS transaction metadata is shown only when returned by verified history routes. */}
                 {roundFeed.length > 0 && (
                   <div className="bg-[#0b0c10] border border-white/10 p-5 rounded-lg space-y-3">
                     <div className="flex items-center gap-1.5 text-white uppercase text-xs font-bold">
                       <Cpu className="w-4 h-4 text-blue-400" />
-                      <span>// Live EVM Decoder Inspector</span>
+                      <span>// EVM Decoder Inspector</span>
                     </div>
                     <p className="text-slate-400 text-xs">
-                      Below is the raw decrypted ABI bytecode payloads compiled on-chain for the most recent game transaction:
+                      Raw input payloads remain hidden until BYOS returns verified transaction calldata for the selected row.
                     </p>
                     <div className="bg-[#050608] border border-white/5 rounded p-3 text-[10px] text-slate-400 space-y-2">
                       <div className="flex justify-between border-b border-white/[0.03] pb-1.5">
                         <span className="text-slate-500">Contract ABI Function:</span>
-                        <span className="text-blue-400 font-bold">executeEscrowEject(address player, uint256 wager, uint256 ejectMulti)</span>
+                        <span className="text-amber-400 font-bold">Needs BYOS calldata proof</span>
                       </div>
                       <div className="space-y-1">
                         <span className="text-slate-500 block">Raw Input Payload (Data):</span>
                         <div className="bg-black/40 p-2 rounded text-[9px] text-amber-500 select-all break-all leading-relaxed">
-                          0x438df9a2000000000000000000000000{wallet.address?.slice(2) || '3a74772e925b54F7dAD7FD95c9Ba30825033f970'}000000000000000000000000000000000000000000000000000000000000004c00000000000000000000000000000000000000000000000000000000000000a5
+                          Needs proof
                         </div>
                       </div>
                       <div className="flex justify-between pt-1 text-[9px]">
-                        <span>Gas Limit: <span className="text-white">65,000</span></span>
-                        <span>Gas Price: <span className="text-white">0.00501 Gwei</span></span>
-                        <span>Facilitator Nonce: <span className="text-amber-500">#{roundFeed.length + 84}</span></span>
+                        <span>Gas Limit: <span className="text-amber-400">Needs proof</span></span>
+                        <span>Gas Price: <span className="text-amber-400">Needs proof</span></span>
+                        <span>Facilitator Nonce: <span className="text-amber-400">Needs proof</span></span>
                       </div>
                     </div>
                   </div>
