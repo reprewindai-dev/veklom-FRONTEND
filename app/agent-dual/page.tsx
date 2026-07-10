@@ -120,6 +120,27 @@ interface DuelRouteState {
 
 type BetLane = 'player' | 'banker' | 'tie';
 
+type BackendLobbyPlayer = {
+  wallet_address: string;
+  session_id: string;
+  status: 'joined' | 'ready' | 'ejected' | 'left' | string;
+  bet_type: BetLane | null;
+  wager_id: string | null;
+  wager_amount_usdc: number;
+  ejected_multiplier: number | null;
+  payout_usdc: number;
+};
+
+type BackendLobby = {
+  id: string;
+  host_wallet_address: string;
+  status: 'open' | 'running' | 'ended' | 'closed' | string;
+  max_players: number;
+  player_count: number;
+  players: BackendLobbyPlayer[];
+  created_at: string | null;
+};
+
 function AgentDuelApp() {
   const { signTypedDataAsync } = useSignTypedData();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -129,6 +150,7 @@ function AgentDuelApp() {
 
   // 1b. Duel Invite Real-time States
   const [activeDuel, setActiveDuel] = useState<DuelSession | null>(null);
+  const [openDuelLobbies, setOpenDuelLobbies] = useState<BackendLobby[]>([]);
   const [isSimulatedPeerActive, setIsSimulatedPeerActive] = useState<boolean>(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
@@ -758,6 +780,70 @@ function AgentDuelApp() {
     ]).filter((bet) => bet.amount > 0);
   };
 
+  const backendLobbyToDuelSession = (lobby: BackendLobby): DuelSession => {
+    const players = lobby.players
+      .filter((player) => player.status !== 'left')
+      .reduce<{ [address: string]: DuelPlayer }>((acc, player) => {
+        const betsForPlayer = {
+          player: player.bet_type === 'player' ? Number(player.wager_amount_usdc || 0) : 0,
+          banker: player.bet_type === 'banker' ? Number(player.wager_amount_usdc || 0) : 0,
+          tie: player.bet_type === 'tie' ? Number(player.wager_amount_usdc || 0) : 0,
+        };
+        acc[player.wallet_address] = {
+          address: player.wallet_address,
+          connected: true,
+          balanceUsdc: 0,
+          bets: betsForPlayer,
+          wagerAmount: Number(player.wager_amount_usdc || 0),
+          ejected: player.status === 'ejected',
+          ejectedMulti: player.ejected_multiplier,
+          payout: Number(player.payout_usdc || 0),
+          status: player.status === 'ready' ? 'ready' : player.status === 'ejected' ? 'ejected' : 'pending',
+        };
+        return acc;
+      }, {});
+
+    return {
+      id: lobby.id,
+      status: lobby.status === 'ended' ? 'ended' : lobby.status === 'running' ? 'running' : 'lobby',
+      hostAddress: lobby.host_wallet_address,
+      players,
+      countdownSeconds: 0,
+      activeHand: null,
+      crashAt: 0,
+      multiplier: 1.0,
+      winnerAddress: null,
+      timestamp: lobby.created_at ? new Date(lobby.created_at).toLocaleTimeString() : new Date().toLocaleTimeString(),
+    };
+  };
+
+  const fetchOpenDuelLobbies = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies?status=open`, { cache: 'no-store' });
+      const data = await response.json();
+      if (data.success && Array.isArray(data.lobbies)) {
+        setOpenDuelLobbies(data.lobbies);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch Agent Duel lobbies:", err);
+    }
+  };
+
+  const refreshActiveDuelLobby = async (lobbyId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(lobbyId)}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (data.success && data.lobby) {
+        setActiveDuel((prev) => {
+          if (prev && prev.status !== 'lobby') return prev;
+          return backendLobbyToDuelSession(data.lobby);
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to refresh Agent Duel lobby:", err);
+    }
+  };
+
   // --- REAL-TIME PVP DUEL CONVENIENCE HANDLERS ---
   const resolveDuelPayouts = (
     players: { [address: string]: DuelPlayer },
@@ -1059,6 +1145,20 @@ function AgentDuelApp() {
     return () => clearTimeout(timer);
   }, [activeDuel?.status, activeDuel?.countdownSeconds]);
 
+  useEffect(() => {
+    if (activeTab !== 'duel') return;
+    fetchOpenDuelLobbies();
+    const timer = window.setInterval(fetchOpenDuelLobbies, 5000);
+    return () => window.clearInterval(timer);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!activeDuel?.id || activeDuel.status !== 'lobby') return;
+    refreshActiveDuelLobby(activeDuel.id);
+    const timer = window.setInterval(() => refreshActiveDuelLobby(activeDuel.id), 2500);
+    return () => window.clearInterval(timer);
+  }, [activeDuel?.id, activeDuel?.status]);
+
   // Handle URL Session Join
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1069,82 +1169,87 @@ function AgentDuelApp() {
     }
   }, [wallet.connected]);
 
-  const handleCreateDuel = () => {
-    const id = "DUEL-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const session: DuelSession = {
-      id,
-      status: 'lobby',
-      hostAddress: myAddress,
-      players: {
-        [myAddress]: {
-          address: myAddress,
-          connected: true,
-          balanceUsdc: wallet.balanceUsdc,
-          bets: { player: 0, banker: 0, tie: 0 },
-          wagerAmount: 0,
-          ejected: false,
-          ejectedMulti: null,
-          payout: 0,
-          status: 'pending'
-        }
-      },
-      countdownSeconds: 0,
-      activeHand: null,
-      crashAt: 0,
-      multiplier: 1.0,
-      winnerAddress: null,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setActiveDuel(session);
-    addNotification('tx_success', 'Duel Lobby Created', `Lobby initialized with Session ID ${id}. Share with a friend.`);
-  };
-
-  const handleJoinDuel = (id: string) => {
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const session: DuelSession = {
-      id,
-      status: 'lobby',
-      hostAddress: "0xHostAddressPlaceholder",
-      players: {
-        [myAddress]: {
-          address: myAddress,
-          connected: true,
-          balanceUsdc: wallet.balanceUsdc,
-          bets: { player: 0, banker: 0, tie: 0 },
-          wagerAmount: 0,
-          ejected: false,
-          ejectedMulti: null,
-          payout: 0,
-          status: 'pending'
-        }
-      },
-      countdownSeconds: 0,
-      activeHand: null,
-      crashAt: 0,
-      multiplier: 1.0,
-      winnerAddress: null,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setActiveDuel(session);
-    
-    setTimeout(() => {
-      if (channelRef.current) {
-        channelRef.current.postMessage({
-          type: 'PEER_JOINED',
-          address: myAddress,
-          balanceUsdc: wallet.balanceUsdc
-        });
+  const handleCreateDuel = async () => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      addNotification('collapse', 'Lobby Blocked', 'Connect a wallet-backed BYOS session before hosting multiplayer.');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken,
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          wallet_address: wallet.address,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.message || `Lobby create failed (${response.status}).`);
       }
-    }, 300);
-
-    addNotification('tx_success', 'Joined Duel Lobby', `Successfully connected to Session ID ${id}. Waiting for host...`);
+      setActiveDuel(backendLobbyToDuelSession(data.lobby));
+      fetchOpenDuelLobbies();
+      addNotification('tx_success', 'BYOS Duel Lobby Created', `Lobby ${data.lobby.id} is visible to connected Agent Duel players.`);
+    } catch (err: any) {
+      addNotification('collapse', 'Lobby Create Failed', err.message || 'BYOS lobby endpoint rejected the request.');
+    }
   };
 
-  const handleLeaveDuel = () => {
+  const handleJoinDuel = async (id: string) => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      addNotification('collapse', 'Join Blocked', 'Connect a wallet-backed BYOS session before joining multiplayer.');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(id.trim().toUpperCase())}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken,
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          wallet_address: wallet.address,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.message || `Lobby join failed (${response.status}).`);
+      }
+      setActiveDuel(backendLobbyToDuelSession(data.lobby));
+      fetchOpenDuelLobbies();
+      addNotification('tx_success', 'Joined BYOS Duel Lobby', `Connected to lobby ${data.lobby.id}.`);
+    } catch (err: any) {
+      addNotification('collapse', 'Lobby Join Failed', err.message || 'BYOS lobby endpoint rejected the request.');
+    }
+  };
+
+  const handleLeaveDuel = async () => {
+    const leavingLobbyId = activeDuel?.id;
+    if (leavingLobbyId && wallet.address && activeSessionId && activeSessionToken) {
+      try {
+        await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(leavingLobbyId)}/leave`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-duel-session-token': activeSessionToken,
+          },
+          body: JSON.stringify({
+            session_id: activeSessionId,
+            wallet_address: wallet.address,
+          }),
+        });
+      } catch (err) {
+        console.warn("Failed to leave BYOS Duel lobby:", err);
+      }
+    }
     setActiveDuel(null);
     setIsSimulatedPeerActive(false);
-    addNotification('collapse', 'Left Duel Session', 'You have disconnected from the PVP lobby.');
+    fetchOpenDuelLobbies();
+    addNotification('collapse', 'Left Duel Session', 'You have disconnected from the BYOS PVP lobby.');
   };
 
   const handleToggleSimulatePeer = () => {
@@ -1657,6 +1762,37 @@ function AgentDuelApp() {
         throw new Error(data?.detail || data?.message || `Wager placement rejected by BYOS (${res.status}).`);
       }
       addM2mLog(`BYOS wager locked: ${bet.type.toUpperCase()} $${bet.amount.toFixed(2)} USDC.`, "success");
+
+      if (activeDuel?.status === 'lobby') {
+        const readyRes = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(activeDuel.id)}/ready`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-duel-session-token': activeSessionToken,
+          },
+          body: JSON.stringify({
+            session_id: activeSessionId,
+            wallet_address: wallet.address,
+            bet_type: bet.type,
+            wager_id: data.wager_id,
+            wager_amount_usdc: bet.amount,
+          }),
+        });
+        const readyData = await readyRes.json().catch(() => null);
+        if (!readyRes.ok || !readyData?.success) {
+          throw new Error(readyData?.detail || readyData?.message || `Lobby ready state rejected by BYOS (${readyRes.status}).`);
+        }
+        setActiveDuel(backendLobbyToDuelSession(readyData.lobby));
+        fetchOpenDuelLobbies();
+        addNotification(
+          'tx_success',
+          'Multiplayer Stake Locked',
+          `BYOS marked lobby ${activeDuel.id} ready with $${bet.amount.toFixed(2)} USDC on ${bet.type.toUpperCase()}.`
+        );
+        setPreviousBets(bets);
+        setBets({ player: 0, banker: 0, tie: 0 });
+        return;
+      }
 
       // Set engine states
       setPhase('running');
@@ -3191,6 +3327,8 @@ function AgentDuelApp() {
                 <DuelInviteBlock
                   wallet={wallet}
                   activeDuel={activeDuel}
+                  openLobbies={openDuelLobbies}
+                  onRefreshLobbies={fetchOpenDuelLobbies}
                   onCreateDuel={handleCreateDuel}
                   onJoinDuel={handleJoinDuel}
                   onLeaveDuel={handleLeaveDuel}

@@ -10,6 +10,8 @@ import { Users, Copy, Plus, ArrowRight, Zap, CheckCircle2, ShieldAlert, Coins, R
 interface DuelInviteBlockProps {
   wallet: WalletState;
   activeDuel: DuelSession | null;
+  openLobbies: Array<{ id: string; host_wallet_address: string; player_count: number; max_players: number; created_at: string | null }>;
+  onRefreshLobbies: () => void;
   onCreateDuel: () => void;
   onJoinDuel: (id: string) => void;
   onLeaveDuel: () => void;
@@ -24,6 +26,8 @@ interface DuelInviteBlockProps {
 export function DuelInviteBlock({
   wallet,
   activeDuel,
+  openLobbies,
+  onRefreshLobbies,
   onCreateDuel,
   onJoinDuel,
   onLeaveDuel,
@@ -148,6 +152,52 @@ export function DuelInviteBlock({
                 </div>
               </form>
             </div>
+          </div>
+
+          <div className="bg-[#050609] border border-white/5 rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-400" /> Open BYOS Lobbies
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Join a real wallet lobby discovered from the BYOS lobby endpoint.
+                </p>
+              </div>
+              <button
+                id="btn-refresh-duel-lobbies"
+                onClick={onRefreshLobbies}
+                className="px-2.5 py-1 border border-white/10 hover:border-emerald-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-300"
+              >
+                <RefreshCw className="w-3 h-3 inline mr-1" /> Refresh
+              </button>
+            </div>
+
+            {openLobbies.length === 0 ? (
+              <div className="border border-dashed border-white/10 rounded p-3 text-[11px] text-slate-500">
+                No open BYOS lobbies are available right now.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {openLobbies.map((lobby) => (
+                  <div key={lobby.id} className="flex items-center justify-between gap-3 border border-white/5 bg-[#090b11] rounded p-2.5">
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold font-mono text-emerald-400">{lobby.id}</div>
+                      <div className="text-[10px] text-slate-500 font-mono truncate">
+                        Host {lobby.host_wallet_address.slice(0, 6)}...{lobby.host_wallet_address.slice(-4)} · {lobby.player_count}/{lobby.max_players}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onJoinDuel(lobby.id)}
+                      disabled={!liveGameplayEnabled || lobby.player_count >= lobby.max_players}
+                      className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-[10px] font-bold uppercase"
+                    >
+                      Join
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="bg-[#0c0d13]/50 border border-white/5 rounded-lg p-3.5">

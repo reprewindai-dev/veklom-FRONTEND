@@ -71,10 +71,11 @@ function walletFromRequest(request: Request): string {
 
 export async function GET(request: Request) {
   const walletAddress = walletFromRequest(request);
-  const [proofProbe, leaderboardProbe, historyProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
+  const [proofProbe, leaderboardProbe, historyProbe, lobbiesProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
     probeJson(BYOS_API_BASE, "/api/v1/duel/proof"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/leaderboard"),
     probeJson(BYOS_API_BASE, `/api/v1/duel/player/${walletAddress}/history`),
+    probeJson(BYOS_API_BASE, "/api/v1/duel/lobbies?status=open"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/wager", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -99,6 +100,12 @@ export async function GET(request: Request) {
       state: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state === "verified" ? "needs_proof" : proofProbe.state,
       status: proofProbe.status,
       detail: proofCapabilities.session_create === "verified" ? "Postgres-backed session endpoint present" : "Session persistence not proven",
+    },
+    {
+      route: "/api/v1/duel/lobbies",
+      state: proofCapabilities.multiplayer_lobbies === "verified" ? "verified" : lobbiesProbe.state,
+      status: lobbiesProbe.status,
+      detail: proofCapabilities.multiplayer_lobbies === "verified" ? "BYOS multiplayer lobby discovery is route-backed" : lobbiesProbe.detail,
     },
     {
       route: "/api/v1/duel/wager",
@@ -161,6 +168,7 @@ export async function GET(request: Request) {
       readLeaderboard: leaderboardProbe.state,
       readHistory: historyProbe.state,
       createSession: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state,
+      multiplayerLobby: proofCapabilities.multiplayer_lobbies === "verified" ? "verified" : lobbiesProbe.state,
       placeWager: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
       settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : outcomeProbe.state,
       settlement: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
