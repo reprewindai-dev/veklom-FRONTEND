@@ -1,0 +1,23 @@
+{
+  "name": "Veklom Agent Duel",
+  "short_name": "Agent Duel",
+  "description": "Base Mainnet wallet game using Veklom BYOS session, signed x402-style USDC wager authorization, and Postgres-backed proof state.",
+  "start_url": "/agent-dual",
+  "scope": "/agent-dual",
+  "display": "standalone",
+  "background_color": "#050608",
+  "theme_color": "#050608",
+  "categories": ["games", "finance", "productivity"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "/og/og-agent-duel.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    }
+  ]
+}

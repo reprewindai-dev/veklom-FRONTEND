@@ -7,7 +7,7 @@ import AmbientIntervention from "@/components/ambient/AmbientIntervention";
 import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ["latin"] });
-const BASE = "/control-plane-next";
+const BASE = "";
 const TITLE = "Veklom Control Plane";
 const DESC = "Veklom — the Sovereign AI Hub. Test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.";
 // Official Veklom brand package (raster) served at the site root + /static/branding.
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
     shortcut: [{ url: "/favicon.svg" }],
     apple: [{ url: "/apple-touch-icon.png" }],
   },
-  manifest: `${BASE}/site.webmanifest`,
+  manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
     siteName: "Veklom · Sovereign AI Hub",
     title: TITLE,
     description: DESC,
-    url: `${BASE}/`,
+    url: "/",
     images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — Sovereign AI Hub" }],
   },
   twitter: {

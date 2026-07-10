@@ -71,7 +71,7 @@ function walletFromRequest(request: Request): string {
 
 export async function GET(request: Request) {
   const walletAddress = walletFromRequest(request);
-  const [proofProbe, leaderboardProbe, historyProbe, wagerProbe, x402Probe, covenantProbe] = await Promise.all([
+  const [proofProbe, leaderboardProbe, historyProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
     probeJson(BYOS_API_BASE, "/api/v1/duel/proof"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/leaderboard"),
     probeJson(BYOS_API_BASE, `/api/v1/duel/player/${walletAddress}/history`),
@@ -108,9 +108,9 @@ export async function GET(request: Request) {
     },
     {
       route: "/api/v1/duel/outcome",
-      state: proofCapabilities.outcome_persist === "verified" ? "verified" : proofProbe.state === "verified" ? "needs_proof" : proofProbe.state,
-      status: proofProbe.status,
-      detail: proofCapabilities.outcome_persist === "verified" ? "Outcome persistence endpoint present" : "Outcome persistence not proven",
+      state: proofCapabilities.outcome_persist === "verified" ? "verified" : outcomeProbe.state,
+      status: outcomeProbe.status,
+      detail: proofCapabilities.outcome_persist === "verified" ? "Outcome persistence endpoint present" : outcomeProbe.detail,
     },
     {
       route: "agent_duel_wagers.settlement_tx_hash",
@@ -162,7 +162,7 @@ export async function GET(request: Request) {
       readHistory: historyProbe.state,
       createSession: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state,
       placeWager: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
-      settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : proofProbe.state,
+      settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : outcomeProbe.state,
       settlement: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
       x402Discovery: x402Probe.state,
       covenantState: covenantProbe.state,
