@@ -99,7 +99,7 @@ export async function GET(request: Request) {
       route: "/api/v1/duel/session/create",
       state: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state === "verified" ? "needs_proof" : proofProbe.state,
       status: proofProbe.status,
-      detail: proofCapabilities.session_create === "verified" ? "Postgres-backed session endpoint present" : "Session persistence not proven",
+      detail: proofCapabilities.session_auth === "siwe" ? "SIWE wallet signature required before session token issue" : proofCapabilities.session_create === "verified" ? "Postgres-backed session endpoint present" : "Session persistence not proven",
     },
     {
       route: "/api/v1/duel/lobbies",
@@ -168,6 +168,7 @@ export async function GET(request: Request) {
       readLeaderboard: leaderboardProbe.state,
       readHistory: historyProbe.state,
       createSession: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state,
+      sessionAuth: proofCapabilities.session_auth === "siwe" ? "siwe" : "needs_proof",
       multiplayerLobby: proofCapabilities.multiplayer_lobbies === "verified" ? "verified" : lobbiesProbe.state,
       placeWager: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
       settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : outcomeProbe.state,

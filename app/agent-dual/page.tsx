@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useSignTypedData } from 'wagmi';
+import { useSignMessage, useSignTypedData } from 'wagmi';
 import { WalletState, LeaderboardEntry, WagerTransaction, EscrowState, PushNotification, TelemetryPacket, TelemetryDuelHand, DailyChallenge, getPacketDetails, DuelSession, DuelPlayer } from '@/components/agent-dual/types';
 import { ArenaChart } from '@/components/agent-dual/ArenaChart';
 import { WalletBlock } from '@/components/agent-dual/WalletBlock';
@@ -143,6 +143,7 @@ type BackendLobby = {
 
 function AgentDuelApp() {
   const { signTypedDataAsync } = useSignTypedData();
+  const { signMessageAsync } = useSignMessage();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeSessionToken, setActiveSessionToken] = useState<string | null>(null);
   // 1. Navigation tab state
@@ -651,15 +652,43 @@ function AgentDuelApp() {
         `Contacting registry for ${address.slice(0, 8)}...`
       );
 
+      const domain = window.location.host;
+      const uri = `${window.location.origin}/agent-dual`;
+      const nonceResponse = await fetch(`${API_BASE_URL}/session/nonce`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet_address: address,
+          domain,
+          uri,
+          chain_id: 8453,
+        }),
+      });
+      const nonceData = await nonceResponse.json();
+      if (!nonceResponse.ok || !nonceData.success || !nonceData.message) {
+        throw new Error(nonceData.detail || nonceData.error || 'Failed to issue wallet-auth challenge');
+      }
+
+      addNotification(
+        'tx_success',
+        'Wallet Signature Required',
+        'Approve the Veklom Agent Duel sign-in message to prove wallet ownership.'
+      );
+
+      const signature = await signMessageAsync({ message: nonceData.message });
       const response = await fetch(`${API_BASE_URL}/session/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet_address: address }),
+        body: JSON.stringify({
+          wallet_address: address,
+          message: nonceData.message,
+          signature,
+        }),
       });
       const data = await response.json();
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to initialize session');
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.error || 'Failed to initialize signed session');
       }
 
       const backendBalance = Number(data.player.balance_usdc);
@@ -678,7 +707,7 @@ function AgentDuelApp() {
       addNotification(
         'tx_success', 
         'Veklom Identity Handshake Completed', 
-        `Linked address ${address.slice(0, 8)}... persistent balance: $${backendBalance.toFixed(2)} USDC`
+        `Signed wallet ${address.slice(0, 8)}... persistent balance: $${backendBalance.toFixed(2)} USDC`
       );
 
       // Load history and leaderboard
@@ -1900,11 +1929,7 @@ function AgentDuelApp() {
       const data = await res.json();
       if (data.success) {
         if (wallet.address) {
-          const profileRes = await fetch(`${API_BASE_URL}/session/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wallet_address: wallet.address }),
-          });
+          const profileRes = await fetch(`${API_BASE_URL}/player/${encodeURIComponent(wallet.address)}/profile`, { cache: 'no-store' });
           const profileData = await profileRes.json();
           if (profileData.success) {
             const backendBalance = Number(profileData.player.balance_usdc);
