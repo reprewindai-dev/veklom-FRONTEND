@@ -111,6 +111,14 @@ export async function GET(request: Request) {
       detail: proofCapabilities.multiplayer_lobbies === "verified" ? "BYOS multiplayer lobby discovery is route-backed" : lobbiesProbe.detail,
     },
     {
+      route: "/api/v1/duel/lobbies/{id}/round-sync",
+      state: proofCapabilities.multiplayer_round_sync === "verified" ? "verified" : "needs_endpoint",
+      status: proofCapabilities.multiplayer_round_sync === "verified" ? proofProbe.status : 0,
+      detail: proofCapabilities.multiplayer_round_sync === "verified"
+        ? "BYOS proves synchronized multiplayer round execution"
+        : "Lobby discovery is route-backed, but synchronized PVP round execution is not proven by BYOS yet",
+    },
+    {
       route: "/api/v1/duel/wager",
       state: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
       status: wagerProbe.status,
@@ -203,6 +211,7 @@ export async function GET(request: Request) {
       createSession: proofCapabilities.session_create === "verified" ? "verified" : proofProbe.state,
       sessionAuth: proofCapabilities.session_auth === "siwe" ? "siwe" : "needs_proof",
       multiplayerLobby: proofCapabilities.multiplayer_lobbies === "verified" ? "verified" : lobbiesProbe.state,
+      multiplayerExecution: proofCapabilities.multiplayer_round_sync === "verified" ? "verified" : "needs_endpoint",
       placeWager: proofCapabilities.wager_persist === "verified" ? "verified" : wagerProbe.state,
       wagerPrepare: proofCapabilities.wager_prepare === "verified" ? "verified" : "needs_proof",
       frontendBaseAccountSend: proofCapabilities.frontend_base_account_send === "verified" ? "verified" : "needs_proof",

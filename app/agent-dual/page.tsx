@@ -1321,6 +1321,14 @@ function AgentDuelApp() {
 
   const handleStartDuelCountdown = () => {
     if (!activeDuel || activeDuel.status !== 'lobby') return;
+    if (duelRouteState?.capabilities?.multiplayerExecution !== 'verified') {
+      addNotification(
+        'collapse',
+        'PVP Round-Sync Needs Proof',
+        'BYOS lobby discovery is live, but synchronized multiplayer round execution is not proven yet.'
+      );
+      return;
+    }
     
     const hand = executeRoutingSync();
     
@@ -3232,6 +3240,7 @@ function AgentDuelApp() {
                   onLeaveDuel={handleLeaveDuel}
                   onStartDuelCountdown={handleStartDuelCountdown}
                   liveGameplayEnabled={!!duelRouteState?.liveGameplayEnabled}
+                  multiplayerExecutionVerified={duelRouteState?.capabilities?.multiplayerExecution === 'verified'}
                 />
               </div>
             )}

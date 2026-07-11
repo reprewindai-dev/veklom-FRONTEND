@@ -732,11 +732,11 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
                     </div>
                   </div>
 
-                  {/* Seed / Cryptography details */}
+                  {/* Local replay details. BYOS settlement proof is shown in the Base Explorer tab. */}
                   <div className="space-y-2 border-t border-white/5 pt-2.5">
                     <div>
                       <div className="flex items-center justify-between text-[9px] font-mono text-slate-500">
-                        <span>Block Verification Seed:</span>
+                        <span>Local Replay Seed:</span>
                         <Hash className="w-3 h-3" />
                       </div>
                       <div className="text-[8px] font-mono text-slate-400 bg-black/60 p-1 rounded border border-white/5 select-all break-all leading-normal">
@@ -745,14 +745,14 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
                     </div>
                     <div>
                       <div className="text-[9px] font-mono text-slate-500">
-                        Active Salt:
+                        Local Replay Salt:
                       </div>
                       <div className="text-[8px] font-mono text-slate-400 bg-black/60 p-1 rounded border border-white/5 select-all break-all leading-normal">
                         {hand.salt || "quantum_duel_salt_0000"}
                       </div>
                     </div>
                     <div className="text-[8px] font-mono text-slate-600 leading-normal text-right">
-                      Verification Formula: SHA256(seed + salt)
+                      Display-only replay values. Not BYOS settlement, gas, or calldata proof.
                     </div>
                   </div>
                 </div>

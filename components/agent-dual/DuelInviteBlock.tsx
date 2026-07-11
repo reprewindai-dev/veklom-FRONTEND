@@ -17,6 +17,7 @@ interface DuelInviteBlockProps {
   onLeaveDuel: () => void;
   onStartDuelCountdown: () => void;
   liveGameplayEnabled: boolean;
+  multiplayerExecutionVerified?: boolean;
 }
 
 export function DuelInviteBlock({
@@ -29,6 +30,7 @@ export function DuelInviteBlock({
   onLeaveDuel,
   onStartDuelCountdown,
   liveGameplayEnabled,
+  multiplayerExecutionVerified = false,
 }: DuelInviteBlockProps) {
   const [joinInput, setJoinInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -75,7 +77,7 @@ export function DuelInviteBlock({
         </div>
         {activeDuel && (
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/30">
-            LOBBY SYNC: ACTIVE
+            LOBBY SYNC: ROUTE BACKED
           </span>
         )}
       </div>
@@ -83,8 +85,7 @@ export function DuelInviteBlock({
       {!activeDuel ? (
         <div className="space-y-4">
           <p className="text-xs text-slate-400 leading-relaxed">
-            Agent Duel multiplayer requires verified BYOS session, wager, and outcome endpoints before live stake execution is enabled.
-            Current route proof is shown above; local peer mode is disabled in production control mode.
+            BYOS lobby creation and peer discovery are route-backed. Synchronized PVP round execution stays locked until BYOS proves a real round-sync endpoint.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -198,7 +199,7 @@ export function DuelInviteBlock({
             </h4>
             <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-500">
               <li>Read routes are allowed to display BYOS leaderboard and history proof.</li>
-              <li>Write routes must prove session creation, wager lock, and outcome settlement before gameplay unlocks.</li>
+              <li>Write routes must prove session creation, wager lock, outcome settlement, and synchronized round execution before PVP gameplay unlocks.</li>
               <li>No local peer result or local settlement is accepted as production proof.</li>
             </ul>
           </div>
@@ -414,7 +415,9 @@ export function DuelInviteBlock({
                       ? "Lock in your prediction stake to complete prep phase."
                       : peerPlayer?.status !== 'ready'
                       ? "Waiting for connected peer to lock in stakes..."
-                      : "All stakes successfully locked. Core routing synchronizers operational."}
+                      : multiplayerExecutionVerified
+                        ? "All stakes locked. BYOS synchronized round execution is verified."
+                        : "All stakes locked. BYOS round-sync endpoint still needs proof before PVP execution."}
                   </p>
                 </div>
               </div>
@@ -423,10 +426,10 @@ export function DuelInviteBlock({
                 <button
                   id="btn-initiate-duel-routing"
                   onClick={onStartDuelCountdown}
-                  disabled={myPlayer?.status !== 'ready' || peerPlayer?.status !== 'ready'}
+                  disabled={myPlayer?.status !== 'ready' || peerPlayer?.status !== 'ready' || !multiplayerExecutionVerified}
                   className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 font-bold uppercase tracking-wider text-xs px-6 py-2.5 rounded transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20"
                 >
-                  <Swords className="w-4 h-4" /> Initiate Duel
+                  <Swords className="w-4 h-4" /> {multiplayerExecutionVerified ? "Initiate Duel" : "Needs Round-Sync"}
                 </button>
               )}
             </div>
