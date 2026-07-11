@@ -34,6 +34,11 @@ export interface WagerTransaction {
   payout: number;
   status: 'pending' | 'success' | 'crashed' | 'refunded';
   network: string;
+  blockHeight?: number | null;
+  gasUsed?: number | null;
+  gasPriceWei?: number | null;
+  callData?: string | null;
+  functionSelector?: string | null;
 }
 
 export interface EscrowState {

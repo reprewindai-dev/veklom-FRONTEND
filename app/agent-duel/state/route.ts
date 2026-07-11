@@ -71,8 +71,9 @@ function walletFromRequest(request: Request): string {
 
 export async function GET(request: Request) {
   const walletAddress = walletFromRequest(request);
-  const [proofProbe, leaderboardProbe, historyProbe, lobbiesProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
+  const [proofProbe, settlementProbe, leaderboardProbe, historyProbe, lobbiesProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
     probeJson(BYOS_API_BASE, "/api/v1/duel/proof"),
+    probeJson(BYOS_API_BASE, "/api/v1/duel/settlement/summary"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/leaderboard"),
     probeJson(BYOS_API_BASE, `/api/v1/duel/player/${walletAddress}/history`),
     probeJson(BYOS_API_BASE, "/api/v1/duel/lobbies?status=open"),
@@ -91,8 +92,10 @@ export async function GET(request: Request) {
   ]);
 
   const proofCapabilities = proofProbe.state === "verified" ? proofProbe.data?.capabilities || {} : {};
+  const settlementProofs = settlementProbe.state === "verified" ? settlementProbe.data?.proofs || {} : {};
   const probeResults: ProbeResult[] = [
     proofProbe,
+    settlementProbe,
     leaderboardProbe,
     historyProbe,
     {
@@ -127,15 +130,33 @@ export async function GET(request: Request) {
     },
     {
       route: "agent_duel_wagers.settlement_tx_hash",
-      state: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
+      state: proofCapabilities.settlement === "verified" || settlementProofs.settlement_history === "verified" ? "verified" : "needs_proof",
       status: proofProbe.status,
-      detail: proofCapabilities.settlement === "verified" ? "At least one wager has settlement tx proof" : "No on-chain settlement tx hash has been recorded yet",
+      detail: proofCapabilities.settlement === "verified" || settlementProofs.settlement_history === "verified" ? "At least one wager has verified Base receipt proof" : "No on-chain settlement tx hash has been recorded yet",
     },
     {
       route: "/api/v1/duel/wagers/{wager_id}/settlement-proof",
       state: proofCapabilities.settlement_proof_ingest === "verified" ? "verified" : "needs_proof",
       status: proofProbe.status,
       detail: proofCapabilities.settlement_proof_ingest === "verified" ? "BYOS verifies Base receipts before accepting settlement proof" : "Settlement proof ingest has not been proven",
+    },
+    {
+      route: "/api/v1/duel/settlement/summary.base_block",
+      state: settlementProofs.base_block_height === "verified" ? "verified" : settlementProbe.state === "verified" ? "needs_proof" : settlementProbe.state,
+      status: settlementProbe.status,
+      detail: settlementProofs.base_block_height === "verified" ? "Base block height returned by Base RPC through BYOS" : "BYOS did not return Base block height proof",
+    },
+    {
+      route: "/api/v1/duel/settlement/summary.pool_liquidity",
+      state: settlementProofs.pool_liquidity === "verified" ? "verified" : settlementProbe.state === "verified" ? "needs_proof" : settlementProbe.state,
+      status: settlementProbe.status,
+      detail: settlementProofs.pool_liquidity === "verified" ? "Treasury USDC balance returned by Base RPC balanceOf" : "BYOS did not return pool liquidity proof",
+    },
+    {
+      route: "/api/v1/duel/settlement/summary.gas_telemetry",
+      state: settlementProofs.gas_telemetry === "verified" ? "verified" : settlementProbe.state === "verified" ? "needs_proof" : settlementProbe.state,
+      status: settlementProbe.status,
+      detail: settlementProofs.gas_telemetry === "verified" ? "Latest wager receipt includes gas telemetry" : "No verified settlement receipt with gas telemetry has been persisted",
     },
     x402Probe,
     covenantProbe,
@@ -187,13 +208,19 @@ export async function GET(request: Request) {
       frontendBaseAccountSend: proofCapabilities.frontend_base_account_send === "verified" ? "verified" : "needs_proof",
       settleOutcome: proofCapabilities.outcome_persist === "verified" ? "verified" : outcomeProbe.state,
       settlementProofIngest: proofCapabilities.settlement_proof_ingest === "verified" ? "verified" : "needs_proof",
-      settlement: proofCapabilities.settlement === "verified" ? "verified" : "needs_proof",
+      settlement: proofCapabilities.settlement === "verified" || settlementProofs.settlement_history === "verified" ? "verified" : "needs_proof",
+      settlementSummary: settlementProbe.state,
+      baseBlockHeight: settlementProofs.base_block_height === "verified" ? "verified" : "needs_proof",
+      poolLiquidity: settlementProofs.pool_liquidity === "verified" ? "verified" : "needs_proof",
+      gasTelemetry: settlementProofs.gas_telemetry === "verified" ? "verified" : "needs_proof",
+      callData: settlementProofs.call_data === "verified" ? "verified" : "needs_proof",
       x402Discovery: x402Probe.state,
       covenantState: covenantProbe.state,
     },
     liveGameplayEnabled: persistenceVerified,
     leaderboard,
     history,
+    settlementSummary: settlementProbe.state === "verified" ? settlementProbe.data : proofProbe.data?.settlement_summary || null,
     proofSource: proofProbe.state === "verified" ? proofProbe.data : null,
   });
 }

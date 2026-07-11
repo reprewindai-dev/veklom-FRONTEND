@@ -117,6 +117,36 @@ interface DuelRouteState {
   liveGameplayEnabled: boolean;
   leaderboard: LeaderboardEntry[];
   history: any[];
+  settlementSummary?: {
+    success?: boolean;
+    source?: string;
+    base_block?: {
+      block_height?: number;
+      proof_source?: string;
+      verified_at?: string;
+    } | null;
+    pool_liquidity?: {
+      amount_usdc?: number;
+      amount_micro?: number;
+      proof_source?: string;
+      verified_at?: string;
+    } | null;
+    latest_settlement?: {
+      tx_hash?: string;
+      block_height?: number;
+      gas?: number;
+      gas_used?: number;
+      gas_price_wei?: number;
+      effective_gas_price_wei?: number;
+      call_data?: string;
+      function_selector?: string;
+      settled_at?: string;
+    } | null;
+    settlement_time?: string | null;
+    settled_wagers?: number;
+    settled_volume_usdc?: number;
+    proofs?: Record<string, string>;
+  } | null;
 }
 
 type BetLane = 'player' | 'banker' | 'tie';
@@ -244,6 +274,13 @@ function AgentDuelApp() {
   const [lastTenCrashes, setLastTenCrashes] = useState<number[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(INITIAL_LEADERBOARD);
   const [duelRouteState, setDuelRouteState] = useState<DuelRouteState | null>(null);
+  const settlementSummary = duelRouteState?.settlementSummary;
+  const latestSettlement = settlementSummary?.latest_settlement;
+  const baseBlockHeight = settlementSummary?.base_block?.block_height;
+  const poolLiquidityUsdc = settlementSummary?.pool_liquidity?.amount_usdc;
+  const settlementTime = settlementSummary?.settlement_time || latestSettlement?.settled_at;
+  const gasTelemetryVerified = settlementSummary?.proofs?.gas_telemetry === 'verified';
+  const selectedProofTx = roundFeed.find((tx) => tx.callData || tx.gasUsed || tx.functionSelector) || roundFeed[0];
 
   // Replay state
   const [lastLostRound, setLastLostRound] = useState<{
@@ -631,7 +668,12 @@ function AgentDuelApp() {
           multiplier: Number(w.payout_multiplier ?? w.multiplier ?? 0),
           payout: Number(w.payout_usdc ?? w.payout ?? 0),
           status: w.outcome === 'won' ? 'success' : w.outcome === 'lost' ? 'crashed' : 'pending',
-          network: 'Base'
+          network: 'Base',
+          blockHeight: typeof w.block_height === 'number' ? w.block_height : null,
+          gasUsed: typeof w.gas_used === 'number' ? w.gas_used : null,
+          gasPriceWei: typeof w.gas_price_wei === 'number' ? w.gas_price_wei : null,
+          callData: typeof w.call_data === 'string' ? w.call_data : null,
+          functionSelector: typeof w.function_selector === 'string' ? w.function_selector : null,
         })).filter((tx: WagerTransaction) => tx.txHash.length > 0);
         setRoundFeed(mappedFeed);
         setLastTenCrashes(mappedFeed.map((tx) => tx.multiplier).filter((value) => value > 0).slice(-10));
@@ -3208,9 +3250,13 @@ function AgentDuelApp() {
                       Route-backed audit view for the Veklom x402 Game Engine. Transaction rows remain empty until BYOS returns verified wager history.
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded text-amber-300 text-xs">
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs ${
+                    gasTelemetryVerified
+                      ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
+                      : 'bg-amber-500/10 border border-amber-500/30 text-amber-300'
+                  }`}>
                     <Cpu className="w-3.5 h-3.5" />
-                    <span>Gas telemetry: <span className="font-bold">Needs proof</span></span>
+                    <span>Gas telemetry: <span className="font-bold">{gasTelemetryVerified ? 'Verified' : 'Needs proof'}</span></span>
                   </div>
                 </div>
 
@@ -3218,9 +3264,11 @@ function AgentDuelApp() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Base Block Height</span>
-                    <span className="text-lg font-bold text-amber-400 block mt-1">Needs proof</span>
+                    <span className={`text-lg font-bold block mt-1 ${baseBlockHeight ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {baseBlockHeight ? baseBlockHeight.toLocaleString() : 'Needs proof'}
+                    </span>
                     <span className="text-[9px] text-slate-400 font-semibold mt-0.5 block flex items-center gap-1">
-                      Waiting for BYOS transaction metadata
+                      {baseBlockHeight ? 'Base RPC eth_blockNumber via BYOS' : 'Waiting for BYOS transaction metadata'}
                     </span>
                   </div>
                   
@@ -3232,16 +3280,22 @@ function AgentDuelApp() {
 
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">x402 Pool Liquidity</span>
-                    <span className="text-lg font-bold text-amber-500 block mt-1">Needs proof</span>
+                    <span className={`text-lg font-bold block mt-1 ${typeof poolLiquidityUsdc === 'number' ? 'text-emerald-400' : 'text-amber-500'}`}>
+                      {typeof poolLiquidityUsdc === 'number' ? `$${poolLiquidityUsdc.toFixed(3)} USDC` : 'Needs proof'}
+                    </span>
                     <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
-                      Waiting for BYOS wager settlement endpoint
+                      {typeof poolLiquidityUsdc === 'number' ? 'Treasury USDC balanceOf via Base RPC' : 'Waiting for BYOS wager settlement endpoint'}
                     </span>
                   </div>
 
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Settlement Time</span>
-                    <span className="text-lg font-bold text-amber-400 block mt-1">Needs proof</span>
-                    <span className="text-[9px] text-slate-400 mt-0.5 block">Returned by settlement history endpoint</span>
+                    <span className={`text-lg font-bold block mt-1 ${settlementTime ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {settlementTime ? new Date(settlementTime).toLocaleTimeString() : 'Needs proof'}
+                    </span>
+                    <span className="text-[9px] text-slate-400 mt-0.5 block">
+                      {settlementTime ? 'Latest verified settlement proof' : 'Returned by settlement history endpoint'}
+                    </span>
                   </div>
                 </div>
 
@@ -3362,7 +3416,7 @@ function AgentDuelApp() {
 
                                   {/* Block Height */}
                                   <td className="py-3.5 px-4 font-mono text-slate-400">
-                                    BYOS
+                                    {tx.blockHeight ? tx.blockHeight.toLocaleString() : 'Needs proof'}
                                   </td>
 
                                   {/* Age */}
@@ -3410,22 +3464,24 @@ function AgentDuelApp() {
                       <span>// EVM Decoder Inspector</span>
                     </div>
                     <p className="text-slate-400 text-xs">
-                      Raw input payloads remain hidden until BYOS returns verified transaction calldata for the selected row.
+                      Raw input payloads are displayed only when BYOS returns verified transaction calldata for the selected row.
                     </p>
                     <div className="bg-[#050608] border border-white/5 rounded p-3 text-[10px] text-slate-400 space-y-2">
                       <div className="flex justify-between border-b border-white/[0.03] pb-1.5">
                         <span className="text-slate-500">Contract ABI Function:</span>
-                        <span className="text-amber-400 font-bold">Needs BYOS calldata proof</span>
+                        <span className={`font-bold ${selectedProofTx?.functionSelector ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {selectedProofTx?.functionSelector || 'Needs BYOS calldata proof'}
+                        </span>
                       </div>
                       <div className="space-y-1">
                         <span className="text-slate-500 block">Raw Input Payload (Data):</span>
-                        <div className="bg-black/40 p-2 rounded text-[9px] text-amber-500 select-all break-all leading-relaxed">
-                          Needs proof
+                        <div className={`bg-black/40 p-2 rounded text-[9px] select-all break-all leading-relaxed ${selectedProofTx?.callData ? 'text-emerald-300' : 'text-amber-500'}`}>
+                          {selectedProofTx?.callData || 'Needs proof'}
                         </div>
                       </div>
                       <div className="flex justify-between pt-1 text-[9px]">
-                        <span>Gas Limit: <span className="text-amber-400">Needs proof</span></span>
-                        <span>Gas Price: <span className="text-amber-400">Needs proof</span></span>
+                        <span>Gas Limit: <span className={latestSettlement?.gas ? 'text-emerald-400' : 'text-amber-400'}>{latestSettlement?.gas ? latestSettlement.gas.toLocaleString() : 'Needs proof'}</span></span>
+                        <span>Gas Price: <span className={selectedProofTx?.gasPriceWei ? 'text-emerald-400' : 'text-amber-400'}>{selectedProofTx?.gasPriceWei ? `${selectedProofTx.gasPriceWei} wei` : 'Needs proof'}</span></span>
                         <span>Facilitator Nonce: <span className="text-amber-400">Needs proof</span></span>
                       </div>
                     </div>
