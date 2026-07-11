@@ -60,6 +60,7 @@ interface LedgerBlock {
 }
 
 type ExecState = 'idle' | 'gateway' | 'inferring' | 'success' | 'blocked' | 'error';
+type ProofState = 'idle' | 'verified' | 'needs_proof' | 'simulation' | 'error';
 type ThreatId = 'injection' | 'depth' | 'credentials' | null;
 
 // Threat scenarios — these are explicitly marked as simulations
@@ -128,6 +129,7 @@ export default function PlaygroundPage() {
   const [resultA, setResultA]             = useState<RunResult | null>(null);
   const [resultB, setResultB]             = useState<RunResult | null>(null);
   const [execError, setExecError]         = useState<string | null>(null);
+  const [proofState, setProofState]       = useState<ProofState>('idle');
 
   // Cost projection (real from backend)
   const [costA, setCostA]                 = useState<number | null>(null);
@@ -177,14 +179,14 @@ export default function PlaygroundPage() {
     if (modelBId) fetchCost(modelBId, setCostB);
   }, [modelAId, modelBId]);
 
-  // Append ledger block
-  const appendLedger = (action: string, stake: string, status: LedgerBlock['status'], evidenceHash?: string) => {
-    if (!evidenceHash) return;
+  // Append only backend-returned evidence. No local hashes are generated here.
+  const appendLedger = (action: string, stake: string, status: LedgerBlock['status'], evidenceId?: string) => {
+    if (!evidenceId) return;
     setLedger(prev => {
       const last = prev[0];
       return [{ index: last ? last.index + 1 : 1, timestamp: new Date().toISOString(),
-        prevHash: last?.hash || '', hash: evidenceHash, action, vnpStake: stake,
-        evidenceHash, status }, ...prev];
+        prevHash: last?.hash || '', hash: evidenceId, action, vnpStake: stake,
+        evidenceHash: evidenceId, status }, ...prev];
     });
   };
 
@@ -252,29 +254,30 @@ export default function PlaygroundPage() {
     setSlashedStake(0);
     setFloatingVal(null);
     setExecError(null);
+    setProofState(isSim ? 'simulation' : 'idle');
     setRunId(Date.now());
 
     try {
       let capiEvidenceHash = '';
+      let capiEvidenceId = '';
 
       if (isSim) {
-        // ── REAL THREAT EVALUATION PATH ──
+        // ── THREAT DRILL PATH: backend guardrail if available, otherwise visibly local-only.
         const scenario = THREAT_SCENARIOS[threat!];
-        setLogs(p => [...p, `[GATEWAY] Submitting threat payload to real guardrail engine...`, `[GATEWAY] Threat type: ${scenario.label}`]);
+        setLogs(p => [...p, `[SIMULATION] Submitting threat payload to guardrail evaluation route...`, `[SIMULATION] Threat type: ${scenario.label}`]);
 
         let evalResult: { passed: boolean; blockedAtPhase: number | null; violations: any[]; riskScore: number; reason: string; scanMs: number };
         try {
           evalResult = await runRealEvaluation(threat);
         } catch (e: any) {
-          // Backend unavailable — fall back to known phase for this scenario
           const fallbackPhase = scenario.failPhase;
-          setLogs(p => [...p, `[GATEWAY] Backend unavailable — using local pattern match (phase ${fallbackPhase})`]);
-          evalResult = { passed: false, blockedAtPhase: fallbackPhase, violations: [], riskScore: 0.9, reason: scenario.label + ' detected by local scan', scanMs: 0 };
+          setLogs(p => [...p, `[SIMULATION] Guardrail route unavailable. Showing local drill only; no backend proof or ledger write.`]);
+          evalResult = { passed: false, blockedAtPhase: fallbackPhase, violations: [], riskScore: 0.9, reason: scenario.label + ' local drill result; backend proof unavailable', scanMs: 0 };
         }
 
         const traceArr = buildTraceFromResult(evalResult.passed, evalResult.blockedAtPhase, evalResult.reason);
         setTrace(traceArr);
-        traceArr.forEach(ph => setLogs(p => [...p, `[GATEWAY] Phase ${ph.phase} ${ph.name}: ${ph.summary}`]));
+        traceArr.forEach(ph => setLogs(p => [...p, `[SIMULATION] Phase ${ph.phase} ${ph.name}: ${ph.summary}`]));
 
         if (!evalResult.passed) {
           const slash = Math.round(evalResult.riskScore * 500);
@@ -285,6 +288,12 @@ export default function PlaygroundPage() {
           setLastStatus('Simulation blocked. No backend ledger write.');
           return;
         }
+
+        setExecState('success');
+        setFloatingVal(null);
+        setLastStatus('Simulation passed. No inference or backend ledger write.');
+        setLogs(p => [...p, '[SIMULATION] Drill complete. Real inference was not dispatched from simulation mode.']);
+        return;
       } else {
         // ── REAL PATH — actual backend inference ──
         if (!userPrompt.trim()) {
@@ -314,6 +323,15 @@ export default function PlaygroundPage() {
         }
 
         capiEvidenceHash = capiPayload?.evidence_hash || capiPayload?.result?.evidence_hash || '';
+        capiEvidenceId = capiEvidenceHash
+          || capiPayload?.receipt_id
+          || capiPayload?.run_id
+          || capiPayload?.execution_id
+          || capiPayload?.log_id
+          || capiPayload?.result?.receipt_id
+          || capiPayload?.result?.run_id
+          || capiPayload?.result?.execution_id
+          || '';
         const backendTrace = Array.isArray(capiPayload?.trace)
           ? capiPayload.trace
           : Array.isArray(capiPayload?.result?.trace)
@@ -332,7 +350,7 @@ export default function PlaygroundPage() {
               phase: 1,
               name: 'cAPI Execute',
               status: 'pass',
-              summary: capiEvidenceHash ? `Evidence hash emitted: ${capiEvidenceHash}` : 'cAPI accepted the governed request without an evidence hash.',
+              summary: capiEvidenceId ? `Backend execution proof emitted: ${capiEvidenceId}` : 'cAPI accepted the governed request without a proof identifier.',
               duration_ms: 0,
               detail: capiPayload,
             }];
@@ -349,7 +367,11 @@ export default function PlaygroundPage() {
         runInference(modelBId, systemPrompt, userPrompt),
       ]);
 
+      let fulfilledA: RunResult | null = null;
+      let fulfilledB: RunResult | null = null;
+
       if (resA.status === 'fulfilled') {
+        fulfilledA = resA.value;
         setResultA(resA.value);
         setLogs(p => [...p, `[SYSTEM] Model A (${resA.value.provider}): ${resA.value.latency_ms}ms · ${(resA.value.input_tokens + resA.value.output_tokens)} tokens · $${resA.value.cost_usd?.toFixed(5)}`]);
       } else {
@@ -357,6 +379,7 @@ export default function PlaygroundPage() {
       }
 
       if (resB.status === 'fulfilled') {
+        fulfilledB = resB.value;
         setResultB(resB.value);
         setLogs(p => [...p, `[SYSTEM] Model B (${resB.value.provider}): ${resB.value.latency_ms}ms · ${(resB.value.input_tokens + resB.value.output_tokens)} tokens · $${resB.value.cost_usd?.toFixed(5)}`]);
       } else {
@@ -364,15 +387,25 @@ export default function PlaygroundPage() {
       }
 
       setExecState('success');
-      setFloatingVal('+10 VNP');
-      setFloatingColor('text-green-400 font-bold');
-      const auditEvidence = capiEvidenceHash || String(resultA?.audit_id || resultB?.audit_id || '');
-      setLastStatus(auditEvidence ? 'Backend audit recorded' : 'Needs backend evidence hash');
-      appendLedger('GOVERNED_RUN', auditEvidence ? 'Backend audit recorded' : 'Needs proof', auditEvidence ? 'SUCCESS' : 'NEEDS_PROOF', auditEvidence);
-      setLogs(p => [...p, auditEvidence ? '[SYSTEM] Execution settled with backend evidence.' : '[SYSTEM] Inference returned without backend evidence hash.']);
+      const modelAuditId = String(fulfilledA?.audit_id || fulfilledB?.audit_id || '');
+      const auditEvidence = capiEvidenceId || modelAuditId;
+      if (auditEvidence) {
+        setProofState('verified');
+        setFloatingVal('+10 VNP');
+        setFloatingColor('text-green-400 font-bold');
+        setLastStatus('Backend proof recorded');
+        appendLedger('GOVERNED_RUN', 'Backend proof recorded', 'SUCCESS', auditEvidence);
+        setLogs(p => [...p, '[SYSTEM] Execution completed with backend proof.']);
+      } else {
+        setProofState('needs_proof');
+        setFloatingVal(null);
+        setLastStatus('Needs backend evidence hash or receipt ID');
+        setLogs(p => [...p, '[SYSTEM] Inference returned without backend evidence. Marking this run Needs proof.']);
+      }
 
     } catch (err: any) {
       setExecState('error');
+      setProofState('error');
       setExecError(err?.message ?? 'Unexpected error');
       setLogs(p => [...p, `[ERROR] ${err?.message ?? 'Execution failed'}`]);
     }
@@ -382,6 +415,7 @@ export default function PlaygroundPage() {
     setExecState('idle'); setIsSimulation(false); setActiveThreat(null);
     setTrace(null); setLogs([]); setResultA(null); setResultB(null);
     setSlashedStake(0); setFloatingVal(null); setExecError(null);
+    setProofState('idle');
     setLastStatus('No backend run yet');
   };
 
@@ -414,6 +448,7 @@ export default function PlaygroundPage() {
   const cheaper = projCostA != null && projCostB != null
     ? projCostA < projCostB ? 'A' : projCostB < projCostA ? 'B' : null
     : null;
+  const isProofVerified = proofState === 'verified';
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
@@ -444,7 +479,7 @@ export default function PlaygroundPage() {
               <p className="text-[10px] text-gray-500 mt-0.5">
                 {isSimulation
                   ? 'Testing how the gateway handles adversarial input — not a real inference run.'
-                  : 'Every prompt passes through 5 real security moats before hitting a real model. Always.'}
+                  : 'Prompts are routed through interlink-cAPI before model execution. Missing backend proof is shown as Needs proof.'}
               </p>
             </div>
           </div>
@@ -457,18 +492,24 @@ export default function PlaygroundPage() {
             )}
             <div className={`px-3 py-1.5 rounded-xl border text-center transition-all ${
               execState === 'blocked' ? 'border-red-500/30 bg-red-500/5' :
-              execState === 'success' ? 'border-green-500/30 bg-green-500/5' :
+              execState === 'success' && isProofVerified ? 'border-green-500/30 bg-green-500/5' :
+              execState === 'success' && proofState === 'needs_proof' ? 'border-yellow-500/30 bg-yellow-500/5' :
+              execState === 'success' && proofState === 'simulation' ? 'border-orange-500/30 bg-orange-500/5' :
               isRunning              ? 'border-[#b8860b]/30 bg-[#b8860b]/5 animate-pulse' :
               'border-white/5 bg-black/30'
             }`}>
               <div className="text-[8px] text-gray-500 uppercase">Status</div>
               <div className={`font-bold text-[9px] ${
-                execState === 'blocked' ? 'text-red-400' : execState === 'success' ? 'text-green-400' :
+                execState === 'blocked' ? 'text-red-400' : execState === 'success' && isProofVerified ? 'text-green-400' :
+                execState === 'success' && proofState === 'needs_proof' ? 'text-yellow-400' :
+                execState === 'success' && proofState === 'simulation' ? 'text-orange-400' :
                 execState === 'gateway' ? 'text-[#b8860b]' : execState === 'inferring' ? 'text-cyan-400' :
                 execState === 'error' ? 'text-red-500' : 'text-gray-500'
               }`}>
                 {execState === 'idle' ? 'ARMED' : execState === 'gateway' ? 'TRACING' :
-                 execState === 'inferring' ? 'INFERRING' : execState === 'success' ? 'SETTLED' :
+                 execState === 'inferring' ? 'INFERRING' : execState === 'success' && isProofVerified ? 'PROVED' :
+                 execState === 'success' && proofState === 'needs_proof' ? 'NEEDS PROOF' :
+                 execState === 'success' && proofState === 'simulation' ? 'DRILL COMPLETE' :
                  execState === 'blocked' ? 'BLOCKED' : 'ERROR'}
               </div>
             </div>
@@ -768,7 +809,7 @@ export default function PlaygroundPage() {
                 <div className="text-[9px] font-mono text-cyan-400 mt-1.5 bg-cyan-950/20 p-1.5 rounded border border-cyan-500/10 break-all leading-relaxed">
                   {execState === 'success' && activeThreat === 'credentials'
                     ? <span className="text-yellow-400 font-bold">Simulation redaction preview</span>
-                    : execState === 'success'
+                    : execState === 'success' && isProofVerified
                     ? <span className="text-green-400">{nonce || 'No nonce emitted by backend response'}</span>
                     : <span className="text-gray-600 italic">Waiting for backend receipt.</span>
                   }
@@ -777,8 +818,10 @@ export default function PlaygroundPage() {
               <div className="p-2.5 rounded-xl bg-black/50 border border-[#b8860b]/15">
                 <span className="text-[8px] text-[#b8860b] uppercase font-bold">cAPI Gateway dispatch</span>
                 <div className="text-[9px] font-mono text-gray-400 mt-1.5 bg-[#b8860b]/5 p-1.5 rounded border border-[#b8860b]/10 break-all">
-                  {execState === 'success'
+                  {execState === 'success' && isProofVerified
                     ? <span className="text-[#b8860b] font-bold">Backend receipt required for this panel.</span>
+                    : execState === 'success'
+                    ? 'GATEWAY: Needs backend proof before this panel is treated as live.'
                     : 'GATEWAY: No backend receipt yet.'}
                 </div>
               </div>
