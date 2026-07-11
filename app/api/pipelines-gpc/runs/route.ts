@@ -198,14 +198,20 @@ function summarizeProof(
   generatedAt: string,
 ): PipelinesGpcResponse["proof"] {
   const failed = probes.filter((probe) => !probe.ok);
-  const authBlocked = failed.find((probe) => probe.status === 401 || probe.status === 403 || probe.status === 402);
+  const publicOverviewOk = probes.some((probe) => probe.route === "/api/v1/workspace/overview/live" && probe.ok);
+  const authBlocked = failed.find((probe) => {
+    if (publicOverviewOk && probe.route === "/api/v1/workspace/overview") return false;
+    return probe.status === 401 || probe.status === 403 || probe.status === 402;
+  });
   const hardErrors = failed.filter((probe) => ![401, 402, 403].includes(probe.status));
 
   let state: SourceState = "verified";
   let reason = "Workspace overview, pipelines, and GPC telemetry returned from BYOS.";
   if (authBlocked) {
     state = "needs_proof";
-    reason = `${authBlocked.route} requires authorization or payment proof: ${authBlocked.error}`;
+    reason = `${authBlocked.route} requires authorization or payment proof: ${authBlocked.error}${
+      publicOverviewOk ? "; public workspace overview is verified" : ""
+    }.`;
   } else if (hardErrors.length > 0) {
     state = runs.length > 0 ? "partial" : "error";
     reason = hardErrors.map((probe) => `${probe.route}: ${probe.error}`).join("; ");
@@ -221,6 +227,7 @@ function summarizeProof(
     generated_at: generatedAt,
     routes: {
       overview: "/api/v1/workspace/overview",
+      overview_live: "/api/v1/workspace/overview/live",
       pipelines: "/api/v1/pipelines",
       gpc_events: "/api/v1/gpc/events",
       gpc_signals: "/api/v1/gpc/observability/signals",
@@ -232,19 +239,21 @@ function summarizeProof(
 
 export async function GET(req: NextRequest) {
   const generatedAt = new Date().toISOString();
-  const [overview, pipelines, gpcEvents, gpcSignals, gpcStats] = await Promise.all([
+  const [overview, overviewLive, pipelines, gpcEvents, gpcSignals, gpcStats] = await Promise.all([
     readJson(req, "/api/v1/workspace/overview"),
+    readJson(req, "/api/v1/workspace/overview/live"),
     readJson(req, "/api/v1/pipelines"),
     readJson(req, "/api/v1/gpc/events"),
     readJson(req, "/api/v1/gpc/observability/signals"),
     readJson(req, "/api/v1/gpc/stats"),
   ]);
 
-  const overviewData = isRecord(overview.data) ? overview.data : {};
+  const overviewSource = overview.ok ? overview : overviewLive;
+  const overviewData = isRecord(overviewSource.data) ? overviewSource.data : {};
   const recentRuns = arrayFrom(overviewData, "recent_runs");
   const runs = recentRuns.map((row) => runFromRecent(row, generatedAt));
   const pipelineRows = arrayFrom(pipelines.data);
-  const probes = [overview, pipelines, gpcEvents, gpcSignals, gpcStats];
+  const probes = [overview, overviewLive, pipelines, gpcEvents, gpcSignals, gpcStats];
 
   return NextResponse.json(
     {
