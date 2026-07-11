@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const BYOS_API_BASE = process.env.BYOS_API_BASE_URL || "https://api.veklom.com";
-const DISCOVERY_APP_BASE = process.env.VEKLOM_DISCOVERY_BASE_URL || "https://veklomdiscovery.vercel.app";
+const DISCOVERY_APP_BASE = process.env.VEKLOM_DISCOVERY_BASE_URL || "https://discovery.veklom.com";
 
 type ProbeState = "verified" | "needs_auth" | "needs_payment" | "error";
 
