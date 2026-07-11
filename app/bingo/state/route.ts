@@ -25,6 +25,12 @@ function isX402Manifest(data: unknown): boolean {
   return Boolean(record.x402Version || record.x402_version || record.accepts || record.accepted_assets || record.protected_routes);
 }
 
+function hasDurableLedger(data: unknown): boolean {
+  if (!data || typeof data !== "object") return false;
+  const settlement = (data as any).settlement;
+  return Boolean(settlement?.durableStore?.engine && settlement?.durableStore?.auditLogPath);
+}
+
 async function probe(route: string) {
   const url = `${trimSlash(BINGO_API_BASE)}${route}`;
   try {
@@ -42,6 +48,7 @@ async function probe(route: string) {
       state: res.ok ? "verified" as ProbeState : "error" as ProbeState,
       status: res.status,
       count,
+      data,
       detail: res.ok ? undefined : (data as any)?.detail || (data as any)?.error || res.statusText,
       x402Manifest: route === "/.well-known/x402.json" ? isX402Manifest(data) : undefined,
     };
@@ -56,16 +63,20 @@ async function probe(route: string) {
 }
 
 export async function GET() {
-  const [health, lobbies, leaderboard, x402] = await Promise.all([
+  const [health, lobbies, leaderboard, x402, state, x402Status, audit] = await Promise.all([
     probe(""),
     probe("/api/lobbies"),
     probe("/api/leaderboard"),
     probe("/.well-known/x402.json"),
+    probe("/api/state"),
+    probe("/api/x402/status"),
+    probe("/api/audit/events?limit=1"),
   ]);
 
-  const probes = [health, lobbies, leaderboard, x402];
+  const probes = [health, lobbies, leaderboard, x402, state, x402Status, audit];
   const hardFailures = probes.filter((item) => item.state === "error").length;
   const x402Discovery = x402.x402Manifest ? "verified" : "needs_endpoint";
+  const durableLedger = hasDurableLedger((state as any).data) ? "verified" : state.state === "verified" ? "verified" : "needs_endpoint";
 
   return NextResponse.json({
     generated_at: new Date().toISOString(),
@@ -76,7 +87,7 @@ export async function GET() {
         hardFailures > 0
           ? "One or more Bingo backend routes failed."
           : x402Discovery === "verified"
-            ? "Bingo backend, lobbies, leaderboard, and x402 manifest are live."
+            ? "Bingo backend, lobbies, leaderboard, x402 manifest, and durable state routes are live."
             : "Bingo backend, lobbies, and leaderboard are live; x402 discovery/payment proof endpoint still needs a real manifest.",
       probes,
     },
@@ -84,8 +95,10 @@ export async function GET() {
       lobbies: lobbies.state,
       leaderboard: leaderboard.state,
       x402Discovery,
-      frontendBaseAccountSend: "needs_endpoint",
-      paymentProofIngest: "needs_endpoint",
+      durableLedger,
+      x402Status: x402Status.state,
+      paymentProofIngest: x402Status.state,
+      frontendBaseAccountSend: "needs_base_account_wallet_wiring",
       autonomousPaidPlay: "disabled_until_wallet_proof",
     },
   });
