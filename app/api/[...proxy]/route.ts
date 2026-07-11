@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { CAPI_RUNTIME_URL, capiAuthHeaderValue } from "@/lib/capi-runtime";
 
 const CAPPO_BACKEND_URL = CAPI_RUNTIME_URL;
-const CAPPO_ADMIN_KEY = capiAuthHeaderValue() || "dev-admin-key-do-not-use-in-prod";
+const CAPPO_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 const VEKLOM_BACKEND_URL = process.env.BACKEND_URL || "https://api.veklom.com";
 

@@ -161,22 +161,15 @@ export default function LiveTelemetry({ logs, metrics, onTriggerManualOverride }
                     const val = input.value.trim();
                     if (!val) return;
 
-                    // Simple CLI parsing simulation
                     let responseMsg = '';
                     const lowerVal = val.toLowerCase();
-                    if (lowerVal.startsWith('capi')) {
-                      responseMsg = `cAPI Interface activated for command: ${val}. Connecting to veklom-byos-backend...`;
-                    } else if (lowerVal.startsWith('veklom')) {
-                      responseMsg = `Veklom Backend: Evaluating deterministic routing request...`;
-                    } else if (lowerVal.startsWith('cappo')) {
-                      responseMsg = `CAPPO Runtime: Triggering PGL governed execution & ExecutionIdentityV1 validation...`;
-                    } else if (lowerVal.startsWith('exec') || lowerVal.startsWith('/v1/exec')) {
+                    if (lowerVal.startsWith('exec') || lowerVal.startsWith('/v1/exec')) {
                       responseMsg = `Dispatching manual intent via CLI.`;
                       onTriggerManualOverride(val, overridePolicy);
                     } else if (lowerVal === 'help') {
-                      responseMsg = `Supported commands: capi <cmd>, veklom <cmd>, cappo <cmd>, exec <intent>`;
+                      responseMsg = `Supported live command: exec <intent>. Other commands require a verified backend route before execution.`;
                     } else {
-                      responseMsg = `Command not recognized. Type 'help' for available CLI commands.`;
+                      responseMsg = `No verified backend route is registered for "${val}". Nothing was executed. Type 'help' for available commands.`;
                     }
 
                     input.value = '';
@@ -191,7 +184,7 @@ export default function LiveTelemetry({ logs, metrics, onTriggerManualOverride }
                     type="text"
                     autoComplete="off"
                     className="w-full bg-transparent border-none text-white focus:outline-none font-sans text-xs tracking-tight ml-2"
-                    placeholder="Enter cAPI / veklom / cappo command..."
+                    placeholder="Enter exec <intent> or help..."
                   />
                 </form>
             </div>

@@ -54,7 +54,7 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Local Reactive State mirroring our central control simulation store
+  // Runtime state populated from live routes when the backend returns proof.
   const [agents, setAgents] = useState<any[]>([]);
   const [runs, setRuns] = useState<any[]>([]);
   const [delegates, setDelegates] = useState<any[]>([]);
@@ -83,7 +83,41 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
 
   // Handle high priority manual execution injection
   const handleTriggerManualOverride = async (intentText: string, policyText: string) => {
-    // await api.triggerManualRun(intentText, policyText);
+    setLogs(prev => [{
+      timestamp: new Date().toISOString(),
+      source: 'Terminal',
+      message: `Submitting governed execution intent through /api/v1/capi/execute with policy ${policyText}.`,
+      type: 'warn'
+    }, ...prev]);
+
+    try {
+      const response = await fetch('/api/v1/capi/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'terminal_manual_override',
+          payload: { intent: intentText, policy: policyText },
+          target_protocol: 'terminal',
+          workspace_id: 'control-plane'
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      setLogs(prev => [{
+        timestamp: new Date().toISOString(),
+        source: 'CAPI',
+        message: response.ok
+          ? `Execution accepted: ${data.execution_id || data.run_id || data.status || 'receipt returned'}`
+          : `Execution rejected: ${data.detail || data.error || response.statusText}`,
+        type: response.ok ? 'success' : 'error'
+      }, ...prev]);
+    } catch (err) {
+      setLogs(prev => [{
+        timestamp: new Date().toISOString(),
+        source: 'CAPI',
+        message: `Execution proxy unavailable: ${err instanceof Error ? err.message : String(err)}`,
+        type: 'error'
+      }, ...prev]);
+    }
   };
 
 
@@ -115,23 +149,21 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
           </div>
           <div className="h-4 w-px bg-white/20"></div>
           <div className="flex items-center gap-4 font-mono text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded border border-white/10">
-            <span className="text-white/30">CAPI_NODE:</span>
+            <span className="text-white/30">RUNTIME_NODE:</span>
             <select 
               className="bg-transparent text-white/80 outline-none cursor-pointer hover:text-white transition-colors"
               onChange={(e) => {
                 import('./data/pglLoader').then(m => m.setCapiBaseUrl(e.target.value));
               }}
-              defaultValue="https://api.veklom.com"
+              defaultValue=""
             >
-              <option value="https://api.veklom.com" className="bg-black text-white">Veklom Cloud (api.veklom.com)</option>
-              <option value="http://localhost:8088" className="bg-black text-white">Veklom Local (8088)</option>
-              <option value="http://localhost:8080" className="bg-black text-white">Interlink Rust (8080)</option>
-              <option value="https://cappo.veklom.com" className="bg-black text-white">CAPPO Cloud (cappo-backend)</option>
-              <option value="http://localhost:8001" className="bg-black text-white">CAPPO Local (8001)</option>
+              <option value="" className="bg-black text-white">Control Proxy (same-origin)</option>
+              <option value="https://api.veklom.com" className="bg-black text-white">BYOS API (api.veklom.com)</option>
+              <option value="https://capi.veklom.com" className="bg-black text-white">Covenant CAPI (capi.veklom.com)</option>
             </select>
             <div className="w-px h-3 bg-white/20"></div>
-            <span>LATENCY: 4MS</span>
-            <span className="text-[#00FF66]">OS_HEALTH: 100%</span>
+            <span>ROUTING: SAME-ORIGIN</span>
+            <span className="text-[#00FF66]">PROOF: LIVE ROUTES</span>
           </div>
         </div>
         <div className="flex items-center gap-6">

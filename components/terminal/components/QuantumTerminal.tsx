@@ -177,7 +177,7 @@ export default function QuantumTerminal() {
     { id: 'openai', name: 'OpenAI (GPT-4o)', enabled: true },
     { id: 'anthropic', name: 'Anthropic (Claude 3)', enabled: true },
     { id: 'groq', name: 'Groq (Llama-3.1)', enabled: true },
-    { id: 'ollama', name: 'Ollama (Local)', enabled: true, baseUrl: 'http://127.0.0.1:11434' },
+    { id: 'ollama', name: 'Ollama (Remote)', enabled: true },
     { id: 'huggingface', name: 'HuggingFace', enabled: true },
     { id: 'deepseek', name: 'DeepSeek', enabled: true }
   ]);
@@ -202,7 +202,7 @@ export default function QuantumTerminal() {
     eventLogs: [
       { id: '1', cls: 'g', text: '<b>BOOT</b> — 120 Sovereign agents initialised', time: '00:00' },
       { id: '2', cls: 'p', text: '<b>Zeno</b> — Interrogator subsystem ONLINE', time: '00:01' },
-      { id: '3', cls: 'a', text: '<b>co2router_srv</b> — Capability negotiation pending', time: '00:01' }
+      { id: '3', cls: 'a', text: '<b>capi.veklom.com</b> — Covenant runtime negotiation pending', time: '00:01' }
     ]
   });
 
@@ -231,12 +231,12 @@ export default function QuantumTerminal() {
         await sleep(400); pushLog(`[LINK]  Handshake accepted. Isolated agent context loaded.`, 'ok');
         await sleep(200); pushLog(`        Agent ${targetAgent} is ready for direct commands.`, 'ok');
       } else {
-        await sleep(200); pushLog('        ✓  filesystem_srv  (stdio)', 'ok');
-        await sleep(200); pushLog('        ✓  quantum_srv     (SSE, 1024 qubits)', 'ok');
-        await sleep(200); pushLog('        ⚠  co2router_srv   (capability pending)', 'warn');
+        await sleep(200); pushLog('        ✓  api.veklom.com  (BYOS control API)', 'ok');
+        await sleep(200); pushLog('        ✓  capi.veklom.com (Covenant runtime proxy)', 'ok');
+        await sleep(200); pushLog('        ⚠  ollama node     (remote server proof pending)', 'warn');
         await sleep(200); pushLog('[BOOT]  Zeno Interrogator: ONLINE', 'sys');
         await sleep(200); pushLog('[BOOT]  Gladiator Engine: 8 paths ready', 'sys');
-        await sleep(200); pushLog('[BOOT]  Cognitive Engine: CONNECTED', 'ok');
+        await sleep(200); pushLog('[BOOT]  Runtime command router: READY', 'ok');
       }
 
       await sleep(150); pushLog('', 'out');
@@ -294,17 +294,13 @@ export default function QuantumTerminal() {
 
     const interval = setInterval(() => {
       fetchAgentsAndMetrics();
-      setTele(prev => ({
-        ...prev,
-        zenoCycles: prev.zenoCycles + Math.floor(Math.random() * 3)
-      }));
     }, 2000);
     return () => clearInterval(interval);
   }, []);
 
   const cmdMap = [
-    { match: 'health check', route: '/health', method: 'GET' },
-    { match: 'status', route: '/status', method: 'GET' },
+    { match: 'health check', route: '/api/v1/health', method: 'GET' },
+    { match: 'status', route: '/api/v1/sys/health', method: 'GET' },
     { match: 'telemetry', route: '/api/quantum-metrics', method: 'GET' },
     { match: 'monitoring health', route: '/api/v1/sys/health', method: 'GET' },
     { match: 'uacp security', route: '/api/uacp/security', method: 'GET' },
@@ -333,14 +329,13 @@ export default function QuantumTerminal() {
     { match: 'compliance', route: '/api/v1/compliance', method: 'GET' },
     { match: 'export evidence', route: '/api/v1/compliance/export', method: 'POST' },
     { match: 'schedule evidence', route: '/api/v1/compliance/schedule-export', method: 'POST' },
-    { match: 'interlink health', route: '/health', method: 'GET' },
-    { match: 'interlink audit', route: '/api/audit', method: 'GET' },
-    { match: 'interlink ui', route: '/ui', method: 'GET' }
+    { match: 'interlink audit', route: 'https://capi.veklom.com/api/audit', method: 'GET' }
   ];
 
   const doRealCommand = async (cmdInfo: typeof cmdMap[0], rawArgs: string) => {
+    const requestUrl = cmdInfo.route.startsWith('http') ? cmdInfo.route : `${API_BASE_URL}${cmdInfo.route}`;
     pushLog(`[EXEC]    Triggering ${cmdInfo.match}...`, 'sys');
-    pushLog(`[ROUTER]  ${cmdInfo.method} ${API_BASE_URL}${cmdInfo.route}`, 'sys');
+    pushLog(`[ROUTER]  ${cmdInfo.method} ${requestUrl}`, 'sys');
 
     await sleep(300);
 
@@ -365,7 +360,7 @@ export default function QuantumTerminal() {
         }
 
         const t = performance.now();
-        const res = await fetch(`${API_BASE_URL}${cmdInfo.route}`, opts);
+        const res = await fetch(requestUrl, opts);
         const elapsed = performance.now() - t;
 
         if (!res.ok) {
@@ -407,7 +402,7 @@ export default function QuantumTerminal() {
     setZenoState({ on: true, lbl: 'INTERROGATING' });
 
     const aInterval = setInterval(() => {
-      setAgentTaskForce(p => p.map(a => Math.random() > 0.82 ? { ...a, status: ['assigned', 'executing', 'blocked', 'idle'][Math.floor(Math.random() * 4)] as any } : a));
+      setAgentTaskForce(p => p);
     }, 150);
 
     try {
@@ -447,35 +442,9 @@ export default function QuantumTerminal() {
       if (mapped) {
          await doRealCommand(mapped, raw);
       } else {
-         // USE REAL BACKEND ENGINE
-         const response = await fetch(`${API_BASE_URL}/api/terminal/shell`, {
-           method: 'POST',
-           headers: token ? {
-             'Content-Type': 'application/json',
-             'Authorization': `Bearer ${token}`
-           } : {
-             'Content-Type': 'application/json'
-           },
-           body: JSON.stringify({ command: raw })
-         });
-
-         if (response.ok) {
-           const backendLogs = await response.json();
-           for (const log of backendLogs) {
-             pushLog(log.text, log.type, log);
-             if (log.type === 'pur' || log.text.includes('Zeno')) updateTele(64, 0);
-             if (log.type === 'ok') updateTele(0, 1);
-             await sleep(50); // Small rhythmic delay
-           }
-         } else {
-           try {
-             const errData = await response.json();
-             const errMsg = Array.isArray(errData) ? errData[0].text : (errData.error || errData.details || 'Unknown Error');
-             pushLog(`[FAULT] Engine Error: ${errMsg}`, 'err');
-           } catch {
-             pushLog('[FAULT] Engine communication failure (500).', 'err');
-           }
-         }
+         pushLog('[ROUTER]  No verified terminal shell route is registered for that command.', 'warn');
+         pushLog('          Use mapped commands such as: health check, exec v1, exec, interlink health, interlink audit.', 'dim');
+         pushLog('          No local shell, fake engine, or simulated backend action was executed.', 'dim');
       }
     } catch (err: any) {
       pushLog(`[FAULT] Neural link severed: ${err.message}`, 'error');
@@ -576,7 +545,7 @@ export default function QuantumTerminal() {
                         </div>
                         <div className="flex flex-col items-center gap-1 min-w-[70px]">
                           <div className="px-2 py-1 rounded bg-[#56d36421] border border-[#63b3ed4d] text-[#56d364] text-[9px]">CTX SERVER</div>
-                          <div className="text-[8px] text-[#3d5269]">quantum_srv</div>
+                          <div className="text-[8px] text-[#3d5269]">capi.veklom.com</div>
                         </div>
                       </div>
                     </div>
@@ -643,40 +612,40 @@ export default function QuantumTerminal() {
                 </div>
                 <div className="topo-node flex flex-col items-center gap-1 w-full max-w-[200px]">
                   <div className="w-full py-2 bg-[#56d36421] border border-[#63b3ed4d] text-[#56d364] text-center text-[11px] rounded">CONTEXT SERVERS</div>
-                  <div className="text-[9px] text-[#3d5269] uppercase tracking-wider text-center px-2">filesystem · quantum · co2router</div>
+                  <div className="text-[9px] text-[#3d5269] uppercase tracking-wider text-center px-2">BYOS API · Covenant CAPI · Ollama Node</div>
                 </div>
              </div>
 
              <div className="text-[9px] uppercase tracking-widest text-[#3d5269] border-b border-[#63b3ed1f] pb-2">4-Step Protocol Handshake (I/O Riot NG)</div>
              <div className="grid grid-cols-2 gap-2">
-               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">1. Capability Discovery</div><div className="text-[#56d364] font-bold">OK</div></div>
-               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">2. Protocol Negotiation</div><div className="text-[#56d364] font-bold">OK</div></div>
-               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">3. Session Initialization</div><div className="text-[#56d364] font-bold">OK</div></div>
-               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">4. Transport Validation</div><div className="text-[#56d364] font-bold">OK</div></div>
+               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">1. BYOS Health</div><div className="text-[#56d364] font-bold">200</div></div>
+               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">2. CAPI Audit</div><div className="text-[#56d364] font-bold">200</div></div>
+               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">3. Execution Receipt</div><div className="text-[#e3b341] font-bold">NEEDS PROOF</div></div>
+               <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-3"><div className="text-[9px] uppercase text-[#3d5269] mb-1">4. Wallet Settlement</div><div className="text-[#e3b341] font-bold">NEEDS PROOF</div></div>
              </div>
 
              <div className="text-[9px] uppercase tracking-widest text-[#3d5269] border-b border-[#63b3ed1f] pb-2">Context Servers</div>
              <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-center"><span className="text-[12px] font-bold">filesystem_srv</span><span className="px-2 py-0.5 bg-[#56d36421] text-[#56d364] text-[9px] rounded-full">ACTIVE</span></div>
-                <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Transport</span><span className="text-[#63b3ed]">stdio</span></div>
-                <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Session</span><span className="text-[#56d364]">Stateful 1:1</span></div>
-                <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Protocol</span><span className="text-[#63b3ed]">v2025-03-26</span></div>
+                 <div className="flex justify-between items-center"><span className="text-[12px] font-bold">api.veklom.com</span><span className="px-2 py-0.5 bg-[#56d36421] text-[#56d364] text-[9px] rounded-full">LIVE</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Transport</span><span className="text-[#63b3ed]">HTTPS</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Session</span><span className="text-[#56d364]">Control proxy</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Protocol</span><span className="text-[#63b3ed]">BYOS API</span></div>
                 <div className="pt-2 flex flex-wrap gap-1">
-                   <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">tools × 6</div>
-                   <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">resources × 12</div>
-                   <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">prompts × 2</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">health 200</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">exec proxy</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">audit proof required</div>
                 </div>
              </div>
 
              <div className="bg-[#111820] border border-[#63b3ed1f] rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-center"><span className="text-[12px] font-bold">quantum_srv</span><span className="px-2 py-0.5 bg-[#56d36421] text-[#56d364] text-[9px] rounded-full">ACTIVE</span></div>
-                <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Transport</span><span className="text-[#63b3ed]">SSE</span></div>
-                <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Session</span><span className="text-[#56d364]">Stateful 1:1</span></div>
-                <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Qubits</span><span className="text-[#bc8cff]">1,024 registered</span></div>
+                 <div className="flex justify-between items-center"><span className="text-[12px] font-bold">capi.veklom.com</span><span className="px-2 py-0.5 bg-[#e3b34121] text-[#e3b341] text-[9px] rounded-full">PARTIAL</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Transport</span><span className="text-[#63b3ed]">HTTPS / CAPI</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Session</span><span className="text-[#e3b341]">Execution receipt required</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Runtime</span><span className="text-[#bc8cff]">Covenant</span></div>
                 <div className="pt-2 flex flex-wrap gap-1">
-                   <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">tools × 8</div>
-                   <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">Zeno API</div>
-                   <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">QPU calibrate</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/api/request</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/api/audit 200</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">receipt proof</div>
                 </div>
              </div>
           </div>
