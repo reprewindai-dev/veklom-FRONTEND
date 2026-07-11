@@ -51,6 +51,7 @@ export const MODULES: ModuleDef[] = [
 
   // 5. ⚖️ Governance & Security
   { slug: "governance", label: "Governance & Identity", href: "/governance", group: "govern", minTier: "starter", description: "Operator trust score, rank progression, immutable event ledger, and identity verification.", icon: "Scale", sidebar: true },
+  { slug: "pgl-studio", label: "PGL Studio", href: "/pgl", group: "govern", minTier: "free", description: "Programmable Governance Ledger onboarding and identity shell.", icon: "Fingerprint", sidebar: true },
   { slug: "interlink", label: "Interlink", href: "/interlink", group: "govern", minTier: "free", description: "cAPI execution proofs and 9-phase ledger.", icon: "ShieldAlert", sidebar: true },
   { slug: "audit", label: "Audit Log", href: "/audit", group: "govern", minTier: "pro", description: "Tamper-evident audit trail.", icon: "FileSearch", sidebar: false },
   { slug: "compliance", label: "Compliance", href: "/compliance", group: "govern", minTier: "sovereign", description: "Frameworks and evidence packages.", icon: "ShieldCheck", sidebar: false },
