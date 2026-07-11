@@ -189,7 +189,7 @@ export default function NexusProtocol() {
             ["topology", "PROBE TOPOLOGY"],
             ["docs", "CHARTER & METHODOLOGY"],
             ["consensus", "CONSENSUS VECTOR"],
-            ["identity", "COVENANT LAYER"],
+            ["identity", "INTERLINK CAPI LAYER"],
             ["staking", "STAKING"],
           ].map(([id, label]) => (
             <button
@@ -527,7 +527,7 @@ export default function NexusProtocol() {
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Composite score</span><strong className="text-[#00E5FF]">BYOS metrics</strong></div>
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>P95 target and observed latency</span><strong className="text-[#00E5FF]">Staking state</strong></div>
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Bond and slashing state</span><strong className="text-[#00E5FF]">Staking state</strong></div>
-                      <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Agent authorization and audit counts</span><strong className="text-[#00E5FF]">cAPI/Covenant</strong></div>
+                      <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Agent authorization and audit counts</span><strong className="text-[#00E5FF]">Interlink CAPI</strong></div>
                     </div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-6">Proof Gaps</h2>
                     <p>Leaderboard access currently requires x402 proof, Merkle beacon status is reported by BYOS as `{state?.anchoring.merkle_status || "Needs proof"}`, and Base anchoring is reported as `{state?.anchoring.block_status || "Needs proof"}`.</p>
@@ -556,14 +556,14 @@ export default function NexusProtocol() {
           <div className="max-w-6xl space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <ProofPanel title="Agents" value={fmtNumber(state?.covenant?.metrics?.agents)} subtitle={`${state?.sources.capi || "cAPI"} /api/state`} state={state?.covenant ? "verified" : "needs_proof"} />
-              <ProofPanel title="Capabilities" value={fmtNumber(state?.covenant?.metrics?.capabilities)} subtitle="Covenant registry" state={state?.covenant ? "verified" : "needs_proof"} />
-              <ProofPanel title="Authorized Rate" value={`${fmtNumber(state?.covenant?.metrics?.authorized_rate)}%`} subtitle="Covenant metrics" state={state?.covenant ? "verified" : "needs_proof"} />
+              <ProofPanel title="Capabilities" value={fmtNumber(state?.covenant?.metrics?.capabilities)} subtitle="Interlink registry" state={state?.covenant ? "verified" : "needs_proof"} />
+              <ProofPanel title="Authorized Rate" value={`${fmtNumber(state?.covenant?.metrics?.authorized_rate)}%`} subtitle="Interlink metrics" state={state?.covenant ? "verified" : "needs_proof"} />
               <ProofPanel title="Audit Events" value={fmtNumber(state?.covenant?.metrics?.total)} subtitle="cAPI audit total" state={state?.covenant ? "verified" : "needs_proof"} />
             </div>
             <div className="rounded-xl border border-white/10 bg-void-metal/80 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Database className="w-4 h-4 text-[#00E5FF]" />
-                <span className="text-xs font-bold uppercase tracking-widest text-white/70">Covenant Agents</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-white/70">Interlink Agents</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {covenantAgents.map((agent: any) => (
@@ -584,7 +584,7 @@ export default function NexusProtocol() {
                 ))}
               </div>
               {covenantAgents.length === 0 && (
-                <EvidenceGate title="No Covenant agents returned">
+                <EvidenceGate title="No Interlink agents returned">
                   The cAPI `/api/state` probe did not return agent registry rows. No local PGL certificates are generated on this page.
                 </EvidenceGate>
               )}

@@ -202,7 +202,7 @@ export default function QuantumTerminal() {
     eventLogs: [
       { id: '1', cls: 'g', text: '<b>BOOT</b> — 120 Sovereign agents initialised', time: '00:00' },
       { id: '2', cls: 'p', text: '<b>Zeno</b> — Interrogator subsystem ONLINE', time: '00:01' },
-      { id: '3', cls: 'a', text: '<b>capi.veklom.com</b> — Covenant runtime negotiation pending', time: '00:01' }
+      { id: '3', cls: 'a', text: '<b>capi.veklom.com</b> — Interlink CAPI runtime negotiation pending', time: '00:01' }
     ]
   });
 
@@ -232,7 +232,7 @@ export default function QuantumTerminal() {
         await sleep(200); pushLog(`        Agent ${targetAgent} is ready for direct commands.`, 'ok');
       } else {
         await sleep(200); pushLog('        ✓  api.veklom.com  (BYOS control API)', 'ok');
-        await sleep(200); pushLog('        ✓  capi.veklom.com (Covenant runtime proxy)', 'ok');
+        await sleep(200); pushLog('        ✓  capi.veklom.com (Interlink CAPI runtime proxy)', 'ok');
         await sleep(200); pushLog('        ⚠  ollama node     (remote server proof pending)', 'warn');
         await sleep(200); pushLog('[BOOT]  Zeno Interrogator: ONLINE', 'sys');
         await sleep(200); pushLog('[BOOT]  Gladiator Engine: 8 paths ready', 'sys');
@@ -612,7 +612,7 @@ export default function QuantumTerminal() {
                 </div>
                 <div className="topo-node flex flex-col items-center gap-1 w-full max-w-[200px]">
                   <div className="w-full py-2 bg-[#56d36421] border border-[#63b3ed4d] text-[#56d364] text-center text-[11px] rounded">CONTEXT SERVERS</div>
-                  <div className="text-[9px] text-[#3d5269] uppercase tracking-wider text-center px-2">BYOS API · Covenant CAPI · Ollama Node</div>
+                  <div className="text-[9px] text-[#3d5269] uppercase tracking-wider text-center px-2">BYOS API · Interlink CAPI · Ollama Node</div>
                 </div>
              </div>
 
@@ -641,7 +641,7 @@ export default function QuantumTerminal() {
                  <div className="flex justify-between items-center"><span className="text-[12px] font-bold">capi.veklom.com</span><span className="px-2 py-0.5 bg-[#e3b34121] text-[#e3b341] text-[9px] rounded-full">PARTIAL</span></div>
                  <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Transport</span><span className="text-[#63b3ed]">HTTPS / CAPI</span></div>
                  <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Session</span><span className="text-[#e3b341]">Execution receipt required</span></div>
-                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Runtime</span><span className="text-[#bc8cff]">Covenant</span></div>
+                 <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Runtime</span><span className="text-[#bc8cff]">Interlink</span></div>
                 <div className="pt-2 flex flex-wrap gap-1">
                     <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/api/request</div>
                     <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/api/audit 200</div>

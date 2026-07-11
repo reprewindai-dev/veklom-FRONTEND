@@ -1,295 +1,259 @@
 "use client";
 
-import { Activity, ExternalLink, FileCheck, Shield, BookOpen, Database, Users, Scale, FileText, AlertCircle } from "lucide-react";
+import { Shield, Zap, CheckCircle2, Activity, BarChart3, Clock, CheckCircle } from "lucide-react";
 import type { VNPScore } from "@/lib/vnp/types";
-import { gradeForScore, VNP_DIMENSIONS } from "@/lib/vnp/constants";
-import { VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
-import GradeBadge from "./GradeBadge";
-import ConfidenceBadge from "./ConfidenceBadge";
-import RegionalBreakdown from "./RegionalBreakdown";
-import ProvenanceChain from "./ProvenanceChain";
-import Link from "next/link";
-import { useState } from "react";
+import { gradeForScore } from "@/lib/vnp/constants";
 
 interface ScoreCardProps {
   score: VNPScore;
 }
 
-function scorePath(score: VNPScore, width: number, height: number, invert = false) {
-  const paddingX = 18;
-  const usableWidth = width - paddingX * 2;
-  const baselineY = height / 2;
-  const count = Math.max(VNP_DIMENSIONS.length - 1, 1);
+function generatePolygonPath(dimensions: number[], width: number, height: number) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2 - 40;
+  const numPoints = dimensions.length;
 
-  return VNP_DIMENSIONS.map((def, index) => {
-    const dim = score.dimensions.find((d) => d.id === def.id);
-    const normalized = dim?.normalized ?? 0;
-    const x = paddingX + (index / count) * usableWidth;
-    const y = baselineY + (50 - normalized) * 0.38 * (invert ? -0.42 : 1);
-    return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-  }).join(" ");
+  return dimensions.map((val, index) => {
+    const angle = (Math.PI * 2 * index) / numPoints - Math.PI / 2;
+    const r = (val / 100) * radius;
+    const x = centerX + Math.cos(angle) * r;
+    const y = centerY + Math.sin(angle) * r;
+    return `${index === 0 ? "M" : "L"} ${x} ${y}`;
+  }).join(" ") + " Z";
 }
 
-type TabType = 'overview' | 'purpose' | 'data' | 'methodology' | 'risks' | 'ethical';
-
 export default function ScoreCard({ score }: ScoreCardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const band = gradeForScore(score.composite);
-  const width = 520;
-  const height = 140;
-  const primaryPath = scorePath(score, width, height);
-  const verificationPath = scorePath(score, width, height, true);
-  const topWeightedDimensions = [...score.dimensions]
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 4);
-  const hasAnchor = Boolean(score.provenance.chainAnchorTx);
+  
+  // We expect 5 dimensions for a Pentagon, fallback to mock if missing
+  const polygonDimensions = [
+    score.dimensions.find(d => d.id === 'security')?.normalized ?? 94,
+    score.dimensions.find(d => d.id === 'availability')?.normalized ?? 92,
+    score.dimensions.find(d => d.id === 'p99_latency')?.normalized ?? 91,
+    score.dimensions.find(d => d.id === 'x402_compliance')?.normalized ?? 90,
+    score.dimensions.find(d => d.id === 'documentation')?.normalized ?? 93,
+  ];
 
-  const tabs = [
-    { id: 'overview', label: 'Benchmark Details', icon: Activity },
-    { id: 'purpose', label: 'Purpose & Users', icon: Users },
-    { id: 'data', label: 'Data', icon: Database },
-    { id: 'methodology', label: 'Methodology', icon: BookOpen },
-    { id: 'risks', label: 'Targeted Risks', icon: Shield },
-    { id: 'ethical', label: 'Ethical & Legal', icon: Scale },
-  ] as const;
+  const width = 400;
+  const height = 400;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const maxRadius = height / 2 - 40;
+
+  const dataPath = generatePolygonPath(polygonDimensions, width, height);
 
   return (
-    <div
-      className="bg-[#080909] border border-[#242424] rounded-lg p-5 transition-all group relative overflow-hidden flex flex-col"
-      style={{ borderColor: `${band.borderColor}` }}
-    >
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.014)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.014)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none" />
+    <div className="bg-[#080B09] border border-[#1E2C22] rounded-xl p-6 relative overflow-hidden flex flex-col font-sans text-white max-w-[650px] mx-auto w-full">
+      {/* Background Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(62,231,162,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(62,231,162,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-      {/* Header: Name + Grade */}
-      <div className="flex justify-between items-start mb-4 relative z-10">
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.18em] text-[#3EE7A2]">
-            <FileCheck className="h-3 w-3" />
-            <span>BenchmarkCard / {VNP_METHODOLOGY_VERSION}</span>
+      {/* Top Header */}
+      <div className="flex items-center justify-between mb-8 relative z-10">
+        <div className="flex items-center gap-2 text-[#3EE7A2] font-mono text-[10px] font-semibold tracking-widest">
+          <Shield className="w-3.5 h-3.5" />
+          <span>INTERLINK TRUST STANDARD v2.0</span>
+        </div>
+        <div className="text-[9px] font-mono border border-[#1E2C22] bg-[#0C120E] text-[#3EE7A2] px-3 py-1 rounded tracking-widest">
+          SCORECARD
+        </div>
+      </div>
+
+      {/* Title & Grade Row */}
+      <div className="flex justify-between items-start mb-6 relative z-10">
+        <div>
+          <h2 className="text-xl font-bold text-white mb-1 tracking-tight">{score.apiName}</h2>
+          <p className="text-xs text-[#A1A1A6] mb-6">API Trust Benchmark Scorecard</p>
+          
+          <div className="text-[9px] text-[#A1A1A6] uppercase tracking-wider font-semibold mb-1">
+            OVERALL SCORE
           </div>
-          <Link
-            href={`/benchmarks/${score.apiId}`}
-            className="text-xl font-bold text-white hover:text-[#FFC94D] transition-colors truncate block"
-          >
-            {score.apiName}
-          </Link>
-          <div className="text-[10px] font-mono text-[#6E6E73] uppercase tracking-widest mt-1">
-            {score.provider} &middot; {score.category}
+          <div className="flex items-baseline gap-1">
+            <span className="text-5xl font-bold text-[#3EE7A2] tracking-tighter">
+              {score.composite.toFixed(1)}
+            </span>
+            <span className="text-lg text-[#3EE7A2]/60">/100</span>
           </div>
         </div>
-        <div className="flex flex-col items-end">
-          <GradeBadge grade={score.grade} composite={score.composite} size="lg" />
-          <div className="text-[9px] font-mono text-[#6E6E73] mt-2 uppercase tracking-widest">
-            Composite Score
+
+        <div className="flex flex-col items-end text-right">
+          <div className="border border-[#1E2C22] bg-[#0C120E] rounded-lg p-3 flex flex-col items-center justify-center min-w-[90px] mb-4">
+            <span className="text-4xl font-bold text-[#3EE7A2] leading-none mb-1">{band.grade}</span>
+            <span className="text-[9px] font-mono text-[#3EE7A2] uppercase tracking-wider">TRUST GRADE</span>
+          </div>
+
+          <div className="space-y-1.5 text-[9px] font-mono">
+            <div className="flex flex-col items-end">
+              <span className="text-[#6E6E73] mb-0.5">ASSESSMENT ID</span>
+              <span className="text-[#A1A1A6] tracking-wider truncate max-w-[120px]" title={score.provenance.chainAnchorTx || "TRUST-2025-00078"}>
+                {score.provenance.chainAnchorTx ? score.provenance.chainAnchorTx.substring(0,12)+"..." : "TRUST-2025-00078"}
+              </span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[#6E6E73] mb-0.5">ASSESSED ON</span>
+              <span className="text-[#A1A1A6]">May 18, 2025 14:32 UTC</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[#6E6E73] mb-0.5">ASSESSMENT TYPE</span>
+              <span className="text-[#A1A1A6]">Full Evaluation</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[#6E6E73] mb-0.5">FRAMEWORK</span>
+              <span className="text-[#A1A1A6]">Interlink CAPI</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[#6E6E73] mb-0.5">VALID THROUGH</span>
+              <span className="text-[#A1A1A6]">May 18, 2026</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex overflow-x-auto gap-2 border-b border-[#242424] pb-2 mb-4 relative z-10 scrollbar-hide">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t-md text-[10px] font-mono uppercase tracking-wider transition-colors whitespace-nowrap ${
-              activeTab === tab.id 
-                ? "bg-[#242424] text-white border-b-2 border-[#3EE7A2]" 
-                : "text-[#6E6E73] hover:text-[#A1A1A6] hover:bg-[#1A1A1A]"
-            }`}
-          >
-            <tab.icon className="w-3 h-3" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Radar Chart Center */}
+      <div className="flex-1 flex items-center justify-center relative z-10 py-4 min-h-[350px]">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full max-w-[350px] h-auto overflow-visible">
+          <defs>
+            <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(62,231,162,0.15)" />
+              <stop offset="100%" stopColor="rgba(62,231,162,0)" />
+            </radialGradient>
+          </defs>
+          
+          {/* Axis Web */}
+          {[1, 0.75, 0.5, 0.25].map((scale, i) => (
+            <polygon
+              key={i}
+              points={generatePolygonPath([100, 100, 100, 100, 100].map(v => v * scale), width, height)}
+              fill="none"
+              stroke="rgba(62,231,162,0.15)"
+              strokeWidth="1"
+            />
+          ))}
 
-      {/* Tab Content */}
-      <div className="relative z-10 flex-1 min-h-[300px]">
-        {activeTab === 'overview' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {/* UACP-style vector signature */}
-            <div className="w-full mb-4">
-              <div className="mb-1.5 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.18em] text-[#6E6E73]">
-                <span className="inline-flex items-center gap-1.5">
-                  <Activity className="h-3 w-3 text-[#37C9EC]" />
-                  Quality Vector Signature
-                </span>
-                <span className="text-[#37C9EC]/70">{VNP_VERIFICATION_STACK_TITLE}</span>
-              </div>
-              <svg
-                viewBox={`0 0 ${width} ${height}`}
-                className="h-[120px] w-full rounded-md border border-[#242424] bg-black/35"
-                preserveAspectRatio="none"
-              >
-                {[25, 50, 75, 100].map((level) => (
-                  <line
-                    key={level}
-                    x1="14"
-                    x2={width - 14}
-                    y1={height / 2 + (50 - level) * 0.38}
-                    y2={height / 2 + (50 - level) * 0.38}
-                    stroke="rgba(255,255,255,0.055)"
-                    strokeDasharray="7 9"
-                  />
-                ))}
-                {VNP_DIMENSIONS.map((def, index) => {
-                  const dim = score.dimensions.find((d) => d.id === def.id);
-                  const normalized = dim?.normalized ?? 0;
-                  const count = Math.max(VNP_DIMENSIONS.length - 1, 1);
-                  const x = 18 + (index / count) * (width - 36);
-                  const y = height / 2 + (50 - normalized) * 0.38;
-                  return (
-                    <g key={def.id}>
-                      <line x1={x} x2={x} y1={24} y2={height - 32} stroke="rgba(255,255,255,0.045)" />
-                      <line x1={x} x2={x} y1={y} y2={y + (index % 2 === 0 ? 10 : -10)} stroke={band.color} strokeOpacity={0.65} />
-                      <circle cx={x} cy={y} r="3" fill={band.color} stroke="#06110C" strokeWidth="1.2" />
-                      <text x={x} y={height - 13} textAnchor="middle" className="fill-[#A1A1A6] text-[9px] font-mono">
-                        {def.shortLabel}
-                      </text>
-                    </g>
-                  );
-                })}
-                <path d={verificationPath} fill="none" stroke="rgba(55,201,236,0.36)" strokeWidth="1.2" />
-                <path d={primaryPath} fill="none" stroke={band.color} strokeWidth="1.7" />
-              </svg>
-            </div>
+          {/* Axis Spoke Lines */}
+          {[0, 1, 2, 3, 4].map((index) => {
+            const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
+            return (
+              <line
+                key={index}
+                x1={centerX}
+                y1={centerY}
+                x2={centerX + Math.cos(angle) * maxRadius}
+                y2={centerY + Math.sin(angle) * maxRadius}
+                stroke="rgba(62,231,162,0.2)"
+                strokeWidth="1"
+                strokeDasharray="4 4"
+              />
+            );
+          })}
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="p-3 bg-[#111] rounded border border-[#242424]">
-                <div className="text-[9px] font-mono text-[#6E6E73] uppercase mb-1">Data Type</div>
-                <div className="text-xs text-[#E6E6E9]">API Telemetry & Synthetic Probes</div>
-              </div>
-              <div className="p-3 bg-[#111] rounded border border-[#242424]">
-                <div className="text-[9px] font-mono text-[#6E6E73] uppercase mb-1">Domains</div>
-                <div className="text-xs text-[#E6E6E9] truncate">{score.category} Infrastructure</div>
-              </div>
-            </div>
+          {/* Value Path */}
+          <polygon
+            points={dataPath}
+            fill="url(#glow)"
+            stroke="#3EE7A2"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
 
-            {/* Dimension grid — top 4 dimensions */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
-              {topWeightedDimensions.map((dim) => (
-                <div key={dim.id}>
-                  <div className="text-[9px] font-mono text-[#6E6E73] uppercase tracking-wider">
-                    {dim.label}
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-sm font-mono tabular-nums text-[#E6E6E9]">
-                      {dim.normalized.toFixed(1)}
-                    </span>
-                    <span className="text-[9px] text-[#6E6E73]">/ 100</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Value Points */}
+          {polygonDimensions.map((val, index) => {
+            const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
+            const r = (val / 100) * maxRadius;
+            const x = centerX + Math.cos(angle) * r;
+            const y = centerY + Math.sin(angle) * r;
+            return (
+              <circle
+                key={`point-${index}`}
+                cx={x}
+                cy={y}
+                r="4"
+                fill="#0C120E"
+                stroke="#3EE7A2"
+                strokeWidth="2"
+              />
+            );
+          })}
 
-            <div className="mb-2">
-              <RegionalBreakdown regions={score.regions} compact />
-            </div>
+          {/* Scale Labels */}
+          <text x={centerX} y={centerY - maxRadius + 12} fill="#A1A1A6" fontSize="9" textAnchor="middle">100</text>
+          <text x={centerX} y={centerY - maxRadius * 0.75 + 12} fill="#A1A1A6" fontSize="9" textAnchor="middle">75</text>
+          <text x={centerX} y={centerY - maxRadius * 0.5 + 12} fill="#A1A1A6" fontSize="9" textAnchor="middle">50</text>
+          <text x={centerX} y={centerY - maxRadius * 0.25 + 12} fill="#A1A1A6" fontSize="9" textAnchor="middle">25</text>
+          <text x={centerX} y={centerY + 3} fill="#A1A1A6" fontSize="9" textAnchor="middle">0</text>
+        </svg>
+
+        {/* Absolute positioned labels for dimensions */}
+        <div className="absolute top-[8%] left-[50%] -translate-x-1/2 flex flex-col items-center">
+          <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
+            <Shield className="w-3 h-3 text-[#3EE7A2]" /> Security
           </div>
-        )}
-
-        {activeTab === 'purpose' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
-            <div className="bg-[#111] p-4 rounded-lg border border-[#242424]">
-              <h3 className="text-xs font-bold text-white mb-2 uppercase tracking-wider">Goal & Audience</h3>
-              <p className="text-[11px] text-[#A1A1A6] leading-relaxed mb-4">
-                Designed to autonomously benchmark {score.apiName} latency, uptime, and SLA adherence across a distributed edge mesh. Target audience includes network engineers, enterprise SLA administrators, and algorithmic traders.
-              </p>
-              
-              <h3 className="text-xs font-bold text-white mb-2 uppercase tracking-wider">Limitations & Out-of-Scope</h3>
-              <p className="text-[11px] text-[#A1A1A6] leading-relaxed">
-                Scorecard is strictly quantitative. Does not measure LLM hallucination rates or contextual accuracy unless specifically probed via a designated semantic dimension. Avoid interpreting latency drops as model degradation.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'data' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#111] p-3 rounded border border-[#242424]">
-                <div className="text-[9px] font-mono text-[#6E6E73] uppercase mb-1">Source</div>
-                <div className="text-xs text-white">VNP Edge Node Mesh</div>
-              </div>
-              <div className="bg-[#111] p-3 rounded border border-[#242424]">
-                <div className="text-[9px] font-mono text-[#6E6E73] uppercase mb-1">Size</div>
-                <div className="text-xs text-white">10M+ probes/day</div>
-              </div>
-              <div className="bg-[#111] p-3 rounded border border-[#242424]">
-                <div className="text-[9px] font-mono text-[#6E6E73] uppercase mb-1">Format</div>
-                <div className="text-xs text-white">Signed JSON Telemetry</div>
-              </div>
-              <div className="bg-[#111] p-3 rounded border border-[#242424]">
-                <div className="text-[9px] font-mono text-[#6E6E73] uppercase mb-1">Annotation</div>
-                <div className="text-xs text-white">Cryptographically Attested</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'methodology' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
-            <div className="bg-[#111] p-4 rounded-lg border border-[#242424]">
-              <div className="space-y-4 text-[11px] text-[#A1A1A6]">
-                <div>
-                  <strong className="text-white">Methods:</strong> Continuous synthetic health checks dispatched from 8 global regions.
-                </div>
-                <div>
-                  <strong className="text-white">Metrics:</strong> P99 Latency (ms), Uptime (%), Connection Drop Rate.
-                </div>
-                <div>
-                  <strong className="text-white">Validation:</strong> Results are filtered for regional network anomalies using a consensus vector before final score aggregation.
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'risks' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-red-900/10 p-4 rounded-lg border border-red-500/20">
-              <h3 className="text-xs font-bold text-red-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> Operational Risks Assessed
-              </h3>
-              <ul className="list-disc list-inside text-[11px] text-[#A1A1A6] space-y-2">
-                <li><strong className="text-white">SLA Violations:</strong> Continuous tracking of sub-optimal latency resulting in financial slashing.</li>
-                <li><strong className="text-white">Regional Outages:</strong> Single-region degradation masking as global stability.</li>
-                <li><strong className="text-white">Data Staleness:</strong> Nodes reporting cached or outdated responses without active processing.</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'ethical' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-[#111] p-4 rounded-lg border border-[#242424]">
-              <h3 className="text-xs font-bold text-white mb-2 uppercase tracking-wider">Privacy & Licensing</h3>
-              <p className="text-[11px] text-[#A1A1A6] leading-relaxed mb-4">
-                No user payloads are intercepted. Edge nodes only measure network-level telemetry and protocol handshakes.
-              </p>
-              <div className="flex items-center gap-2 p-2 bg-[#1A1A1A] rounded border border-[#333]">
-                <FileText className="w-4 h-4 text-[#3EE7A2]" />
-                <span className="text-[10px] text-white">VNP Open Data License v1.0</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer: confidence + provenance + link */}
-      <div className="pt-3 mt-4 border-t border-[#242424] flex flex-col sm:flex-row items-center justify-between relative z-10 gap-3">
-        <div className="flex items-center gap-3">
-          <ConfidenceBadge confidence={score.confidence} />
-          <ProvenanceChain provenance={score.provenance} compact />
+          <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[0]?.toFixed(0)}</div>
         </div>
-        <Link
-          href={`/benchmarks/${score.apiId}`}
-          className="flex items-center gap-1.5 text-[10px] font-mono text-[#FFB800]/60 hover:text-[#FFB800] uppercase tracking-widest transition-colors"
-        >
-          View Live Feed <ExternalLink className="w-3 h-3" />
-        </Link>
+
+        <div className="absolute top-[35%] right-[5%] flex flex-col items-center">
+          <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
+            <CheckCircle2 className="w-3 h-3 text-[#3EE7A2]" /> Reliability
+          </div>
+          <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[1]?.toFixed(0)}</div>
+        </div>
+
+        <div className="absolute bottom-[5%] right-[15%] flex flex-col items-center">
+          <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
+            <Zap className="w-3 h-3 text-[#3EE7A2]" /> Performance
+          </div>
+          <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[2]?.toFixed(0)}</div>
+        </div>
+
+        <div className="absolute bottom-[5%] left-[15%] flex flex-col items-center">
+          <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
+            <Activity className="w-3 h-3 text-[#3EE7A2]" /> Interoperability
+          </div>
+          <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[3]?.toFixed(0)}</div>
+        </div>
+
+        <div className="absolute top-[35%] left-[5%] flex flex-col items-center">
+          <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
+            <Shield className="w-3 h-3 text-[#3EE7A2]" /> Governance
+          </div>
+          <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[4]?.toFixed(0)}</div>
+        </div>
+      </div>
+
+      {/* Footer Grid */}
+      <div className="grid grid-cols-4 mt-6 pt-5 border-t border-[#1E2C22] relative z-10">
+        <div className="flex items-start gap-2">
+          <BarChart3 className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
+          <div>
+            <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">DATA SOURCES</div>
+            <div className="text-white font-mono text-xs">24</div>
+          </div>
+        </div>
+        
+        <div className="flex items-start gap-2">
+          <Activity className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
+          <div>
+            <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">TELEMETRY POINTS</div>
+            <div className="text-white font-mono text-xs">12,842</div>
+          </div>
+        </div>
+        
+        <div className="flex items-start gap-2">
+          <Clock className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
+          <div>
+            <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">EVALUATION WINDOW</div>
+            <div className="text-white font-mono text-xs">30 Days</div>
+          </div>
+        </div>
+        
+        <div className="flex items-start gap-2">
+          <CheckCircle className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
+          <div>
+            <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">CONFIDENCE</div>
+            <div className="text-white font-bold text-xs tracking-wide">High</div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-

@@ -4,18 +4,38 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Send, ShieldCheck, Activity, Terminal } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { api } from '@/lib/api';
 
 export default function VNPClaimPage() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+
+  const [resultData, setResultData] = useState<any>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
     
-    // Simulate API call for now (will connect to backend later)
-    setTimeout(() => {
+    try {
+      const form = e.target as HTMLFormElement;
+      const formData = new FormData(form);
+      const payload = {
+        provider_name: formData.get('provider_name'),
+        api_name: formData.get('api_name'),
+        api_domain: formData.get('api_domain'),
+        base_url: formData.get('base_url'),
+        health_path: formData.get('health_path'),
+        company_name: formData.get('company_name'),
+        contact_email: formData.get('contact_email'),
+        workspace_id: 'default-workspace', // TODO: get from active session
+      };
+      
+      const res = await api.post('/api/v1/claims', payload);
+      setResultData(res);
       setStatus('success');
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+      setStatus('error');
+    }
   };
 
   return (
@@ -62,6 +82,18 @@ export default function VNPClaimPage() {
               <p className="text-gray-400 mb-6">
                 Your API endpoint has been added to the evaluation queue. The VNP Edge Network will begin preliminary latency and uptime probing shortly.
               </p>
+              
+              {resultData && (
+                <div className="bg-black/50 border border-white/10 rounded-lg p-4 mb-6 text-left">
+                  <h3 className="font-bold text-[#FFB800] mb-2 text-sm">DNS VERIFICATION REQUIRED</h3>
+                  <p className="text-sm text-gray-400 mb-4">{resultData.instructions}</p>
+                  <div className="bg-white/5 p-3 rounded font-mono text-xs text-gray-300 break-all">
+                    <strong>Record Name:</strong> {resultData.dns_record}<br/>
+                    <strong>Value:</strong> {resultData.dns_value}
+                  </div>
+                </div>
+              )}
+
               <Link href="/vnp" className="inline-flex px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors">
                 Return to Global Mesh
               </Link>
@@ -78,21 +110,38 @@ export default function VNPClaimPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-mono text-gray-500 mb-2 uppercase tracking-wider">Provider Name</label>
+                      <label className="block text-xs font-mono text-gray-500 mb-2 uppercase tracking-wider">Provider / Company Name</label>
                       <input 
                         required
+                        name="provider_name"
                         type="text" 
                         placeholder="e.g. OpenAI, Stripe"
                         className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
+                      <input type="hidden" name="company_name" value="" />
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-gray-500 mb-2 uppercase tracking-wider">API Name</label>
                       <input 
                         required
+                        name="api_name"
                         type="text" 
                         placeholder="e.g. GPT-4 Inference"
                         className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono text-gray-500 mb-2 uppercase tracking-wider">API Domain</label>
+                    <div className="relative">
+                      <Terminal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input 
+                        required
+                        name="api_domain"
+                        type="text" 
+                        placeholder="api.provider.com"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
                     </div>
                   </div>
@@ -103,6 +152,7 @@ export default function VNPClaimPage() {
                       <Terminal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                       <input 
                         required
+                        name="base_url"
                         type="url" 
                         placeholder="https://api.provider.com/v1"
                         className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
@@ -116,6 +166,7 @@ export default function VNPClaimPage() {
                       <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                       <input 
                         required
+                        name="health_path"
                         type="text" 
                         placeholder="/health or /ping"
                         className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
@@ -128,6 +179,7 @@ export default function VNPClaimPage() {
                     <label className="block text-xs font-mono text-gray-500 mb-2 uppercase tracking-wider">Contact Email</label>
                     <input 
                       required
+                      name="contact_email"
                       type="email" 
                       placeholder="engineering@provider.com"
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
