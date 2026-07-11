@@ -171,7 +171,9 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
   }, [selectedMarketId, stakeAmount, stakeOutcome, stakePending, mutateStakingRoute]);
 
   const stakeNum = parseFloat(stakeAmount) || 0;
-  const netStake = Math.round(stakeNum * (1 - 0.025));
+  const netStake = stakeNum * (1 - 0.025);
+  const stakePlacementAvailable = stakingRoute?.writeActions.stakePlacement.state === "available_with_auth";
+  const verifierRegistrationAvailable = stakingRoute?.writeActions.verifierRegistration.state === "available_with_auth";
 
   return (
     <div className="space-y-8 relative">
@@ -203,6 +205,14 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
           </div>
         )}
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
+          <div className={`rounded border px-3 py-2 ${verifierRegistrationAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
+            Verifier registration: {stakingRoute?.writeActions.verifierRegistration.state || "loading"}
+          </div>
+          <div className={`rounded border px-3 py-2 ${stakePlacementAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
+            Stake placement: {stakingRoute?.writeActions.stakePlacement.state || "loading"}
+          </div>
+        </div>
       </div>
       {/* Protocol Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -398,15 +408,15 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             </div>
 
             <div className="text-[10px] font-mono text-[#A1A1A6]">
-              Platform fee: 2.5% | Net stake after fee: <span className="text-white">${netStake}</span>
+              Platform fee: 2.5% | Net stake after fee: <span className="text-white">${netStake.toFixed(2)}</span>
             </div>
 
             <button
               onClick={handleStake}
-              disabled={!selectedMarketId || stakePending}
+              disabled={!selectedMarketId || stakePending || !stakePlacementAvailable}
               className="w-full py-2.5 rounded-lg text-sm font-medium bg-[#FFB800]/10 border border-[#FFB800]/30 text-[#FFB800] hover:bg-[#FFB800]/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {stakePending ? "Processing..." : `Stake ${stakeOutcome} — $${stakeNum.toFixed(2)} USDC`}
+              {stakePending ? "Processing..." : stakePlacementAvailable ? `Stake ${stakeOutcome} — $${stakeNum.toFixed(2)} USDC` : "Stake disabled until BYOS returns verified markets"}
             </button>
 
             {stakeResult && (
@@ -437,7 +447,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <div>Resolution: Auto-checked against verifier distribution</div>
               <div>Speed: Sub-second (smart contract validation)</div>
             </div>
-            <div className="mt-3 text-[10px] text-emerald-400 font-mono">99% of challenges resolve at this tier</div>
+            <div className="mt-3 text-[10px] text-amber-300 font-mono">Resolution telemetry needs verified settlement rows before live-rate claims are displayed.</div>
           </div>
 
           <div className="bg-[#111111] border border-[#1A1A1A] rounded-lg p-4">
@@ -482,11 +492,11 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <div className="text-xs font-mono text-[#A1A1A6] mb-2">Settlement Architecture</div>
             <div className="space-y-3">
               {[
-                "Agent attaches micro-stake ($0.001 USDC) to x402 payment header",
-                "Off-chain aggregator batches outcomes per epoch",
-                "If API meets VNP target: agent stake earns fractional yield from provider bond",
-                "If API fails: auto-slash triggers micro-refund + penalty from provider bond",
-                "Periodic on-chain settlement (net balances) on Base L2 — sub-$0.001 per anchor",
+                "Protocol target: agent attaches micro-stake ($0.001 USDC) to x402 payment header",
+                "Protocol target: off-chain aggregator batches outcomes per epoch",
+                "Needs settlement proof: yield from provider bond after SLA success",
+                "Needs settlement proof: slash/refund after verified SLA failure",
+                "Needs on-chain proof: periodic net-balance settlement on Base L2",
               ].map((step, i) => (
                 <div key={i} className="flex items-start gap-3 text-xs text-[#A1A1A6]">
                   <span className="w-5 h-5 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-[9px] font-mono flex items-center justify-center shrink-0 mt-0.5">
@@ -531,12 +541,15 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <div className="font-mono text-sm text-[#A1A1A6]">{v.measurementCount.toLocaleString()}</div>
             <div className="text-right flex items-center justify-end gap-2">
               <span className="font-mono text-sm text-[#A1A1A6]">{v.accuracy.toFixed(1)}%</span>
-              <span className="px-2 py-0.5 rounded text-[9px] uppercase font-mono bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                Active
+              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono border ${v.active ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-300"}`}>
+                {v.active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
         ))}
+        {verifiers.length === 0 && (
+          <div className="p-10 text-center text-[#6E6E73] text-sm">No verifier rows returned by BYOS staking state.</div>
+        )}
       </div>
 
       {/* KDE Consensus Visualization */}
