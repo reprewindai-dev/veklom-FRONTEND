@@ -55,7 +55,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
   const [showToast, setShowToast] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState<'proof' | 'summary'>('proof');
 
-  const isCompleted = events.some(e => e.event_type === 'ledger.seal');
+  const isCompleted = events.some(e => e.event_type === 'client.trace.hash');
 
   // Automatically switch to summary tab on scan completion
   useEffect(() => {
@@ -82,8 +82,8 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
   useEffect(() => {
     if (!runId) return;
     
-    // An event with type 'ledger.seal' signifies the current sweep has finished and is sealed.
-    const isCompleted = events.some(e => e.event_type === 'ledger.seal');
+    // The current legacy BYOS scan flow finishes with a client-side display hash.
+    const isCompleted = events.some(e => e.event_type === 'client.trace.hash');
     if (!isCompleted) return;
 
     setHistory(prev => {
@@ -241,10 +241,10 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
     textOut += `\n`;
     
     textOut += `${borderLine}\n`;
-    textOut += `AUDIT SIGNATURE CANONICAL SHA-256 PROOF\n`;
+    textOut += `DISPLAY HASH SHA-256 PROOF\n`;
     textOut += `${thinLine}\n`;
     textOut += `Verification Hash: ${auditHash}\n`;
-    textOut += `Status:            TAMPER-PROOF-VERIFIED (Sealed by Rust cryptosystems)\n`;
+    textOut += `Status:            CLIENT-DERIVED DISPLAY HASH; BACKEND LEDGER PROOF PENDING\n`;
     textOut += `${borderLine}\n`;
 
     const txtString = `data:text/plain;charset=utf-8,${encodeURIComponent(textOut)}`;
@@ -487,7 +487,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
       doc.setFont("courier", "bold");
       doc.setFontSize(8);
       doc.setTextColor(0, 255, 65); // Cyber Green
-      doc.text("CANONICAL PROOF LEDGER HASH (SHA-256):", 20, y + 6);
+      doc.text("DISPLAY HASH (SHA-256 OVER CURRENT EVENT VIEW):", 20, y + 6);
       doc.setFont("courier", "normal");
       doc.setFontSize(8);
       doc.setTextColor(220, 220, 220);
@@ -498,7 +498,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
       doc.setTextColor(120, 120, 120);
-      doc.text("CRITICAL STATUS: TAMPER-PROOF VERIFIED • DIGITAL COMPLIANCE MATRIX", 20, y + 20);
+      doc.text("STATUS: CLIENT-DERIVED HASH • CANONICAL BACKEND LEDGER PROOF PENDING", 20, y + 20);
 
       y += 24 + 10;
 
@@ -753,7 +753,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
         {activeViewTab === 'proof' ? (
           <>
             <p className="text-[11px] leading-relaxed mb-6 opacity-65 text-gray-400">
-              SHA-256 Canonical Ledger Hash generated from strictly ordered event stream (BTreeMap serialization). Fully tamper-resistant.
+              SHA-256 display hash generated from the ordered event stream currently returned by BYOS and rendered in this browser. Canonical backend ledger verification is pending until the Repo Risk Gate run ledger endpoint is wired into this view.
             </p>
 
             {/* Ledger Hash Box */}
@@ -770,7 +770,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                 <div className="flex items-center space-x-1.5">
                   <span className="text-[9px] font-mono text-[#00FF41] uppercase tracking-widest font-bold flex items-center">
                     <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                    Status: Tamper-Proof-Verified
+                    Status: Client Display Hash
                   </span>
                 </div>
 
@@ -1034,7 +1034,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                 {findings.length === 0 ? (
                   <div className="text-[10px] font-mono text-emerald-400/90 flex items-center space-x-1.5 py-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Sovereign ledger fully clean. No alerts!</span>
+                    <span>No findings returned by the current BYOS scan response.</span>
                   </div>
                 ) : (
                   <div className="space-y-1 font-mono text-[9px] select-text">
@@ -1087,7 +1087,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
       {/* Export Ledger Controls */}
       <div className="mt-6 pt-4 border-t border-[#222] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-mono">
         <span className="text-[10px] text-gray-500 uppercase">
-          Sealed Records Vault
+          Export Current Evidence View
         </span>
         
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
