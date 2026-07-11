@@ -171,7 +171,7 @@ function telemetryLogs(record: Record<string, unknown>, generatedAt: string) {
   if (Array.isArray(raw)) {
     return raw.map((item) => (typeof item === "string" ? item : JSON.stringify(item))).slice(0, 15);
   }
-  return [`[${generatedAt.substring(11, 19)}] Registry proof loaded from BYOS /api/v1/agents/registry.`];
+  return [];
 }
 
 function mapAgent(record: Record<string, unknown>, index: number, generatedAt: string): AgentNode {
@@ -183,6 +183,14 @@ function mapAgent(record: Record<string, unknown>, index: number, generatedAt: s
   const angle = (Math.PI * 2 * index) / Math.max(1, 12);
   const radius = 260 + (index % 3) * 95;
   const scopes = toolScopes(record);
+  const warnings = [
+    rawRole ? "" : "BYOS registry did not return a role; visual role is inferred for topology grouping.",
+    rawDepartment ? "" : "BYOS registry did not return a department/cluster; visual cluster is inferred for filtering.",
+    stringValue(record, ["status", "state", "health_status"], "") ? "" : "BYOS registry did not return status; node is shown as Idle until backend state is present.",
+    record.x === undefined || record.y === undefined
+      ? "BYOS registry did not return map coordinates; position is deterministic UI layout only."
+      : "",
+  ].filter(Boolean);
 
   return {
     id,
@@ -200,8 +208,8 @@ function mapAgent(record: Record<string, unknown>, index: number, generatedAt: s
     provider: stringValue(record, ["provider", "route", "model_provider"], ""),
     pgl_hash: stringValue(record, ["pgl_hash", "pglHash", "evidence_hash"], ""),
     pgl_status: stringValue(record, ["pgl_status", "pglStatus"], "") === "revoked" ? "revoked" : stringValue(record, ["pgl_hash", "pglHash", "evidence_hash"], "") ? "verified" : "unverified",
-    warnings: [],
-    toolScopes: scopes.length ? scopes : ["registry.read"],
+    warnings,
+    toolScopes: scopes,
     metrics: {
       cpu: Math.max(0, Math.min(100, numberValue(record, ["cpu", "cpu_load", "cpu_percent"], 0))),
       memory: Math.max(0, Math.min(100, numberValue(record, ["memory", "memory_percent", "mem"], 0))),

@@ -332,7 +332,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
         return;
       }
       const trace: any = await api.get(`/api/v1/agents/${id}/trace`);
-      setTraceResult({ count: trace.count || 0 });
+      setTraceResult({ count: Array.isArray(trace) ? trace.length : trace.count || 0 });
       setIsDiagnosticsOpen(true);
     } catch (e: any) {
       setTraceError(e?.message || 'Trace endpoint unavailable — endpoint not yet wired');
@@ -868,13 +868,19 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                 {/* Tool scope codes */}
                 <div className="space-y-1.5">
                   <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold">Authorized Tool Capability Scopes</span>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedAgent.toolScopes.map((scope) => (
-                      <code key={scope} className="text-[10px] bg-white/[0.04] border border-white/10 text-white/80 px-2 py-0.5 rounded-none break-all tracking-tight select-all">
-                        {scope}()
-                      </code>
-                    ))}
-                  </div>
+                  {selectedAgent.toolScopes.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedAgent.toolScopes.map((scope) => (
+                        <code key={scope} className="text-[10px] bg-white/[0.04] border border-white/10 text-white/80 px-2 py-0.5 rounded-none break-all tracking-tight select-all">
+                          {scope}()
+                        </code>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] bg-hazard-amber/5 border border-hazard-amber/20 text-hazard-amber/80 px-2 py-1 font-mono">
+                      Needs proof: BYOS registry did not return capability scopes for this agent.
+                    </div>
+                  )}
                 </div>
 
                 {/* Real-time ticker console */}
