@@ -300,26 +300,23 @@ export default function NexusProtocol() {
                         } as VNPDimensionScore;
                       }),
                       confidence: {
-                        level: "high",
+                        level: selectedApi.measurementCount >= 100 ? "high" : selectedApi.measurementCount > 0 ? "provisional" : "low",
                         sampleCount: selectedApi.measurementCount,
-                        marginOfError: 1.5,
+                        marginOfError: 0,
                         minForHigh: 100
                       },
-                      regions: [
-                        { region: "us-east", label: "US East (N. Virginia)", score: selectedApi.score, p50: 45, p95: selectedApi.observedP95Ms || 150, p99: 180, p999: 250, errorRate: 0.01, availability: 99.99, measurementCount: 15000, lastMeasured: new Date().toISOString() },
-                        { region: "eu-west", label: "EU West (Ireland)", score: selectedApi.score - 2, p50: 120, p95: (selectedApi.observedP95Ms || 150) + 60, p99: 240, p999: 310, errorRate: 0.05, availability: 99.95, measurementCount: 12000, lastMeasured: new Date().toISOString() },
-                      ] as VNPRegionalScore[],
+                      regions: [] as VNPRegionalScore[],
                       provenance: {
-                        epochId: "ep_" + Math.random().toString(36).substring(7),
-                        epochStart: new Date(Date.now() - 3600000).toISOString(),
-                        epochEnd: new Date().toISOString(),
-                        merkleRoot: selectedApi.anchorHash || "pending",
+                        epochId: state?.generated_at || "needs-proof",
+                        epochStart: state?.metrics?.timestamp || state?.generated_at || new Date(0).toISOString(),
+                        epochEnd: state?.generated_at || state?.metrics?.timestamp || new Date(0).toISOString(),
+                        merkleRoot: selectedApi.anchorHash || "Needs proof",
                         chainAnchorTx: selectedApi.txHash || null,
-                        chainAnchorBlock: 12345678,
+                        chainAnchorBlock: null,
                         measurementCount: selectedApi.measurementCount,
-                        nodeOperators: ["Hetzner-DE", "AWS-US", "GCP-EU"],
-                        harnessVersion: "v1.0.0",
-                        scriptHash: "hash_xyz"
+                        nodeOperators: [],
+                        harnessVersion: state?.metrics?.methodology || "Needs proof",
+                        scriptHash: "Needs proof"
                       },
                       lastMeasured: selectedApi.lastUpdated,
                       measurementCount: selectedApi.measurementCount,
