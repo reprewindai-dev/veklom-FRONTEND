@@ -108,7 +108,7 @@ export default function Sidebar({
         { id: 'staking', name: 'Staking Protocol', icon: Coins, href: '/staking' },
         { id: 'duel', name: 'Agent Duel', icon: Sword, href: '/agent-duel' },
         { id: 'id', name: 'Veklom ID', icon: Fingerprint, href: '/veklom-id' },
-        { id: 'veklom-discovery', name: 'Veklom Discovery', icon: Search, href: '/benchmarks/discovery', isLive: true },
+        { id: 'veklom-discovery', name: 'Veklom Discovery', icon: Search, href: '/discovery', isLive: true },
         { id: 'bingo', name: 'Bingo 2060', icon: Gamepad2, href: '/bingo' },
       ]
     },

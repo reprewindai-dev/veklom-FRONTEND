@@ -433,7 +433,7 @@ export default function APIBenchmarksDashboard() {
             Authority Arena
           </Link>
           <Link
-            href="/benchmarks/discovery"
+            href="/discovery"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.05] border border-white/10 text-ink-200 hover:text-white hover:bg-white/[0.08] transition"
           >
             <BookOpen className="h-3.5 w-3.5" />

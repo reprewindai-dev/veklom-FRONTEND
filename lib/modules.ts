@@ -46,7 +46,7 @@ export const MODULES: ModuleDef[] = [
   { slug: "agent-duel", label: "Agent Dual", href: "/agent-dual", group: "ecosystem", minTier: "free", description: "Multi-agent debate arena running on Base.", icon: "Swords", sidebar: true },
   { slug: "bingo", label: "BINGO 2060", href: "/bingo", group: "ecosystem", minTier: "free", description: "M2M Galactic Tournament.", icon: "Gamepad2", sidebar: true },
   { slug: "veklom-id", label: "Veklom ID", href: "/veklom-id", group: "ecosystem", minTier: "free", description: "Decentralized Sovereign Operator Registry.", icon: "Fingerprint", sidebar: true },
-  { slug: "benchmarks-discovery", label: "Veklom Discovery", href: "/benchmarks/discovery", group: "ecosystem", minTier: "free", description: "x402 payments, ACP agents, Base MCP wallet, ENS resolution, on-chain reputation ledger.", icon: "Globe2", sidebar: false },
+  { slug: "discovery", label: "Veklom Discovery", href: "/discovery", group: "ecosystem", minTier: "free", description: "x402 payments, ACP agents, Base MCP wallet, ENS resolution, on-chain reputation ledger.", icon: "Globe2", sidebar: false },
 
 
   // 5. ⚖️ Governance & Security
