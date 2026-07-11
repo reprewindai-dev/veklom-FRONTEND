@@ -67,7 +67,8 @@ interface ProbeResult<T = unknown> {
 }
 
 interface BackendSourceState {
-  id: "byos" | "cappo";
+  id: "byos" | "capi";
+  legacy_id?: string;
   label: string;
   repo: string;
   role: string;
@@ -202,9 +203,13 @@ export default function ControlNodePage() {
   const expectedProofCount = canonical.data?.canonical_source_count ?? 2;
   const canonicalSources = canonical.data?.sources ?? [];
   const byosSource = canonicalSources.find((source) => source.id === "byos");
-  const capiSource = canonicalSources.find((source) => source.id === "cappo");
+  const capiSource = canonicalSources.find((source) => source.id === "capi" || source.legacy_id === "cappo");
   const byosHealthy = byosSource?.state === "healthy";
   const capiHealthy = capiSource?.state === "healthy";
+  const capiPolicyCount = Array.isArray((capiSource?.overview.data as any)?.policies)
+    ? ((capiSource?.overview.data as any).policies as unknown[]).length
+    : 0;
+  const capiPoliciesVerified = capiPolicyCount > 0;
   const auditRows = audit.data?.events?.map((ev) => ({
     id: ev.id,
     title: ev.event_type,
@@ -301,7 +306,9 @@ export default function ControlNodePage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Policy Mode</span>
-              <span className="text-white/90 text-xs font-medium tracking-wide">Zero-Trust Active</span>
+              <span className={`text-xs font-medium tracking-wide ${capiPoliciesVerified ? "text-white/90" : "text-[#FFAB00]"}`}>
+                {capiPoliciesVerified ? "Zero-Trust Active" : "Needs proof"}
+              </span>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Last Sync</span>
@@ -385,11 +392,11 @@ export default function ControlNodePage() {
                   <div className="space-y-4 text-[11px] font-mono">
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Policy Engine</span>
-                      <span className={capiHealthy ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{proofLabel(capiHealthy, canonical.isLoading)}</span>
+                      <span className={capiPoliciesVerified ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{proofLabel(capiPoliciesVerified, canonical.isLoading)}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Approval Mode</span>
-                      <span className="text-white/90 tracking-wider">{capiHealthy ? "COVENANT POLICY" : "NEEDS PROOF"}</span>
+                      <span className="text-white/90 tracking-wider">{capiPoliciesVerified ? `COVENANT POLICY (${capiPolicyCount})` : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Budget Guard</span>

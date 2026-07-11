@@ -21,6 +21,7 @@ interface ProbeResult<T = unknown> {
 
 interface BackendSourceState {
   id: CanonicalBackendConfig["id"];
+  legacy_id?: string;
   label: string;
   repo: string;
   role: CanonicalBackendConfig["role"];
@@ -126,6 +127,8 @@ function sourceState(
 
   const proof_signal = sourceOfTruth?.ok
     ? "source-of-truth snapshot verified"
+    : overview.ok && sourceOfTruth
+      ? `workspace overview verified; source-of-truth ${sourceOfTruth.status ? `HTTP ${sourceOfTruth.status}` : "needs proof"}`
     : overview.ok
       ? "workspace overview verified"
       : health.ok
@@ -134,6 +137,7 @@ function sourceState(
 
   return {
     id: backend.id,
+    legacy_id: backend.id === "capi" ? "cappo" : undefined,
     label: backend.label,
     repo: backend.repo,
     role: backend.role,

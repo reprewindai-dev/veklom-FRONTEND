@@ -141,7 +141,7 @@ export default function Sidebar({
 
   const itemProbeState = (item: MenuItem): "online" | "degraded" | "needs_proof" => {
     if (item.id === "overview") return sourceStates.overview || (mcpHeartbeat === "online" ? "online" : "needs_proof");
-    if (["runtime", "interlink"].includes(item.id)) return sourceStates.cappo || "needs_proof";
+    if (["runtime", "interlink"].includes(item.id)) return sourceStates.capi || sourceStates.cappo || "needs_proof";
     if (["swarm-map", "spine", "repo-risk", "playground", "nexus", "runs", "staking", "duel", "id", "veklom-discovery", "bingo", "committee", "treasury", "api-keys", "webhooks", "integrations"].includes(item.id)) {
       return sourceStates.byos || "needs_proof";
     }

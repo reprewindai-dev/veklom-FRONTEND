@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "cappo";
+export type CanonicalBackendId = "byos" | "capi";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -46,7 +46,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       authMode: "forward-bearer",
     },
     {
-      id: "cappo",
+      id: "capi",
       label: CAPI_RUNTIME_LABEL,
       repo: CAPI_RUNTIME_REPO,
       role: "governed-runtime",

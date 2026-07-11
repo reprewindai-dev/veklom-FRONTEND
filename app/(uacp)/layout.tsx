@@ -11,7 +11,8 @@ import { api } from '@/lib/api';
 type ProbeState = "online" | "degraded" | "needs_proof";
 
 interface CanonicalSource {
-  id: "byos" | "cappo";
+  id: "byos" | "capi";
+  legacy_id?: string;
   state: "healthy" | "degraded" | "needs_proof";
 }
 
@@ -61,6 +62,9 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
         };
         for (const source of data.sources || []) {
           states[source.id] = toProbeState(source.state);
+          if (source.legacy_id) {
+            states[source.legacy_id] = toProbeState(source.state);
+          }
         }
 
         setSourceStates(states);
