@@ -62,7 +62,7 @@ export default function CommunalResonanceEngine({
     setPeers(initialPeers);
   }, [activePlayersCount]);
 
-  // Handle continuous real-time changes to simulate low-latency biometric synchronization
+  // Local-only telemetry animation. It is not settlement, medical, or identity proof.
   useEffect(() => {
     const interval = setInterval(() => {
       // Modulate peer biometrics to sync closer to playerResonance if player focus is high

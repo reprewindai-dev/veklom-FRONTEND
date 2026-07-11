@@ -18,12 +18,12 @@ export default function PushLog({ challenges, onCompleteChallenge }: PushLogProp
   const [pushLogs, setPushLogs] = useState<Array<{ id: string; message: string; timestamp: string }>>([
     {
       id: '1',
-      message: 'Daily challenge portal synced: Maintain 85% cardiac coherence to claim USDC awards.',
+      message: 'Daily challenge portal synced from the Bingo client state. USDC awards require backend settlement proof.',
       timestamp: new Date(Date.now() - 3600000).toISOString()
     },
     {
       id: '2',
-      message: 'Base mainnet tournament active: Galactic Ring pattern payout multiplier increased by 1.5x.',
+      message: 'Bingo backend feed active: Galactic Ring pattern payout multiplier visible for this lobby.',
       timestamp: new Date(Date.now() - 7200000).toISOString()
     }
   ]);
@@ -43,7 +43,7 @@ export default function PushLog({ challenges, onCompleteChallenge }: PushLogProp
           const permission = await Notification.requestPermission();
           if (permission === 'granted') {
             new Notification('BINGO 2060 SYSTEM ALIGNMENT', {
-              body: 'Holographic push alerts successfully configured! Standard Base Mainnet alerts are active.',
+              body: 'Push alerts are enabled for this browser. Base settlement alerts require backend proof rows.',
               icon: '/favicon.ico'
             });
           }
@@ -56,7 +56,7 @@ export default function PushLog({ challenges, onCompleteChallenge }: PushLogProp
       setPushLogs((prev) => [
         {
           id: String(Date.now()),
-          message: 'Secure subscription locked. App token mapped under Base ID 6a20f24cc341f72c2f573eb5.',
+          message: 'Browser notification subscription enabled. Base app metadata proof is still pending.',
           timestamp: new Date().toISOString()
         },
         ...prev

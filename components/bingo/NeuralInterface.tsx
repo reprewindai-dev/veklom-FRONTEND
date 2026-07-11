@@ -245,7 +245,7 @@ export default function NeuralInterface({
       </div>
 
       <div className="mt-6 p-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-mono text-white/40">
-        <span className="font-bold text-[#00f3ff]">COLLECTIVE RESONANCE ADVICE:</span> Tuning Brainwaves above 30Hz while keeping Cardiac Coherence near 0.90 triggers hyper-synchronistic automated on-chain caller alerts!
+        <span className="font-bold text-[#00f3ff]">COLLECTIVE RESONANCE ADVICE:</span> Tuning Brainwaves above 30Hz while keeping Cardiac Coherence near 0.90 improves local gameplay telemetry. On-chain alerts require backend settlement proof.
       </div>
     </div>
   );

@@ -96,7 +96,7 @@ export default function Leaderboard({ entries, currentPlayerWallet }: Leaderboar
       </div>
 
       <div className="mt-5 p-3 bg-black/40 border border-white/10 rounded-xl text-[10px] text-white/40 font-mono leading-relaxed text-center">
-        Leaderboard updates every block. Maintain extreme cardiac synchronization to stay ranked in the top tier!
+        Leaderboard rows come from the Bingo backend. Payment rank and payout proof remain pending until x402 settlement rows exist.
       </div>
     </div>
   );

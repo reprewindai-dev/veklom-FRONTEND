@@ -15,12 +15,24 @@ import PaymentConsole from '@/components/bingo/PaymentConsole';
 import Leaderboard from '@/components/bingo/Leaderboard';
 import SharingHub from '@/components/bingo/SharingHub';
 import PushLog from '@/components/bingo/PushLog';
+import { useApi } from '@/hooks/useApi';
 import { 
   Cpu, Wifi, WifiOff, RefreshCw, Sparkles, MessageSquare, Play, HelpCircle, LogOut,
   Trophy, TrendingUp, Coins, ShieldAlert, CheckCircle2, Zap, Shield, FileText, ChevronRight, Activity, Bell
 } from 'lucide-react';
 
 const TREASURY_WALLET = '0x3a74772e925b54F7dAD7FD95c9Ba30825033f970';
+const BINGO_API_BASE = process.env.NEXT_PUBLIC_BINGO_API_BASE_URL || 'https://bingo.veklom.com';
+
+interface BingoProofState {
+  source: string;
+  proof: {
+    state: 'verified' | 'partial' | 'error';
+    reason: string;
+    probes: Array<{ route: string; state: string; status: number; count?: number; detail?: string; x402Manifest?: boolean }>;
+  };
+  capabilities: Record<string, string>;
+}
 
 // Helper to generate a reproducible standard BINGO card
 function generateBingoCard(seed: string): number[][] {
@@ -56,6 +68,7 @@ function generateBingoCard(seed: string): number[][] {
 }
 
 export default function App() {
+  const { data: bingoProof } = useApi<BingoProofState>('/bingo/state', { refreshInterval: 30000 });
   const [player, setPlayer] = useState<Player | null>(null);
   const [resonance, setResonance] = useState<BiometricResonance>({
     attention_focus_percentage: 75,
@@ -89,21 +102,21 @@ export default function App() {
   const [waiverSignKey, setWaiverSignKey] = useState<string>('');
   const [isSigningWaiver, setIsSigningWaiver] = useState<boolean>(false);
 
-  // Auto-Pilot (M2M Delegation) Mode (Enabled by default for 100% passive hands-free auto-pilot gameplay)
-  const [isAutoPilot, setIsAutoPilot] = useState<boolean>(true);
+  // Auto-pilot can observe the board, but paid actions stay disabled until real wallet proof is wired.
+  const [isAutoPilot, setIsAutoPilot] = useState<boolean>(false);
 
   // Multi-Lobby States
   const [activeLobbyId, setActiveLobbyId] = useState<string>('micro-lobby');
   const [lobbies, setLobbies] = useState<LobbyState[]>([]);
   const [jackpotState, setJackpotState] = useState<GlobalJackpotState>({
-    progressiveJackpotPool: 1250.75,
-    treasuryCollected: 145.20,
+    progressiveJackpotPool: 0,
+    treasuryCollected: 0,
     lastJackpotWinner: null
   });
 
   // Balance states
-  const [usdcBalance, setUsdcBalance] = useState<number>(1540.50);
-  const [ethBalance, setEthBalance] = useState<number>(0.842);
+  const [usdcBalance, setUsdcBalance] = useState<number>(0);
+  const [ethBalance, setEthBalance] = useState<number>(0);
 
   // Challenges list
   const [challenges, setChallenges] = useState<Challenge[]>([
@@ -165,7 +178,7 @@ export default function App() {
   // Fetch all Lobbies and Progressive jackpot states
   const fetchLobbiesAndJackpots = async () => {
     try {
-      const res = await fetch('https://bingo.veklom.com/api/lobbies');
+      const res = await fetch(`${BINGO_API_BASE}/api/lobbies`);
       if (res.ok) {
         const data = await res.json();
         setLobbies(data.lobbies);
@@ -183,7 +196,7 @@ export default function App() {
   // Fetch Leaderboard
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const res = await fetch('https://bingo.veklom.com/api/leaderboard');
+      const res = await fetch(`${BINGO_API_BASE}/api/leaderboard`);
       if (res.ok) {
         const data = await res.json();
         setLeaders(data.leaders);
@@ -247,8 +260,7 @@ export default function App() {
     setChallenges((prev) =>
       prev.map((c) => {
         if (c.id === id && !c.completed) {
-          showToast(`DAILY CHALLENGE COMPLETE: ${c.title}! Earned +${c.rewardUSDC} USDC!`, 'success');
-          setUsdcBalance((curr) => curr + c.rewardUSDC);
+          showToast(`DAILY CHALLENGE COMPLETE: ${c.title}. Reward is locked until Bingo backend returns settlement proof.`, 'warn');
           return { ...c, completed: true };
         }
         return c;
@@ -261,7 +273,7 @@ export default function App() {
     if (!activeLobby) return;
     setAiLoading(true);
     try {
-      const res = await fetch('https://bingo.veklom.com/api/gemini/commentary', {
+      const res = await fetch(`${BINGO_API_BASE}/api/gemini/commentary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -307,7 +319,7 @@ export default function App() {
     });
 
     try {
-      const res = await fetch('https://bingo.veklom.com/api/lobbies/join', {
+      const res = await fetch(`${BINGO_API_BASE}/api/lobbies/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -360,7 +372,7 @@ export default function App() {
     });
 
     try {
-      const res = await fetch('https://bingo.veklom.com/api/v1/interlink/execute', {
+      const res = await fetch(`${BINGO_API_BASE}/api/v1/interlink/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -378,84 +390,11 @@ export default function App() {
     }
   };
 
-  // Sign and authorize Base X402 payment signature (Simulating secure on-device hardware)
+  // Real Base/x402 signing is intentionally blocked until the backend exposes proof ingestion.
   const handleSignAndPay = async () => {
     if (!pendingPaymentReq || !paymentActionDetails) return;
 
-    // Simulate cryptographic EIP-712 / EIP-3009 local signing
-    const mockSignature = {
-      payload: {
-        authorization: {
-          from: player?.walletAddress,
-          to: pendingPaymentReq.accepts[0].payTo,
-          value: Math.round(Number(pendingPaymentReq.accepts[0].price) * 1000000).toString(),
-          validBefore: Math.floor(Date.now() / 1000) + 3600,
-          nonce: '0x' + crypto.randomUUID().replace(/-/g, '')
-        },
-        signature: '0x' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
-      }
-    };
-
-    const b64Signature = btoa(JSON.stringify(mockSignature));
-
-    try {
-      const isLobbyJoin = paymentActionDetails.tool === 'join_lobby';
-      const endpoint = isLobbyJoin ? 'https://bingo.veklom.com/api/lobbies/join' : 'https://bingo.veklom.com/api/v1/interlink/execute';
-      
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'PAYMENT-SIGNATURE': b64Signature,
-        },
-        body: JSON.stringify(
-          isLobbyJoin 
-            ? paymentActionDetails.parameters 
-            : {
-                tool_name: paymentActionDetails.tool,
-                parameters: paymentActionDetails.parameters,
-              }
-        ),
-      });
-
-      const responseHeader = res.headers.get('PAYMENT-RESPONSE');
-      const data = await res.json();
-
-      if (res.ok && (data.status === 'success' || data.success)) {
-        const decodedResponse = JSON.parse(atob(responseHeader || ''));
-        const pricePaid = Number(pendingPaymentReq.accepts[0].price);
-
-        const newTx = {
-          hash: decodedResponse.transactionId,
-          action: isLobbyJoin ? `Registered in ${activeLobby.name}` : `Selected Cell #${paymentActionDetails.parameters.number}`,
-          amount: pricePaid.toFixed(2),
-          timestamp: new Date().toISOString(),
-          status: 'success' as const
-        };
-
-        setTransactions((prev) => [newTx, ...prev]);
-        setUsdcBalance((curr) => curr - pricePaid);
-        
-        if (isLobbyJoin) {
-          showToast(`Successfully joined ${activeLobby.name}. Fee split logged on-chain.`, 'success');
-        } else if (paymentActionDetails.tool === 'telepathic_number_selection') {
-          showToast(`Telepathic selection #${paymentActionDetails.parameters.number} synchronized.`, 'success');
-          updateAiCommentary(paymentActionDetails.parameters.number);
-        } else if (paymentActionDetails.tool === 'sync_offline_gameplay') {
-          setOfflineQueue([]);
-          showToast(`Synchronized ${data.synchronizedCount} offline actions successfully!`, 'success');
-        }
-
-        fetchLobbiesAndJackpots();
-      } else {
-        showToast(data.error || 'On-chain payment settlement rejected.', 'warn');
-      }
-    } catch (e) {
-      showToast('Blockchain verification timeout.', 'warn');
-    } finally {
-      setPendingPaymentReq(null);
-      setPaymentActionDetails(null);
-    }
+    showToast('Real Base wallet payment is not wired for Bingo yet. No artificial signature was sent.', 'warn');
   };
 
   const handleRejectPayment = () => {
@@ -482,7 +421,7 @@ export default function App() {
     });
 
     try {
-      const res = await fetch('https://bingo.veklom.com/api/v1/interlink/execute', {
+      const res = await fetch(`${BINGO_API_BASE}/api/v1/interlink/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -521,134 +460,12 @@ export default function App() {
   useEffect(() => {
     if (!isAutoPilot || !player || !activeLobby) return;
 
-    const interval = setInterval(async () => {
-      const isRegistered = activeLobby.activePlayers.some(p => p.walletAddress.toLowerCase() === player.walletAddress.toLowerCase());
-
-      // 1. Auto-Register for Lobby Countdown
-      if (activeLobby.status === 'countdown' && !isRegistered) {
-        // Formulate automatic EIP-3009 joining payload
-        const mockSignature = {
-          payload: {
-            authorization: {
-              from: player.walletAddress,
-              to: TREASURY_WALLET,
-              value: Math.round(activeLobby.entryFee * 1000000).toString(),
-              validBefore: Math.floor(Date.now() / 1000) + 3600,
-              nonce: '0x' + crypto.randomUUID().replace(/-/g, '')
-            },
-            signature: '0x' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
-          }
-        };
-
-        const b64Signature = btoa(JSON.stringify(mockSignature));
-
-        try {
-          const res = await fetch('https://bingo.veklom.com/api/lobbies/join', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'PAYMENT-SIGNATURE': b64Signature,
-            },
-            body: JSON.stringify({
-              lobbyId: activeLobbyId,
-              walletAddress: player.walletAddress,
-              username: player.username,
-              coherence: resonance.cardiac_coherence,
-              focus: resonance.attention_focus_percentage,
-              frequency: resonance.neural_frequency_hz
-            })
-          });
-
-          if (res.ok) {
-            const responseHeader = res.headers.get('PAYMENT-RESPONSE');
-            const decodedResponse = JSON.parse(atob(responseHeader || ''));
-            
-            const newTx = {
-              hash: decodedResponse.transactionId,
-              action: `[AUTO-PILOT] Entered ${activeLobby.name}`,
-              amount: activeLobby.entryFee.toFixed(2),
-              timestamp: new Date().toISOString(),
-              status: 'success' as const
-            };
-
-            setTransactions((prev) => [newTx, ...prev]);
-            setUsdcBalance((curr) => curr - activeLobby.entryFee);
-            showToast(`[AUTO-PILOT] Signed EIP-3009 entrance to ${activeLobby.name}!`, 'success');
-            fetchLobbiesAndJackpots();
-          }
-        } catch (err) {
-          console.error('[AUTO-PILOT] join failed:', err);
-        }
-      }
-
-      // 2. Auto-Daub called numbers
-      if (activeLobby.status === 'active' && isRegistered) {
-        // Find cells on our board that are called but not selected yet
-        const flattened = playerCard.flat();
-        const unselectedCalled = flattened.filter(n => activeLobby.calledNumbers.includes(n) && !selectedNumbers.includes(n));
-
-        if (unselectedCalled.length > 0) {
-          const targetNum = unselectedCalled[0];
-          
-          // Auto-Pilot submits telepathic selection with a micropayment signature
-          const mockSignature = {
-            payload: {
-              authorization: {
-                from: player.walletAddress,
-                to: TREASURY_WALLET,
-                value: '10000', // 0.01 USDC Telepathic micro fee
-                validBefore: Math.floor(Date.now() / 1000) + 3600,
-                nonce: '0x' + crypto.randomUUID().replace(/-/g, '')
-              },
-              signature: '0x' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
-            }
-          };
-
-          const b64Signature = btoa(JSON.stringify(mockSignature));
-
-          try {
-            const res = await fetch('https://bingo.veklom.com/api/v1/interlink/execute', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'PAYMENT-SIGNATURE': b64Signature,
-              },
-              body: JSON.stringify({
-                tool_name: 'telepathic_number_selection',
-                parameters: {
-                  game_id: activeLobby.id,
-                  number: targetNum,
-                  biometric_resonance: resonance,
-                  walletAddress: player.walletAddress,
-                }
-              }),
-            });
-
-            if (res.ok) {
-              const responseHeader = res.headers.get('PAYMENT-RESPONSE');
-              const decodedResponse = JSON.parse(atob(responseHeader || ''));
-              
-              const newTx = {
-                hash: decodedResponse.transactionId,
-                action: `[AUTO-PILOT] Daubed Cell #${targetNum}`,
-                amount: '0.01',
-                timestamp: new Date().toISOString(),
-                status: 'success' as const
-              };
-
-              setTransactions((prev) => [newTx, ...prev]);
-              setUsdcBalance((curr) => curr - 0.01);
-              fetchLobbiesAndJackpots();
-            }
-          } catch (err) {
-            console.error('[AUTO-PILOT] daub failed:', err);
-          }
-        }
-      }
+    const interval = setInterval(() => {
+      showToast('[AUTO-PILOT] Watch mode only. Paid autonomous play is disabled until real wallet proof is wired.', 'warn');
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isAutoPilot, player, activeLobby, playerCard, selectedNumbers, activeLobbyId, resonance]);
+  }, [isAutoPilot, player, activeLobby]);
 
   // If user hasn't signed waiver, show upfront legal covenant screen
   if (!hasSignedWaiver) {
@@ -675,7 +492,7 @@ export default function App() {
                 <Shield className="w-4 h-4 text-red-400" /> ARTICLE I: COGNITIVE AI DELEGATION
               </h4>
               <p className="text-white/70">
-                You hereby delegate and bind an autonomous AI Agent to play BINGO 2060 on your behalf. The Agent is authorized to monitor biochemical telemetry, automatically select matching grid matrices, and submit cryptographically simulated EIP-3009 Transfer-With-Authorizations directly on Base Mainnet.
+                You may delegate an autonomous AI Agent to monitor live Bingo lobbies and board state. Paid auto-play is disabled until Base wallet approval and BYOS settlement proof are returned by the backend.
               </p>
             </div>
 
@@ -684,7 +501,7 @@ export default function App() {
                 <Coins className="w-4 h-4 text-[#00f3ff]" /> ARTICLE II: PROGRESSIVE POOL & REVENUE PERCENTAGES
               </h4>
               <p className="text-white/70">
-                All game fees are subject to immutable split allocations verified on-chain: **10% House Treasury Cut** paid directly to the developer wallet ({TREASURY_WALLET}), **20% Progressive Jackpot Cut** staying within the global progressive pool, and **70% active round prize pot**. A **15% winner fee surcharge** is withheld from payouts to preserve progressive pool solvency.
+                Target fee allocation is 10% house treasury, 20% progressive jackpot, and 70% active round prize pot. This screen only treats those values as live when returned by the Bingo backend or settlement proof route.
               </p>
             </div>
 
@@ -693,7 +510,7 @@ export default function App() {
                 <Activity className="w-4 h-4 text-[#bc13fe]" /> ARTICLE III: BIOMETRIC TELEMETRY & RESONANCE
               </h4>
               <p className="text-white/70">
-                Signer acknowledges that gameplay speed, winning patterns, and standings are calibrated by live Cardiac Coherence and Brainwave telemetry. No parameters are mocked or simulated. All data feeds are legally bound to your EIP-155:8453 account.
+                Signer acknowledges that local telemetry controls are gameplay inputs. They are not medical biometric proof and are not treated as on-chain evidence without backend settlement rows.
               </p>
             </div>
           </div>
@@ -707,7 +524,7 @@ export default function App() {
                 type="text"
                 value={waiverSignKey}
                 onChange={(e) => setWaiverSignKey(e.target.value)}
-                placeholder="Enter private mnemonic key or signature hash (min 10 chars)..."
+                placeholder="Type an acknowledgement phrase (min 10 chars)..."
                 required
                 className="bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white placeholder-white/30 focus:outline-none focus:border-red-500 transition-colors"
               />
@@ -746,7 +563,7 @@ export default function App() {
   if (!player) {
     return (
       <div className="min-h-screen bg-[#060813] flex items-center justify-center p-4">
-        <MFASection onAuthenticated={handleAuthenticated} />
+        <MFASection apiBase={BINGO_API_BASE} onAuthenticated={handleAuthenticated} />
       </div>
     );
   }
@@ -834,6 +651,30 @@ export default function App() {
         </div>
       </header>
 
+      <section className="border-b border-white/10 bg-black/50 px-8 py-3">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-white/40">Bingo 2060 Proof State</div>
+            <div className="text-xs text-white/80 mt-0.5">
+              {bingoProof?.proof.reason || "Checking Bingo backend, lobby feed, leaderboard, and x402 discovery..."}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {bingoProof?.proof.probes.map((probe) => (
+              <span key={probe.route} className={`rounded border px-2 py-1 text-[9px] font-mono ${
+                probe.state === 'verified' && probe.x402Manifest !== false
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                  : probe.state === 'verified'
+                    ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                    : 'border-red-500/30 bg-red-500/10 text-red-300'
+              }`}>
+                {probe.route || '/'} · {probe.status}{typeof probe.count === 'number' ? ` · ${probe.count}` : ''}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Global Live Progressive Jackpot Indicators */}
       <section className="bg-gradient-to-r from-[#bc13fe]/10 via-black/40 to-[#00f3ff]/10 border-b border-white/10 py-4 px-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
         <div className="flex items-center gap-3">
@@ -869,8 +710,8 @@ export default function App() {
           <div>
             <div className="text-[9px] font-mono text-white/40 uppercase tracking-widest">EIP-3009 Network Speed</div>
             <div className="text-xs font-mono font-bold text-green-400 flex items-center gap-1.5">
-              <span>● COHERENT AT 8453</span>
-              <span className="text-[9px] text-white/40">(BASE MAINNET)</span>
+              <span>● BASE 8453 TARGET</span>
+              <span className="text-[9px] text-white/40">(needs x402 proof)</span>
             </div>
           </div>
         </div>
@@ -1070,7 +911,7 @@ export default function App() {
               onSelectNumber={handleSelectNumber}
               selectedNumbers={selectedNumbers}
               isOffline={isOffline}
-              onClaimWin={() => showToast('Payout processed automatically on-chain!', 'success')}
+              onClaimWin={() => showToast('Local win detected. Payout is locked until Bingo backend settlement proof exists.', 'warn')}
               claimedWins={player.performanceMetrics.totalWins}
             />
           )}

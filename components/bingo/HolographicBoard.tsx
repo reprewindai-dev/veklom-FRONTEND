@@ -126,7 +126,7 @@ export default function HolographicBoard({
             </h3>
           </div>
           <p className="text-xs text-white/50 font-sans mt-0.5">
-            Active patterns synchronized on Base.org Network
+            Active patterns loaded from the Bingo backend feed
           </p>
         </div>
 
@@ -227,7 +227,7 @@ export default function HolographicBoard({
             Winning Pattern Detected!
           </h4>
           <p className="text-xs text-slate-300 font-mono mt-1">
-            Holographic verification alignment perfect
+            Local board match detected. Backend payout proof is required.
           </p>
           <button
             onClick={onClaimWin}
@@ -244,7 +244,7 @@ export default function HolographicBoard({
           <Zap className="w-3 h-3 text-[#00f3ff]" /> Hover cell for quantum prediction
         </span>
         <span>
-          Base App ID: {'6a20f24cc341f72c2f573eb5'.substring(0, 8)}...
+          Base App proof: needs verified metadata
         </span>
       </div>
     </div>
