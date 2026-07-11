@@ -21,7 +21,6 @@ import { QuantumReplayModal } from '@/components/agent-dual/QuantumReplayModal';
 import { DuelInviteBlock } from '@/components/agent-dual/DuelInviteBlock';
 import { FlameMeter } from '@/components/agent-dual/FlameMeter';
 import { WalletProviders } from './WalletProviders';
-import { BankerPayPanel } from './BankerPayPanel';
 import { 
   Flame, 
   Coins, 
@@ -154,7 +153,6 @@ function AgentDuelApp() {
   // 1b. Duel Invite Real-time States
   const [activeDuel, setActiveDuel] = useState<DuelSession | null>(null);
   const [openDuelLobbies, setOpenDuelLobbies] = useState<BackendLobby[]>([]);
-  const [isSimulatedPeerActive, setIsSimulatedPeerActive] = useState<boolean>(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
   // 1bb. Base Chain audit search state. Chain metadata is displayed only when returned by BYOS.
@@ -371,10 +369,7 @@ function AgentDuelApp() {
           chosenWager = 0.25;
           if (chosenWager > bankroll) chosenWager = 0.05;
           newBets[spot] = chosenWager;
-          if (bankroll > 2.0 && Math.random() < 0.3) {
-            newBets.tie = 0.05; 
-          }
-          addM2mLog(`[Bot Smart] Grid trend bet: $${chosenWager.toFixed(2)} on [${spot.toUpperCase()}]`, "info");
+          addM2mLog(`[Bot Smart] Single-lane trend bet: $${chosenWager.toFixed(2)} on [${spot.toUpperCase()}]`, "info");
         }
 
         setBets(newBets);
@@ -1278,131 +1273,8 @@ function AgentDuelApp() {
       }
     }
     setActiveDuel(null);
-    setIsSimulatedPeerActive(false);
     fetchOpenDuelLobbies();
     addNotification('collapse', 'Left Duel Session', 'You have disconnected from the BYOS PVP lobby.');
-  };
-
-  const handleToggleSimulatePeer = () => {
-    if (!activeDuel) return;
-    const peerAddress = "0xPeerWallet" + Math.random().toString(36).substring(2, 6).toUpperCase();
-    
-    setIsSimulatedPeerActive((prev) => {
-      const nextVal = !prev;
-      setActiveDuel((duel) => {
-        if (!duel) return null;
-        const updatedPlayers = { ...duel.players };
-        if (nextVal) {
-          updatedPlayers[peerAddress] = {
-            address: peerAddress,
-            connected: true,
-            balanceUsdc: 0,
-            bets: { player: 0, banker: 0, tie: 0 },
-            wagerAmount: 0,
-            ejected: false,
-            ejectedMulti: null,
-            payout: 0,
-            status: 'pending'
-          };
-          addNotification('tx_success', 'Simulated Peer Added', `Simulated Peer address connected: ${peerAddress}`);
-        } else {
-          const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-          Object.keys(updatedPlayers).forEach((addr) => {
-            if (addr !== myAddress) {
-              delete updatedPlayers[addr];
-            }
-          });
-          addNotification('collapse', 'Simulated Peer Removed', 'Peer disconnected from the lobby.');
-        }
-        return { ...duel, players: updatedPlayers };
-      });
-      return nextVal;
-    });
-  };
-
-  const handlePlaceSimulatedBet = (simBets: { player: number; banker: number; tie: number }) => {
-    if (!activeDuel) return;
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const peerEntry = Object.entries(activeDuel.players).find(([addr]) => addr !== myAddress);
-    if (!peerEntry) return;
-    const peerAddress = peerEntry[0];
-
-    setActiveDuel((prev) => {
-      if (!prev) return null;
-      const updatedPlayers = { ...prev.players };
-      const totalWager = simBets.player + simBets.banker + simBets.tie;
-      updatedPlayers[peerAddress] = {
-        ...updatedPlayers[peerAddress],
-        bets: simBets,
-        wagerAmount: totalWager,
-        balanceUsdc: Number((updatedPlayers[peerAddress].balanceUsdc - totalWager).toFixed(2)),
-        status: 'ready'
-      };
-      return { ...prev, players: updatedPlayers };
-    });
-    playSfx(660, 0.05, 'sine', 0.1);
-  };
-
-  const handleSimulatePeerEject = () => {
-    if (!activeDuel || activeDuel.status !== 'running') return;
-    const finalMulti = multiplier;
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const peerEntry = Object.entries(activeDuel.players).find(([addr]) => addr !== myAddress);
-    if (!peerEntry) return;
-    const peerAddress = peerEntry[0];
-
-    setActiveDuel((prev) => {
-      if (!prev) return null;
-      const updatedPlayers = { ...prev.players };
-      if (updatedPlayers[peerAddress] && updatedPlayers[peerAddress].status === 'ready') {
-        const outcome = prev.activeHand?.outcome || 'player';
-        let payout = 0;
-        if (outcome === 'player') {
-          payout = updatedPlayers[peerAddress].bets.player * finalMulti * 2.0;
-        } else if (outcome === 'banker') {
-          payout = updatedPlayers[peerAddress].bets.banker * finalMulti * 1.95;
-        } else if (outcome === 'tie') {
-          payout = updatedPlayers[peerAddress].bets.tie * finalMulti * 9.0;
-          payout += (updatedPlayers[peerAddress].bets.player + updatedPlayers[peerAddress].bets.banker) * finalMulti;
-        }
-
-        updatedPlayers[peerAddress] = {
-          ...updatedPlayers[peerAddress],
-          status: 'ejected',
-          ejected: true,
-          ejectedMulti: finalMulti,
-          payout: Number(payout.toFixed(2))
-        };
-        
-        addNotification('tx_success', `Peer Ejected at ${finalMulti.toFixed(2)}x`, `Peer secured potential payout of $${payout.toFixed(2)} USDC.`);
-      }
-
-      const allFinished = Object.values(updatedPlayers).every(p => (p as DuelPlayer).status === 'ejected' || (p as DuelPlayer).status === 'crashed');
-      if (allFinished) {
-        clearInterval(timerId.current);
-        setPhase('ejected');
-        setVisiblePacketsCount(3);
-        const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
-        
-        const myPayout = finalDuelState.players[myAddress]?.payout || 0;
-        const newBalance = Number((bankroll + myPayout).toFixed(2));
-        if (wallet.connected) {
-          setWallet((v) => ({ ...v, balanceUsdc: newBalance }));
-        } else {
-          setBankroll(newBalance);
-        }
-
-        return {
-          ...prev,
-          status: 'ended',
-          players: finalDuelState.players,
-          winnerAddress: finalDuelState.winnerAddress
-        };
-      }
-
-      return { ...prev, players: updatedPlayers };
-    });
-    playSfx(587.33, 0.2, 'sine', 0.25);
   };
 
   const handleStartDuelCountdown = () => {
@@ -3316,10 +3188,6 @@ function AgentDuelApp() {
                   onCreateDuel={handleCreateDuel}
                   onJoinDuel={handleJoinDuel}
                   onLeaveDuel={handleLeaveDuel}
-                  onToggleSimulatePeer={handleToggleSimulatePeer}
-                  onPlaceSimulatedBet={handlePlaceSimulatedBet}
-                  onSimulatePeerEject={handleSimulatePeerEject}
-                  isSimulatedPeerActive={isSimulatedPeerActive}
                   onStartDuelCountdown={handleStartDuelCountdown}
                   liveGameplayEnabled={!!duelRouteState?.liveGameplayEnabled}
                 />
@@ -3589,10 +3457,6 @@ export default function App() {
   return (
     <WalletProviders>
       <AgentDuelApp />
-      {/* Banker Pay Panel — real on-chain payment to /x402/score */}
-      <div style={{ padding: '32px 16px', maxWidth: 660, margin: '0 auto' }}>
-        <BankerPayPanel />
-      </div>
     </WalletProviders>
   );
 }
