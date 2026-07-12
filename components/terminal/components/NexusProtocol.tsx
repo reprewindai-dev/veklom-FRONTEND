@@ -77,7 +77,7 @@ interface NexusState {
   leaderboard: any;
   leaderboard_state: "verified" | "needs_proof" | "error";
   x402: any;
-  covenant: any;
+  cappo: any;
   cards: NexusApiCard[];
   nodes: NexusNode[];
   anchoring: {
@@ -165,8 +165,8 @@ export default function NexusProtocol() {
     if (!selectedApiId && apiCards.length > 0) setSelectedApiId(apiCards[0].id);
   }, [apiCards, selectedApiId]);
 
-  const covenantAgents = useMemo(() => {
-    const agents = Array.isArray(state?.covenant?.agents) ? state?.covenant.agents : [];
+  const cappoAgents = useMemo(() => {
+    const agents = Array.isArray(state?.cappo?.agents) ? state?.cappo.agents : [];
     return agents.slice(0, 8);
   }, [state]);
 
@@ -461,7 +461,7 @@ export default function NexusProtocol() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[8.5px] font-mono text-white/30 uppercase">
                     <span>Metrics: {state?.metrics ? "verified" : "needs proof"}</span>
                     <span>Staking: {state?.staking ? "verified" : "needs proof"}</span>
-                    <span>cAPI: {state?.covenant ? "verified" : "needs proof"}</span>
+                    <span>cAPI: {state?.cappo ? "verified" : "needs proof"}</span>
                   </div>
                 </div>
               </div>
@@ -555,10 +555,10 @@ export default function NexusProtocol() {
         {subTab === "identity" && (
           <div className="max-w-6xl space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <ProofPanel title="Agents" value={fmtNumber(state?.covenant?.metrics?.agents)} subtitle={`${state?.sources.capi || "cAPI"} /api/state`} state={state?.covenant ? "verified" : "needs_proof"} />
-              <ProofPanel title="Capabilities" value={fmtNumber(state?.covenant?.metrics?.capabilities)} subtitle="Interlink registry" state={state?.covenant ? "verified" : "needs_proof"} />
-              <ProofPanel title="Authorized Rate" value={`${fmtNumber(state?.covenant?.metrics?.authorized_rate)}%`} subtitle="Interlink metrics" state={state?.covenant ? "verified" : "needs_proof"} />
-              <ProofPanel title="Audit Events" value={fmtNumber(state?.covenant?.metrics?.total)} subtitle="cAPI audit total" state={state?.covenant ? "verified" : "needs_proof"} />
+              <ProofPanel title="Agents" value={fmtNumber(state?.cappo?.metrics?.agents)} subtitle={`${state?.sources.capi || "cAPI"} /api/state`} state={state?.cappo ? "verified" : "needs_proof"} />
+              <ProofPanel title="Capabilities" value={fmtNumber(state?.cappo?.metrics?.capabilities)} subtitle="Interlink registry" state={state?.cappo ? "verified" : "needs_proof"} />
+              <ProofPanel title="Authorized Rate" value={`${fmtNumber(state?.cappo?.metrics?.authorized_rate)}%`} subtitle="Interlink metrics" state={state?.cappo ? "verified" : "needs_proof"} />
+              <ProofPanel title="Audit Events" value={fmtNumber(state?.cappo?.metrics?.total)} subtitle="cAPI audit total" state={state?.cappo ? "verified" : "needs_proof"} />
             </div>
             <div className="rounded-xl border border-white/10 bg-void-metal/80 p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -566,7 +566,7 @@ export default function NexusProtocol() {
                 <span className="text-xs font-bold uppercase tracking-widest text-white/70">Interlink Agents</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {covenantAgents.map((agent: any) => (
+                {cappoAgents.map((agent: any) => (
                   <div key={agent.identity?.agent_id} className="p-4 rounded-lg border border-white/5 bg-black/40">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -583,7 +583,7 @@ export default function NexusProtocol() {
                   </div>
                 ))}
               </div>
-              {covenantAgents.length === 0 && (
+              {cappoAgents.length === 0 && (
                 <EvidenceGate title="No Interlink agents returned">
                   The cAPI `/api/state` probe did not return agent registry rows. No local PGL certificates are generated on this page.
                 </EvidenceGate>

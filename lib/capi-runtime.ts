@@ -3,9 +3,9 @@ export const CAPI_RUNTIME_URL =
   process.env.INTERLINK_CAPI_URL ||
   "https://capi.veklom.com";
 
-export const CAPI_RUNTIME_LABEL = "interlink-cAPI / Covenant runtime";
+export const CAPI_RUNTIME_LABEL = "CAPPO Backend";
 
-export const CAPI_RUNTIME_REPO = "interlink-cAPI";
+export const CAPI_RUNTIME_REPO = "cappo-backend";
 
 export const CAPI_EXECUTION_PATH =
   process.env.CAPI_EXECUTION_PATH ||

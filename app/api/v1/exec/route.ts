@@ -42,7 +42,7 @@ function validateRequest(req: NextRequest): NextResponse | null {
   const contentType = req.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
     return NextResponse.json(
-      { error: "interlink-cAPI execution requires application/json" },
+      { error: "CAPPO Backend execution requires application/json" },
       { status: 415 },
     );
   }
@@ -103,9 +103,9 @@ async function proxyExec(req: NextRequest) {
       headers: responseHeaders,
     });
   } catch (err) {
-    const detail = err instanceof Error ? err.message.slice(0, 180) : "interlink-cAPI execution proxy failed";
+    const detail = err instanceof Error ? err.message.slice(0, 180) : "CAPPO Backend execution proxy failed";
     return NextResponse.json(
-      { error: "interlink-cAPI governed execution unavailable", detail },
+      { error: "CAPPO Backend governed execution unavailable", detail },
       { status: 502 },
     );
   }

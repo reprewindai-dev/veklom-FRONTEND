@@ -102,10 +102,10 @@ function bondHealthScore(provider: any): number {
   return clampScore(100 - (slashed / bond) * 100);
 }
 
-function normalizeCards(metrics: any, staking: any, covenant: any) {
+function normalizeCards(metrics: any, staking: any, cappo: any) {
   const apis = Array.isArray(metrics?.apis) ? metrics.apis : [];
   const providers = Array.isArray(staking?.providers) ? staking.providers : [];
-  const authorizedRate = asNumber(covenant?.metrics?.authorized_rate);
+  const authorizedRate = asNumber(cappo?.metrics?.authorized_rate);
   const physicalProbes = asNumber(metrics?.total_physical_probes_recorded);
 
   return apis.map((api: any) => {
@@ -113,7 +113,7 @@ function normalizeCards(metrics: any, staking: any, covenant: any) {
     const composite = clampScore(asNumber(api?.compositeScore));
     const p95Score = p95HealthScore(provider);
     const bondScore = bondHealthScore(provider);
-    const covenantScore = clampScore(authorizedRate);
+    const cappoScore = clampScore(authorizedRate);
     const probeScore = clampScore(Math.min(100, physicalProbes / 250));
 
     return {
@@ -157,8 +157,8 @@ function normalizeCards(metrics: any, staking: any, covenant: any) {
             : "No provider bond returned",
         },
         {
-          name: "Covenant auth",
-          score: covenantScore,
+          name: "CAPPO auth",
+          score: cappoScore,
           weight: 15,
           desc: `cAPI authorized rate ${authorizedRate || 0}%`,
         },
@@ -187,7 +187,7 @@ function normalizeNodes(staking: any, metrics: any) {
 }
 
 export async function GET() {
-  const [metricsProbe, stakingProbe, leaderboardProbe, x402Probe, covenantProbe] = await Promise.all([
+  const [metricsProbe, stakingProbe, leaderboardProbe, x402Probe, cappoProbe] = await Promise.all([
     probeJson(BYOS_API_BASE, "/api/v1/vnp/metrics"),
     probeJson(BYOS_API_BASE, "/api/v1/x402/staking/state"),
     probeJson(BYOS_API_BASE, "/api/v1/benchmarks/leaderboard"),
@@ -197,10 +197,10 @@ export async function GET() {
 
   const metrics = metricsProbe.state === "verified" ? metricsProbe.data : null;
   const staking = stakingProbe.state === "verified" ? stakingProbe.data : null;
-  const covenant = covenantProbe.state === "verified" ? covenantProbe.data : null;
-  const cards = normalizeCards(metrics, staking, covenant);
+  const cappo = cappoProbe.state === "verified" ? cappoProbe.data : null;
+  const cards = normalizeCards(metrics, staking, cappo);
   const nodes = normalizeNodes(staking, metrics);
-  const probes = [metricsProbe, stakingProbe, leaderboardProbe, x402Probe, covenantProbe].map(({ data, ...probe }) => probe);
+  const probes = [metricsProbe, stakingProbe, leaderboardProbe, x402Probe, cappoProbe].map(({ data, ...probe }) => probe);
   const hardFailures = probes.filter((probe) => probe.state === "error").length;
   const proofGaps = probes.filter((probe) => probe.state === "needs_proof").length;
 
@@ -225,7 +225,7 @@ export async function GET() {
     leaderboard: leaderboardProbe.state === "verified" ? leaderboardProbe.data : null,
     leaderboard_state: leaderboardProbe.state,
     x402: x402Probe.state === "verified" ? x402Probe.data : null,
-    covenant,
+    cappo,
     cards,
     nodes,
     anchoring: {

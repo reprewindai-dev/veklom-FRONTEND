@@ -1,7 +1,7 @@
 /**
- * Covenant Protocol — type definitions.
+ * CAPPO Protocol — type definitions.
  *
- * Every connection through Covenant carries identity, policy, trust, and
+ * Every connection through CAPPO carries identity, policy, trust, and
  * evidence as first-class citizens. These types describe the full surface of
  * the protocol: core runtime, plus the Safety, Intelligence, and Governance
  * layers.
@@ -105,7 +105,7 @@ export interface Policy {
   };
 }
 
-export interface CovenantRequest {
+export interface CAPPORequest {
   connection_id: string;
   agent_id: string;
   agent_signature: string;
@@ -194,7 +194,7 @@ export interface TrustScore {
   last_updated: string;
 }
 
-export interface CovenantResponse {
+export interface CAPPOResponse {
   connection_id: string;
   status: Decision;
   evidence_hash?: string;

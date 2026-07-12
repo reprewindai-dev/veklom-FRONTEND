@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import type { PhaseTrace } from "@/lib/covenant/types";
+import type { PhaseTrace } from "@/lib/cappo/types";
 import { cx, PHASE_STYLE } from "./util";
 import { Json } from "./ui";
 

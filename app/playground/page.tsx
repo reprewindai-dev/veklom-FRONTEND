@@ -479,7 +479,7 @@ export default function PlaygroundPage() {
               <p className="text-[10px] text-gray-500 mt-0.5">
                 {isSimulation
                   ? 'Testing how the gateway handles adversarial input — not a real inference run.'
-                  : 'Prompts are routed through interlink-cAPI before model execution. Missing backend proof is shown as Needs proof.'}
+                  : 'Prompts are routed through CAPPO Backend before model execution. Missing backend proof is shown as Needs proof.'}
               </p>
             </div>
           </div>

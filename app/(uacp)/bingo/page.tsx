@@ -439,7 +439,7 @@ export default function App() {
     }
   };
 
-  // Sign Legal Waiver covenant
+  // Sign Legal Waiver cappo
   const handleSignWaiver = (e: React.FormEvent) => {
     e.preventDefault();
     if (!waiverSignKey.trim() || waiverSignKey.length < 10) {
@@ -452,7 +452,7 @@ export default function App() {
       localStorage.setItem('bingo2060_waiver_signed', 'true');
       setHasSignedWaiver(true);
       setIsSigningWaiver(false);
-      showToast('M2M Autonomous Covenant Signed & Transmitted to Base Ledger!', 'success');
+      showToast('M2M Autonomous CAPPO Signed & Transmitted to Base Ledger!', 'success');
     }, 1500);
   };
 
@@ -467,7 +467,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isAutoPilot, player, activeLobby]);
 
-  // If user hasn't signed waiver, show upfront legal covenant screen
+  // If user hasn't signed waiver, show upfront legal cappo screen
   if (!hasSignedWaiver) {
     return (
       <div className="min-h-screen bg-[#060813] flex items-center justify-center p-4 relative overflow-hidden font-mono">

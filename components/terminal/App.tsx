@@ -159,7 +159,7 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
             >
               <option value="" className="bg-black text-white">Control Proxy (same-origin)</option>
               <option value="https://api.veklom.com" className="bg-black text-white">BYOS API (api.veklom.com)</option>
-              <option value="https://capi.veklom.com" className="bg-black text-white">Covenant CAPI (capi.veklom.com)</option>
+              <option value="https://capi.veklom.com" className="bg-black text-white">CAPPO CAPI (capi.veklom.com)</option>
             </select>
             <div className="w-px h-3 bg-white/20"></div>
             <span>ROUTING: SAME-ORIGIN</span>

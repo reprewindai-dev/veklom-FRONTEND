@@ -107,7 +107,7 @@ const API_BASE_URL = '/api/v1/duel';
 
 interface DuelRouteState {
   generated_at: string;
-  source: { byos: string; covenant: string };
+  source: { byos: string; cappo: string };
   proof: {
     state: 'verified' | 'partial' | 'error';
     reason: string;

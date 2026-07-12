@@ -71,7 +71,7 @@ function walletFromRequest(request: Request): string {
 
 export async function GET(request: Request) {
   const walletAddress = walletFromRequest(request);
-  const [proofProbe, settlementProbe, leaderboardProbe, historyProbe, lobbiesProbe, wagerProbe, outcomeProbe, x402Probe, covenantProbe] = await Promise.all([
+  const [proofProbe, settlementProbe, leaderboardProbe, historyProbe, lobbiesProbe, wagerProbe, outcomeProbe, x402Probe, cappoProbe] = await Promise.all([
     probeJson(BYOS_API_BASE, "/api/v1/duel/proof"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/settlement/summary"),
     probeJson(BYOS_API_BASE, "/api/v1/duel/leaderboard"),
@@ -167,7 +167,7 @@ export async function GET(request: Request) {
       detail: settlementProofs.gas_telemetry === "verified" ? "Latest wager receipt includes gas telemetry" : "No verified settlement receipt with gas telemetry has been persisted",
     },
     x402Probe,
-    covenantProbe,
+    cappoProbe,
   ];
   const probes = probeResults.map(({ data, ...probe }) => probe);
   const endpointGaps = probes.filter((probe) => probe.state === "needs_endpoint").length;
@@ -188,7 +188,7 @@ export async function GET(request: Request) {
     generated_at: new Date().toISOString(),
     source: {
       byos: trimSlash(BYOS_API_BASE),
-      covenant: trimSlash(CAPI_RUNTIME_URL),
+      cappo: trimSlash(CAPI_RUNTIME_URL),
     },
     wallet: walletAddress,
     proof: {
@@ -224,7 +224,7 @@ export async function GET(request: Request) {
       gasTelemetry: settlementProofs.gas_telemetry === "verified" ? "verified" : "needs_proof",
       callData: settlementProofs.call_data === "verified" ? "verified" : "needs_proof",
       x402Discovery: x402Probe.state,
-      covenantState: covenantProbe.state,
+      cappoState: cappoProbe.state,
     },
     liveGameplayEnabled: persistenceVerified,
     leaderboard,

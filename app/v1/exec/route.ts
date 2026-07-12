@@ -34,7 +34,7 @@ async function proxyExec(req: NextRequest) {
     });
   } catch (err: any) {
     return NextResponse.json(
-      { error: "interlink-cAPI governed execution unavailable", detail: err?.message || String(err) },
+      { error: "CAPPO Backend governed execution unavailable", detail: err?.message || String(err) },
       { status: 502 },
     );
   }

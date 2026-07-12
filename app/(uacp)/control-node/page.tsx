@@ -2,9 +2,9 @@
 
 
 import { useState, useEffect, useRef } from "react";
-import { initialStreamState, connectStream, shouldAcceptEvent, isHeartbeatExpired, StreamMachineState } from "@/lib/covenant/machines/streamMachine";
-import { reduceRunState, RunState } from "@/lib/covenant/machines/runMachine";
-import type { SseEvent } from "@/lib/covenant/generated/sse";
+import { initialStreamState, connectStream, shouldAcceptEvent, isHeartbeatExpired, StreamMachineState } from "@/lib/cappo/machines/streamMachine";
+import { reduceRunState, RunState } from "@/lib/cappo/machines/runMachine";
+import type { SseEvent } from "@/lib/cappo/generated/sse";
 import { api, apiUrl } from "@/lib/api";
 
 import { useApi } from "@/hooks/useApi";
@@ -231,7 +231,7 @@ export default function ControlNodePage() {
 
   if (canonical.data?.state === "needs_proof" && !canonical.isLoading) {
     verdictTitle = "Canonical backends need proof";
-    verdictSubtitle = "veklom BYOS backend and interlink-cAPI/Covenant are unreachable or returned no operational proof.";
+    verdictSubtitle = "veklom BYOS backend and CAPPO Backend/CAPPO are unreachable or returned no operational proof.";
     verdictState = 'critical';
   } else if (!systemOperational && !canonical.isLoading) {
     verdictTitle = "Production readiness degraded";
@@ -251,7 +251,7 @@ export default function ControlNodePage() {
     verdictState = 'warning';
   } else if (workspace.isLoading || canonical.isLoading) {
     verdictTitle = "Assessing readiness...";
-    verdictSubtitle = "Syncing with veklom BYOS backend and interlink-cAPI/Covenant.";
+    verdictSubtitle = "Syncing with veklom BYOS backend and CAPPO Backend/CAPPO.";
     verdictState = 'neutral';
   }
 
@@ -332,13 +332,13 @@ export default function ControlNodePage() {
             <ActionRow
               type="review"
               title="Review cAPI proof source"
-              subtitle={capiSource ? `${capiSource.label}: ${capiSource.state.replace("_", " ")}` : "interlink-cAPI source probe pending."}
+              subtitle={capiSource ? `${capiSource.label}: ${capiSource.state.replace("_", " ")}` : "CAPPO Backend source probe pending."}
               actionText="View cAPI"
             />
             <ActionRow
               type="open"
               title="Open Runtime Enforcement"
-              subtitle={capiHealthy ? "Covenant runtime proof is returning from cAPI." : "Runtime enforcement needs cAPI proof."}
+              subtitle={capiHealthy ? "CAPPO runtime proof is returning from cAPI." : "Runtime enforcement needs cAPI proof."}
               actionText="Go to Queue"
             />
           </div>
@@ -569,7 +569,7 @@ export default function ControlNodePage() {
               <Link href="/runtime"><LaunchpadCard title="Runtime Enforcement" status={capiHealthy ? "cAPI proof observed" : "Needs proof"} count={capiHealthy ? 1 : 0} urgency={capiHealthy ? "low" : "normal"} /></Link>
               <Link href="/pipelines"><LaunchpadCard title="Pipelines & GPC" status={usageSummary.active_pipelines !== undefined ? "Live active pipelines" : "Needs proof"} count={usageSummary.active_pipelines ?? 0} urgency="normal" /></Link>
               <Link href="/governance"><LaunchpadCard title="Governance" status={auditRows.length ? "Audit events" : "Needs proof"} count={auditRows.length} urgency={auditRows.some((e) => e.isAlert) ? "high" : "low"} /></Link>
-              <Link href="/interlink"><LaunchpadCard title="interlink-cAPI" status={capiHealthy ? "Covenant online" : "Needs proof"} count={proofCount} urgency={capiHealthy ? "low" : "normal"} /></Link>
+              <Link href="/interlink"><LaunchpadCard title="CAPPO Backend" status={capiHealthy ? "CAPPO online" : "Needs proof"} count={proofCount} urgency={capiHealthy ? "low" : "normal"} /></Link>
               <Link href="/nexus"><LaunchpadCard title="Nexus Protocol" status="Needs proof" count={0} urgency="low" /></Link>
             </div>
           </div>

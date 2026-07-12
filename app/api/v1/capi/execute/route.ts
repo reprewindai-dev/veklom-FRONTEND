@@ -19,7 +19,7 @@ function validateRequest(req: NextRequest): NextResponse | null {
   const contentType = req.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
     return NextResponse.json(
-      { error: "interlink-cAPI execution requires application/json" },
+      { error: "CAPPO Backend execution requires application/json" },
       { status: 415 },
     );
   }
@@ -43,7 +43,7 @@ function validateRequest(req: NextRequest): NextResponse | null {
   bucket.count += 1;
   if (bucket.count > 60) {
     return NextResponse.json(
-      { error: "interlink-cAPI execution rate limit exceeded", retry_after_seconds: Math.ceil((bucket.resetAt - now) / 1000) },
+      { error: "CAPPO Backend execution rate limit exceeded", retry_after_seconds: Math.ceil((bucket.resetAt - now) / 1000) },
       { status: 429 },
     );
   }
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     const text = await response.text();
     const data = text ? safeJson(text) : {};
     if (!response.ok) {
-      return NextResponse.json(data || { error: "interlink-cAPI execution unavailable" }, {
+      return NextResponse.json(data || { error: "CAPPO Backend execution unavailable" }, {
         status: response.status,
         headers: { "cache-control": "no-store" },
       });
@@ -116,15 +116,15 @@ export async function POST(req: NextRequest) {
         ...data,
         run_id: runId,
         execution_id: data?.execution_id || runId,
-        proof_source: "interlink-cAPI",
-        covenant_runtime: true,
+        proof_source: "CAPPO Backend",
+        cappo_runtime: true,
       },
       { headers: { "cache-control": "no-store" } },
     );
   } catch (err) {
-    const detail = err instanceof Error ? err.message.slice(0, 180) : "interlink-cAPI execution proxy failed";
+    const detail = err instanceof Error ? err.message.slice(0, 180) : "CAPPO Backend execution proxy failed";
     return NextResponse.json(
-      { error: "interlink-cAPI execution unavailable", detail },
+      { error: "CAPPO Backend execution unavailable", detail },
       { status: 502 },
     );
   }

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pipeline } from '@/components/pipeline/Pipeline';
-import type { PhaseTrace } from '@/lib/covenant/types';
+import type { PhaseTrace } from '@/lib/cappo/types';
 import { getToken } from '@/lib/api';
 import { 
   Users, 
