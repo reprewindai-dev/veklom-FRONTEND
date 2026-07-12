@@ -13,10 +13,11 @@ import { useGpc } from '@/lib/gpc/useGpc';
 import { GpcCanvas, GpcPropertyPanel } from '@/components/gpc/GpcCanvas';
 import { useExecutionStore, usePreviewStore } from '@/lib/gpc/stores';
 import { ModuleHeader, Pill } from '@/components/telemetry';
-import { BookOpen, Play, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { BookOpen, Play, AlertCircle, CheckCircle, AlertTriangle, Rocket } from 'lucide-react';
 
 interface CompilationModal {
   isOpen: boolean;
+  pipelineId: string;
   pythonCode: string;
   nodeCount: number;
   warnings: string[];
@@ -47,9 +48,15 @@ export default function GpcPage() {
   const [intentInput, setIntentInput] = useState('');
   const [compilationModal, setCompilationModal] = useState<CompilationModal>({
     isOpen: false,
+    pipelineId: '',
     pythonCode: '',
     nodeCount: 0,
     warnings: [],
+  });
+  const [deployModal, setDeployModal] = useState({
+    isOpen: false,
+    targetRepo: '',
+    isDeploying: false,
   });
   const [previewModal, setPreviewModal] = useState<PreviewModal>({
     isOpen: false,
@@ -59,18 +66,50 @@ export default function GpcPage() {
   });
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
 
-  // Compile pipeline
   const handleCompile = useCallback(async () => {
     const result = await compile();
     if (result) {
       setCompilationModal({
         isOpen: true,
+        pipelineId: result.pipeline_id || '',
         pythonCode: result.python_code,
         nodeCount: result.node_count,
         warnings: result.warnings || [],
       });
     }
   }, [compile]);
+
+  const handleDeploy = async () => {
+    if (!deployModal.targetRepo) {
+      setToast({ message: 'Please enter a target repository', type: 'error' });
+      return;
+    }
+    setDeployModal((prev) => ({ ...prev, isDeploying: true }));
+    try {
+      const response = await fetch('/api/v1/gpc/deploy/github', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
+        },
+        body: JSON.stringify({
+          pipeline_id: compilationModal.pipelineId,
+          target_repo: deployModal.targetRepo,
+          python_code: compilationModal.pythonCode,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Deployment failed');
+      }
+      setToast({ message: data.message || 'Dispatched to GitHub successfully!', type: 'success' });
+      setDeployModal({ isOpen: false, targetRepo: '', isDeploying: false });
+    } catch (err: any) {
+      setToast({ message: err.message, type: 'error' });
+    } finally {
+      setDeployModal((prev) => ({ ...prev, isDeploying: false }));
+    }
+  };
 
   // Execute pipeline
   const handleExecute = useCallback(async () => {
@@ -175,6 +214,20 @@ export default function GpcPage() {
         >
           <Play size={16} />
           {isExecuting ? 'Running...' : 'Execute'}
+        </button>
+        <button
+          onClick={() => {
+            if (!compilationModal.pipelineId || !compilationModal.pythonCode) {
+              setToast({ message: 'Please compile the pipeline first', type: 'error' });
+              return;
+            }
+            setDeployModal({ ...deployModal, isOpen: true });
+          }}
+          disabled={isExecuting || isLoading || !compilationModal.pythonCode}
+          className="px-4 py-2 text-sm font-medium rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ml-auto"
+        >
+          <Rocket size={16} />
+          Ship 🚀
         </button>
       </div>
 
@@ -317,6 +370,47 @@ export default function GpcPage() {
                 className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deploy Modal */}
+      {deployModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full mx-4 p-6">
+            <h2 className="text-xl font-semibold mb-2">Deploy to GitHub Actions</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Instantly dispatch the compiled capability pipeline to your GitHub repository. 
+              Requires a configured GitHub connection in settings.
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Target Repository
+              </label>
+              <input
+                type="text"
+                value={deployModal.targetRepo}
+                onChange={(e) => setDeployModal({ ...deployModal, targetRepo: e.target.value })}
+                placeholder="e.g., your-org/production-pipelines"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDeployModal({ ...deployModal, isOpen: false })}
+                disabled={deployModal.isDeploying}
+                className="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeploy}
+                disabled={deployModal.isDeploying || !deployModal.targetRepo}
+                className="px-4 py-2 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {deployModal.isDeploying ? 'Dispatching...' : 'Dispatch'}
               </button>
             </div>
           </div>

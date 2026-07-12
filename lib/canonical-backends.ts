@@ -56,6 +56,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       sourceOfTruthPath: "/api/audit",
       authMode: "server-api-key",
     },
+    {
+      id: "pgl",
+      label: "IdentityRAG PGL Backend",
+      repo: "Agent-Control-need-pgl",
+      role: "governed-runtime",
+      baseUrl: "https://pgl.veklom.com",
+      healthPath: "/api/health",
+      overviewPath: "/api/health",
+      authMode: "forward-bearer",
+    },
   ];
 }
 
