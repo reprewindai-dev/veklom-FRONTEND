@@ -4,11 +4,12 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi" | "pgl";
+export type CanonicalBackendId = "byos" | "capi" | "pgl" | "gnomledger";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
-  | "governed-runtime";
+  | "governed-runtime"
+  | "ledger";
 
 export type CanonicalBackendAuthMode = "forward-bearer" | "server-api-key";
 
@@ -64,6 +65,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       baseUrl: "https://pgl.veklom.com",
       healthPath: "/api/health",
       overviewPath: "/api/health",
+      authMode: "forward-bearer",
+    },
+    {
+      id: "gnomledger",
+      label: "Gnomledger x402 Fabric",
+      repo: "gnomledger",
+      role: "ledger",
+      baseUrl: "https://gnomledger.veklom.com",
+      healthPath: "/health",
+      overviewPath: "/health",
       authMode: "forward-bearer",
     },
   ];
