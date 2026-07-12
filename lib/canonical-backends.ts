@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi";
+export type CanonicalBackendId = "byos" | "capi" | "pgl";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
