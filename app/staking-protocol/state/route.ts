@@ -4,9 +4,15 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const VNP_API_BASE =
+  process.env.VNP_API_BASE_URL ||
   process.env.BYOS_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://api.veklom.com";
+  "https://vnp.veklom.com";
+
+const CAPPO_API_BASE =
+  process.env.CAPPO_API_BASE_URL ||
+  process.env.CAPPO_BACKEND_URL ||
+  "https://cappo.veklom.com";
 
 type ProbeState = "verified" | "needs_proof" | "error";
 
@@ -30,9 +36,9 @@ function safeJson(value: string): any {
   }
 }
 
-async function probeJson(route: string): Promise<ProbeResult> {
+async function probeJson(base: string, route: string): Promise<ProbeResult> {
   try {
-    const res = await fetch(`${trimSlash(VNP_API_BASE)}${route}`, {
+    const res = await fetch(`${trimSlash(base)}${route}`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -41,7 +47,7 @@ async function probeJson(route: string): Promise<ProbeResult> {
     if (!res.ok) {
       return {
         route,
-        state: "error",
+        state: res.status === 401 || res.status === 402 || res.status === 403 ? "needs_proof" : "error",
         status: res.status,
         detail: res.statusText,
         data,
@@ -60,8 +66,8 @@ async function probeJson(route: string): Promise<ProbeResult> {
 
 export async function GET() {
   const [bondsProbe, scoresProbe] = await Promise.all([
-    probeJson("/api/v1/x402/staking/state"),
-    probeJson("/api/v1/vnp/metrics"),
+    probeJson(CAPPO_API_BASE, "/api/v1/x402/staking/state"),
+    probeJson(VNP_API_BASE, "/api/v1/vnp/metrics"),
   ]);
 
   const verifiedBonds = bondsProbe.state === "verified" ? bondsProbe.data?.providers : [];
@@ -87,17 +93,29 @@ export async function GET() {
     const amount = Number(provider.amountMinor);
     return Number.isFinite(amount) ? total + amount / 100 : total;
   }, 0);
+  const proofState =
+    bondsProbe.state === "error"
+      ? "error"
+      : formattedProviders.length > 0
+        ? "verified"
+        : "needs_proof";
 
   return NextResponse.json({
     generated_at: new Date().toISOString(),
     source: trimSlash(VNP_API_BASE),
+    sources: {
+      vnp: trimSlash(VNP_API_BASE),
+      cappo: trimSlash(CAPPO_API_BASE),
+    },
     proof: {
-      state: bondsProbe.state === "error" ? "error" : formattedProviders.length > 0 ? "verified" : "needs_proof",
+      state: proofState,
       reason: bondsProbe.state === "error"
-        ? "VNP staking backend is unreachable."
+        ? "CAPPO staking backend is unreachable."
         : formattedProviders.length > 0
-          ? "VNP bonds returned live route-backed records."
-          : "VNP staking routes are reachable but returned no live bond records.",
+          ? "CAPPO staking returned live route-backed records."
+          : bondsProbe.state === "needs_proof"
+            ? "CAPPO staking route is reachable but requires authorization proof."
+            : "CAPPO staking route returned no live bond records.",
       probes: [
         { route: "/api/v1/x402/staking/state", state: bondsProbe.state, status: bondsProbe.status },
         { route: "/api/v1/vnp/metrics", state: scoresProbe.state, status: scoresProbe.status }
