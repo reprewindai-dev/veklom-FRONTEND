@@ -67,11 +67,16 @@ async function probeJson(base: string, route: string): Promise<ProbeResult> {
 export async function GET() {
   const [bondsProbe, scoresProbe] = await Promise.all([
     probeJson(CAPPO_API_BASE, "/api/v1/x402/staking/state"),
-    probeJson(VNP_API_BASE, "/api/v1/vnp/metrics"),
+    probeJson(VNP_API_BASE, "/api/v1/nexus/scores"),
   ]);
 
   const verifiedBonds = bondsProbe.state === "verified" ? bondsProbe.data?.providers : [];
-  const verifiedScores = scoresProbe.state === "verified" ? scoresProbe.data?.apis : [];
+  const scoresData = scoresProbe.state === "verified" ? scoresProbe.data : null;
+  const verifiedScores = Array.isArray(scoresData)
+    ? scoresData
+    : Array.isArray(scoresData?.apis)
+      ? scoresData.apis
+      : [];
 
   const scoresByApiId = Array.isArray(verifiedScores)
     ? new Map(verifiedScores.map((score: any) => [String(score?.api_id || score?.apiId || score?.id || ""), score]))
@@ -118,7 +123,7 @@ export async function GET() {
             : "CAPPO staking route returned no live bond records.",
       probes: [
         { route: "/api/v1/x402/staking/state", state: bondsProbe.state, status: bondsProbe.status },
-        { route: "/api/v1/vnp/metrics", state: scoresProbe.state, status: scoresProbe.status }
+        { route: "/api/v1/nexus/scores", state: scoresProbe.state, status: scoresProbe.status }
       ]
     },
     staking: {
