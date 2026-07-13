@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const VNP_API_BASE = process.env.VNP_API_BASE_URL || "https://vnp.veklom.com";
+const VNP_API_BASE =
+  process.env.BYOS_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://api.veklom.com";
 
 type ProbeState = "verified" | "needs_proof" | "error";
 
@@ -57,27 +60,27 @@ async function probeJson(route: string): Promise<ProbeResult> {
 
 export async function GET() {
   const [bondsProbe, scoresProbe] = await Promise.all([
-    probeJson("/api/v1/staking/bonds"),
-    probeJson("/api/v1/nexus/scores"),
+    probeJson("/api/v1/x402/staking/state"),
+    probeJson("/api/v1/vnp/metrics"),
   ]);
 
-  const verifiedBonds = bondsProbe.state === "verified" ? bondsProbe.data : [];
-  const verifiedScores = scoresProbe.state === "verified" ? scoresProbe.data : [];
+  const verifiedBonds = bondsProbe.state === "verified" ? bondsProbe.data?.providers : [];
+  const verifiedScores = scoresProbe.state === "verified" ? scoresProbe.data?.apis : [];
 
   const scoresByApiId = Array.isArray(verifiedScores)
     ? new Map(verifiedScores.map((score: any) => [String(score?.api_id || score?.apiId || score?.id || ""), score]))
     : new Map<string, any>();
   
   const formattedProviders = Array.isArray(verifiedBonds) ? verifiedBonds.map((b: any) => ({
-    id: b.id,
-    targetApiId: b.target_api_id,
-    amountMinor: b.amount_minor,
-    currency: b.currency,
-    state: b.state,
-    statusLevel: b.state === "active" ? "healthy" : "warning",
-    latencyAvg: scoresByApiId.get(String(b.target_api_id))?.observed_p95_ms ?? null,
-    successRate: scoresByApiId.get(String(b.target_api_id))?.success_rate ?? null,
-    activeAlerts: scoresByApiId.get(String(b.target_api_id))?.active_alerts ?? 0
+    id: b.apiId,
+    targetApiId: b.apiId,
+    amountMinor: Math.round(Number(b.bondAmountUsdc || 0) * 100),
+    currency: "USDC",
+    state: b.status,
+    statusLevel: b.status === "healthy" ? "healthy" : "warning",
+    latencyAvg: b.observedP95Ms ?? null,
+    successRate: scoresByApiId.get(String(b.apiId))?.availability ?? null,
+    activeAlerts: b.status === "healthy" ? 0 : 1
   })) : [];
 
   const totalStakedUsd = formattedProviders.reduce((total: number, provider: any) => {
@@ -96,17 +99,17 @@ export async function GET() {
           ? "VNP bonds returned live route-backed records."
           : "VNP staking routes are reachable but returned no live bond records.",
       probes: [
-        { route: "/api/v1/staking/bonds", state: bondsProbe.state, status: bondsProbe.status },
-        { route: "/api/v1/nexus/scores", state: scoresProbe.state, status: scoresProbe.status }
+        { route: "/api/v1/x402/staking/state", state: bondsProbe.state, status: bondsProbe.status },
+        { route: "/api/v1/vnp/metrics", state: scoresProbe.state, status: scoresProbe.status }
       ]
     },
     staking: {
       providers: formattedProviders,
-      protocolStats: { activeBonds: formattedProviders.length, totalStakedUsd },
-      settlements: [],
-      verifiers: [],
-      kdeCurves: {},
-      vnpParams: { k: 2, lambda: 1.5, challengeTierA: 50, challengeTierB: 100, consensusWeights: [] }
+      protocolStats: bondsProbe.state === "verified" ? bondsProbe.data?.protocolStats || { activeBonds: formattedProviders.length, totalStakedUsd } : { activeBonds: formattedProviders.length, totalStakedUsd },
+      settlements: bondsProbe.state === "verified" ? bondsProbe.data?.settlements || [] : [],
+      verifiers: bondsProbe.state === "verified" ? bondsProbe.data?.verifiers || [] : [],
+      kdeCurves: bondsProbe.state === "verified" ? bondsProbe.data?.kdeCurves || {} : {},
+      vnpParams: bondsProbe.state === "verified" ? bondsProbe.data?.vnpParams || {} : {}
     },
     markets: [],
     marketProof: {
@@ -114,8 +117,8 @@ export async function GET() {
       reason: "No route-backed staking market data returned; synthetic markets are disabled.",
     },
     writeActions: {
-      verifierRegistration: { route: "/api/v1/staking/verifiers", state: "needs_auth" },
-      stakePlacement: { route: "/api/v1/staking/bonds", state: "needs_auth" },
+      verifierRegistration: { route: "/api/v1/x402/staking/state", state: "read_only" },
+      stakePlacement: { route: "/api/v1/x402/staking/state", state: "read_only" },
     }
   });
 }
