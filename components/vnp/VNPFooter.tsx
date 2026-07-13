@@ -45,7 +45,7 @@ export default function VNPFooter() {
               <li><Link href="/vnp/docs" className="hover:text-[#FFB800] transition-colors">Documentation</Link></li>
               <li><Link href="/vnp/sdk/python" className="hover:text-[#FFB800] transition-colors">Python Probe SDK</Link></li>
               <li><Link href="/vnp/sdk/fastapi" className="hover:text-[#FFB800] transition-colors">FastAPI Integration</Link></li>
-              <li><a href="https://github.com/veklom/veklom-vnp" target="_blank" rel="noopener noreferrer" className="hover:text-[#FFB800] transition-colors flex items-center gap-1">GitHub Repository <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
+              <li><a href="https://github.com/reprewindai-dev/veklom-vnp" target="_blank" rel="noopener noreferrer" className="hover:text-[#FFB800] transition-colors flex items-center gap-1">GitHub Repository <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a></li>
             </ul>
           </div>
 

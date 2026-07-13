@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const vnpData = {
     methodology_version: "VNP Methodology v1.0",
-    methodology_url: "https://veklom.com/vnp/docs/methodology",
+    methodology_url: "https://veklom.com/vnp/methodology",
     license: "VNP Open Standard (CC BY-ND 4.0)",
     data_mode: "provisional",
     tagline: "Cryptographic API telemetry for the machine-to-machine economy",

@@ -18,7 +18,7 @@ export default function SlashingPage() {
           <h2 className="text-2xl font-bold mb-4 border-b border-white/10 pb-4">The "Remaining Node Poisoning Trap"</h2>
           <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-xl text-gray-300">
             <p className="leading-relaxed mb-4">
-              Previous protocol versions (v0.1.15) utilized strict minimum functions for proxy score caps. This created a devastating vulnerability where an attacker could DDoS 3 out of 5 regional nodes, and execute a localized BGP route-leak on the remaining 2 nodes.
+              Earlier protocol drafts utilized strict minimum functions for proxy score caps. This created a devastating vulnerability where an attacker could DDoS 3 out of 5 regional nodes, and execute a localized BGP route-leak on the remaining 2 nodes.
             </p>
             <p className="leading-relaxed">
               Because a minimum function has a breakdown point of 0%, a single adversarial input of zero completely dictates the output—resulting in unjust financial slashing for flawless competitors.

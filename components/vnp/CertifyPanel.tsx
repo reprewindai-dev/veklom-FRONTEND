@@ -279,7 +279,7 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
                 <div className="space-y-2 text-[10px] font-mono mb-4">
                   {[
                     { label: 'Issued', value: issued },
-                    { label: 'Standard', value: 'VNP Methodology v0.1' },
+                    { label: 'Standard', value: 'VNP Methodology v1.0' },
                     { label: 'Chain', value: 'Base L2 (block #1,442,881)' },
                     { label: 'Merkle Root', value: merkle.slice(0, 18) + '…' },
                   ].map(r => (

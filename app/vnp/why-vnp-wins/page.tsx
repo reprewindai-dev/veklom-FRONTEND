@@ -81,7 +81,7 @@ export default function WhyVNPWinsPage() {
                 <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                   <td className="py-5 px-4 font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-slate-400" /> Methodology Openness</td>
                   <td className="py-5 px-4 bg-[#FFB800]/5 font-bold text-white border-x border-[#FFB800]/20">
-                    Fully Public (v0.1 Published)
+                    Fully Public (VNP Methodology v1.0)
                   </td>
                   <td className="py-5 px-4 text-slate-400">Opaque / Black Box</td>
                   <td className="py-5 px-4 text-slate-400">Proprietary Paid Tier</td>
@@ -172,7 +172,7 @@ export default function WhyVNPWinsPage() {
             <Link href="/api/vnp.json" target="_blank" className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium">
               Access Public Feed
             </Link>
-            <Link href="/vnp/methodology/x402" className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium">
+            <Link href="/vnp/x402" className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium">
               X402 Contract Mapping
             </Link>
           </div>
