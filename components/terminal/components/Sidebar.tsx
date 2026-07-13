@@ -84,7 +84,7 @@ export default function Sidebar({
     {
       title: 'BUILD',
       items: [
-        { id: 'spine', name: 'Pipelines & GPC', icon: GitBranch, href: '/pipelines', isLive: true },
+        { id: 'gpc', name: 'Pipelines & GPC', icon: GitBranch, href: '/gpc', isLive: true },
         { id: 'repo-risk', name: 'Repo Risk Gate', icon: ShieldAlert, href: '/repogate', isLive: true },
       ]
     },
