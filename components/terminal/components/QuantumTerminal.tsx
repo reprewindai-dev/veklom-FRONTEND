@@ -202,7 +202,7 @@ export default function QuantumTerminal() {
     eventLogs: [
       { id: '1', cls: 'g', text: '<b>BOOT</b> — 120 Sovereign agents initialised', time: '00:00' },
       { id: '2', cls: 'p', text: '<b>Zeno</b> — Interrogator subsystem ONLINE', time: '00:01' },
-      { id: '3', cls: 'a', text: '<b>capi.veklom.com</b> — Interlink CAPI runtime negotiation pending', time: '00:01' }
+      { id: '3', cls: 'a', text: '<b>capi.veklom.com</b> — CAPPO runtime negotiation pending', time: '00:01' }
     ]
   });
 
@@ -232,7 +232,7 @@ export default function QuantumTerminal() {
         await sleep(200); pushLog(`        Agent ${targetAgent} is ready for direct commands.`, 'ok');
       } else {
         await sleep(200); pushLog('        ✓  api.veklom.com  (BYOS control API)', 'ok');
-        await sleep(200); pushLog('        ✓  capi.veklom.com (Interlink CAPI runtime proxy)', 'ok');
+        await sleep(200); pushLog('        ✓  capi.veklom.com (CAPPO runtime proxy)', 'ok');
         await sleep(200); pushLog('        ⚠  ollama node     (remote server proof pending)', 'warn');
         await sleep(200); pushLog('[BOOT]  Zeno Interrogator: ONLINE', 'sys');
         await sleep(200); pushLog('[BOOT]  Gladiator Engine: 8 paths ready', 'sys');
@@ -612,7 +612,7 @@ export default function QuantumTerminal() {
                 </div>
                 <div className="topo-node flex flex-col items-center gap-1 w-full max-w-[200px]">
                   <div className="w-full py-2 bg-[#56d36421] border border-[#63b3ed4d] text-[#56d364] text-center text-[11px] rounded">CONTEXT SERVERS</div>
-                  <div className="text-[9px] text-[#3d5269] uppercase tracking-wider text-center px-2">BYOS API · Interlink CAPI · Ollama Node</div>
+                  <div className="text-[9px] text-[#3d5269] uppercase tracking-wider text-center px-2">BYOS API · CAPPO Runtime · Ollama Node</div>
                 </div>
              </div>
 

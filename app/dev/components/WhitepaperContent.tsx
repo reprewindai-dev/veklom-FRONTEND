@@ -158,7 +158,7 @@ export default function WhitepaperContent() {
       {/* Chapter 4 */}
       <section id="interlink-capi" className="mb-20 scroll-mt-24">
         <h2 className="text-xl font-bold text-[#f2f2f5] mb-6 border-b border-[#2a2630] pb-3 flex items-center gap-2">
-          <span className="text-[#f05a70] font-mono">04.</span> Interlink CAPI & Swarm
+          <span className="text-[#f05a70] font-mono">04.</span> CAPPO Runtime & Swarm
         </h2>
         <div className="space-y-4 text-[#c9c5cf] leading-relaxed text-sm">
           <p>

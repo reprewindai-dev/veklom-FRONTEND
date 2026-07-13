@@ -14,11 +14,9 @@ import {
   Shield,
 } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
-import { ApiDnaVisualizer, MiniDnaVisualizer } from "./ApiDnaVisualizer";
 import { VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
 import ScoreCard from "@/components/vnp/ScoreCard";
-import type { VNPScore, VNPDimensionScore, VNPConfidence, VNPProvenance, VNPGrade, VNPRegionalScore } from "@/lib/vnp/types";
-import { VNP_DIMENSIONS } from "@/lib/vnp/constants";
+import type { VNPScore, VNPDimensionScore, VNPConfidence, VNPProvenance, VNPGrade, VNPRegionalScore, VNPDimensionId } from "@/lib/vnp/types";
 
 interface DimensionScore {
   name: string;
@@ -130,6 +128,14 @@ function ProofPanel({ title, value, subtitle, state }: { title: string; value: s
   );
 }
 
+const SCORECARD_AXIS_IDS: VNPDimensionId[] = [
+  "security",
+  "availability",
+  "x402_compliance",
+  "documentation",
+  "throughput",
+];
+
 function EvidenceGate({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-[#FFB800]/25 bg-[#FFB800]/5 p-6">
@@ -189,7 +195,7 @@ export default function NexusProtocol() {
             ["topology", "PROBE TOPOLOGY"],
             ["docs", "CHARTER & METHODOLOGY"],
             ["consensus", "CONSENSUS VECTOR"],
-            ["identity", "INTERLINK CAPI LAYER"],
+            ["identity", "CAPPO RUNTIME LAYER"],
             ["staking", "STAKING"],
           ].map(([id, label]) => (
             <button
@@ -254,7 +260,16 @@ export default function NexusProtocol() {
                         <span>ROUTE-BACKED QUALITY VECTOR</span>
                         <span className="text-[#00E5FF]/60">VNP v1.0</span>
                       </div>
-                      <MiniDnaVisualizer dimensions={api.dimensions} score={api.score} />
+                      <div className="grid grid-cols-5 gap-1.5" aria-label="Route-backed score vector">
+                        {api.dimensions.slice(0, 5).map((dimension) => (
+                          <div key={dimension.name} className="h-8 rounded border border-white/10 bg-black/30 overflow-hidden flex items-end" title={`${dimension.name}: ${dimension.score}`}>
+                            <div
+                              className="w-full bg-[#00FF66]/50 border-t border-[#00FF66]/70"
+                              style={{ height: `${Math.max(0, Math.min(100, dimension.score))}%` }}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -284,19 +299,14 @@ export default function NexusProtocol() {
                       category: "LLM Inference",
                       composite: selectedApi.score,
                       grade: selectedApi.grade as VNPGrade,
-                      dimensions: VNP_DIMENSIONS.map(def => {
-                        const dim = selectedApi.dimensions.find(d => 
-                          d.name.toLowerCase().includes(def.label.toLowerCase()) || 
-                          d.name.toLowerCase() === def.id.toLowerCase() ||
-                          def.label.toLowerCase().includes(d.name.toLowerCase())
-                        );
+                      dimensions: selectedApi.dimensions.slice(0, 5).map((dim, index) => {
                         return {
-                          id: def.id,
-                          label: def.label,
-                          raw: dim?.score || 0,
-                          normalized: dim?.score || 0,
-                          weight: dim?.weight || def.weight,
-                          weighted: (dim?.score || 0) * (dim?.weight || def.weight)
+                          id: SCORECARD_AXIS_IDS[index] || "documentation",
+                          label: dim.name,
+                          raw: dim.score,
+                          normalized: dim.score,
+                          weight: dim.weight / 100,
+                          weighted: dim.score * (dim.weight / 100)
                         } as VNPDimensionScore;
                       }),
                       confidence: {
@@ -461,7 +471,7 @@ export default function NexusProtocol() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[8.5px] font-mono text-white/30 uppercase">
                     <span>Metrics: {state?.metrics ? "verified" : "needs proof"}</span>
                     <span>Staking: {state?.staking ? "verified" : "needs proof"}</span>
-                    <span>cAPI: {state?.cappo ? "verified" : "needs proof"}</span>
+                    <span>CAPPO: {state?.cappo ? "verified" : "needs proof"}</span>
                   </div>
                 </div>
               </div>
@@ -507,7 +517,7 @@ export default function NexusProtocol() {
                   <>
                     <h1 className="text-lg font-bold text-white border-b border-white/10 pb-2">Veklom Nexus Protocol (VNP) - Governance Charter v1.0</h1>
                     <div className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded text-yellow-200/80 mb-4 font-mono text-[10px]">
-                      STATUS: Methodology and governance text. Live operational claims on this page come only from BYOS and cAPI route probes.
+                      STATUS: Methodology and governance text. Live operational claims on this page come only from BYOS and CAPPO route probes.
                     </div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-4">1. Mission & Values</h2>
                     <p>The Veklom Nexus Protocol is a real-time API benchmark scoring standard designed to provide transparent, reproducible, and actionable performance scores for APIs across regions, protocols, and deployment models.</p>
@@ -520,14 +530,14 @@ export default function NexusProtocol() {
                   <>
                     <h1 className="text-lg font-bold text-white border-b border-white/10 pb-2">VNP Methodology v1.0</h1>
                     <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded text-emerald-200/80 mb-4 font-mono text-[10px]">
-                      STATUS: Methodology target. Current live data sources: `/api/v1/vnp/metrics`, `/api/v1/x402/staking/state`, `/.well-known/x402.json`, and cAPI `/api/state`.
+                      STATUS: Methodology target. Current live data sources: `/api/v1/vnp/metrics`, `/api/v1/x402/staking/state`, `/.well-known/x402.json`, and CAPPO `/health`.
                     </div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-4">Current Route-Backed Fields</h2>
                     <div className="space-y-2.5 my-3">
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Composite score</span><strong className="text-[#00E5FF]">BYOS metrics</strong></div>
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>P95 target and observed latency</span><strong className="text-[#00E5FF]">Staking state</strong></div>
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Bond and slashing state</span><strong className="text-[#00E5FF]">Staking state</strong></div>
-                      <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Agent authorization and audit counts</span><strong className="text-[#00E5FF]">Interlink CAPI</strong></div>
+                      <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Governed runtime health</span><strong className="text-[#00E5FF]">CAPPO</strong></div>
                     </div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-6">Proof Gaps</h2>
                     <p>Leaderboard access currently requires x402 proof, Merkle beacon status is reported by BYOS as `{state?.anchoring.merkle_status || "Needs proof"}`, and Base anchoring is reported as `{state?.anchoring.block_status || "Needs proof"}`.</p>
@@ -555,15 +565,15 @@ export default function NexusProtocol() {
         {subTab === "identity" && (
           <div className="max-w-6xl space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <ProofPanel title="Agents" value={fmtNumber(state?.cappo?.metrics?.agents)} subtitle={`${state?.sources.capi || "cAPI"} /api/state`} state={state?.cappo ? "verified" : "needs_proof"} />
-              <ProofPanel title="Capabilities" value={fmtNumber(state?.cappo?.metrics?.capabilities)} subtitle="Interlink registry" state={state?.cappo ? "verified" : "needs_proof"} />
-              <ProofPanel title="Authorized Rate" value={`${fmtNumber(state?.cappo?.metrics?.authorized_rate)}%`} subtitle="Interlink metrics" state={state?.cappo ? "verified" : "needs_proof"} />
-              <ProofPanel title="Audit Events" value={fmtNumber(state?.cappo?.metrics?.total)} subtitle="cAPI audit total" state={state?.cappo ? "verified" : "needs_proof"} />
+              <ProofPanel title="Runtime Health" value={String(state?.cappo?.status || "Needs proof")} subtitle={`${state?.sources.capi || "CAPPO"} /health`} state={state?.cappo?.status === "ok" ? "verified" : "needs_proof"} />
+              <ProofPanel title="Governed Exec" value="Auth Required" subtitle="/v1/exec signed envelope" state="needs_proof" />
+              <ProofPanel title="PGL Certificates" value="Auth Required" subtitle="ExecutionIdentityV1" state="needs_proof" />
+              <ProofPanel title="Audit Ledger" value="Auth Required" subtitle="/v1/audit/ledger" state="needs_proof" />
             </div>
             <div className="rounded-xl border border-white/10 bg-void-metal/80 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Database className="w-4 h-4 text-[#00E5FF]" />
-                <span className="text-xs font-bold uppercase tracking-widest text-white/70">Interlink Agents</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-white/70">CAPPO Runtime Evidence</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {cappoAgents.map((agent: any) => (
@@ -584,8 +594,8 @@ export default function NexusProtocol() {
                 ))}
               </div>
               {cappoAgents.length === 0 && (
-                <EvidenceGate title="No Interlink agents returned">
-                  The cAPI `/api/state` probe did not return agent registry rows. No local PGL certificates are generated on this page.
+                <EvidenceGate title="CAPPO agent registry requires auth">
+                  The CAPPO `/health` probe is live. Governed execution, PGL certificate, and audit-ledger details require authenticated CAPPO requests and signed execution envelopes.
                 </EvidenceGate>
               )}
             </div>

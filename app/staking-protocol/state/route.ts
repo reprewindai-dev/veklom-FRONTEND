@@ -64,8 +64,9 @@ export async function GET() {
   const verifiedBonds = bondsProbe.state === "verified" ? bondsProbe.data : [];
   const verifiedScores = scoresProbe.state === "verified" ? scoresProbe.data : [];
 
-  // Adapt VNP raw data to the legacy BYOS-expected frontend structure
-  // This allows graceful UI degradation and connection to real VNP telemetry
+  const scoresByApiId = Array.isArray(verifiedScores)
+    ? new Map(verifiedScores.map((score: any) => [String(score?.api_id || score?.apiId || score?.id || ""), score]))
+    : new Map<string, any>();
   
   const formattedProviders = Array.isArray(verifiedBonds) ? verifiedBonds.map((b: any) => ({
     id: b.id,
@@ -74,52 +75,44 @@ export async function GET() {
     currency: b.currency,
     state: b.state,
     statusLevel: b.state === "active" ? "healthy" : "warning",
-    latencyAvg: Math.random() * 10 + 5, // Simulated until VNP scores provide it
-    successRate: 99.9,
-    activeAlerts: 0
+    latencyAvg: scoresByApiId.get(String(b.target_api_id))?.observed_p95_ms ?? null,
+    successRate: scoresByApiId.get(String(b.target_api_id))?.success_rate ?? null,
+    activeAlerts: scoresByApiId.get(String(b.target_api_id))?.active_alerts ?? 0
   })) : [];
 
-  const formattedMarkets = Array.isArray(verifiedBonds) ? verifiedBonds.map((b: any) => ({
-    id: b.id,
-    title: `SLA Bond: ${b.target_api_id}`,
-    category: "latency",
-    yesPrice: 0.8,
-    noPrice: 0.2,
-    volume: b.amount_minor / 100,
-    poolYes: (b.amount_minor / 100) * 0.8,
-    poolNo: (b.amount_minor / 100) * 0.2,
-    resolutionDate: new Date(Date.now() + 86400000).toISOString(),
-    targetApi: b.target_api_id,
-    resolved: false
-  })) : [];
+  const totalStakedUsd = formattedProviders.reduce((total: number, provider: any) => {
+    const amount = Number(provider.amountMinor);
+    return Number.isFinite(amount) ? total + amount / 100 : total;
+  }, 0);
 
   return NextResponse.json({
     generated_at: new Date().toISOString(),
     source: trimSlash(VNP_API_BASE),
     proof: {
-      state: bondsProbe.state === "error" ? "error" : "verified",
-      reason: bondsProbe.state === "error" ? "Graceful Degradation: VNP Backend Uncontactable" : "Authenticated VNP Bonds returned live records.",
+      state: bondsProbe.state === "error" ? "error" : formattedProviders.length > 0 ? "verified" : "needs_proof",
+      reason: bondsProbe.state === "error"
+        ? "VNP staking backend is unreachable."
+        : formattedProviders.length > 0
+          ? "VNP bonds returned live route-backed records."
+          : "VNP staking routes are reachable but returned no live bond records.",
       probes: [
         { route: "/api/v1/staking/bonds", state: bondsProbe.state, status: bondsProbe.status },
         { route: "/api/v1/nexus/scores", state: scoresProbe.state, status: scoresProbe.status }
       ]
     },
     staking: {
-      providers: formattedProviders.length > 0 ? formattedProviders : [
-        // Graceful fallback mock if VNP is unreachable
-        { id: "mock-vnp-1", targetApiId: "api-gpt4", amountMinor: 100000, currency: "USD", state: "active", statusLevel: "healthy", latencyAvg: 12.5, successRate: 99.9, activeAlerts: 0 }
-      ],
-      protocolStats: { activeBonds: formattedProviders.length, totalStakedUsd: 50000 },
+      providers: formattedProviders,
+      protocolStats: { activeBonds: formattedProviders.length, totalStakedUsd },
       settlements: [],
       verifiers: [],
       kdeCurves: {},
       vnpParams: { k: 2, lambda: 1.5, challengeTierA: 50, challengeTierB: 100, consensusWeights: [] }
     },
-    markets: formattedMarkets.length > 0 ? formattedMarkets : [
-      // Graceful fallback mock if VNP is unreachable
-      { id: "mock-mkt-1", title: "OpenAI GPT-4o Latency < 1000ms", category: "latency", yesPrice: 0.95, noPrice: 0.05, volume: 25000, poolYes: 24000, poolNo: 1000, resolutionDate: new Date().toISOString(), targetApi: "api-gpt4", resolved: false }
-    ],
-    marketProof: { state: bondsProbe.state, reason: bondsProbe.detail || "VNP Connection OK" },
+    markets: [],
+    marketProof: {
+      state: "needs_proof",
+      reason: "No route-backed staking market data returned; synthetic markets are disabled.",
+    },
     writeActions: {
       verifierRegistration: { route: "/api/v1/staking/verifiers", state: "needs_auth" },
       stakePlacement: { route: "/api/v1/staking/bonds", state: "needs_auth" },

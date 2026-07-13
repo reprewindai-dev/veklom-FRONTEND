@@ -23,17 +23,39 @@ function generatePolygonPath(dimensions: number[], width: number, height: number
   }).join(" ") + " Z";
 }
 
+function isIsoDate(value: string | null | undefined): value is string {
+  return Boolean(value && !Number.isNaN(Date.parse(value)));
+}
+
 export default function ScoreCard({ score }: ScoreCardProps) {
   const band = gradeForScore(score.composite);
-  
-  // We expect 5 dimensions for a Pentagon, fallback to mock if missing
-  const polygonDimensions = [
-    score.dimensions.find(d => d.id === 'security')?.normalized ?? 94,
-    score.dimensions.find(d => d.id === 'availability')?.normalized ?? 92,
-    score.dimensions.find(d => d.id === 'p99_latency')?.normalized ?? 91,
-    score.dimensions.find(d => d.id === 'x402_compliance')?.normalized ?? 90,
-    score.dimensions.find(d => d.id === 'documentation')?.normalized ?? 93,
-  ];
+  const axes = score.dimensions.slice(0, 5);
+  while (axes.length < 5) {
+    axes.push({
+      id: "documentation",
+      label: "Needs proof",
+      raw: 0,
+      normalized: 0,
+      weight: 0,
+      weighted: 0,
+    });
+  }
+  const polygonDimensions = axes.map((dimension) => dimension.normalized);
+  const assessedOn = isIsoDate(score.provenance.epochEnd)
+    ? new Date(score.provenance.epochEnd).toLocaleString("en-US", { timeZone: "UTC" }) + " UTC"
+    : "Needs proof";
+  const windowLabel = isIsoDate(score.provenance.epochStart) && isIsoDate(score.provenance.epochEnd)
+    ? `${new Date(score.provenance.epochStart).toLocaleTimeString("en-US", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" })} - ${new Date(score.provenance.epochEnd).toLocaleTimeString("en-US", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" })} UTC`
+    : "Needs proof";
+  const assessmentId = score.provenance.merkleRoot && score.provenance.merkleRoot !== "Needs proof"
+    ? score.provenance.merkleRoot
+    : score.provenance.chainAnchorTx || "Needs proof";
+  const dataSources = score.provenance.nodeOperators.length > 0
+    ? String(score.provenance.nodeOperators.length)
+    : "Needs proof";
+  const telemetryPoints = score.measurementCount > 0
+    ? score.measurementCount.toLocaleString()
+    : "Needs proof";
 
   const width = 400;
   const height = 400;
@@ -52,7 +74,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
       <div className="flex items-center justify-between mb-8 relative z-10">
         <div className="flex items-center gap-2 text-[#3EE7A2] font-mono text-[10px] font-semibold tracking-widest">
           <Shield className="w-3.5 h-3.5" />
-          <span>INTERLINK TRUST STANDARD v2.0</span>
+          <span>VNP Methodology v1.0</span>
         </div>
         <div className="text-[9px] font-mono border border-[#1E2C22] bg-[#0C120E] text-[#3EE7A2] px-3 py-1 rounded tracking-widest">
           SCORECARD
@@ -85,25 +107,25 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           <div className="space-y-1.5 text-[9px] font-mono">
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">ASSESSMENT ID</span>
-              <span className="text-[#A1A1A6] tracking-wider truncate max-w-[120px]" title={score.provenance.chainAnchorTx || "TRUST-2025-00078"}>
-                {score.provenance.chainAnchorTx ? score.provenance.chainAnchorTx.substring(0,12)+"..." : "TRUST-2025-00078"}
+              <span className="text-[#A1A1A6] tracking-wider truncate max-w-[120px]" title={assessmentId}>
+                {assessmentId.length > 18 ? assessmentId.substring(0, 12) + "..." : assessmentId}
               </span>
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">ASSESSED ON</span>
-              <span className="text-[#A1A1A6]">May 18, 2025 14:32 UTC</span>
+              <span className="text-[#A1A1A6]">{assessedOn}</span>
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">ASSESSMENT TYPE</span>
-              <span className="text-[#A1A1A6]">Full Evaluation</span>
+              <span className="text-[#A1A1A6]">{score.confidence.level === "high" ? "Route-backed evaluation" : "Partial proof evaluation"}</span>
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">FRAMEWORK</span>
-              <span className="text-[#A1A1A6]">Interlink CAPI</span>
+              <span className="text-[#A1A1A6]">{score.provenance.harnessVersion || "VNP v1.0"}</span>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-[#6E6E73] mb-0.5">VALID THROUGH</span>
-              <span className="text-[#A1A1A6]">May 18, 2026</span>
+              <span className="text-[#6E6E73] mb-0.5">EVIDENCE STATE</span>
+              <span className="text-[#A1A1A6]">{score.status === "active" ? "Live" : "Needs proof"}</span>
             </div>
           </div>
         </div>
@@ -186,35 +208,35 @@ export default function ScoreCard({ score }: ScoreCardProps) {
         {/* Absolute positioned labels for dimensions */}
         <div className="absolute top-[8%] left-[50%] -translate-x-1/2 flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Shield className="w-3 h-3 text-[#3EE7A2]" /> Security
+            <Shield className="w-3 h-3 text-[#3EE7A2]" /> {axes[0].label}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[0]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute top-[35%] right-[5%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <CheckCircle2 className="w-3 h-3 text-[#3EE7A2]" /> Reliability
+            <CheckCircle2 className="w-3 h-3 text-[#3EE7A2]" /> {axes[1].label}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[1]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute bottom-[5%] right-[15%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Zap className="w-3 h-3 text-[#3EE7A2]" /> Performance
+            <Zap className="w-3 h-3 text-[#3EE7A2]" /> {axes[2].label}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[2]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute bottom-[5%] left-[15%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Activity className="w-3 h-3 text-[#3EE7A2]" /> Interoperability
+            <Activity className="w-3 h-3 text-[#3EE7A2]" /> {axes[3].label}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[3]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute top-[35%] left-[5%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Shield className="w-3 h-3 text-[#3EE7A2]" /> Governance
+            <Shield className="w-3 h-3 text-[#3EE7A2]" /> {axes[4].label}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[4]?.toFixed(0)}</div>
         </div>
@@ -226,7 +248,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           <BarChart3 className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
           <div>
             <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">DATA SOURCES</div>
-            <div className="text-white font-mono text-xs">24</div>
+            <div className="text-white font-mono text-xs">{dataSources}</div>
           </div>
         </div>
         
@@ -234,7 +256,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           <Activity className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
           <div>
             <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">TELEMETRY POINTS</div>
-            <div className="text-white font-mono text-xs">12,842</div>
+            <div className="text-white font-mono text-xs">{telemetryPoints}</div>
           </div>
         </div>
         
@@ -242,7 +264,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           <Clock className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
           <div>
             <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">EVALUATION WINDOW</div>
-            <div className="text-white font-mono text-xs">30 Days</div>
+            <div className="text-white font-mono text-xs">{windowLabel}</div>
           </div>
         </div>
         
@@ -250,7 +272,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           <CheckCircle className="w-4 h-4 text-[#3EE7A2] mt-0.5" />
           <div>
             <div className="text-[7px] font-mono text-[#6E6E73] uppercase tracking-widest mb-1">CONFIDENCE</div>
-            <div className="text-white font-bold text-xs tracking-wide">High</div>
+            <div className="text-white font-bold text-xs tracking-wide">{score.confidence.level}</div>
           </div>
         </div>
       </div>

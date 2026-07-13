@@ -9,7 +9,7 @@ export const CHAPTERS = [
   { id: "strategic-imperative", title: "1. The Strategic Imperative", icon: Shield },
   { id: "pgl-identity", title: "2. PGL IdentityRAG", icon: KeyRound },
   { id: "seked-policy", title: "3. SEKED Guardrails", icon: Cpu },
-  { id: "interlink-capi", title: "4. Interlink CAPI & Swarm", icon: Layers },
+  { id: "interlink-capi", title: "4. CAPPO Runtime & Swarm", icon: Layers },
   { id: "x402-vnp", title: "5. x402 & Micro-Stakes", icon: Terminal },
 ];
 

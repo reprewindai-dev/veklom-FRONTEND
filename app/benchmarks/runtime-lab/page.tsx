@@ -425,14 +425,14 @@ export default function App() {
       }
       if (data.verdict?.decision === "allow") {
         setExecutionResult({
-          output: data.output?.response || "Executed via Interlink CAPI successfully.",
+          output: data.output?.response || "Executed via CAPPO successfully.",
           proof: data.verdict?.proof,
           cost: data.verdict?.cost
         });
         fetchWalletInfo();
         fetchLedger();
       } else {
-        setExecutionError(data.verdict?.reason || "Secure execution failed or was denied by cAPI governance");
+        setExecutionError(data.verdict?.reason || "Secure execution failed or was denied by CAPPO governance");
       }
     } catch (e) {
       console.error(e);
