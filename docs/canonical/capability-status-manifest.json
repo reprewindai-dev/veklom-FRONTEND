@@ -1,0 +1,39 @@
+{
+  "version": "2026-07-13",
+  "repository": "reprewindai-dev/veklom-FRONTEND",
+  "authority_role": "presentation_layer",
+  "owns": [
+    "operator_presentation",
+    "customer_onboarding_ui",
+    "admin_control_surfaces",
+    "status_display_from_backend_manifests"
+  ],
+  "does_not_own": [
+    "hardcoded_canonical_status",
+    "hardcoded_topology",
+    "trust_connection_persistence",
+    "capability_graph_truth",
+    "final_consequential_execution_authority",
+    "physical_measurement_truth",
+    "settlement_finality"
+  ],
+  "status_namespaces": [
+    "readiness_status",
+    "connection_state",
+    "execution_state",
+    "policy_decision",
+    "measurement_state",
+    "settlement_stage",
+    "verification_result"
+  ],
+  "display_rules": [
+    "Display cAPI and CAPPO as separate operational entities.",
+    "Do not label capi.veklom.com as CAPPO.",
+    "Do not show Live for VNP nodes unless the backend manifest reports canonical liveness evidence."
+  ],
+  "deployment": {
+    "provider": "Hetzner",
+    "orchestrator": "Coolify",
+    "allowed_nodes": ["us-ashburn", "us-hillsboro", "de-nuremberg", "de-falkenstein", "sg-singapore"]
+  }
+}

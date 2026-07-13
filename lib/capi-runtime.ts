@@ -3,9 +3,9 @@ export const CAPI_RUNTIME_URL =
   process.env.INTERLINK_CAPI_URL ||
   "https://capi.veklom.com";
 
-export const CAPI_RUNTIME_LABEL = "CAPPO Backend";
+export const CAPI_RUNTIME_LABEL = "Ambient Interlink cAPI";
 
-export const CAPI_RUNTIME_REPO = "cappo-backend";
+export const CAPI_RUNTIME_REPO = "cAPI";
 
 export const CAPI_EXECUTION_PATH =
   process.env.CAPI_EXECUTION_PATH ||
@@ -25,6 +25,7 @@ export function capiExecutionUrl(): string {
 export function capiAuthHeaderValue(): string {
   return process.env.CAPI_API_KEY ||
     process.env.INTERLINK_CAPI_API_KEY ||
+    // Deprecated compatibility aliases only. Do not display cAPI as CAPPO authority.
     process.env.CAPPO_API_KEY ||
     process.env.CAPPO_BACKEND_API_KEY ||
     "";
