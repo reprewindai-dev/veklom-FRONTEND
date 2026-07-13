@@ -75,6 +75,7 @@ jobs:
               --build-arg NEXT_PUBLIC_API_BASE_URL= \
               -t tvxcsezs2ypd8tjuj6ic9gih:latest .
             sed -i \"s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/\" docker-compose.yaml
+            docker ps -aq --filter 'name=^/tvxcsezs2ypd8tjuj6ic9gih-' | xargs -r docker rm -f
             docker compose -f docker-compose.yaml up -d
             echo 'Frontend deployment complete: ${{ github.sha }}'
           "
