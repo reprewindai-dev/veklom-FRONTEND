@@ -47,6 +47,17 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       authMode: "forward-bearer",
     },
     {
+      id: "capi",
+      label: CAPI_RUNTIME_LABEL,
+      repo: CAPI_RUNTIME_REPO,
+      role: "governed-runtime",
+      baseUrl: trimTrailingSlash(capiUrl),
+      healthPath: "/api/state",
+      overviewPath: "/api/state",
+      sourceOfTruthPath: "/api/audit",
+      authMode: "server-api-key",
+    },
+    {
       id: "gnomledger",
       label: "Gnomledger x402 Fabric",
       repo: "gnomledger",
