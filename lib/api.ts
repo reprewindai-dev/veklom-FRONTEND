@@ -55,6 +55,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/",
   "/blog",
   "/vnp",
+  "/benchmarks",
   "/pricing",
   "/claim",
   "/discovery",

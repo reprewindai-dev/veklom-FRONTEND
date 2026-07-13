@@ -1,4 +1,5 @@
 export { default as DimensionRadar } from "./DimensionRadar";
+export { default as ApiBenchmarkCard } from "./ApiBenchmarkCard";
 export { default as GradeBadge } from "./GradeBadge";
 export { default as ConfidenceBadge } from "./ConfidenceBadge";
 export { default as RegionalBreakdown } from "./RegionalBreakdown";
