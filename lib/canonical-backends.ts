@@ -58,6 +58,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       authMode: "server-api-key",
     },
     {
+      id: "pgl",
+      label: "IdentityRAG PGL Backend",
+      repo: "Agent-Control-need-pgl",
+      role: "governed-runtime",
+      baseUrl: "https://pgl.veklom.com",
+      healthPath: "/api/health",
+      overviewPath: "/api/health",
+      authMode: "forward-bearer",
+    },
+    {
       id: "gnomledger",
       label: "Gnomledger x402 Fabric",
       repo: "gnomledger",
