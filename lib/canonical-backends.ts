@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi" | "pgl" | "gnomledger" | "interlink";
+export type CanonicalBackendId = "byos" | "capi";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -56,36 +56,6 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       overviewPath: "/api/state",
       sourceOfTruthPath: "/api/audit",
       authMode: "server-api-key",
-    },
-    {
-      id: "pgl",
-      label: "IdentityRAG PGL Backend",
-      repo: "Agent-Control-need-pgl",
-      role: "governed-runtime",
-      baseUrl: "https://pgl.veklom.com",
-      healthPath: "/health",
-      overviewPath: "/health",
-      authMode: "forward-bearer",
-    },
-    {
-      id: "gnomledger",
-      label: "Gnomledger x402 Fabric",
-      repo: "gnomledger",
-      role: "ledger",
-      baseUrl: "https://pgl.veklom.com",
-      healthPath: "/health",
-      overviewPath: "/health",
-      authMode: "forward-bearer",
-    },
-    {
-      id: "interlink",
-      label: "Ambient Interlink cAPI",
-      repo: "cAPI",
-      role: "governed-runtime",
-      baseUrl: "https://capi.veklom.com",
-      healthPath: "/api/state",
-      overviewPath: "/api/state",
-      authMode: "forward-bearer",
     },
   ];
 }
