@@ -567,7 +567,7 @@ export default function ControlNodePage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               <Link href="/runtime"><LaunchpadCard title="Runtime Enforcement" status={capiHealthy ? "cAPI proof observed" : "Needs proof"} count={capiHealthy ? 1 : 0} urgency={capiHealthy ? "low" : "normal"} /></Link>
-              <Link href="/pipelines"><LaunchpadCard title="Pipelines & GPC" status={usageSummary.active_pipelines !== undefined ? "Live active pipelines" : "Needs proof"} count={usageSummary.active_pipelines ?? 0} urgency="normal" /></Link>
+              <Link href="/gpc"><LaunchpadCard title="Pipelines & GPC" status={usageSummary.active_pipelines !== undefined ? "Live active pipelines" : "Needs proof"} count={usageSummary.active_pipelines ?? 0} urgency="normal" /></Link>
               <Link href="/governance"><LaunchpadCard title="Governance" status={auditRows.length ? "Audit events" : "Needs proof"} count={auditRows.length} urgency={auditRows.some((e) => e.isAlert) ? "high" : "low"} /></Link>
               <Link href="/interlink"><LaunchpadCard title="CAPPO Backend" status={capiHealthy ? "CAPPO online" : "Needs proof"} count={proofCount} urgency={capiHealthy ? "low" : "normal"} /></Link>
               <Link href="/nexus"><LaunchpadCard title="Nexus Protocol" status="Needs proof" count={0} urgency="low" /></Link>
