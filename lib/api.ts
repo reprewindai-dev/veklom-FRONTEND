@@ -51,6 +51,24 @@ export interface RequestOpts {
   headers?: Record<string, string>;
 }
 
+const PUBLIC_ROUTE_PREFIXES = [
+  "/",
+  "/blog",
+  "/vnp",
+  "/pricing",
+  "/claim",
+  "/discovery",
+  "/dev",
+  "/login",
+  "/signup",
+];
+
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTE_PREFIXES.some((route) => (
+    route === "/" ? pathname === "/" : pathname === route || pathname.startsWith(`${route}/`)
+  ));
+}
+
 export function apiBaseUrl(): string {
   if (API_BASE) return API_BASE;
   if (typeof window !== "undefined") {
@@ -125,9 +143,12 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       `HTTP ${res.status}`;
       
     if (typeof window !== "undefined") {
+      const isPublicPage = isPublicRoute(window.location.pathname);
       if (res.status === 402) {
-        const currentPath = window.location.pathname + window.location.search;
-        window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
+        if (!isPublicPage) {
+          const currentPath = window.location.pathname + window.location.search;
+          window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
+        }
       } else if (res.status === 403 || res.status === 401) {
         const isAuthTokenError = msg.toLowerCase().includes("invalid or expired token") || 
                                  msg.toLowerCase().includes("invalid token") || 
@@ -151,6 +172,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
         }
         
         // Governance lock - redirect to Trust / Security center or login
+        if (isPublicPage) {
+          throw new ApiError(res.status, String(msg), json);
+        }
+
         if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {
           if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login";
