@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi" | "pgl" | "gnomledger";
+export type CanonicalBackendId = "byos" | "capi" | "pgl" | "gnomledger" | "interlink";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -75,6 +75,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       baseUrl: "https://gnomledger.veklom.com",
       healthPath: "/health",
       overviewPath: "/health",
+      authMode: "forward-bearer",
+    },
+    {
+      id: "interlink",
+      label: "Ambient Interlink cAPI",
+      repo: "cAPI",
+      role: "governed-runtime",
+      baseUrl: "https://interlink.veklom.com",
+      healthPath: "/api/health",
+      overviewPath: "/api/health",
       authMode: "forward-bearer",
     },
   ];
