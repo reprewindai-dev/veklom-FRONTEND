@@ -65,7 +65,6 @@ export interface PipelineCompilationRequest {
 
 export interface PipelineCompilationResult {
   success: boolean;
-  pipeline_id?: string;
   python_code: string;
   node_count: number;
   execution_order: string[];
