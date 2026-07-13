@@ -11,7 +11,7 @@ const TOP_APIS = [
   // First-Party Veklom Infrastructure
   { id: "veklom-api", name: "api.veklom.com", version: "v1.5" },
   { id: "veklom-control", name: "control.veklom.com", version: "v1.5" },
-  { id: "veklom-cappo", name: "cappo.veklom.com", version: "v1.0" },
+  { id: "veklom-cappo", name: "capi.veklom.com", version: "v1.0" },
   { id: "veklom-pgl", name: "pgl.veklom.com", version: "v1.0" },
   { id: "veklom-gpc", name: "gpc.veklom.com", version: "v3.0" },
   

@@ -10,7 +10,7 @@ export const CAPI_RUNTIME_REPO = "cappo-backend";
 export const CAPI_EXECUTION_PATH =
   process.env.CAPI_EXECUTION_PATH ||
   process.env.INTERLINK_CAPI_EXECUTION_PATH ||
-  "/api/request";
+  "/v1/exec";
 
 export function capiRuntimeUrl(path: string): string {
   const base = CAPI_RUNTIME_URL.replace(/\/+$/, "");

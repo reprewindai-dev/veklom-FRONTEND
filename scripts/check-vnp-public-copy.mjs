@@ -24,7 +24,7 @@ const forbidden = [
   "Unbiased " + "10" + "-D Composite Scores",
   "LOCKED SPECIFICATION " + "v0.1.5",
   "v0.1.5",
-  "capi.veklom",
+  "cAPI backend",
   "VERIFIED (x402 Circuit)",
   "RPN Active",
   "autonomously slashed",

@@ -192,7 +192,7 @@ export async function GET() {
     probeJson(BYOS_API_BASE, "/api/v1/x402/staking/state"),
     probeJson(BYOS_API_BASE, "/api/v1/benchmarks/leaderboard"),
     probeJson(BYOS_API_BASE, "/.well-known/x402.json"),
-    probeJson(CAPI_RUNTIME_URL, "/api/state"),
+    probeJson(CAPI_RUNTIME_URL, "/health"),
   ]);
 
   const metrics = metricsProbe.state === "verified" ? metricsProbe.data : null;

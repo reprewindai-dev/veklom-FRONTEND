@@ -403,7 +403,7 @@ export default function App() {
     setExecutionResult(null);
 
     try {
-      const res = await fetch("https://mcpapi.vercel.app/api/request", {
+      const res = await fetch("/api/v1/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1535,4 +1535,3 @@ export default function App() {
     </Shell>
   );
 }
-

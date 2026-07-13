@@ -88,7 +88,7 @@ export async function GET(request: Request) {
       body: JSON.stringify({}),
     }),
     probeJson(BYOS_API_BASE, "/.well-known/x402.json"),
-    probeJson(CAPI_RUNTIME_URL, "/api/state"),
+    probeJson(CAPI_RUNTIME_URL, "/health"),
   ]);
 
   const proofCapabilities = proofProbe.state === "verified" ? proofProbe.data?.capabilities || {} : {};

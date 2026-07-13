@@ -6,8 +6,9 @@ const BYOS_BACKEND_URL =
   "https://api.veklom.com";
 
 const CAPPO_BACKEND_URL =
+  process.env.CAPI_BACKEND_URL ||
   process.env.CAPPO_BACKEND_URL ||
-  "https://cappo.veklom.com";
+  "https://capi.veklom.com";
 
 async function readJson(url: string) {
   const response = await fetch(url, { cache: "no-store" });

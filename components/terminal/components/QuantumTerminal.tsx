@@ -643,7 +643,7 @@ export default function QuantumTerminal() {
                  <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Session</span><span className="text-[#e3b341]">Execution receipt required</span></div>
                  <div className="flex justify-between text-[10px]"><span className="text-[#6b8299]">Runtime</span><span className="text-[#bc8cff]">Interlink</span></div>
                 <div className="pt-2 flex flex-wrap gap-1">
-                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/api/request</div>
+                    <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/v1/exec</div>
                     <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">/api/audit 200</div>
                     <div className="px-2 py-0.5 bg-[#151e2b] border border-[#63b3ed1f] rounded text-[9px] text-[#6b8299]">receipt proof</div>
                 </div>

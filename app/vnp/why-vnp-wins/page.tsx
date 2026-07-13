@@ -126,7 +126,7 @@ export default function WhyVNPWinsPage() {
                 <Check className="w-6 h-6 text-[#FFB800] shrink-0 mt-1" />
                 <div>
                   <strong className="text-white block text-lg mb-1">First-Party Veklom APIs</strong>
-                  <span className="text-gray-400 text-sm">APIs owned and operated by Veklom (api.veklom.com, cappo.veklom.com, etc.).</span>
+                  <span className="text-gray-400 text-sm">APIs owned and operated by Veklom (api.veklom.com, capi.veklom.com, etc.).</span>
                 </div>
               </li>
               <li className="flex gap-3 text-slate-300">

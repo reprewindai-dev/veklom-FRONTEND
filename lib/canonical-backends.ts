@@ -52,9 +52,9 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       repo: CAPI_RUNTIME_REPO,
       role: "governed-runtime",
       baseUrl: trimTrailingSlash(capiUrl),
-      healthPath: "/api/state",
-      overviewPath: "/api/state",
-      sourceOfTruthPath: "/api/audit",
+      healthPath: "/health",
+      overviewPath: "/v1/vnp/methodology",
+      sourceOfTruthPath: "/v1/audit/ledger",
       authMode: "server-api-key",
     },
   ];

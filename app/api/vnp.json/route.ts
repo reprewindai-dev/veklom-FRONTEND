@@ -18,7 +18,7 @@ export async function GET() {
     ],
     backends: {
       byos: "https://api.veklom.com",
-      cappo: "https://cappo.veklom.com/v1/exec"
+      cappo: "https://capi.veklom.com/v1/exec"
     },
     last_anchor: new Date().toISOString(),
     merkle_root: "0x8f2d9c4b7e1a3f6d5c2b9a8e7f6d5c4b3a2e1f0d9c8b7a6f5e4d3c2b1a0f9e8d",
