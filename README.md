@@ -64,7 +64,8 @@ VBB_BACKEND_URL=https://api.veklom.com
 Governed runtime backend:
 
 ```bash
-CAPPO_BACKEND_URL=https://cappo.veklom.com
+CAPI_BACKEND_URL=https://capi.veklom.com
+CAPPO_API_KEY=<configured in Coolify>
 ```
 
 Production client code should call same-origin routes where possible, for example:
