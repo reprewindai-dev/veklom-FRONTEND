@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-capi/edge';
 
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
@@ -10,6 +11,23 @@ export function middleware(request: NextRequest) {
     if (url.pathname === '/') {
       url.pathname = '/dev';
       return NextResponse.rewrite(url);
+    }
+  }
+
+  // interlink-cAPI: Edge Interception for capabilities
+  if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
+    const identity = getExecutionIdentity(request);
+    
+    // We determine required capabilities based on the route.
+    const requiredCaps = ['openai_api_key']; // Default for these restricted routes
+    const { missing } = hasRequiredCapabilities(identity, requiredCaps);
+
+    if (missing.length > 0) {
+      // Intercept and redirect to the edge-prompt to fulfill requirements
+      const promptUrl = new URL('/edge-prompt', request.url);
+      promptUrl.searchParams.set('missing', missing.join(','));
+      promptUrl.searchParams.set('returnTo', url.pathname + url.search);
+      return NextResponse.redirect(promptUrl);
     }
   }
 
