@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamicImport from "next/dynamic";
 import { 
@@ -43,6 +44,11 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const now = new Date();
   const activeBlogs = blogsData
     .filter(blog => new Date(blog.publishDate) <= now)
@@ -635,7 +641,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {activeBlogs.map(blog => {
+            {mounted && activeBlogs.map(blog => {
               const formattedDate = new Date(blog.publishDate).toLocaleDateString('en-US', {
                 year: 'numeric', month: 'short', day: 'numeric'
               });
