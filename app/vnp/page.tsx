@@ -158,9 +158,9 @@ export default function VNPLandingPage() {
               <div className="space-y-4">
                 {[
                   { name: 'Physical measurements', weight: 'Live' },
-                  { name: 'Signed telemetry', weight: 'Partial' },
+                  { name: 'Signed telemetry', weight: 'Live' },
                   { name: 'Route beacons', weight: 'Connected' },
-                  { name: 'Robust scoring', weight: 'Partial' },
+                  { name: 'Robust scoring', weight: 'Connected' },
                   { name: 'x402 settlement evidence', weight: 'Connected' },
                   { name: 'PGL audit trails', weight: 'Connected' },
                   { name: 'Agent/runtime enforcement', weight: 'Auth Required' }
@@ -178,7 +178,7 @@ export default function VNPLandingPage() {
               <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
                 <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-mono text-gray-400">DEMO MODE: VNP_TOPOLOGY_MESH</span>
+                  <span className="text-xs font-mono text-gray-400">CONNECTED VIEW: VNP_TOPOLOGY_MESH</span>
                 </div>
                 <div className="h-[500px] overflow-hidden p-6 relative bg-[#060608]">
                   <div className="transform scale-[0.85] origin-top-left w-[117%] h-[117%] pointer-events-none">
