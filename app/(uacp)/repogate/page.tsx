@@ -16,10 +16,10 @@ export default function RepoGatePage() {
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded text-left mt-4 space-y-4">
             <h2 className="text-xl font-bold text-white mb-2">Next Steps:</h2>
             <ol className="list-decimal pl-5 space-y-2 text-gray-300">
-              <li>Deploy the <code className="bg-black px-1.5 py-0.5 rounded text-green-400">real-repo-gate-for-veklom</code> repository as a separate Vite project on Vercel or Coolify.</li>
-              <li>Get the live deployment URL (e.g., <code>https://my-repo-gate.vercel.app</code>).</li>
-              <li>Add <code className="bg-black px-1.5 py-0.5 rounded text-blue-400">NEXT_PUBLIC_REPOGATE_URL</code> as an environment variable in your Veklom Control Plane deployment settings, pointing to the live URL.</li>
-              <li>Redeploy the Control Plane.</li>
+              <li>The <code className="bg-black px-1.5 py-0.5 rounded text-green-400">repogate</code> repository is deployed as a standalone Vite project on your Hetzner Coolify node.</li>
+              <li>Ensure the Coolify proxy routes its domain (e.g., <code>https://repogate.veklom.com</code>).</li>
+              <li>Add <code className="bg-black px-1.5 py-0.5 rounded text-blue-400">NEXT_PUBLIC_REPOGATE_URL</code> as an environment variable in the Control Plane Coolify settings, pointing to the live URL.</li>
+              <li>Force deploy the Control Plane container in Coolify to apply the env var.</li>
             </ol>
           </div>
         </div>
