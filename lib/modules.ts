@@ -34,7 +34,7 @@ export const MODULES: ModuleDef[] = [
   { slug: "benchmarks", label: "Nexus Protocol", href: "/benchmarks", group: "nexus", minTier: "free", description: "VNP-certified API trust leaderboard and SLA staking markets.", icon: "ActivitySquare", sidebar: true },
   { slug: "vnp-incidents", label: "Incidents & Slashing", href: "/vnp-incidents", group: "nexus", minTier: "free", description: "Live SLA breaches, cryptographic evidence, and PGL dispute resolution.", icon: "ShieldAlert", sidebar: true },
   { slug: "benchmarks-pgl", label: "PGL Identity Layer", href: "/benchmarks?tab=pgl", group: "nexus", minTier: "free", description: "PGL Immutable Identity and M2M trust operations.", icon: "Fingerprint", sidebar: false },
-  { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "nexus", minTier: "free", description: "API Trust Leaderboard with 10-dimension scoring.", icon: "Shield", sidebar: false },
+  { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "nexus", minTier: "free", description: "API Trust Leaderboard with VNP v1.0 verification scoring.", icon: "Shield", sidebar: false },
   { slug: "benchmarks-consensus", label: "Consensus Vector", href: "/benchmarks?tab=consensus", group: "nexus", minTier: "free", description: "Multi-node measurement consensus and epoch history.", icon: "Network", sidebar: false },
   { slug: "benchmarks-methodology", label: "Methodology", href: "/benchmarks?tab=methodology", group: "nexus", minTier: "free", description: "VNP scoring methodology, dimensions, and provenance spec.", icon: "BookOpen", sidebar: false },
   

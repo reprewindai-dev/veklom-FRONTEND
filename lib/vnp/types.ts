@@ -167,15 +167,15 @@ export interface MicroStakeHeader {
 }
 
 /**
- * Veklom Nexus Protocol (VNP) v0.1 — Core Type Definitions
+ * Veklom Nexus Protocol (VNP) v1.0 — Core Type Definitions
  *
- * Aligned to the locked VNP Methodology Specification v0.1.
- * These types model the 10-dimension scoring system, measurement records,
- * provenance chain, and regional breakdown used across the VNP surface.
+ * Aligned to VNP Methodology v1.0. These types model the verification
+ * scoring inputs, measurement records, provenance chain, and regional
+ * breakdown used across the VNP surface.
  */
 
 // ---------------------------------------------------------------------------
-// Dimension identifiers — the 10 canonical VNP measurement dimensions
+// Verification input identifiers used by the current VNP scoring pipeline.
 // ---------------------------------------------------------------------------
 export type VNPDimensionId =
   | "p99_latency"
