@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Player, BiometricResonance, LobbyState, GlobalJackpotState, Challenge, PaymentRequirement } from '@/components/bingo/types';
-import MFASection from '@/components/bingo/MFASection';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import HolographicBoard from '@/components/bingo/HolographicBoard';
 import NeuralInterface from '@/components/bingo/NeuralInterface';
 import CommunalResonanceEngine from '@/components/bingo/CommunalResonanceEngine';
@@ -33,6 +33,8 @@ interface BingoProofState {
   };
   capabilities: Record<string, string>;
 }
+
+import { WalletProviders } from '../../agent-dual/WalletProviders';
 
 // Helper to generate a reproducible standard BINGO card
 function generateBingoCard(seed: string): number[][] {
@@ -67,7 +69,7 @@ function generateBingoCard(seed: string): number[][] {
   return card;
 }
 
-export default function App() {
+function BingoApp() {
   const { data: bingoProof } = useApi<BingoProofState>('/bingo/state', { refreshInterval: 30000 });
   const [player, setPlayer] = useState<Player | null>(null);
   const [resonance, setResonance] = useState<BiometricResonance>({
@@ -467,103 +469,55 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isAutoPilot, player, activeLobby]);
 
-  // If user hasn't signed waiver, show upfront legal cappo screen
-  if (!hasSignedWaiver) {
-    return (
-      <div className="min-h-screen bg-[#060813] flex items-center justify-center p-4 relative overflow-hidden font-mono">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,_#1e1436_0%,_transparent_70%)] opacity-60"></div>
-        
-        <div className="max-w-3xl w-full bg-black/60 border border-red-500/30 rounded-3xl p-8 backdrop-blur-2xl relative z-10 space-y-6 shadow-[0_0_50px_rgba(239,68,68,0.15)]">
-          <div className="flex items-center gap-3 pb-4 border-b border-white/10 text-red-500">
-            <ShieldAlert className="w-8 h-8 animate-pulse shrink-0" />
-            <div>
-              <h2 className="text-lg font-black tracking-widest uppercase">M2M NEURAL BINGO LIABILITY COVENANT</h2>
-              <p className="text-[9px] text-white/50">SECURED UNDER LAWS OF BASE MAINNET LEDGER SYSTEM-X402</p>
-            </div>
-          </div>
+  const { address, isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
 
-          <div className="text-[11px] text-white/80 space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin leading-relaxed">
-            <p className="text-amber-400 font-bold">
-              IMPORTANT: READ THESE IMMERSIVE SYSTEM CLAUSES BEFORE TRANSMITTING YOUR NEURAL FOOTPRINT COGNITIVE SIGNATURE.
-            </p>
-            
-            <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-3">
-              <h4 className="font-bold text-white flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-red-400" /> ARTICLE I: COGNITIVE AI DELEGATION
-              </h4>
-              <p className="text-white/70">
-                You may delegate an autonomous AI Agent to monitor live Bingo lobbies and board state. Paid auto-play is disabled until Base wallet approval and BYOS settlement proof are returned by the backend.
-              </p>
-            </div>
+  useEffect(() => {
+    if (isConnected && address) {
+      setPlayer({
+        username: 'Base_Player_' + address.substring(0, 4),
+        walletAddress: address,
+        mfaEnabled: false,
+        mfaSecret: '',
+        performanceMetrics: {
+          totalWins: 0,
+          avgCardiacCoherence: 0.85,
+          peakNeuralFrequency: 14.0,
+          attentionScore: 92,
+        }
+      });
+    } else {
+      setPlayer(null);
+    }
+  }, [isConnected, address]);
 
-            <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-3">
-              <h4 className="font-bold text-white flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-[#00f3ff]" /> ARTICLE II: PROGRESSIVE POOL & REVENUE PERCENTAGES
-              </h4>
-              <p className="text-white/70">
-                Target fee allocation is 10% house treasury, 20% progressive jackpot, and 70% active round prize pot. This screen only treats those values as live when returned by the Bingo backend or settlement proof route.
-              </p>
-            </div>
-
-            <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-3">
-              <h4 className="font-bold text-white flex items-center gap-1.5">
-                <Activity className="w-4 h-4 text-[#bc13fe]" /> ARTICLE III: BIOMETRIC TELEMETRY & RESONANCE
-              </h4>
-              <p className="text-white/70">
-                Signer acknowledges that local telemetry controls are gameplay inputs. They are not medical biometric proof and are not treated as on-chain evidence without backend settlement rows.
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSignWaiver} className="space-y-4 pt-4 border-t border-white/10">
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] text-white/50 uppercase tracking-widest">
-                Transmit Neural Footprint (Key signature to bind your AI Agent):
-              </label>
-              <input
-                type="text"
-                value={waiverSignKey}
-                onChange={(e) => setWaiverSignKey(e.target.value)}
-                placeholder="Type an acknowledgement phrase (min 10 chars)..."
-                required
-                className="bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white placeholder-white/30 focus:outline-none focus:border-red-500 transition-colors"
-              />
-            </div>
-
-            <div className="flex items-start gap-2.5">
-              <input type="checkbox" id="agree" required className="mt-1 accent-red-500 cursor-pointer" />
-              <label htmlFor="agree" className="text-[9px] text-white/60 leading-normal cursor-pointer select-none">
-                I agree to irrevocably bind my neural link agent to these game rules and authorize direct Base Mainnet EIP-3009 payment authorizations.
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSigningWaiver}
-              className="w-full bg-gradient-to-r from-red-600 to-amber-600 text-white py-3 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:brightness-110 active:scale-[0.99] transition-all disabled:opacity-50"
-            >
-              {isSigningWaiver ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  CONNECTING SYNAPSE & SIGNING COVENANT...
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4" />
-                  AUTHORIZE & TRANSMIT NEURAL SIGNATURE
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  if (!player) {
+  if (!isConnected || !player) {
     return (
       <div className="min-h-screen bg-[#060813] flex items-center justify-center p-4">
-        <MFASection apiBase={BINGO_API_BASE} onAuthenticated={handleAuthenticated} />
+        <div className="max-w-md w-full mx-auto bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden text-center space-y-6">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-[#00f3ff]/10 rounded-full blur-3xl -z-10"></div>
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#bc13fe]/10 rounded-full blur-3xl -z-10"></div>
+          
+          <div className="inline-flex p-3 bg-black/40 border border-[#00f3ff]/30 rounded-2xl shadow-inner">
+            <Cpu className="w-8 h-8 text-[#00f3ff]" />
+          </div>
+          
+          <h2 className="text-xl font-black uppercase text-[#00f3ff]">Welcome to Bingo</h2>
+          <p className="text-xs text-white/60">Connect your Base Smart Wallet to play.</p>
+          
+          <div className="flex flex-col gap-3 pt-4">
+            {connectors.map((connector) => (
+              <button
+                key={connector.uid}
+                onClick={() => connect({ connector })}
+                disabled={isPending}
+                className="w-full bg-gradient-to-r from-[#00f3ff] to-[#bc13fe] text-black font-black uppercase tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer font-mono text-xs shadow-[0_0_20px_rgba(0,243,255,0.4)] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+              >
+                {isPending ? 'Connecting...' : `Connect ${connector.name === 'Coinbase Wallet' ? 'Base Smart Wallet' : connector.name}`}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -592,8 +546,8 @@ export default function App() {
         <div className="flex flex-wrap items-center gap-6 mt-4 sm:mt-0">
           <div className="text-right">
             <p className="text-[10px] text-white/40 uppercase font-mono tracking-widest">Base Mainnet X402</p>
-            <p className="text-xs font-mono text-[#00f3ff]" title={player.walletAddress}>
-              {player.walletAddress.substring(0, 7)}...{player.walletAddress.substring(player.walletAddress.length - 6)}
+            <p className="text-xs font-mono text-[#00f3ff]" title={player?.walletAddress}>
+              {player?.walletAddress?.substring(0, 7)}...{player?.walletAddress?.substring(player?.walletAddress.length - 6)}
             </p>
           </div>
           
@@ -746,7 +700,7 @@ export default function App() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {lobbies.map((lobby) => {
-            const isUserRegistered = lobby.activePlayers.some(p => p.walletAddress.toLowerCase() === player.walletAddress.toLowerCase());
+            const isUserRegistered = lobby.activePlayers.some(p => p.walletAddress.toLowerCase() === player?.walletAddress?.toLowerCase());
             const isSelected = lobby.id === activeLobbyId;
             return (
               <div
@@ -1082,5 +1036,13 @@ export default function App() {
         <p>All neural telemetry and cryptographic signatures processed with Interlink-cAPI.</p>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <WalletProviders>
+      <BingoApp />
+    </WalletProviders>
   );
 }

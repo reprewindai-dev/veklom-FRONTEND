@@ -3,7 +3,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createConfig, http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
-import { baseAccount, coinbaseWallet, injected } from "wagmi/connectors";
+import { coinbaseWallet, injected } from "wagmi/connectors";
 
 export const agentDuelQueryClient = new QueryClient();
 
@@ -11,9 +11,6 @@ const walletConnectors =
   typeof window === "undefined"
     ? []
     : [
-        baseAccount({
-          appName: "Veklom Agent Duel",
-        }),
         coinbaseWallet({
           appName: "Veklom Agent Duel",
         }),
