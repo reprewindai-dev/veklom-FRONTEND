@@ -161,7 +161,7 @@ export default function VNPLandingPage() {
                   { name: 'Signed telemetry', weight: 'Live' },
                   { name: 'Route beacons', weight: 'Connected' },
                   { name: 'Robust scoring', weight: 'Connected' },
-                  { name: 'x402 settlement evidence', weight: 'Connected' },
+                  { name: 'x402 settlement evidence', weight: 'Live' },
                   { name: 'PGL audit trails', weight: 'Connected' },
                   { name: 'Agent/runtime enforcement', weight: 'Auth Required' }
                 ].map((item, i) => (

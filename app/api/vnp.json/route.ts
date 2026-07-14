@@ -1,58 +1,144 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+
+type VerificationStackItem = {
+  section: string;
+  status: string;
+  backend?: string;
+};
+
+type MethodologyResponse = {
+  methodology?: string;
+  tagline?: string;
+  verification_stack?: VerificationStackItem[];
+  backends?: unknown;
+};
+
+type TopologyResponse = {
+  topology?: {
+    activeNodes?: number;
+    expectedNodes?: number;
+    registeredNodes?: number;
+    partiallyImplementedNodes?: number;
+    configIncompleteNodes?: number;
+    nodes?: Array<{
+      region?: string;
+      status_str?: string;
+      activeKeyCount?: number;
+      lastHeartbeat?: string;
+      lastObservation?: string;
+      observationCount?: number;
+      version?: string;
+    }>;
+  };
+};
+
+const BYOS_BACKEND_URL =
+  process.env.VBB_BACKEND_URL ||
+  process.env.BACKEND_URL ||
+  "https://api.veklom.com";
+
+const CAPPO_BACKEND_URL =
+  process.env.CAPPO_BACKEND_URL ||
+  process.env.CAPI_RUNTIME_URL ||
+  "https://capi.veklom.com";
+
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
+
+async function readJson<T>(url: string): Promise<T | null> {
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+const fallbackStack: VerificationStackItem[] = [
+  { section: "Physical measurements", status: "Disconnected" },
+  { section: "Signed telemetry", status: "Disconnected" },
+  { section: "Route beacons", status: "Disconnected" },
+  { section: "Robust scoring", status: "Disconnected" },
+  { section: "x402 settlement evidence", status: "Disconnected" },
+  { section: "PGL audit trails", status: "Disconnected" },
+  { section: "Agent/runtime enforcement", status: "Auth Required", backend: "cappo-backend" },
+];
 
 export async function GET() {
+  const byosBase = trimTrailingSlash(BYOS_BACKEND_URL);
+  const cappoBase = trimTrailingSlash(CAPPO_BACKEND_URL);
+  const methodologyUrl = `${byosBase}/api/v1/vnp/methodology`;
+  const topologyUrl = `${byosBase}/api/v1/beacon/topology`;
+
+  const [methodology, topology] = await Promise.all([
+    readJson<MethodologyResponse>(methodologyUrl),
+    readJson<TopologyResponse>(topologyUrl),
+  ]);
+
+  const verificationStack = methodology?.verification_stack?.length
+    ? methodology.verification_stack
+    : fallbackStack;
+
+  const x402Status =
+    verificationStack.find((item) => item.section === "x402 settlement evidence")?.status ||
+    "Disconnected";
+
+  const topologyState = topology?.topology;
+  const connectedNodes =
+    topologyState?.nodes?.map((node) => ({
+      region: node.region,
+      status: node.status_str || "Disconnected",
+      active_key_count: node.activeKeyCount ?? 0,
+      last_heartbeat: node.lastHeartbeat ?? null,
+      last_observation: node.lastObservation ?? null,
+      observation_count: node.observationCount ?? 0,
+      version: node.version ?? null,
+    })) || [];
+
   const vnpData = {
-    methodology_version: "VNP Methodology v1.0",
+    methodology_version: methodology?.methodology || "VNP Methodology v1.0",
     methodology_url: "https://veklom.com/vnp/methodology",
     license: "VNP Open Standard (CC BY-ND 4.0)",
-    data_mode: "live",
-    tagline: "Cryptographic API telemetry for the machine-to-machine economy",
-    verification_stack: [
-      { section: "Physical measurements", status: "Live" },
-      { section: "Signed telemetry", status: "Live" },
-      { section: "Route beacons", status: "Connected" },
-      { section: "Robust scoring", status: "Connected" },
-      { section: "x402 settlement evidence", status: "Connected" },
-      { section: "PGL audit trails", status: "Connected" },
-      { section: "Agent/runtime enforcement", status: "Auth Required" }
-    ],
+    data_mode: methodology && topology ? "live" : "partially_connected",
+    tagline:
+      methodology?.tagline ||
+      "Cryptographic API telemetry for the machine-to-machine economy",
+    verification_stack: verificationStack,
     backends: {
-      byos: "https://api.veklom.com",
-      cappo: "https://capi.veklom.com/v1/exec"
+      byos: byosBase,
+      cappo: `${cappoBase}/v1/exec`,
     },
-    last_anchor: new Date().toISOString(),
-    merkle_root: "0x8f2d9c4b7e1a3f6d5c2b9a8e7f6d5c4b3a2e1f0d9c8b7a6f5e4d3c2b1a0f9e8d",
-    x402_settlement_enabled: "Connected",
-    tracked_apis_count: 12,
-    api_feed: [
-      {
-        api: "api.veklom.com",
-        composite_score: 98.4,
-        grade: "A+",
-        confidence_interval: "±0.2%",
-        dimensions: {
-          p99_latency: { weight: 0.40, score: 99.1, raw_value: "42ms" },
-          geo_adjusted_latency: { weight: 0.20, score: 98.5, raw_value: "14ms" },
-          error_rate: { weight: 0.15, score: 100, raw_value: "0.001%" },
-          availability: { weight: 0.15, score: 99.9, raw_value: "99.999%" },
-          security: { weight: 0.10, score: 100, raw_value: "TLS 1.3 / Ed25519" }
-        },
-        regional_metrics: {
-          "us-ashburn": { geo_adjusted_latency: 12.4, error_rate: 0.0, status: "active" },
-          "us-hillsboro": { geo_adjusted_latency: 15.1, error_rate: 0.0, status: "active" },
-          "de-falkenstein": { geo_adjusted_latency: 22.8, error_rate: 0.001, status: "active" },
-          "de-nuremberg": { geo_adjusted_latency: 24.1, error_rate: 0.001, status: "active" },
-          "sg-singapore": { geo_adjusted_latency: 35.6, error_rate: 0.002, status: "active" }
-        }
-      }
-    ]
+    evidence_endpoints: {
+      methodology: methodologyUrl,
+      topology: topologyUrl,
+      cappo_exec: `${cappoBase}/v1/exec`,
+    },
+    topology: {
+      active_nodes: topologyState?.activeNodes ?? 0,
+      expected_nodes: topologyState?.expectedNodes ?? 0,
+      registered_nodes: topologyState?.registeredNodes ?? 0,
+      partially_implemented_nodes: topologyState?.partiallyImplementedNodes ?? 0,
+      config_incomplete_nodes: topologyState?.configIncompleteNodes ?? 0,
+      nodes: connectedNodes,
+    },
+    merkle_root: null,
+    merkle_root_status: "Not Yet Wired",
+    x402_settlement_enabled: x402Status,
+    tracked_apis_count: null,
+    api_feed_status: "Use /api/vnp/leaderboard for backend-scored API entries.",
+    api_feed: [],
+    generated_at: new Date().toISOString(),
   };
 
   return NextResponse.json(vnpData, {
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'public, max-age=30',
-      'X-VNP-Methodology': 'VNP Methodology v1.0'
-    }
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "no-store",
+      "X-VNP-Methodology": "VNP Methodology v1.0",
+    },
   });
 }

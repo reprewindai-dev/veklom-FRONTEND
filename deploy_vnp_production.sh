@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ################################################################################
-# VNP v0.1 AUTOMATED PRODUCTION DEPLOYMENT
+# VNP Methodology v1.0 legacy infrastructure helper
 #
 # PURPOSE: Deploy VNP from zero to live (Base L2 + 5 regions) in <2 hours
 # USAGE: ./deploy-vnp-production.sh
@@ -176,7 +176,7 @@ provision_infrastructure() {
 
 generate_terraform_config() {
   cat > main.tf << 'EOF'
-# VNP v0.1 Terraform Configuration
+# VNP Methodology v1.0 Terraform Configuration
 # Provisions: ClickHouse cluster, Kafka cluster, scoring engine, public API
 
 terraform {
@@ -478,24 +478,10 @@ deploy_smart_contract() {
 # ============================================================================
 
 deploy_dashboard() {
-  log_step "PHASE 5: DEPLOYING DASHBOARD (10 min)"
-  
-  cd "$SCRIPT_DIR/../dashboard"
-  
-  log_info "Building Next.js dashboard..."
-  npm ci
-  npm run build
-  
-  log_info "Deploying to Vercel..."
-  npm install -g vercel
-  vercel deploy --prod --token "$VERCEL_TOKEN"
-  
-  local dashboard_url=$(vercel env pull --token "$VERCEL_TOKEN" | grep VERCEL_URL | cut -d= -f2)
-  export DASHBOARD_URL="https://$dashboard_url"
-  
-  log_success "Dashboard deployed: $DASHBOARD_URL"
-  
-  cd "$SCRIPT_DIR"
+  log_step "PHASE 5: DASHBOARD DEPLOYMENT"
+  log_error "This legacy helper must not deploy the VNP dashboard. Veklom frontend deployments run through Coolify."
+  log_error "Use the Coolify application for reprewindai-dev/veklom-FRONTEND instead of this script."
+  return 1
 }
 
 # ============================================================================
@@ -582,7 +568,7 @@ final_report() {
   
   cat << EOF
 
-  ✓ VNP v0.1 LIVE ON PRODUCTION
+  ✓ VNP Methodology v1.0 LIVE ON PRODUCTION
 
   INFRASTRUCTURE:
     - 5 regional measurement nodes: ${#REGIONS[@]}
@@ -621,7 +607,7 @@ EOF
 # ============================================================================
 
 main() {
-  log_info "Starting VNP v0.1 Production Deployment"
+  log_info "Starting VNP Methodology v1.0 Production Deployment"
   log_info "Deployment Environment: $DEPLOYMENT_ENV"
   log_info "Timestamp: $(date -Iseconds)"
   

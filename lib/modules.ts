@@ -36,7 +36,7 @@ export const MODULES: ModuleDef[] = [
   { slug: "benchmarks-pgl", label: "PGL Identity Layer", href: "/benchmarks?tab=pgl", group: "nexus", minTier: "free", description: "PGL Immutable Identity and M2M trust operations.", icon: "Fingerprint", sidebar: false },
   { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "nexus", minTier: "free", description: "API Trust Leaderboard with VNP v1.0 verification scoring.", icon: "Shield", sidebar: false },
   { slug: "benchmarks-consensus", label: "Consensus Vector", href: "/benchmarks?tab=consensus", group: "nexus", minTier: "free", description: "Multi-node measurement consensus and epoch history.", icon: "Network", sidebar: false },
-  { slug: "benchmarks-methodology", label: "Methodology", href: "/benchmarks?tab=methodology", group: "nexus", minTier: "free", description: "VNP scoring methodology, dimensions, and provenance spec.", icon: "BookOpen", sidebar: false },
+  { slug: "benchmarks-methodology", label: "Methodology", href: "/benchmarks?tab=methodology", group: "nexus", minTier: "free", description: "VNP Methodology v1.0 verification inputs and provenance spec.", icon: "BookOpen", sidebar: false },
   
   { slug: "benchmarks-arena", label: "Authority Arena", href: "/benchmarks/arena", group: "nexus", minTier: "free", description: "Interactive agent character creator and consensus pipeline playground.", icon: "Gamepad2", sidebar: false },
   { slug: "benchmarks-runtime-lab", label: "Gateway Trust Contract Lab", href: "/benchmarks/runtime-lab", group: "nexus", minTier: "free", description: "7-step deterministic pipeline, EAT token signing, policy presets, and cryptographic evidence ledger.", icon: "ShieldCheck", sidebar: false },

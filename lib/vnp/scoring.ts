@@ -1,8 +1,8 @@
 /**
- * VNP v0.1 Scoring Engine
+ * VNP Methodology v1.0 scoring engine
  *
  * Transforms raw benchmark API data into full VNP composite scores.
- * Implements the locked methodology: 10 dimensions, asymmetric weighting,
+ * Implements the current methodology: asymmetric verification input weighting,
  * geographic normalization, confidence intervals, and provenance generation.
  */
 

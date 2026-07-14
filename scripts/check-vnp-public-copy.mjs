@@ -33,6 +33,11 @@ const forbidden = [
   "Signed telemetry\", weight: \"Partial\"",
   "Robust scoring', weight: 'Partial'",
   "Robust scoring\", weight: \"Partial\"",
+  "x402 settlement evidence', weight: 'Connected'",
+  "x402 settlement evidence\", weight: \"Connected\"",
+  "\"x402 settlement evidence\", status: \"Connected\"",
+  "\"merkle_root\": \"0x",
+  "merkle_root: \"0x",
   "DEMO MODE: VNP_TOPOLOGY_MESH",
 ];
 
