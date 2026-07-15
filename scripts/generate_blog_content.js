@@ -225,7 +225,7 @@ const templates = [
   {
     titleTemplate: "x402 Implementation: Securing {service} with Micro-Stakes",
     slugTemplate: "x402-implementation-micro-stakes-{service}",
-    techs: ["LLM Providers", "Cloud SQL", "AWS Lambda", "Vercel Edge"]
+    techs: ["LLM Providers", "Cloud SQL", "AWS Lambda", "Coolify Hetzner"]
   }
 ];
 

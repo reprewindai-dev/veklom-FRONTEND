@@ -204,7 +204,7 @@ function AgentDuelApp() {
     idWallet: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     paymentWallet: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     network: "Base Mainnet",
-    verificationDomain: "veklom-id.vercel.app",
+    verificationDomain: "id.veklom.com",
     connected: false,
     balanceEth: 0,
     balanceUsdc: 0

@@ -132,9 +132,9 @@
     "publishDate": "2027-04-13T01:10:52.820Z"
   },
   {
-    "slug": "x402-implementation-micro-stakes-vercel-edge",
-    "title": "x402 Implementation: Securing Vercel Edge with Micro-Stakes",
-    "excerpt": "A technical deep dive into Vercel Edge and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
+    "slug": "x402-implementation-micro-stakes-coolify-hetzner",
+    "title": "x402 Implementation: Securing Coolify and Hetzner with Micro-Stakes",
+    "excerpt": "A technical deep dive into the Coolify and Hetzner deployment surface that runs Veklom's VNP telemetry, x402, and control-plane routes.",
     "publishDate": "2027-04-27T01:10:52.820Z"
   },
   {
