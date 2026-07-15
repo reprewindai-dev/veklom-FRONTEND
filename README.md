@@ -6,6 +6,7 @@ Production frontend for the Veklom sovereign AI control plane and Veklom Nexus P
 
 - Public application: `https://veklom.com`
 - VNP standard and docs entry: `https://veklom.com/vnp`
+- Standalone VNP product surface: `https://vnp.veklom.com`
 - Developer surface: `https://veklom.dev`
 - Backend API: `https://api.veklom.com`
 
@@ -64,9 +65,11 @@ VBB_BACKEND_URL=https://api.veklom.com
 Governed runtime backend:
 
 ```bash
-CAPI_BACKEND_URL=https://capi.veklom.com
+CAPPO_BACKEND_URL=https://capi.veklom.com
 CAPPO_API_KEY=<configured in Coolify>
 ```
+
+Legacy `CAPI_*` environment names may still exist for compatibility, but the implementation repo and backend authority are `reprewindai-dev/cappo-backend`.
 
 Production client code should call same-origin routes where possible, for example:
 

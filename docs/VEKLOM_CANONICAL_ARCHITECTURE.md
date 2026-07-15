@@ -12,9 +12,9 @@ This document represents the unified architectural truth lock for the Veklom pla
 - The SDK is strictly a generated machine-native embodiment of a connection, not an independent layer.
 
 ### 2.2 The Fabric: Interlink
-- **Component:** Ambient Interlink cAPI (`reprewindai-dev/cAPI`)
-- **Role:** The distributed operating fabric. It handles intent classification, negotiation, capability composition, and public-facing gateway duties.
-- **Rules:** Interlink cannot invent capabilities; it only discovers and routes them based on persistent truths stored in BYOS.
+- **Component:** Interlink routing surface inside the approved implementation repos. Do not use or invent a separate `reprewindai-dev/cAPI` implementation repo for current production work.
+- **Role:** The distributed operating fabric. It handles intent classification, negotiation, capability composition, and public-facing gateway duties through BYOS state and CAPPO execution authority.
+- **Rules:** Interlink cannot invent capabilities; it only discovers and routes them based on persistent truths stored in BYOS and must release consequential execution through CAPPO.
 
 ### 2.3 The Runtime: Amphoteric
 - **Component:** Amphoteric Runtime
