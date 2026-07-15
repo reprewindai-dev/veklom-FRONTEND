@@ -24,14 +24,6 @@ const StakingProtocol = dynamicImport(
   () => import("@/components/vnp/StakingProtocol"),
   { ssr: false, loading: () => <div className="h-[400px] bg-white/5 rounded-xl animate-pulse" /> }
 );
-const HostileAgentDemo = dynamicImport(
-  () => import("@/app/dev/components/HostileAgentDemo"),
-  { ssr: false, loading: () => <div className="h-[600px] bg-white/5 rounded-xl animate-pulse" /> }
-);
-const GovernedExportDemo = dynamicImport(
-  () => import("@/app/dev/components/GovernedExportDemo"),
-  { ssr: false, loading: () => <div className="h-[600px] bg-white/5 rounded-xl animate-pulse" /> }
-);
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -173,8 +165,32 @@ export default function Home() {
           <motion.div variants={fadeUpVariants} id="live-demo" className="relative scroll-mt-24 w-full">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-3xl opacity-50 rounded-3xl -z-10" />
             <div className="grid md:grid-cols-2 gap-8">
-                <HostileAgentDemo />
-                <GovernedExportDemo />
+              <div className="card obsidian-glass p-8 text-left">
+                <div className="flex items-center gap-3 mb-5">
+                  <ShieldAlert className="w-5 h-5 text-[#FFB800]" />
+                  <span className="text-xs tracking-[0.14em] text-[#FFB800] font-bold uppercase">Runtime Interception</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">Hostile agent interception</h2>
+                <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                  Run the governed demo in the secured control-plane surface. The public landing page stays static and stable; the live trace executes inside the authenticated runtime.
+                </p>
+                <Link href="/dev#runtime-demo" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Open live trace <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="card obsidian-glass p-8 text-left">
+                <div className="flex items-center gap-3 mb-5">
+                  <FileSpreadsheet className="w-5 h-5 text-[#FFB800]" />
+                  <span className="text-xs tracking-[0.14em] text-[#FFB800] font-bold uppercase">Governed Export</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">Cross-boundary proof flow</h2>
+                <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                  See the BYOS guardrail path, CAPPO execution proof, and x402 settlement evidence from the live runtime without loading terminal-only code on the homepage.
+                </p>
+                <Link href="/vnp/docs" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Open VNP docs <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </motion.div>
         </motion.div>
