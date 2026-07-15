@@ -118,8 +118,8 @@ export default function VNPLandingPage() {
             VNP Methodology v1.0
           </motion.div>
           
-          <motion.h1 variants={fadeUpVariants} className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            Cryptographically Verifiable <br />
+          <motion.h1 variants={fadeUpVariants} className="max-w-4xl mx-auto text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight text-balance">
+            Cryptographic <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FFE6A8] to-[#FFB800]">
               API telemetry for the M2M Economy.
             </span>
