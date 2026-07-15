@@ -40,7 +40,7 @@ jobs:
 
   # ── 2. Deploy to Production (main only) ─────────────────────────────────────
   deploy:
-    name: Deploy to control.veklom.com
+    name: Deploy to control.veklom.com and veklom.dev
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -89,6 +89,7 @@ jobs:
             cleanup
             trap - EXIT
             sed -i \"s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/\" docker-compose.yaml
+            python3 -c 'from pathlib import Path; p=Path(\"docker-compose.yaml\"); s=p.read_text(); t=chr(96); control=f\"Host({t}control.veklom.com{t}) && PathPrefix({t}/{t})\"; expanded=f\"(Host({t}control.veklom.com{t}) || Host({t}veklom.dev{t}) || Host({t}www.veklom.dev{t})) && PathPrefix({t}/{t})\"; s=s.replace(control, expanded); s=s.replace(\"caddy_0=https://control.veklom.com\", \"caddy_0=https://control.veklom.com, https://veklom.dev, https://www.veklom.dev\"); p.write_text(s)'
             docker ps -aq --filter 'name=tvxcsezs2ypd8tjuj6ic9gih' | xargs -r docker rm -f
             docker compose -f docker-compose.yaml up -d --force-recreate
             echo 'Frontend deployment complete: ${{ github.sha }}'
@@ -102,4 +103,9 @@ jobs:
             echo "HEALTH CHECK FAILED: control.veklom.com returned $HTTP"
             exit 1
           fi
-          echo "control.veklom.com healthy — deployment successful"
+          DEV_HTTP=$(curl -sk https://veklom.dev -o /dev/null -w '%{http_code}')
+          if [ "$DEV_HTTP" != "200" ]; then
+            echo "HEALTH CHECK FAILED: veklom.dev returned $DEV_HTTP"
+            exit 1
+          fi
+          echo "control.veklom.com and veklom.dev healthy — deployment successful"
