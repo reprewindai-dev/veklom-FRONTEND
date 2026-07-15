@@ -7,6 +7,25 @@ import { Activity, Globe, Server, Shield, Zap, ArrowRight, Check, Search, Code, 
 import { motion } from "framer-motion";
 import VNPFooter from "@/components/vnp/VNPFooter";
 
+type VerificationStackItem = {
+  section: string;
+  status: string;
+};
+
+type VnpPublicManifest = {
+  verification_stack?: VerificationStackItem[];
+};
+
+const fallbackVerificationStack: VerificationStackItem[] = [
+  { section: 'Physical measurements', status: 'Disconnected' },
+  { section: 'Signed telemetry', status: 'Disconnected' },
+  { section: 'Route beacons', status: 'Disconnected' },
+  { section: 'Robust scoring', status: 'Disconnected' },
+  { section: 'x402 settlement evidence', status: 'Disconnected' },
+  { section: 'PGL audit trails', status: 'Disconnected' },
+  { section: 'Agent/runtime enforcement', status: 'Auth Required' }
+];
+
 const NetworkTopologyPanel = dynamicImport(
   () => import("@/components/vnp/NetworkTopologyPanel"),
   { ssr: false, loading: () => <div className="h-[500px] bg-white/5 rounded-xl animate-pulse" /> }
@@ -27,6 +46,34 @@ const staggerContainer = {
 };
 
 export default function VNPLandingPage() {
+  const [verificationStack, setVerificationStack] = React.useState<VerificationStackItem[]>(fallbackVerificationStack);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function loadVerificationStack() {
+      try {
+        const response = await fetch('/api/vnp.json', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) return;
+        const manifest = (await response.json()) as VnpPublicManifest;
+        if (!cancelled && manifest.verification_stack?.length) {
+          setVerificationStack(manifest.verification_stack);
+        }
+      } catch {
+        // Keep conservative fallback statuses if backend-derived manifest is unavailable.
+      }
+    }
+
+    loadVerificationStack();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden selection:bg-[#FFB800]/30 relative z-10 font-sans">
       
@@ -156,18 +203,10 @@ export default function VNPLandingPage() {
               </p>
               
               <div className="space-y-4">
-                {[
-                  { name: 'Physical measurements', weight: 'Live' },
-                  { name: 'Signed telemetry', weight: 'Live' },
-                  { name: 'Route beacons', weight: 'Connected' },
-                  { name: 'Robust scoring', weight: 'Connected' },
-                  { name: 'x402 settlement evidence', weight: 'Live' },
-                  { name: 'PGL audit trails', weight: 'Connected' },
-                  { name: 'Agent/runtime enforcement', weight: 'Auth Required' }
-                ].map((item, i) => (
+                {verificationStack.map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#FFB800]/30 transition-colors">
-                    <span className="font-medium text-gray-300">{item.name}</span>
-                    <span className="font-mono text-[#FFB800] font-bold">{item.weight}</span>
+                    <span className="font-medium text-gray-300">{item.section}</span>
+                    <span className="font-mono text-[#FFB800] font-bold">{item.status}</span>
                   </div>
                 ))}
               </div>
