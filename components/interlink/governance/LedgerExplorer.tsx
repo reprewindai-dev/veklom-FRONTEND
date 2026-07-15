@@ -137,7 +137,7 @@ export default function LedgerExplorer({ ledger }: LedgerExplorerProps) {
           <div className="border-b border-[#23272E] pb-3 flex justify-between items-center">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <Database className="w-4 h-4 text-green-400" />
-              Project Genome Ledger: Attestation Chain
+              Gnomledger: Attestation Chain
             </h3>
             <span className="text-[10px] text-gray-500 font-mono">
               {filteredLedger.length} Verified interaction blocks

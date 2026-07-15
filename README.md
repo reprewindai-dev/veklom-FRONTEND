@@ -147,6 +147,6 @@ Do not document Vercel as the deployment target for this repo.
 
 ## Notes
 
-- PGL Genome DNA is a separate identity/lineage concept and should not be removed just because the VNP API scoring visual moved away from DNA/helix imagery.
+- PGL Gnomledger identity/lineage data is separate from the VNP API scoring visual and should not be removed just because the public benchmark card moved away from DNA/helix imagery.
 - The VNP API benchmark card should remain methodology-backed and API-specific.
 - Public docs belong inside the app under `/vnp/docs`, not an external docs domain.
