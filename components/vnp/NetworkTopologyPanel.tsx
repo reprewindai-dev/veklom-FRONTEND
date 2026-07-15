@@ -42,6 +42,7 @@ interface SwarmTransaction {
 export default function NetworkTopologyPanel() {
   const [selectedNodeId, setSelectedNodeId] = useState<string>("");
   const { data: topologyData, mutate: refreshTopology } = useSWR<any>("/api/v1/beacon/topology", fetcher, { refreshInterval: 5000 });
+  const { data: x402Config } = useSWR<any>("/api/v1/x402/config", fetcher, { refreshInterval: 30000 });
   
   // Real State from Backend
   const realTopology = topologyData?.topology;
@@ -73,6 +74,27 @@ export default function NetworkTopologyPanel() {
   }, [realTopology]);
 
   const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
+  const activeNodes = Number(realTopology?.activeNodes ?? nodes.filter((node) => node.status_str === "Connected").length);
+  const expectedNodes = Number(realTopology?.expectedNodes ?? 5);
+  const registeredNodes = Number(realTopology?.registeredNodes ?? nodes.length);
+  const topologyLabel =
+    activeNodes >= expectedNodes && expectedNodes > 0
+      ? "NODE MESH CONNECTED"
+      : registeredNodes > 0
+        ? `${registeredNodes}/${expectedNodes} REGISTERED · ${activeNodes}/${expectedNodes} CONNECTED`
+        : "NODE MESH DISCONNECTED";
+  const topologyLabelClass =
+    activeNodes >= expectedNodes && expectedNodes > 0
+      ? "text-emerald-300 bg-emerald-950/40 border-emerald-500/20"
+      : registeredNodes > 0
+        ? "text-amber-300 bg-amber-950/30 border-amber-500/20"
+        : "text-rose-300 bg-rose-950/30 border-rose-500/20";
+  const x402Enabled = Boolean(x402Config?.enabled);
+  const x402Label = x402Enabled
+    ? `x402 USDC Route Payments: Live (${x402Config?.network ?? "base"})`
+    : "x402 USDC Route Payments: Config Incomplete";
+  const settlementLabel =
+    totalSettledUsd > 0 ? `${totalSettledUsd.toFixed(2)} $SETTLED` : "No ledger settlements recorded";
 
   // ── ACTIONS ────────────────────────────────────────────────────────────────────
   
@@ -166,8 +188,8 @@ export default function NetworkTopologyPanel() {
               <span className="text-sm font-sans tracking-wide text-white/90">Veklom Gateway &amp; x402 Settlement Evidence</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-emerald-300 uppercase tracking-widest bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]">
-                VNP SLA Performance
+              <span className={`text-[9px] uppercase tracking-widest border px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)] ${topologyLabelClass}`}>
+                {topologyLabel}
               </span>
               <span className="text-[9px] text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded border bg-slate-900/50 border-slate-700/50 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3 text-emerald-400" /> STRICT MODE
@@ -176,10 +198,10 @@ export default function NetworkTopologyPanel() {
           </div>
 
           <div className="text-right flex flex-col items-end gap-1">
-            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC Route Payments: Connected</span>
+            <span className={`text-[9px] uppercase tracking-[0.2em] ${x402Enabled ? "text-emerald-400/70" : "text-amber-400/70"}`}>{x402Label}</span>
             <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded px-3 py-1 flex items-center gap-2 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_5px_#34d399]"></span>
-              <span className="text-emerald-400 font-mono text-sm tracking-tight">{totalSettledUsd.toFixed(2)} $SETTLED</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${totalSettledUsd > 0 ? "bg-emerald-400 animate-pulse shadow-[0_0_5px_#34d399]" : "bg-slate-500"}`}></span>
+              <span className={`${totalSettledUsd > 0 ? "text-emerald-400" : "text-slate-400"} font-mono text-sm tracking-tight`}>{settlementLabel}</span>
             </div>
           </div>
         </div>
@@ -465,7 +487,7 @@ export default function NetworkTopologyPanel() {
               className="w-full py-3.5 bg-gradient-to-r from-amber-900/40 to-amber-600/20 hover:from-amber-800/50 hover:to-amber-500/30 disabled:opacity-50 text-amber-200 border border-amber-500/30 hover:border-amber-400/50 rounded-xl font-mono text-[10px] tracking-widest transition-all duration-300 uppercase flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] group"
             >
               <Zap className="w-4 h-4 text-amber-400 group-hover:animate-pulse" />
-              <span>{isActiveStorm ? "Consensus Flooding..." : "Simulate Escrow Storm"}</span>
+              <span>{isActiveStorm ? "Consensus Flooding..." : "Request Escrow Probe"}</span>
             </button>
 
             <div className="grid grid-cols-2 gap-3">
