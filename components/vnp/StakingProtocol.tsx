@@ -172,8 +172,8 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
 
   const stakeNum = parseFloat(stakeAmount) || 0;
   const netStake = stakeNum * (1 - 0.025);
-  const stakePlacementAvailable = stakingRoute?.writeActions.stakePlacement.state === "available_with_auth";
-  const verifierRegistrationAvailable = stakingRoute?.writeActions.verifierRegistration.state === "available_with_auth";
+  const stakePlacementAvailable = stakingRoute?.writeActions?.stakePlacement?.state === "available_with_auth";
+  const verifierRegistrationAvailable = stakingRoute?.writeActions?.verifierRegistration?.state === "available_with_auth";
 
   return (
     <div className="space-y-8 relative">
@@ -184,7 +184,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <div className="text-sm text-white mt-1">{stakingRoute?.proof.reason || "Loading BYOS staking proof..."}</div>
           </div>
           <div className="lg:ml-auto flex flex-wrap gap-2">
-            {stakingRoute?.proof.probes.map((probe) => (
+            {(stakingRoute?.proof?.probes || []).map((probe) => (
               <span
                 key={probe.route}
                 className={`px-2 py-1 rounded border text-[10px] font-mono ${
@@ -200,17 +200,17 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             ))}
           </div>
         </div>
-        {stakingRoute?.marketProof.state !== "verified" && (
+        {stakingRoute?.marketProof?.state !== "verified" && (
           <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
             {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
           </div>
         )}
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
           <div className={`rounded border px-3 py-2 ${verifierRegistrationAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
-            Verifier registration: {stakingRoute?.writeActions.verifierRegistration.state || "loading"}
+            Verifier registration: {stakingRoute?.writeActions?.verifierRegistration?.state || "loading"}
           </div>
           <div className={`rounded border px-3 py-2 ${stakePlacementAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
-            Stake placement: {stakingRoute?.writeActions.stakePlacement.state || "loading"}
+            Stake placement: {stakingRoute?.writeActions?.stakePlacement?.state || "loading"}
           </div>
         </div>
       </div>
@@ -267,7 +267,9 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           <div className="text-right">Bond&nbsp;&nbsp;Penalty/Ep</div>
         </div>
         {providers.map((p) => {
-          const sc = STATUS_COLORS[p.status];
+          const deviation = p.deviation || { deviationMs: 0, toleranceMs: 0, excessMs: 0, penaltyUsdc: 0 };
+          const consensus = p.consensus || { finalScore: p.observedP95Ms ?? 0 };
+          const sc = STATUS_COLORS[p.status] || STATUS_COLORS.warning;
           const isExpanded = expandedBond === p.apiId;
           return (
             <div key={p.apiId}>
@@ -281,7 +283,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 </div>
                 <div className="font-mono text-sm text-[#A1A1A6]">{fmtMs(p.targetP95Ms)}</div>
                 <div className="font-mono text-sm text-white">{fmtMs(p.observedP95Ms)}</div>
-                <div className="font-mono text-sm text-[#A1A1A6]">{p.deviation.deviationMs.toFixed(1)}ms</div>
+                <div className="font-mono text-sm text-[#A1A1A6]">{fmtMs(deviation.deviationMs)}</div>
                 <div>
                   <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono ${sc.bg} ${sc.border} ${sc.text} border`}>
                     {sc.label}
@@ -289,7 +291,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 </div>
                 <div className="text-right font-mono text-xs">
                   <span className="text-[#A1A1A6]">{fmtUSD(p.bondAmountUsdc)}</span>
-                  <span className="text-rose-400 ml-2">{p.deviation.penaltyUsdc > 0 ? `-${fmtUSD(p.deviation.penaltyUsdc)}` : "$0"}</span>
+                  <span className="text-rose-400 ml-2">{deviation.penaltyUsdc > 0 ? `-${fmtUSD(deviation.penaltyUsdc)}` : "$0"}</span>
                   {isExpanded ? <ChevronUp className="w-3 h-3 inline ml-1" /> : <ChevronDown className="w-3 h-3 inline ml-1" />}
                 </div>
               </div>
@@ -297,15 +299,15 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 <div className="px-5 py-4 bg-[#111111] border-t border-[#1A1A1A] grid grid-cols-4 gap-4 text-xs">
                   <div>
                     <div className="text-[#A1A1A6] mb-1">Tolerance Band</div>
-                    <div className="text-white font-mono">&plusmn;{p.deviation.toleranceMs.toFixed(1)}ms (k={VNP_PARAMS.k})</div>
+                    <div className="text-white font-mono">&plusmn;{fmtMs(deviation.toleranceMs)} (k={VNP_PARAMS.k ?? "—"})</div>
                   </div>
                   <div>
                     <div className="text-[#A1A1A6] mb-1">Excess Deviation</div>
-                    <div className="text-white font-mono">{p.deviation.excessMs.toFixed(1)}ms</div>
+                    <div className="text-white font-mono">{fmtMs(deviation.excessMs)}</div>
                   </div>
                   <div>
                     <div className="text-[#A1A1A6] mb-1">Consensus Score</div>
-                    <div className="text-white font-mono">{p.consensus.finalScore.toFixed(1)}ms</div>
+                    <div className="text-white font-mono">{fmtMs(consensus.finalScore)}</div>
                   </div>
                   <div>
                     <div className="text-[#A1A1A6] mb-1">Total Slashed</div>

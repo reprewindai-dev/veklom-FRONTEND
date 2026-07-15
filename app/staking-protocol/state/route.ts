@@ -71,21 +71,50 @@ export async function GET() {
     ? new Map(verifiedScores.map((score: any) => [String(score?.api_id || score?.apiId || score?.id || ""), score]))
     : new Map<string, any>();
   
-  const formattedProviders = Array.isArray(verifiedBonds) ? verifiedBonds.map((b: any) => ({
-    id: b.apiId,
-    targetApiId: b.apiId,
-    amountMinor: Math.round(Number(b.bondAmountUsdc || 0) * 100),
-    currency: "USDC",
-    state: b.status,
-    statusLevel: b.status === "healthy" ? "healthy" : "warning",
-    latencyAvg: b.observedP95Ms ?? null,
-    successRate: scoresByApiId.get(String(b.apiId))?.availability ?? null,
-    activeAlerts: b.status === "healthy" ? 0 : 1
-  })) : [];
+  const formattedProviders = Array.isArray(verifiedBonds) ? verifiedBonds.map((b: any) => {
+    const apiId = String(b.apiId || b.id || b.targetApiId || "");
+    const score = scoresByApiId.get(apiId) || {};
+    const targetP95Ms = Number(b.targetP95Ms ?? b.target_p95_ms ?? 0);
+    const observedP95Ms = Number(b.observedP95Ms ?? b.observed_p95_ms ?? b.latencyAvg ?? 0);
+    const rawDeviation = b.deviation || {};
+    const deviationMs = Number(rawDeviation.deviationMs ?? b.deviationMs ?? Math.abs(observedP95Ms - targetP95Ms) ?? 0);
+    const toleranceMs = Number(rawDeviation.toleranceMs ?? b.toleranceMs ?? 0);
+    const excessMs = Number(rawDeviation.excessMs ?? b.excessMs ?? 0);
+    const penaltyUsdc = Number(rawDeviation.penaltyUsdc ?? b.penaltyUsdc ?? b.penaltyRatePerEpoch ?? 0);
+    const status = b.status === "healthy" || b.status === "warning" || b.status === "breaching" || b.status === "critical"
+      ? b.status
+      : penaltyUsdc > 0 ? "warning" : "healthy";
+
+    return {
+      apiId,
+      name: b.name || b.apiName || score.name || apiId || "Unknown API",
+      provider: b.provider || score.provider || "BYOS",
+      targetP95Ms,
+      observedP95Ms,
+      sigmaMs: Number(b.sigmaMs ?? b.sigma_ms ?? 0),
+      deviation: {
+        deviationMs,
+        toleranceMs,
+        excessMs,
+        penaltyUsdc,
+      },
+      bondAmountUsdc: Number(b.bondAmountUsdc ?? b.amount ?? 0),
+      slashedTotalUsdc: Number(b.slashedTotalUsdc ?? b.slashedTotal ?? 0),
+      penaltyRatePerEpoch: Number(b.penaltyRatePerEpoch ?? penaltyUsdc),
+      status,
+      consensus: {
+        kdeMode: Number(b.consensus?.kdeMode ?? observedP95Ms),
+        historicalEwma: Number(b.consensus?.historicalEwma ?? observedP95Ms),
+        shadowProbe: Number(b.consensus?.shadowProbe ?? observedP95Ms),
+        finalScore: Number(b.consensus?.finalScore ?? observedP95Ms),
+        weights: b.consensus?.weights || { kde: 0, historical: 0, shadow: 0 },
+      },
+    };
+  }) : [];
 
   const totalStakedUsd = formattedProviders.reduce((total: number, provider: any) => {
-    const amount = Number(provider.amountMinor);
-    return Number.isFinite(amount) ? total + amount / 100 : total;
+    const amount = Number(provider.bondAmountUsdc);
+    return Number.isFinite(amount) ? total + amount : total;
   }, 0);
 
   return NextResponse.json({
