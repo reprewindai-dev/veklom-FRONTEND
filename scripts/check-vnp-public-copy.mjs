@@ -39,6 +39,16 @@ const forbidden = [
   "\"merkle_root\": \"0x",
   "merkle_root: \"0x",
   "DEMO MODE: VNP_TOPOLOGY_MESH",
+  "VNP VNP Methodology",
+  "Helsinki",
+  "30s Sync",
+  "Every 30 seconds",
+  "Gnomledger vault",
+  "automatically slashed",
+  "We have tied physics directly",
+  "we verified that applying x402",
+  "reduces runaway compute consumption by over 94",
+  "You can deploy it today with zero-trust guarantees",
 ];
 
 function files(root) {
@@ -68,6 +78,19 @@ for (const file of roots.flatMap(files)) {
 
 if (failures.length) {
   console.error("Forbidden VNP public copy found:\n" + failures.join("\n"));
+  process.exit(1);
+}
+
+const blogIndex = JSON.parse(readFileSync("data/blog-index.json", "utf8"));
+const seenSlugs = new Set();
+const duplicateSlugs = [];
+for (const post of blogIndex) {
+  if (seenSlugs.has(post.slug)) duplicateSlugs.push(post.slug);
+  seenSlugs.add(post.slug);
+}
+
+if (duplicateSlugs.length) {
+  console.error("Duplicate VNP blog slugs found:\n" + duplicateSlugs.join("\n"));
   process.exit(1);
 }
 

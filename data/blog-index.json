@@ -136,23 +136,5 @@
     "title": "x402 Implementation: Securing Coolify and Hetzner with Micro-Stakes",
     "excerpt": "A technical deep dive into the Coolify and Hetzner deployment surface that runs Veklom's VNP telemetry, x402, and control-plane routes.",
     "publishDate": "2027-04-27T01:10:52.820Z"
-  },
-  {
-    "slug": "analyzing-kubernetes-agentic-zero-trust",
-    "title": "Analyzing the Kubernetes Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Kubernetes and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2027-05-11T01:10:52.820Z"
-  },
-  {
-    "slug": "analyzing-redis-agentic-zero-trust",
-    "title": "Analyzing the Redis Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into Redis and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2027-05-25T01:10:52.820Z"
-  },
-  {
-    "slug": "analyzing-postgresql-agentic-zero-trust",
-    "title": "Analyzing the PostgreSQL Stack: Why Agentic Infrastructure Requires Zero Trust",
-    "excerpt": "A technical deep dive into PostgreSQL and how it interfaces with the Veklom Sovereign Control Plane and the VNP Trust Matrix.",
-    "publishDate": "2027-06-08T01:10:52.820Z"
   }
 ]
