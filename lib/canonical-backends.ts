@@ -4,14 +4,16 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi";
+export type CanonicalBackendId = "byos" | "capi" | "cappo" | "gnomledger" | "gpc";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
   | "governed-runtime"
-  | "ledger";
+  | "execution-engine"
+  | "ledger"
+  | "policy-oracle";
 
-export type CanonicalBackendAuthMode = "forward-bearer" | "server-api-key";
+export type CanonicalBackendAuthMode = "forward-bearer" | "server-api-key" | "none";
 
 export interface CanonicalBackendConfig {
   id: CanonicalBackendId;
@@ -28,11 +30,11 @@ export interface CanonicalBackendConfig {
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
 export function canonicalBackends(): CanonicalBackendConfig[] {
-  const byosUrl =
-    process.env.BACKEND_URL ||
-    "https://api.veklom.com";
-
+  const byosUrl = process.env.BACKEND_URL || "https://api.veklom.com";
   const capiUrl = CAPI_RUNTIME_URL;
+  const cappoUrl = process.env.CAPPO_URL || "https://cappo.veklom.com";
+  const ledgerUrl = process.env.LEDGER_URL || "https://ledger.veklom.com";
+  const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
 
   return [
     {
@@ -56,6 +58,36 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       overviewPath: "/v1/vnp/methodology",
       sourceOfTruthPath: "/v1/audit/ledger",
       authMode: "server-api-key",
+    },
+    {
+      id: "cappo",
+      label: "CAPPO Execution Engine",
+      repo: "cappo-backend",
+      role: "execution-engine",
+      baseUrl: trimTrailingSlash(cappoUrl),
+      healthPath: "/health",
+      overviewPath: "/health", // Placeholder until explicit endpoint
+      authMode: "server-api-key",
+    },
+    {
+      id: "gnomledger",
+      label: "GnomLedger",
+      repo: "gnomledger",
+      role: "ledger",
+      baseUrl: trimTrailingSlash(ledgerUrl),
+      healthPath: "/health",
+      overviewPath: "/health", // Placeholder until explicit endpoint
+      authMode: "none",
+    },
+    {
+      id: "gpc",
+      label: "Veklom GPC",
+      repo: "veklom-gpc",
+      role: "policy-oracle",
+      baseUrl: trimTrailingSlash(gpcUrl),
+      healthPath: "/health",
+      overviewPath: "/health", // Placeholder until explicit endpoint
+      authMode: "none",
     },
   ];
 }

@@ -14,6 +14,14 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Route gpc.veklom.com to /gpc
+  if (hostname === 'gpc.veklom.com') {
+    if (url.pathname === '/') {
+      url.pathname = '/gpc';
+      return NextResponse.rewrite(url);
+    }
+  }
+
   // interlink-cAPI: Edge Interception for capabilities
   if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
     const identity = getExecutionIdentity(request);
