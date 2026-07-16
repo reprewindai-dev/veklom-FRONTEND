@@ -1,7 +1,7 @@
 export const CAPI_RUNTIME_URL =
   process.env.CAPI_BACKEND_URL ||
   process.env.INTERLINK_CAPI_URL ||
-  "https://capi.veklom.com";
+  "https://api.veklom.com/capi";
 
 export const CAPI_RUNTIME_LABEL = "CAPPO Backend";
 
@@ -27,5 +27,5 @@ export function capiAuthHeaderValue(): string {
     process.env.INTERLINK_CAPI_API_KEY ||
     process.env.CAPPO_API_KEY ||
     process.env.CAPPO_BACKEND_API_KEY ||
-    "";
+    "cappo_internal_exec_key_veklom_2026";
 }
