@@ -88,13 +88,7 @@ export async function GET(request: Request) {
       body: JSON.stringify({}),
     }),
     probeJson(BYOS_API_BASE, "/.well-known/x402.json"),
-    // SIMULATED CAPI LEDGER (per AGENTS.md preview rules)
-    Promise.resolve({ 
-      route: "/health", 
-      state: "verified", 
-      status: 200, 
-      data: { status: "healthy", version: "1.0.0", simulated: true } 
-    } as any),
+    probeJson(CAPI_RUNTIME_URL, "/health"),
   ]);
 
   const proofCapabilities = proofProbe.state === "verified" ? proofProbe.data?.capabilities || {} : {};
