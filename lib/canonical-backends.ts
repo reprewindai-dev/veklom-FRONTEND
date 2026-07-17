@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi" | "cappo" | "gnomledger" | "gpc";
+export type CanonicalBackendId = "byos" | "capi" | "cappo" | "gnomledger" | "gpc" | "genome";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -88,6 +88,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       healthPath: "/health",
       overviewPath: "/health", // Placeholder until explicit endpoint
       authMode: "none",
+    },
+    {
+      id: "genome",
+      label: "Genome Ledger (PGL)",
+      repo: "veklom-byos-backend",
+      role: "sovereign-control-plane",
+      baseUrl: trimTrailingSlash(byosUrl),
+      healthPath: "/health",
+      overviewPath: "/api/v1/genome/status",
+      authMode: "forward-bearer",
     },
   ];
 }
