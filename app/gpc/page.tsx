@@ -1,6 +1,6 @@
 /**
- * GPC Page (Replacement for placeholder)
- * Full pipeline generator with canvas, compiler, execution, preview
+ * GPC Page (UPDATED) — Full Pipeline Lifecycle
+ * Compile → Test (sample data) → Approve → Deploy (GitHub Actions)
  * 
  * Generated for: veklom-control-plane/app/gpc/page.tsx
  */
@@ -11,22 +11,28 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Shell from '@/components/Shell';
 import { useGpc } from '@/lib/gpc/useGpc';
 import { GpcCanvas, GpcPropertyPanel } from '@/components/gpc/GpcCanvas';
+import {
+  TestPreviewModal,
+  GitHubExportDialog,
+} from '@/components/gpc/GpcTestDeployUI';
 import { useExecutionStore, usePreviewStore } from '@/lib/gpc/stores';
 import { ModuleHeader, Pill } from '@/components/telemetry';
-import { BookOpen, Play, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import {
+  BookOpen,
+  Play,
+  AlertCircle,
+  CheckCircle,
+  AlertTriangle,
+  TestTube2,
+  Github,
+  Copy,
+} from 'lucide-react';
 
 interface CompilationModal {
   isOpen: boolean;
   pythonCode: string;
   nodeCount: number;
   warnings: string[];
-}
-
-interface PreviewModal {
-  isOpen: boolean;
-  rows: number;
-  columns: string[];
-  sample: any[][];
 }
 
 export default function GpcPage() {
@@ -61,13 +67,13 @@ export default function GpcPage() {
     nodeCount: 0,
     warnings: [],
   });
-  const [previewModal, setPreviewModal] = useState<PreviewModal>({
-    isOpen: false,
-    rows: 0,
-    columns: [],
-    sample: [],
-  });
-  const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [showGitHubDialog, setShowGitHubDialog] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: string } | null>(
+    null
+  );
+  const [pipelineName, setPipelineName] = useState('Untitled Pipeline');
+  const [deploymentStatus, setDeploymentStatus] = useState<string | null>(null);
 
   // Compile pipeline
   const handleCompile = useCallback(async () => {
@@ -98,6 +104,16 @@ export default function GpcPage() {
     setIntentInput('');
   }, [intentInput, generateFromIntent]);
 
+  // Approve test and prepare for deployment
+  const handleApproveTest = useCallback(async () => {
+    setToast({
+      message: '✅ Test passed! Ready for deployment.',
+      type: 'success',
+    });
+    setShowTestModal(false);
+    setDeploymentStatus('tested');
+  }, []);
+
   return (
     <Shell>
       {/* Protocol Status Badge */}
@@ -125,13 +141,18 @@ export default function GpcPage() {
       <ModuleHeader
         breadcrumb="GPC · Generative Pipeline Compiler"
         title="Pipeline Generator"
-        subtitle="Convert messy intent into deterministic, executed pipelines."
+        subtitle="Visual intent → Executable pipeline → Auto-deployed to production"
         pills={
           <>
             <Pill tone="green" dot>
               Backend live
             </Pill>
-            <Pill tone="cyan">Compile → Execute</Pill>
+            <Pill tone="cyan">Test → Deploy</Pill>
+            {deploymentStatus && (
+              <Pill tone="amber">
+                {deploymentStatus === 'tested' ? '✅ Ready to deploy' : deploymentStatus}
+              </Pill>
+            )}
             <Pill tone="amber" dot={isExecuting}>
               {isExecuting ? 'Running' : 'Ready'}
             </Pill>
@@ -183,34 +204,60 @@ export default function GpcPage() {
         </div>
       )}
 
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={() => setShowIntentDialog(true)}
-          disabled={isExecuting || isLoading}
-          className="px-4 py-2 text-sm font-medium rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <BookOpen size={16} />
-          Generate from Intent
-        </button>
-        <button
-          onClick={handleCompile}
-          disabled={isExecuting || isLoading}
-          className="px-4 py-2 text-sm font-medium rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Compiling...' : 'Compile'}
-        </button>
-        <button
-          onClick={handleExecute}
-          disabled={isExecuting || isLoading}
-          className="px-4 py-2 text-sm font-medium rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <Play size={16} />
-          {isExecuting ? 'Running...' : 'Execute'}
-        </button>
+      {/* Pipeline Workflow Toolbar */}
+      <div className="mb-4 space-y-3">
+        {/* Top row: Generation & Compilation */}
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setShowIntentDialog(true)}
+            disabled={isExecuting || isLoading}
+            className="px-4 py-2 text-sm font-medium rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+          >
+            <BookOpen size={16} />
+            Generate from Intent
+          </button>
+          <button
+            onClick={handleCompile}
+            disabled={isExecuting || isLoading}
+            className="px-4 py-2 text-sm font-medium rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+          >
+            {isLoading ? (
+              <>
+                <span className="animate-spin">⌛</span>
+                Compiling...
+              </>
+            ) : (
+              <>
+                📋 Compile
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Second row: Operational stages (Test & Deploy) */}
+        <div className="flex gap-2 flex-wrap bg-gray-50 p-2 rounded-lg border border-border">
+          <button
+            onClick={() => setShowTestModal(true)}
+            disabled={isExecuting || isLoading}
+            className="px-3 py-1.5 text-xs font-semibold rounded bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <TestTube2 size={14} />
+            Run Test Preview
+          </button>
+
+          <button
+            onClick={() => setShowGitHubDialog(true)}
+            disabled={deploymentStatus !== 'tested' || isExecuting}
+            className="px-3 py-1.5 text-xs font-semibold rounded bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <Github size={14} />
+            Export to GitHub Actions
+          </button>
+        </div>
       </div>
 
-      {/* Main layout: Canvas + Property Panel + Preview */}
-      <div className="flex gap-4 h-[calc(100vh-300px)] rounded-xl overflow-hidden border border-border shadow-md">
+      {/* Main layout: Canvas + Panels */}
+      <div className="flex gap-4 h-[calc(100vh-320px)] rounded-xl overflow-hidden border border-border shadow-md">
         {/* Canvas (left) */}
         <div className="flex-1">
           <GpcCanvas onCompile={handleCompile} onExecute={handleExecute} />
@@ -265,6 +312,8 @@ export default function GpcPage() {
         )}
       </div>
 
+      {/* MODALS */}
+
       {/* Intent Dialog */}
       {showIntentDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -298,61 +347,74 @@ export default function GpcPage() {
         </div>
       )}
 
-      {/* Compilation Modal */}
+      {/* Compilation Result Modal */}
       {compilationModal.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-4">Compiled Pipeline</h2>
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full mx-4 p-6 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Compilation Result</h2>
+              <Pill tone="green">{compilationModal.nodeCount} nodes compiled</Pill>
+            </div>
 
+            {/* Warnings */}
             {compilationModal.warnings.length > 0 && (
-              <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-yellow-800">
-                    <strong>Warnings:</strong>
-                    <ul className="mt-1 space-y-1">
-                      {compilationModal.warnings.map((w, i) => (
-                        <li key={i}>• {w}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+              <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg flex flex-col gap-1 text-sm">
+                <span className="font-semibold flex items-center gap-1">
+                  <AlertTriangle size={16} />
+                  Warnings:
+                </span>
+                <ul className="list-disc pl-5">
+                  {compilationModal.warnings.map((w, idx) => (
+                    <li key={idx}>{w}</li>
+                  ))}
+                </ul>
               </div>
             )}
 
             <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>Nodes:</strong> {compilationModal.nodeCount}
-              </p>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm font-medium mb-2">Generated Python:</p>
-              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
+              <p className="text-sm font-medium mb-2">Generated Python Code:</p>
+              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs max-h-64 overflow-y-auto">
                 {compilationModal.pythonCode}
               </pre>
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end mt-auto">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(compilationModal.pythonCode);
-                  setToast({ message: 'Copied to clipboard', type: 'success' });
+                  setToast({ message: 'Code copied to clipboard', type: 'success' });
                 }}
-                className="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50"
+                className="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
               >
+                <Copy size={16} />
                 Copy Code
               </button>
               <button
-                onClick={() => setCompilationModal({ ...compilationModal, isOpen: false })}
-                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => setCompilationModal((prev) => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-sm rounded bg-indigo-600 text-white hover:bg-indigo-700"
               >
-                Close
+                Done
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Test Preview Modal */}
+      <TestPreviewModal
+        isOpen={showTestModal}
+        onClose={() => setShowTestModal(false)}
+        pipelineId="pipeline_123"
+        onApprove={handleApproveTest}
+      />
+
+      {/* GitHub Export Dialog */}
+      <GitHubExportDialog
+        isOpen={showGitHubDialog}
+        onClose={() => setShowGitHubDialog(false)}
+        pipelineId="pipeline_123"
+        pipelineName={pipelineName}
+      />
     </Shell>
   );
 }
