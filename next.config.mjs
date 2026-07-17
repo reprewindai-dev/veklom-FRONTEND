@@ -15,6 +15,35 @@ const nextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
+  webpack: (config, { isServer }) => {
+    // wagmi / viem / mppx / ox use dynamic requires incompatible with
+    // Next.js server-side bundling. Mark them external on the server —
+    // they are client-only wallet packages.
+    if (isServer) {
+      const existingExternals = Array.isArray(config.externals)
+        ? config.externals
+        : config.externals
+        ? [config.externals]
+        : [];
+      config.externals = [
+        ...existingExternals,
+        'wagmi',
+        'viem',
+        '@wagmi/core',
+        '@wagmi/connectors',
+        'mppx',
+        'ox',
+        'accounts',
+      ];
+    }
+    // Suppress "Critical dependency: the request of a dependency is an expression"
+    // from wagmi/mppx/ox tempo internals during client bundling.
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /node_modules\/(mppx|ox|wagmi|@wagmi|accounts)/ },
+    ];
+    return config;
+  },
   // IMPORTANT: Do NOT set NEXT_PUBLIC_API_BASE_URL here.
   // It must remain empty so the browser uses same-origin /api/* paths.
   // The rewrites() block below proxies those to BACKEND_URL server-side.
