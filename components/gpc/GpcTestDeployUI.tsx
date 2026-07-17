@@ -12,7 +12,7 @@ import {
   CheckCircle,
   AlertCircle,
   Play,
-  GitHub,
+  Github,
   Copy,
   ExternalLink,
   Loader,
@@ -69,24 +69,25 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = React.memo(
 
         eventSource.addEventListener('message', (event) => {
           const data: ExecutionEvent = JSON.parse(event.data);
+          const eventType = data.event as string;
 
-          if (data.event === 'compiled') {
+          if (eventType === 'compiled') {
             console.log('Pipeline compiled:', data);
-          } else if (data.event === 'node_preview' && data.preview) {
+          } else if (eventType === 'node_preview' && data.preview) {
             setResults((prev) => [
               ...prev,
               {
                 nodeId: data.node_id || 'unknown',
                 nodeType: 'Transform',
                 status: 'success',
-                rows: data.preview.rows,
-                columns: data.preview.columns,
-                sample: data.preview.sample,
+                rows: data.preview?.rows ?? 0,
+                columns: data.preview?.columns ?? [],
+                sample: data.preview?.sample ?? [],
               },
             ]);
           } else if (data.event === 'complete') {
             setTestRunId(data.event); // Mock
-            setCanDeploy = data.success && data.approval === 'ready_to_deploy';
+            setCanDeploy(!!data.success);
             eventSource.close();
           } else if (data.error) {
             setResults((prev) => [
@@ -339,7 +340,7 @@ export const GitHubExportDialog: React.FC<GitHubExportDialogProps> = React.memo(
           {/* Header */}
           <div className="border-b border-gray-200 p-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <GitHub size={24} className="text-gray-900" />
+              <Github size={24} className="text-gray-900" />
               <h2 className="text-xl font-bold text-gray-900">
                 Export to GitHub Actions
               </h2>
@@ -456,7 +457,7 @@ export const GitHubExportDialog: React.FC<GitHubExportDialogProps> = React.memo(
                     </>
                   ) : (
                     <>
-                      <GitHub size={16} />
+                      <Github size={16} />
                       Export Workflow
                     </>
                   )}
