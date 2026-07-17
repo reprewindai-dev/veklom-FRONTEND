@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Shell from '@/components/Shell';
 import { useGpc } from '@/lib/gpc/useGpc';
 import { GpcCanvas, GpcPropertyPanel } from '@/components/gpc/GpcCanvas';
@@ -41,6 +41,16 @@ export default function GpcPage() {
     const nodeId = state.selectedPreviewNodeId;
     return nodeId ? state.previews.get(nodeId) : undefined;
   });
+
+  // Protocol status
+  const [protocolStatus, setProtocolStatus] = React.useState<{loaded: boolean; count: number} | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.veklom.com/protocol.json')
+      .then(r => r.json())
+      .then(d => setProtocolStatus({ loaded: true, count: Object.keys(d.capabilities || {}).length }))
+      .catch(() => setProtocolStatus({ loaded: false, count: 0 }));
+  }, []);
 
   // UI state
   const [showIntentDialog, setShowIntentDialog] = useState(false);
@@ -90,6 +100,27 @@ export default function GpcPage() {
 
   return (
     <Shell>
+      {/* Protocol Status Badge */}
+      {protocolStatus && (
+        <a
+          href="https://api.veklom.com/protocol.json"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            padding: '4px 12px', borderRadius: '20px',
+            background: protocolStatus.loaded ? 'rgba(0,255,128,0.1)' : 'rgba(255,60,60,0.1)',
+            border: `1px solid ${protocolStatus.loaded ? 'rgba(0,255,128,0.3)' : 'rgba(255,60,60,0.3)'}`,
+            color: protocolStatus.loaded ? '#00ff80' : '#ff3c3c',
+            fontSize: '11px', fontFamily: 'monospace', textDecoration: 'none',
+            position: 'absolute', top: '16px', right: '16px', zIndex: 10
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+          {protocolStatus.loaded ? `${protocolStatus.count} capabilities live` : 'protocol offline'}
+        </a>
+      )}
+
       {/* Header */}
       <ModuleHeader
         breadcrumb="GPC · Generative Pipeline Compiler"
