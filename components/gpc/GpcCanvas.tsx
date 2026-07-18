@@ -217,7 +217,7 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
       (changes) => {
         const canvasStore = useCanvasStore.getState();
         changes.forEach((change) => {
-          if (change.type === 'position' && 'position' in change) {
+          if (change.type === 'position' && change.position) {
             canvasStore.moveNode(change.id, change.position);
           } else if (change.type === 'select' && 'selected' in change) {
             if (change.selected) {
