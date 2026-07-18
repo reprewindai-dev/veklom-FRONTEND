@@ -15,6 +15,7 @@ const nextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
+  staticPageGenerationTimeout: 1000,
   webpack: (config, { isServer }) => {
     // wagmi / viem / mppx / ox use dynamic requires incompatible with
     // Next.js server-side bundling. Mark them external on the server —
