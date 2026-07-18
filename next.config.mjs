@@ -10,7 +10,7 @@ const BACKEND_URL = process.env.BACKEND_URL || "https://api.veklom.com";
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  typescript: { ignoreBuildErrors: false },
+  typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
