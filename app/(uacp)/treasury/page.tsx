@@ -73,9 +73,22 @@ function TreasuryContent() {
   const keys = useApi<any>("/api/v1/auth/api-keys");
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyToken, setNewKeyToken] = useState<string | null>(null);
+  const [newKeyScopes, setNewKeyScopes] = useState<string[]>(["read"]);
   const [copiedKey, setCopiedKey] = useState(false);
   const [keyBusy, setKeyBusy] = useState(false);
   const [keyErr, setKeyErr] = useState<string | null>(null);
+
+  const ALL_SCOPES = [
+    { id: "read",  label: "Read",  desc: "Query agents, runs, telemetry" },
+    { id: "write", label: "Write", desc: "Create runs, submit signals" },
+    { id: "admin", label: "Admin", desc: "Manage keys, webhooks, settings" },
+  ];
+
+  function toggleScope(scope: string) {
+    setNewKeyScopes(prev =>
+      prev.includes(scope) ? prev.filter(s => s !== scope) : [...prev, scope]
+    );
+  }
 
   // Webhooks Data
   const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
@@ -148,11 +161,13 @@ function TreasuryContent() {
   // API Key Actions
   async function createApiKey() {
     if (!newKeyName.trim()) { setKeyErr("Name the key first."); return; }
+    if (newKeyScopes.length === 0) { setKeyErr("Select at least one scope."); return; }
     setKeyBusy(true); setKeyErr(null); setNewKeyToken(null);
     try {
-      const res = await api<any>("/api/v1/auth/api-keys", { method: "POST", body: { name: newKeyName.trim() } });
+      const res = await api<any>("/api/v1/auth/api-keys", { method: "POST", body: { name: newKeyName.trim(), scopes: newKeyScopes } });
       setNewKeyToken(res.key || res.api_key || res.token);
       setNewKeyName("");
+      setNewKeyScopes(["read"]);
       keys.mutate();
     } catch (e) { setKeyErr((e as Error).message); } finally { setKeyBusy(false); }
   }
@@ -451,12 +466,44 @@ function TreasuryContent() {
                   />
                 </div>
 
+                <div>
+                  <label className="text-[9px] text-white/40 uppercase block mb-1.5">Permission Scopes</label>
+                  <div className="space-y-1.5">
+                    {ALL_SCOPES.map((s) => {
+                      const active = newKeyScopes.includes(s.id);
+                      return (
+                        <label
+                          key={s.id}
+                          className={`flex items-center gap-2.5 p-2 border cursor-pointer transition-all select-none ${
+                            active
+                              ? "border-brand-400/50 bg-brand-400/10"
+                              : "border-white/5 bg-black/40 hover:border-white/15"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() => toggleScope(s.id)}
+                            className="rounded bg-black border-white/10 text-brand-400 focus:ring-0 focus:ring-offset-0"
+                          />
+                          <div className="flex-1">
+                            <span className={`text-[10px] font-bold uppercase tracking-wide ${active ? "text-brand-400" : "text-white/50"}`}>
+                              {s.label}
+                            </span>
+                            <span className="text-[9px] text-white/30 ml-1.5">{s.desc}</span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {keyErr && <div className="text-[9px] text-laser-red">{keyErr}</div>}
                 
                 <button
                   onClick={createApiKey}
-                  disabled={keyBusy}
-                  className="w-full py-2 bg-brand-400 text-black font-bold text-xs uppercase cursor-pointer hover:bg-brand-500 transition-colors flex items-center justify-center gap-1.5"
+                  disabled={keyBusy || newKeyScopes.length === 0}
+                  className="w-full py-2 bg-brand-400 text-black font-bold text-xs uppercase cursor-pointer hover:bg-brand-500 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   Generate Key
@@ -492,28 +539,46 @@ function TreasuryContent() {
                     <tr className="border-b border-white/5 text-[9px] text-white/30 uppercase bg-black/25">
                       <th className="p-3">Name</th>
                       <th className="p-3">Prefix</th>
+                      <th className="p-3">Scopes</th>
                       <th className="p-3">Created At</th>
                       <th className="p-3 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
-                    {keyList.map((k: any) => (
-                      <tr key={k.id || k.key_id} className="hover:bg-white/[0.01] text-[10px] transition-colors">
-                        <td className="p-3 text-white/80 font-bold flex items-center gap-1.5">
-                          <KeyRound className="w-3 h-3 text-brand-400" /> {k.name}
-                        </td>
-                        <td className="p-3 text-white/40"><code className="bg-white/5 px-1">{k.prefix || k.preview || "—"}…</code></td>
-                        <td className="p-3 text-white/50">{(k.created_at || "").slice(0, 10)}</td>
-                        <td className="p-3 text-right">
-                          <button
-                            onClick={() => revokeApiKey(k.id || k.key_id)}
-                            className="p-1 px-2 rounded border border-laser-red/20 bg-laser-red/5 hover:bg-laser-red/10 text-laser-red transition-all cursor-pointer text-[9px] uppercase font-bold"
-                          >
-                            Revoke
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {keyList.map((k: any) => {
+                      const scopes: string[] = k.scopes || [];
+                      return (
+                        <tr key={k.id || k.key_id} className="hover:bg-white/[0.01] text-[10px] transition-colors">
+                          <td className="p-3 text-white/80 font-bold">
+                            <span className="flex items-center gap-1.5"><KeyRound className="w-3 h-3 text-brand-400" /> {k.name}</span>
+                          </td>
+                          <td className="p-3 text-white/40"><code className="bg-white/5 px-1">{k.prefix || k.preview || "—"}…</code></td>
+                          <td className="p-3">
+                            <div className="flex flex-wrap gap-1">
+                              {scopes.length > 0 ? scopes.map((s) => (
+                                <span
+                                  key={s}
+                                  className={`px-1.5 py-0.5 text-[8px] font-bold uppercase rounded ${
+                                    s === "admin" ? "bg-laser-red/15 text-laser-red border border-laser-red/20" :
+                                    s === "write" ? "bg-[#b8860b]/15 text-[#b8860b] border border-[#b8860b]/20" :
+                                    "bg-brand-400/10 text-brand-400 border border-brand-400/20"
+                                  }`}
+                                >{s}</span>
+                              )) : <span className="text-white/20 text-[9px]">—</span>}
+                            </div>
+                          </td>
+                          <td className="p-3 text-white/50">{(k.created_at || "").slice(0, 10)}</td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => revokeApiKey(k.id || k.key_id)}
+                              className="p-1 px-2 rounded border border-laser-red/20 bg-laser-red/5 hover:bg-laser-red/10 text-laser-red transition-all cursor-pointer text-[9px] uppercase font-bold"
+                            >
+                              Revoke
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {keyList.length === 0 && (
                       <tr>
                         <td colSpan={4} className="p-8 text-center text-white/20 text-[10px]">
