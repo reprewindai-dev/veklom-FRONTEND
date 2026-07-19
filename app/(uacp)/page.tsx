@@ -10,7 +10,7 @@
 
 import React from 'react';
 
-const UACP_V3_URL = 'https://uacpv3-control-plane.onrender.com';
+const UACP_V3_URL = 'https://uacpv3.onrender.com';
 
 export default function UacpPage() {
   return (
