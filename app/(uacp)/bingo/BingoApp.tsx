@@ -1041,8 +1041,6 @@ function BingoApp() {
 
 export default function App() {
   return (
-    <WalletProviders>
-      <BingoApp />
-    </WalletProviders>
+    <BingoApp />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from 'next/dynamic';
+import { WalletProviders } from '../../agent-dual/WalletProviders';
 
 // Disable SSR for the entire Bingo application since it relies on window, local state,
 // and wagmi hooks that throw React hydration/prerender errors during build
@@ -9,5 +10,9 @@ const BingoAppDynamic = dynamic(() => import('./BingoApp'), {
 });
 
 export default function Page() {
-  return <BingoAppDynamic />;
+  return (
+    <WalletProviders>
+      <BingoAppDynamic />
+    </WalletProviders>
+  );
 }

@@ -116,7 +116,13 @@ const nextConfig = {
         destination: `${BACKEND_URL}/status/`,
       },
       {
+        // Serve the protocol manifest from the backend
+        source: "/protocol.json",
+        destination: `${BACKEND_URL}/protocol.json`,
+      },
+      {
         // PGL ledger calls go to the dedicated ledger service
+
         source: "/api/v1/ledger/:path*",
         destination: "https://pgl.veklom.com/api/v1/ledger/:path*",
       },

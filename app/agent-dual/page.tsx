@@ -3367,6 +3367,11 @@ function AgentDuelApp() {
 }
 
 export default function App() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
   return (
     <WalletProviders>
       <AgentDuelApp />
