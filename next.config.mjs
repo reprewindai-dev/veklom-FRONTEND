@@ -126,7 +126,15 @@ const nextConfig = {
         source: "/api/v1/ledger/:path*",
         destination: "https://pgl.veklom.com/api/v1/ledger/:path*",
       },
-
+      {
+        // Proxy GPC canvas to backend static mount
+        source: "/gpc",
+        destination: `${BACKEND_URL}/gpc/`,
+      },
+      {
+        source: "/gpc/:path*",
+        destination: `${BACKEND_URL}/gpc/:path*`,
+      },
       {
         // All /api/* calls from the browser are proxied to the backend.
         // This avoids CORS entirely — the browser always talks to its own origin.
