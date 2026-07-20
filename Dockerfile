@@ -4,7 +4,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+# Reduce memory footprint of npm ci
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # ─── Stage 2: builder ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -18,7 +19,8 @@ COPY . .
 ARG NEXT_PUBLIC_API_BASE_URL=""
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS=--max-old-space-size=4096
+# Lower the memory ceiling so V8 triggers garbage collection before the OS OOM killer intervenes on a 1GB/2GB VPS.
+ENV NODE_OPTIONS=--max-old-space-size=1024
 
 
 RUN npm run build
