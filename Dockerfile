@@ -19,8 +19,8 @@ COPY . .
 ARG NEXT_PUBLIC_API_BASE_URL=""
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-# Lower the memory ceiling so V8 triggers garbage collection before the OS OOM killer intervenes on a 1GB/2GB VPS.
-ENV NODE_OPTIONS=--max-old-space-size=1024
+# Allow up to 4GB memory, OS has 4GB swap space now.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 
 
 RUN npm run build
