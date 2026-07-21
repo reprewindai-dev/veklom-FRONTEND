@@ -4,8 +4,13 @@
 // BACKEND_URL  — server-side env var set in Coolify / Docker.
 //   In prod, point this at the backend service URL (e.g. http://veklom-api:8088)
 //   or the public domain if they share a domain (https://api.veklom.com).
-//   Falls back to https://api.veklom.com for production deployments.
-const BACKEND_URL = process.env.BACKEND_URL || "https://api.veklom.com";
+//   Production builds fail closed when BACKEND_URL is absent.
+const BACKEND_URL = process.env.BACKEND_URL ||
+  (process.env.NODE_ENV === "production" ? "" : "http://127.0.0.1:8088");
+
+if (process.env.NODE_ENV === "production" && !BACKEND_URL) {
+  throw new Error("BACKEND_URL must be configured for production builds");
+}
 
 const nextConfig = {
   output: "standalone",
