@@ -67,18 +67,30 @@ function forwardedHeaders(req: NextRequest): Headers {
   return headers;
 }
 
-function normalizeCapiPayload(body: any): Record<string, unknown> {
-  const action = typeof body?.action === "string" ? body.action : "execute";
+function normalizeCapiPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const action = typeof body.action === "string" ? body.action : null;
+  const agentId = typeof body.agent_id === "string" ? body.agent_id : null;
+  const capabilityId = typeof body.capability_id === "string"
+    ? body.capability_id
+    : typeof body.capability === "string"
+      ? body.capability
+      : null;
+
+  if (!action || !agentId || !capabilityId) {
+    throw new Error("agent_id, capability_id, and action are required");
+  }
+
   return {
-    agent_id: body?.agent_id && body.agent_id !== "agent-test" ? body.agent_id : "agent-atlas",
-    capability_id: body?.capability_id || body?.capability || "cap-search",
+    agent_id: agentId,
+    capability_id: capabilityId,
     action,
     input: {
-      target_protocol: body?.target_protocol || "capi",
-      payload: body?.payload || {},
-      workspace_id: body?.workspace_id || "default",
+      target_protocol: body.target_protocol || "capi",
+      payload: body.payload || {},
+      workspace_id: body.workspace_id || "default",
     },
-    approvals: Array.isArray(body?.approvals) ? body.approvals : undefined,
+    approvals: Array.isArray(body.approvals) ? body.approvals : undefined,
+    security: body.security,
   };
 }
 
@@ -86,18 +98,42 @@ export async function POST(req: NextRequest) {
   const validation = validateRequest(req);
   if (validation) return validation;
 
-  let body: any;
+  let rawBody: unknown;
   try {
-    body = await req.json();
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  if (!rawBody || typeof rawBody !== "object" || Array.isArray(rawBody)) {
+    return NextResponse.json({ error: "JSON object body required" }, { status: 400 });
+  }
+
   try {
+    const apiKey = capiAuthHeaderValue();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "CAPI_BACKEND_API_KEY is not configured" },
+        { status: 503 },
+      );
+    }
+
+    let payload: Record<string, unknown>;
+    try {
+      payload = normalizeCapiPayload(rawBody as Record<string, unknown>);
+    } catch {
+      return NextResponse.json(
+        { error: "agent_id, capability_id, and action are required" },
+        { status: 400 },
+      );
+    }
+
+    const headers = forwardedHeaders(req);
+    headers.set("x-api-key", apiKey);
     const response = await fetch(capiExecutionUrl(), {
       method: "POST",
-      headers: forwardedHeaders(req),
-      body: JSON.stringify(normalizeCapiPayload(body)),
+      headers,
+      body: JSON.stringify(payload),
       cache: "no-store",
     });
 
