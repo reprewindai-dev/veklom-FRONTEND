@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { capiAuthHeaderValue, capiExecutionUrl } from "@/lib/capi-runtime";
+import { hasBearerAuthorization } from "@/lib/authorization";
 
 const MAX_EXEC_BODY_BYTES = 512 * 1024;
 
@@ -56,6 +57,7 @@ function forwardedHeaders(req: NextRequest): Headers {
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
+  headers.delete("x-api-key");
 
   headers.set("accept", "application/json");
   headers.set("x-veklom-runtime-proxy", "control-plane");
@@ -95,6 +97,9 @@ function normalizeCapiPayload(body: Record<string, unknown>): Record<string, unk
 }
 
 export async function POST(req: NextRequest) {
+  if (!hasBearerAuthorization(req.headers.get("authorization"))) {
+    return NextResponse.json({ error: "Bearer authorization required" }, { status: 401 });
+  }
   const validation = validateRequest(req);
   if (validation) return validation;
 

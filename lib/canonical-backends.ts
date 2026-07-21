@@ -22,7 +22,7 @@ export interface CanonicalBackendConfig {
   role: CanonicalBackendRole;
   baseUrl: string;
   healthPath: string;
-  overviewPath: string;
+  overviewPath?: string;
   sourceOfTruthPath?: string;
   authMode: CanonicalBackendAuthMode;
 }
@@ -66,7 +66,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       role: "execution-engine",
       baseUrl: trimTrailingSlash(cappoUrl),
       healthPath: "/health",
-      overviewPath: "/health", // Placeholder until explicit endpoint
+      overviewPath: undefined,
       authMode: "server-api-key",
     },
     {
@@ -76,7 +76,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       role: "ledger",
       baseUrl: trimTrailingSlash(ledgerUrl),
       healthPath: "/health",
-      overviewPath: "/health", // Placeholder until explicit endpoint
+      overviewPath: undefined,
       authMode: "none",
     },
     {
@@ -86,7 +86,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       role: "policy-oracle",
       baseUrl: trimTrailingSlash(gpcUrl),
       healthPath: "/health",
-      overviewPath: "/health", // Placeholder until explicit endpoint
+      overviewPath: undefined,
       authMode: "none",
     },
     {

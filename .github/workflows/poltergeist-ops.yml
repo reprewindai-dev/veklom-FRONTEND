@@ -79,7 +79,12 @@ jobs:
           sleep 10
           HTTP=$(curl -sk https://control.veklom.com -o /dev/null -w '%{http_code}')
           if [ "$HTTP" = "200" ]; then
-            echo "Deployment successful: HTTP $HTTP"
+            DEPENDENCY=$(curl -sk -w '%{http_code}' https://control.veklom.com/api/health/dependencies)
+            if ! printf '%s' "$DEPENDENCY" | grep -q '"status":"healthy".*200$'; then
+              echo "Deployment proof unavailable: dependency health is not healthy"
+              exit 1
+            fi
+            echo "Deployment successful: root HTTP $HTTP and dependency proof healthy"
           else
             echo "Deployment failed: HTTP $HTTP"
             exit 1

@@ -14,6 +14,7 @@ async function proxyRequest(req: NextRequest) {
   let headers = new Headers(req.headers);
   headers.delete("host"); // Let the native fetch set the host
   headers.delete("connection");
+  headers.delete("x-api-key"); // Never allow clients to select an upstream credential
 
   const targetBase = path === "/v1/exec" || path.startsWith("/v1/exec/") || path.startsWith("/api/v1/capi/")
     ? CAPPO_BACKEND_URL

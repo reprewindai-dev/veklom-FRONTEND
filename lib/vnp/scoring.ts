@@ -16,295 +16,73 @@ import type {
   VNPGrade,
   VNPRegionId,
 } from "./types";
-import {
-  VNP_DIMENSIONS,
-  VNP_REGIONS,
-  NORMALIZATION,
-  CONFIDENCE_THRESHOLDS,
-  gradeForScore,
-  type DimensionDef,
-} from "./constants";
+import { VNP_DIMENSIONS, CONFIDENCE_THRESHOLDS } from "./constants";
 
-// ---------------------------------------------------------------------------
-// Normalization: convert raw measurement to 0-100 score
-// ---------------------------------------------------------------------------
-function normalize(dim: DimensionDef, raw: number): number {
-  const ref = NORMALIZATION[dim.id];
-  let score: number;
-
-  if (dim.direction === "lower") {
-    // Lower is better (latency, error rate)
-    // ideal=50ms → 100, poor=5000ms → 0
-    if (raw <= ref.ideal) {
-      score = 100;
-    } else if (raw >= ref.poor) {
-      score = 0;
-    } else {
-      score = 100 * (1 - (raw - ref.ideal) / (ref.poor - ref.ideal));
-    }
-  } else {
-    // Higher is better (uptime, throughput, security, etc.)
-    if (raw >= ref.ideal) {
-      score = 100;
-    } else if (raw <= ref.poor) {
-      score = 0;
-    } else {
-      score = 100 * ((raw - ref.poor) / (ref.ideal - ref.poor));
-    }
-  }
-
-  return Math.max(0, Math.min(100, Math.round(score * 10) / 10));
-}
-
-// ---------------------------------------------------------------------------
-// Extract raw dimension value from a BenchmarkApiEntry
-// ---------------------------------------------------------------------------
-function extractRaw(dim: DimensionDef, api: BenchmarkApiEntry): number {
-  switch (dim.id) {
-    case "p99_latency":
-      return api.p99;
-    case "error_rate":
-      // Derive from SLA drift — higher drift means more errors
-      return Math.max(0, 100 - api.sla) + Math.abs(api.drift) * 0.5;
-    case "availability":
-      return api.uptime24h;
-    case "throughput":
-      return api.throughput;
-    case "security":
-      return api.govScore;
-    case "documentation":
-      // Score based on presence of description, mcpSchema, endpointUrl
-      return computeDocScore(api);
-    case "versioning":
-      // Stable providers with lower drift score higher
-      return Math.max(0, 100 - Math.abs(api.drift) * 10);
-    case "x402_compliance":
-      return computeX402Score(api);
-    case "rate_limit_transparency":
-      // Inferred from compliance labels and tier
-      return computeRateLimitScore(api);
-    case "developer_experience":
-      return api.devScore;
-    default:
-      return 0;
-  }
-}
-
-function computeDocScore(api: BenchmarkApiEntry): number {
-  let score = 40; // baseline
-  if (api.description) score += 20;
-  if (api.endpointUrl) score += 15;
-  if (api.mcpSchema && Object.keys(api.mcpSchema).length > 0) score += 25;
-  return Math.min(100, score);
-}
-
-function computeX402Score(api: BenchmarkApiEntry): number {
-  let score = 0;
-  const labels = (api.complianceLabels || []).map((l) => l.toLowerCase());
-  if (labels.includes("x402") || labels.includes("x402-ready")) score += 40;
-  if (labels.includes("base-mainnet") || labels.includes("eip-712")) score += 30;
-  if (labels.includes("usdc") || labels.includes("micropay")) score += 15;
-  // Tier bonus
-  score += Math.max(0, (4 - api.sovereignTier) * 5);
-  return Math.min(100, score);
-}
-
-function computeRateLimitScore(api: BenchmarkApiEntry): number {
-  let score = 50; // baseline assumption
-  const labels = (api.complianceLabels || []).map((l) => l.toLowerCase());
-  if (labels.includes("rate-limit") || labels.includes("429-compliant")) score += 25;
-  if (labels.includes("retry-after")) score += 15;
-  score += Math.max(0, (4 - api.sovereignTier) * 3);
-  return Math.min(100, score);
-}
-
-// ---------------------------------------------------------------------------
-// Confidence computation
-// ---------------------------------------------------------------------------
-function computeConfidence(measurementCount: number): VNPConfidence {
-  let level: VNPConfidence["level"];
-  if (measurementCount >= CONFIDENCE_THRESHOLDS.high) {
-    level = "high";
-  } else if (measurementCount >= CONFIDENCE_THRESHOLDS.medium) {
-    level = "medium";
-  } else if (measurementCount >= CONFIDENCE_THRESHOLDS.low) {
-    level = "low";
-  } else {
-    level = "provisional";
-  }
-
-  // Approximate 95% CI margin of error using 1.96 / sqrt(n) * baseline_std
-  const baselineStd = 8; // assumed std deviation on 0-100 scale
-  const marginOfError =
-    measurementCount > 0
-      ? Math.round((1.96 * baselineStd) / Math.sqrt(measurementCount) * 10) / 10
-      : 50;
-
-  return {
-    level,
-    sampleCount: measurementCount,
-    marginOfError,
-    minForHigh: CONFIDENCE_THRESHOLDS.high,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Regional score generation — deterministic geographic normalization
-// No Math.random(): regional variance derived from API identity + baseline RTT
-// ---------------------------------------------------------------------------
-function generateRegionalScores(api: BenchmarkApiEntry): VNPRegionalScore[] {
-  return VNP_REGIONS.map((region) => {
-    const regionSeed = deterministicSeed(api.id + region.id);
-    const geoAdjust = region.baselineRttMs;
-
-    // Deterministic jitter factor per-region derived from API identity
-    const jitter = 0.85 + regionSeed * 0.3; // 0.85–1.15 range, stable per (api, region)
-    const adjustedP99 = Math.max(1, api.p99 + geoAdjust * jitter);
-    const adjustedP95 = Math.max(1, api.p95 + geoAdjust * (jitter * 0.85));
-    const adjustedP50 = Math.max(1, api.p50 + geoAdjust * (jitter * 0.6));
-    const adjustedP999 = adjustedP99 * (1.25 + regionSeed * 0.15);
-
-    // Availability: deterministic per-region offset from global uptime
-    const availOffset = regionSeed * 0.4; // 0–0.4% offset
-    const regionalAvailability = Math.max(90, api.uptime24h - availOffset);
-    const regionalErrorRate = Math.max(0, (100 - api.sla) + (regionSeed * 0.2 - 0.1));
-
-    const latScore = normalize(VNP_DIMENSIONS[0], adjustedP99);
-    const availScore = normalize(VNP_DIMENSIONS[2], regionalAvailability);
-    const score = Math.round((latScore * 0.6 + availScore * 0.4) * 10) / 10;
-
-    // Deterministic measurement count per region
-    const baseCount = 200 + Math.floor(regionSeed * 300);
-
-    return {
-      region: region.id,
-      label: region.label,
-      score,
-      p50: Math.round(adjustedP50 * 10) / 10,
-      p95: Math.round(adjustedP95 * 10) / 10,
-      p99: Math.round(adjustedP99 * 10) / 10,
-      p999: Math.round(adjustedP999 * 10) / 10,
-      errorRate: Math.round(regionalErrorRate * 100) / 100,
-      availability: Math.round(regionalAvailability * 100) / 100,
-      measurementCount: baseCount,
-      lastMeasured: new Date().toISOString(),
-    };
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Provenance generation — honest state, no fake chain anchors
-// Merkle root is deterministic from API ID + epoch window (reproducible)
-// Chain anchor fields null until Base L2 contract is deployed
-// ---------------------------------------------------------------------------
-function generateProvenance(api: BenchmarkApiEntry): VNPProvenance {
-  const now = new Date();
-  // Align to hourly epochs
-  const epochHour = new Date(now);
-  epochHour.setMinutes(0, 0, 0);
-  const epochStart = epochHour.toISOString();
-  const epochEnd = new Date(epochHour.getTime() + 3600000).toISOString();
-
-  const merkleRoot = deterministicHash(api.id + epochStart);
-  const seed = deterministicSeed(api.id);
-
-  return {
-    epochId: `epoch-${api.id}-${epochHour.getTime()}`,
-    epochStart,
-    epochEnd,
-    merkleRoot,
-    chainAnchorTx: null,
-    chainAnchorBlock: null,
-    measurementCount: 200 + Math.floor(seed * 800),
-    nodeOperators: ["veklom-node-eu-1", "veklom-node-us-1", "veklom-node-ap-1"],
-    harnessVersion: "k6-vnp-0.1.3",
-    scriptHash: deterministicHash(api.id + "script"),
-  };
-}
-
-/** Deterministic hash-like string from input (not cryptographic, but stable) */
-function deterministicHash(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const ch = input.charCodeAt(i);
-    hash = ((hash << 5) - hash + ch) | 0;
-  }
-  const hex = Math.abs(hash).toString(16).padStart(8, "0");
-  // Extend to 64 chars by repeating with variations
-  let result = "";
-  for (let i = 0; i < 8; i++) {
-    const variation = Math.abs(hash + i * 7919).toString(16).padStart(8, "0");
-    result += variation;
-  }
-  return result.substring(0, 64);
-}
-
-function deterministicSeed(input: string): number {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash % 1000) / 1000;
-}
-
-// ---------------------------------------------------------------------------
-// Main scoring function: BenchmarkApiEntry → VNPScore
-// ---------------------------------------------------------------------------
+/**
+ * Leaderboard metadata is not measurement evidence. Until the backend returns
+ * signed observations and provenance, the control plane must remain blocked.
+ */
 export function computeVNPScore(api: BenchmarkApiEntry): VNPScore {
-  // Compute each dimension
-  const dimensions: VNPDimensionScore[] = VNP_DIMENSIONS.map((dim) => {
-    const raw = extractRaw(dim, api);
-    const normalized = normalize(dim, raw);
-    const weighted = Math.round(normalized * dim.weight * 10) / 10;
-    return {
-      id: dim.id,
-      label: dim.label,
-      raw: Math.round(raw * 100) / 100,
-      normalized,
-      weight: dim.weight,
-      weighted,
-    };
-  });
-
-  // Composite score
-  const composite = Math.round(
-    dimensions.reduce((sum, d) => sum + d.weighted, 0) * 10
-  ) / 10;
-
-  // Grade
-  const gradeBand = gradeForScore(composite);
-
-  // Measurement count (derive from throughput + tier)
-  const measurementCount = Math.round(
-    500 + api.throughput * 2 + (4 - api.sovereignTier) * 200 + deterministicSeed(api.id) * 1000
+  const evidence = api.measurementEvidence;
+  const evidenceIsValid = Boolean(
+    evidence && Number.isInteger(evidence.measurementCount) && evidence.measurementCount > 0 &&
+    evidence.merkleRoot.trim() && evidence.nodeOperators.length > 0 &&
+    evidence.harnessVersion.trim() && evidence.scriptHash.trim() && evidence.epochStart && evidence.epochEnd
   );
-
-  // Confidence
-  const confidence = computeConfidence(measurementCount);
-
-  // Regional breakdown
-  const regions = generateRegionalScores(api);
-
-  // Provenance
-  const provenance = generateProvenance(api);
-
-  // Status
-  const status = confidence.level === "provisional" ? "provisional" as const : "active" as const;
-
+  if (!evidenceIsValid) {
+    return {
+      apiId: api.id,
+      apiName: api.name,
+      provider: api.provider || "Veklom Network",
+      category: api.category,
+      composite: 0,
+      grade: "N/A",
+      dimensions: [],
+      confidence: { level: "unmeasured", sampleCount: 0, marginOfError: 0, minForHigh: CONFIDENCE_THRESHOLDS.high },
+      regions: [],
+      provenance: { epochId: "unmeasured", epochStart: "", epochEnd: "", merkleRoot: "Needs proof", chainAnchorTx: null, chainAnchorBlock: null, measurementCount: 0, nodeOperators: [], harnessVersion: "", scriptHash: "" },
+      lastMeasured: "",
+      measurementCount: 0,
+      status: "unmeasured",
+    };
+  }
   return {
     apiId: api.id,
     apiName: api.name,
-    provider: api.provider || "Veklom Network",
+    provider: api.provider || "Needs proof",
     category: api.category,
-    composite,
-    grade: gradeBand.grade,
-    dimensions,
-    confidence,
-    regions,
-    provenance,
-    lastMeasured: new Date().toISOString(),
-    measurementCount,
-    status,
+    composite: 0,
+    grade: "N/A" as VNPScore["grade"],
+    dimensions: VNP_DIMENSIONS.map((dimension) => ({
+      id: dimension.id,
+      label: dimension.label,
+      raw: 0,
+      normalized: 0,
+      weight: dimension.weight,
+      weighted: 0,
+    })),
+    confidence: {
+      level: "unmeasured",
+      sampleCount: 0,
+      marginOfError: 0,
+      minForHigh: CONFIDENCE_THRESHOLDS.high,
+    },
+    regions: [],
+    provenance: {
+      epochId: "Needs proof",
+      epochStart: "",
+      epochEnd: "",
+      merkleRoot: "Needs proof",
+      chainAnchorTx: null,
+      chainAnchorBlock: null,
+      measurementCount: 0,
+      nodeOperators: [],
+      harnessVersion: "Needs proof",
+      scriptHash: "Needs proof",
+    },
+    lastMeasured: "",
+    measurementCount: 0,
+    status: "unmeasured",
   };
 }
 
@@ -314,5 +92,7 @@ export function computeVNPScore(api: BenchmarkApiEntry): VNPScore {
 export function computeLeaderboard(apis: BenchmarkApiEntry[]): VNPScore[] {
   return apis
     .map(computeVNPScore)
+    .filter((score) => score.status === "active")
+    .filter((score) => score.status !== "unmeasured")
     .sort((a, b) => b.composite - a.composite);
 }

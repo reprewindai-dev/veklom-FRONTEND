@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { dependencyHttpStatus, summarizeDependencyStatuses } from "@/lib/dependency-status";
 
 type Dependency = {
   name: string;
@@ -22,7 +23,7 @@ async function checkDependency(dependency: Dependency) {
     });
     return {
       name: dependency.name,
-      status: response.ok ? ("healthy" as const) : ("unhealthy" as const),
+      status: dependencyHttpStatus(response.status),
       http_status: response.status,
     };
   } catch {
@@ -41,15 +42,11 @@ export async function GET() {
     checkDependency({ name: "abide", url: process.env.ABIDE_URL }),
   ]);
 
-  const configured = dependencies.filter((dependency) => dependency.status !== "unconfigured");
-  const healthy = configured.filter((dependency) => dependency.status === "healthy");
-  const status = configured.length > 0 && healthy.length === configured.length
-    ? "healthy"
-    : "degraded";
+  const summary = summarizeDependencyStatuses(dependencies);
 
   return NextResponse.json({
-    status,
+    status: summary.status,
     dependencies,
     checked_at: new Date().toISOString(),
-  }, { headers: { "cache-control": "no-store" } });
+  }, { status: summary.httpStatus, headers: { "cache-control": "no-store" } });
 }

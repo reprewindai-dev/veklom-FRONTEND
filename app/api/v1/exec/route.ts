@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CAPI_RUNTIME_URL, capiAuthHeaderValue, CAPI_EXECUTION_PATH } from "@/lib/capi-runtime";
+import { hasBearerAuthorization } from "@/lib/authorization";
 
 const CAPPO_BACKEND_URL = CAPI_RUNTIME_URL;
 const CAPPO_ADMIN_KEY = capiAuthHeaderValue();
@@ -63,6 +64,7 @@ function forwardedHeaders(req: NextRequest): Headers {
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
+  headers.delete("x-api-key");
 
   headers.set("accept", "application/json");
   headers.set("x-veklom-runtime-proxy", "control-plane");
@@ -75,6 +77,9 @@ function forwardedHeaders(req: NextRequest): Headers {
 }
 
 async function proxyExec(req: NextRequest) {
+  if (!hasBearerAuthorization(req.headers.get("authorization"))) {
+    return NextResponse.json({ error: "Bearer authorization required" }, { status: 401 });
+  }
   const validation = validateRequest(req);
   if (validation) return validation;
 

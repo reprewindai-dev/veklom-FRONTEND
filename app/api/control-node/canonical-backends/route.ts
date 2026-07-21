@@ -75,6 +75,15 @@ async function probe<T>(
   backend: CanonicalBackendConfig,
   path: string,
 ): Promise<ProbeResult<T>> {
+  if (!path) {
+    return {
+      ok: false,
+      status: null,
+      route: "Needs proof",
+      latency_ms: 0,
+      error: "Operational overview endpoint is not configured",
+    };
+  }
   const started = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4500);
@@ -185,7 +194,7 @@ export async function GET(req: NextRequest) {
     configs.map(async (backend) => {
       const [health, overview, sourceOfTruth] = await Promise.all([
         probe(req, backend, backend.healthPath),
-        probe(req, backend, backend.overviewPath),
+        probe(req, backend, backend.overviewPath || ""),
         backend.sourceOfTruthPath
           ? probe(req, backend, backend.sourceOfTruthPath)
           : Promise.resolve(undefined),

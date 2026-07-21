@@ -233,14 +233,14 @@ export interface VNPScore {
   status: VNPStatus;
 }
 
-export type VNPGrade = "AAA" | "AA" | "A" | "BBB" | "BB" | "B" | "CCC" | "CC" | "C" | "D";
-export type VNPStatus = "active" | "provisional" | "disputed" | "suspended";
+export type VNPGrade = "AAA" | "AA" | "A" | "BBB" | "BB" | "B" | "CCC" | "CC" | "C" | "D" | "N/A";
+export type VNPStatus = "active" | "provisional" | "disputed" | "suspended" | "unmeasured";
 
 // ---------------------------------------------------------------------------
 // Confidence interval
 // ---------------------------------------------------------------------------
 export interface VNPConfidence {
-  level: "high" | "medium" | "low" | "provisional";
+  level: "high" | "medium" | "low" | "provisional" | "unmeasured";
   /** Number of measurements in scoring window */
   sampleCount: number;
   /** 95% CI half-width on composite score */
@@ -361,4 +361,15 @@ export interface BenchmarkApiEntry {
   uptime24h: number;
   totalStaked: number;
   status: string;
+  measurementEvidence?: {
+    measurementCount: number;
+    merkleRoot: string;
+    nodeOperators: string[];
+    harnessVersion: string;
+    scriptHash: string;
+    epochStart: string;
+    epochEnd: string;
+    chainAnchorTx?: string | null;
+    chainAnchorBlock?: number | null;
+  } | null;
 }

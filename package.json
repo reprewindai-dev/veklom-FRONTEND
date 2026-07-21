@@ -6,6 +6,7 @@
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
+    "test": "jest lib/__tests__ --runInBand",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:vnp-copy": "node scripts/check-vnp-public-copy.mjs"

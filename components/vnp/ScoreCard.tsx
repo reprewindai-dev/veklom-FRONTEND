@@ -28,7 +28,8 @@ function isIsoDate(value: string | null | undefined): value is string {
 }
 
 export default function ScoreCard({ score }: ScoreCardProps) {
-  const band = gradeForScore(score.composite);
+  const measured = score.status !== "unmeasured" && score.grade !== "N/A";
+  const band = measured ? gradeForScore(score.composite) : { grade: "N/A", color: "#A1A1A6", bgColor: "rgba(161,161,166,0.1)", borderColor: "rgba(161,161,166,0.25)" };
   const axes = score.dimensions.slice(0, 5);
   while (axes.length < 5) {
     axes.push({
@@ -92,15 +93,15 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-5xl font-bold text-[#3EE7A2] tracking-tighter">
-              {score.composite.toFixed(1)}
+              {measured ? score.composite.toFixed(1) : "N/A"}
             </span>
-            <span className="text-lg text-[#3EE7A2]/60">/100</span>
+            {measured && <span className="text-lg text-[#3EE7A2]/60">/100</span>}
           </div>
         </div>
 
         <div className="flex flex-col items-end text-right">
           <div className="border border-[#1E2C22] bg-[#0C120E] rounded-lg p-3 flex flex-col items-center justify-center min-w-[90px] mb-4">
-            <span className="text-4xl font-bold text-[#3EE7A2] leading-none mb-1">{band.grade}</span>
+            <span className="text-4xl font-bold leading-none mb-1" style={{ color: band.color }}>{band.grade}</span>
             <span className="text-[9px] font-mono text-[#3EE7A2] uppercase tracking-wider">TRUST GRADE</span>
           </div>
 
@@ -117,7 +118,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">ASSESSMENT TYPE</span>
-              <span className="text-[#A1A1A6]">{score.confidence.level === "high" ? "Route-backed evaluation" : "Partial proof evaluation"}</span>
+            <span className="text-[#A1A1A6]">{score.confidence.level === "unmeasured" ? "Unmeasured" : score.confidence.level === "high" ? "Route-backed evaluation" : "Partial proof evaluation"}</span>
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">FRAMEWORK</span>
@@ -170,16 +171,16 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           })}
 
           {/* Value Path */}
-          <polygon
+          {measured && <polygon
             points={dataPath}
             fill="url(#glow)"
             stroke="#3EE7A2"
             strokeWidth="3"
             strokeLinejoin="round"
-          />
+          />}
 
           {/* Value Points */}
-          {polygonDimensions.map((val, index) => {
+          {measured && polygonDimensions.map((val, index) => {
             const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
             const r = (val / 100) * maxRadius;
             const x = centerX + Math.cos(angle) * r;

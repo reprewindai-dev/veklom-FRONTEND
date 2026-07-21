@@ -31,7 +31,13 @@ jobs:
       - name: Lint check
         run: npm run lint
 
-      - name: Type check + build
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test -- --ci
+
+      - name: Production build
         run: npm run build
 
       - name: Report build size
@@ -66,6 +72,7 @@ jobs:
             cd \$APP
             git pull origin main
             COMMIT=\$(git rev-parse HEAD)
+            test "\$COMMIT" = "${{ github.sha }}"
             OLLAMA_WAS_RUNNING=0
             if docker ps --format '{{.Names}}' | grep -qx 'veklom-ollama'; then
               OLLAMA_WAS_RUNNING=1
@@ -103,9 +110,17 @@ jobs:
             echo "HEALTH CHECK FAILED: control.veklom.com returned $HTTP"
             exit 1
           fi
+          DEPENDENCY_JSON=$(curl -sk -w '\n%{http_code}' https://control.veklom.com/api/health/dependencies)
+          DEPENDENCY_HTTP=$(printf '%s\n' "$DEPENDENCY_JSON" | tail -n 1)
+          DEPENDENCY_BODY=$(printf '%s\n' "$DEPENDENCY_JSON" | sed '$d')
+          if [ "$DEPENDENCY_HTTP" != "200" ] || ! printf '%s' "$DEPENDENCY_BODY" | grep -q '"status":"healthy"'; then
+            echo "HEALTH CHECK FAILED: dependency proof is not healthy"
+            printf '%s\n' "$DEPENDENCY_BODY"
+            exit 1
+          fi
           DEV_HTTP=$(curl -sk https://veklom.dev -o /dev/null -w '%{http_code}')
           if [ "$DEV_HTTP" != "200" ]; then
             echo "HEALTH CHECK FAILED: veklom.dev returned $DEV_HTTP"
             exit 1
           fi
-          echo "control.veklom.com and veklom.dev healthy — deployment successful"
+          echo "control.veklom.com, dependencies, and veklom.dev healthy — deployment successful"
