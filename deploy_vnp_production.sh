@@ -46,6 +46,7 @@ BASE_CHAIN="base"
 BASE_RPC="https://mainnet.base.org"
 REGIONS=("us-east" "us-west" "eu-west" "ap-southeast" "ap-northeast")
 MEASUREMENT_NODES=("vnp-us-east-1" "vnp-us-west-1" "vnp-eu-west-1" "vnp-ap-southeast-1" "vnp-ap-northeast-1")
+NODES_ONLINE=0
 
 # ============================================================================
 # LOGGING & UTILITY
@@ -94,7 +95,7 @@ validate_prerequisites() {
   done
   
   # Check environment variables
-  local required_vars=("VNP_ISSUER_PRIVATE_KEY" "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "GITHUB_TOKEN")
+  local required_vars=("VNP_ISSUER_PRIVATE_KEY" "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "GITHUB_TOKEN" "DASHBOARD_URL")
   for var in "${required_vars[@]}"; do
     if [[ -z "${!var:-}" ]]; then
       log_error "Missing env var: $var"
@@ -165,9 +166,9 @@ provision_infrastructure() {
   log_success "Infrastructure provisioned successfully"
   
   # Export infrastructure outputs
-  export CLICKHOUSE_HOST=$(terraform output -raw clickhouse_host 2>/dev/null || echo "clickhouse.vnp.io")
-  export KAFKA_BROKERS=$(terraform output -raw kafka_brokers 2>/dev/null || echo "kafka-1.vnp.io:9092,kafka-2.vnp.io:9092,kafka-3.vnp.io:9092")
-  export API_ENDPOINT=$(terraform output -raw api_endpoint 2>/dev/null || echo "https://api.vnp.io")
+  export CLICKHOUSE_HOST=$(terraform output -raw clickhouse_host)
+  export KAFKA_BROKERS=$(terraform output -raw kafka_brokers)
+  export API_ENDPOINT=$(terraform output -raw api_endpoint)
   
   log_success "Infrastructure exports: CLICKHOUSE_HOST, KAFKA_BROKERS, API_ENDPOINT"
   
@@ -460,6 +461,10 @@ deploy_smart_contract() {
   npx hardhat run scripts/deploy-vnp-anchor.js --network base
   
   local contract_address=$(npx hardhat run scripts/get-deployment-address.js --network base)
+  if [[ ! "$contract_address" =~ ^0x[0-9a-fA-F]{40}$ ]]; then
+    log_error "Smart contract deployment did not return a valid address"
+    return 1
+  fi
   export VNP_ANCHOR_CONTRACT_ADDRESS="$contract_address"
   
   log_success "Smart contract deployed: $contract_address"
@@ -531,7 +536,7 @@ verify_deployment() {
   
   # Check smart contract
   log_info "Checking Base L2 contract..."
-  if curl -f "https://api.basescan.org/api?module=contract&action=getabi&address=$VNP_ANCHOR_CONTRACT_ADDRESS" &> /dev/null; then
+  if curl -fsS "https://api.basescan.org/api?module=contract&action=getabi&address=$VNP_ANCHOR_CONTRACT_ADDRESS" | grep -q '"status":"1"'; then
     log_success "Smart contract is verified on Base"
   else
     log_error "Smart contract verification failed"
@@ -546,9 +551,11 @@ verify_deployment() {
       log_success "$node online"
       nodes_online=$((nodes_online + 1))
     else
-      log_warning "$node offline (may not be DNS-propagated yet)"
+      log_error "$node offline"
+      errors=$((errors + 1))
     fi
   done
+  NODES_ONLINE=$nodes_online
   
   if [ $errors -eq 0 ]; then
     log_success "ALL SYSTEMS VERIFIED"
@@ -568,14 +575,14 @@ final_report() {
   
   cat << EOF
 
-  ✓ VNP Methodology v1.0 LIVE ON PRODUCTION
+  ✓ VNP deployment endpoints verified
 
   INFRASTRUCTURE:
-    - 5 regional measurement nodes: ${#REGIONS[@]}
+    - Regional measurement nodes online: $NODES_ONLINE / ${#REGIONS[@]}
     - ClickHouse cluster: 3 nodes (500GB each)
     - Kafka cluster: 3 brokers
-    - Scoring engine: Auto-scaling (1-5 replicas)
-    - Public API: Load balanced
+    - Scoring engine: provisioned by Terraform
+    - Public API: endpoint verified
     
   ENDPOINTS:
     - API: $API_ENDPOINT
@@ -583,21 +590,7 @@ final_report() {
     - Dashboard: $DASHBOARD_URL
     - Base L2 Contract: https://basescan.org/address/$VNP_ANCHOR_CONTRACT_ADDRESS
     
-  NEXT STEPS:
-    1. Verify all 5 measurement nodes are online
-    2. Wait 30 minutes for measurements to start flowing
-    3. Announce to IETF httpapi + HackerNews
-    4. Monitor system health (24/7 for first 48 hours)
-    5. File Linux Foundation Series application
-    
-  TIMELINE:
-    Day 1: ✓ All systems live
-    Week 1: ✓ 1,000+ measurements collected
-    Month 1: ✓ First scores published, governance vote scheduled
-    Month 3: ✓ 50 APIs measured, TSC elections complete
-    
-  COST: ~$750/month (sponsors cover)
-  STATUS: PRODUCTION READY
+  STATUS: VERIFIED CHECKS ONLY — measurement and settlement state require live evidence
 
 EOF
 }
