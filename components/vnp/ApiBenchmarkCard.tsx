@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 
-interface BenchmarkCardData {
+export interface BenchmarkCardData {
   benchmark_details: {
     name: string;
     version: string | null;

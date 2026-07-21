@@ -8,6 +8,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from "recharts";
+import type { BaseTickContentProps } from "recharts";
 import type { VNPDimensionScore } from "@/lib/vnp/types";
 import { VNP_DIMENSIONS } from "@/lib/vnp/constants";
 
@@ -28,10 +29,29 @@ export default function DimensionRadar({
     const dim = dimensions.find((d) => d.id === def.id);
     return {
       subject: def.shortLabel,
-      score: dim?.normalized ?? 0,
+      score: dim?.normalized ?? null,
+      missing: !dim,
       fullMark: 100,
     };
   });
+
+  const tick = ({ x, y, payload, index }: BaseTickContentProps) => {
+    const datum = data[index];
+    const value = String(payload.value);
+    const label = datum?.missing ? `${value} ·NP` : value;
+    return (
+      <text
+        x={Number(x)}
+        y={Number(y)}
+        fill={datum?.missing ? "#FF7A00" : "#A1A1A6"}
+        fontSize={10}
+        fontFamily="monospace"
+        textAnchor="middle"
+      >
+        {label}
+      </text>
+    );
+  };
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -40,7 +60,7 @@ export default function DimensionRadar({
         {showLabels && (
           <PolarAngleAxis
             dataKey="subject"
-            tick={{ fill: "#A1A1A6", fontSize: 10, fontFamily: "monospace" }}
+            tick={tick}
           />
         )}
         <PolarRadiusAxis

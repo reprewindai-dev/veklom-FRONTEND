@@ -7,7 +7,7 @@ import useSWR from 'swr';
 import { fetcher } from '@/lib/api';
 import Shell from '@/components/Shell';
 import type { BenchmarkApiEntry } from '@/lib/vnp/types';
-import ApiBenchmarkCard from '@/components/vnp/ApiBenchmarkCard';
+import ApiBenchmarkCard, { type BenchmarkCardData } from '@/components/vnp/ApiBenchmarkCard';
 
 function gradeFor(score: number): { letter: string; color: string } {
   if (score >= 90) return { letter: 'A+', color: '#FFB800' };
@@ -22,6 +22,10 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
   const resolvedParams = React.use(params);
   const apiId = resolvedParams.apiId;
   const { data: lbData } = useSWR<BenchmarkApiEntry[]>('/api/v1/benchmarks/leaderboard', fetcher);
+  const { data: cardData, error: cardError } = useSWR<BenchmarkCardData>(
+    `/api/v1/benchmarks/card/${encodeURIComponent(apiId)}`,
+    fetcher,
+  );
   const [copied, setCopied] = useState(false);
 
   const api = useMemo(() =>
@@ -29,10 +33,15 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
     [lbData, apiId]
   );
 
-  const score = typeof api?.govScore === "number" ? api.govScore : null;
+  const score = typeof cardData?.performance?.composite_score === "number"
+    ? cardData.performance.composite_score
+    : typeof api?.govScore === "number"
+      ? api.govScore
+      : null;
   const grade = score === null ? null : gradeFor(score);
   const apiName = api?.name ?? "VNP Benchmark Registry";
-  const apiVersion = api ? "v1.0.0" : "scorecard pending";
+  const apiVersion = cardData?.benchmark_details?.version || "Needs proof";
+  const evidenceLabel = cardData && !cardError ? "Present" : "Insufficient Evidence";
 
   const copyEmbed = () => {
     navigator.clipboard.writeText(`[![VNP Score](https://control.veklom.com/api/vnp/badge/${apiId}.svg)](https://control.veklom.com/benchmarks/${apiId})`);
@@ -52,7 +61,7 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[9px] font-mono font-bold tracking-widest text-[#FFB800] bg-[#FFB800]/10 border border-[#FFB800]/20 px-2 py-0.5 rounded">
-                {api ? "VERIFIED API" : "REGISTRY LOOKUP LIMITED"}
+                {evidenceLabel}
               </span>
               <span className="text-[10px] font-mono text-[#6E6E73]">{apiVersion}</span>
             </div>

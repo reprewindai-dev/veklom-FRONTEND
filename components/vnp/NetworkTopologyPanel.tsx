@@ -1,33 +1,22 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { fetcher, api } from "@/lib/api";
-import { Server, Activity, ShieldAlert, Zap, Cpu, Clipboard, RefreshCw, Layers, Radio, Flame, CheckCircle, Terminal, Play, Lock, Database, PlayCircle, StopCircle } from "lucide-react";
+import { Server, Layers, Radio, Flame, Terminal, Lock, Database, Zap } from "lucide-react";
 
 interface PeerNode {
   id: string;
   name: string;
-  region: string;
+  region?: string;
   status: "LEADER" | "ATTESTING" | "CHALLENGED" | "STANDBY";
   status_str?: string;
   x: number;
   y: number;
-  stakeUsd: number;
-  cpuMs: number;
-  poolUtilization: number;
+  stakeUsd?: number;
+  cpuMs?: number;
+  poolUtilization?: number;
   version: string;
-  tenantLock: string;
-}
-
-interface PaymentPacket {
-  id: string;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  progress: number; // 0 to 1
-  amountUsd: number;
-  tenant: string;
+  tenantLock?: string;
 }
 
 interface SwarmTransaction {
@@ -42,14 +31,13 @@ interface SwarmTransaction {
 export default function NetworkTopologyPanel() {
   const [selectedNodeId, setSelectedNodeId] = useState<string>("");
   const { data: topologyData, mutate: refreshTopology } = useSWR<any>("/api/v1/beacon/topology", fetcher, { refreshInterval: 5000 });
-  const { data: x402Config } = useSWR<any>("/api/v1/x402/config", fetcher, { refreshInterval: 30000 });
+  const { data: x402Config, error: x402Error } = useSWR<any>("/api/v1/x402/config", fetcher, { refreshInterval: 30000 });
   
   // Real State from Backend
   const realTopology = topologyData?.topology;
 
   // UI State
   const [nodes, setNodes] = useState<PeerNode[]>([]);
-  const [packets, setPackets] = useState<PaymentPacket[]>([]);
   const [eventsLog, setEventsLog] = useState<string[]>([]);
   const [ledgerFeed, setLedgerFeed] = useState<SwarmTransaction[]>([]);
   const [isActiveStorm, setIsActiveStorm] = useState(false);
@@ -89,10 +77,10 @@ export default function NetworkTopologyPanel() {
       : registeredNodes > 0
         ? "text-amber-300 bg-amber-950/30 border-amber-500/20"
         : "text-rose-300 bg-rose-950/30 border-rose-500/20";
-  const x402Enabled = Boolean(x402Config?.enabled);
+  const x402Enabled = x402Config?.enabled === true && !x402Error;
   const x402Label = x402Enabled
     ? `x402 USDC Route Payments: Live (${x402Config?.network ?? "base"})`
-    : "x402 USDC Route Payments: Config Incomplete";
+    : "x402 USDC Route Payments: Unknown";
   const settlementLabel =
     totalSettledUsd > 0 ? `${totalSettledUsd.toFixed(2)} $SETTLED` : "No ledger settlements recorded";
 
@@ -184,15 +172,12 @@ export default function NetworkTopologyPanel() {
         <div className="flex items-center justify-between border-b border-cyan-900/30 pb-3 z-10 relative">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Radio className="w-5 h-5 text-emerald-400 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              <Radio className={`w-5 h-5 ${activeNodes > 0 ? "text-emerald-400 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "text-slate-500"}`} />
               <span className="text-sm font-sans tracking-wide text-white/90">Veklom Gateway &amp; x402 Settlement Evidence</span>
             </div>
             <div className="flex items-center gap-2">
               <span className={`text-[9px] uppercase tracking-widest border px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)] ${topologyLabelClass}`}>
                 {topologyLabel}
-              </span>
-              <span className="text-[9px] text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded border bg-slate-900/50 border-slate-700/50 flex items-center gap-1">
-                <CheckCircle className="w-3 h-3 text-emerald-400" /> STRICT MODE
               </span>
             </div>
           </div>
@@ -253,20 +238,6 @@ export default function NetworkTopologyPanel() {
                 })
               )}
             </g>
-
-            {/* Draw simulation packets if active */}
-            {packets.map((p) => {
-              const currentX = p.fromX + (p.toX - p.fromX) * p.progress;
-              const currentY = p.fromY + (p.toY - p.fromY) * p.progress;
-              const color = p.tenant === "veklom.io" ? "#10b981" : p.tenant === "tempo_global" ? "#6366f1" : "#f59e0b";
-
-              return (
-                <g key={p.id}>
-                  <circle cx={currentX} cy={currentY} r="3" fill={color} style={{ filter: "url(#laser-glow)" }} />
-                  <circle cx={currentX} cy={currentY} r="8" fill="none" stroke={color} strokeWidth="1" opacity={(1.0 - p.progress) * 0.8} />
-                </g>
-              );
-            })}
 
             {/* Draw interactable physical nodes */}
             {nodes.map((n) => {
@@ -415,7 +386,7 @@ export default function NetworkTopologyPanel() {
                 <Server className={`${selectedNode.status === "LEADER" ? "text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]" : selectedNode.status === "CHALLENGED" ? "text-rose-400" : "text-cyan-400"} w-5 h-5`} />
               </div>
               <div className="flex-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">Consensus Node</span>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">VNP Node</span>
                 <h3 className="text-sm font-sans font-medium text-white/90">{selectedNode.name}</h3>
               </div>
               <span className={`text-[9px] font-mono px-2.5 py-1 rounded border tracking-widest uppercase ${
@@ -434,21 +405,24 @@ export default function NetworkTopologyPanel() {
             <div className="space-y-4 font-mono text-[10px] text-cyan-100/60">
               <div className="flex justify-between items-center">
                 <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Jurisdiction</span>
-                <span className="text-white/90 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30 uppercase">{selectedNode.region}</span>
+                <span className="text-white/90 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30 uppercase">{selectedNode.region ?? "Unknown"}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Active Stake (Real)</span>
-                <span className="text-emerald-400 text-[11px]">${selectedNode.stakeUsd.toLocaleString()} USD</span>
-              </div>
+              {typeof selectedNode.stakeUsd === "number" && (
+                <div className="flex justify-between items-center">
+                  <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Stake</span>
+                  <span className="text-emerald-400 text-[11px]">${selectedNode.stakeUsd.toLocaleString()} USD</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Latency</span>
-                <span className="text-cyan-300">{selectedNode.cpuMs.toFixed(3)} ms</span>
+                <span className="text-cyan-300">{typeof selectedNode.cpuMs === "number" ? `${selectedNode.cpuMs.toFixed(3)} ms` : "Unknown"}</span>
               </div>
               
               {/* Connection Pool Meter */}
+              {typeof selectedNode.poolUtilization === "number" && (
               <div className="space-y-2 bg-[#03070c]/50 p-3 rounded-lg border border-cyan-900/20">
                 <div className="flex justify-between items-center">
-                  <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">sqlx::Pool Utilization</span>
+                  <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">Connection Pool Utilization</span>
                   <span className={`${selectedNode.poolUtilization > 80 ? "text-amber-400" : "text-cyan-400"}`}>{selectedNode.poolUtilization}%</span>
                 </div>
                 <div className="w-full bg-[#0b1219] h-1.5 rounded-full overflow-hidden border border-cyan-900/30">
@@ -458,11 +432,18 @@ export default function NetworkTopologyPanel() {
                   />
                 </div>
               </div>
+              )}
+              {typeof selectedNode.poolUtilization !== "number" && (
+                <div className="flex justify-between items-center bg-[#03070c]/50 p-3 rounded-lg border border-cyan-900/20">
+                  <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">Connection Pool Utilization</span>
+                  <span className="text-slate-400">Unknown</span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center pt-2 border-t border-cyan-900/20">
                 <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Tenant Namespace Lock</span>
                 <span className="text-indigo-300 max-w-[140px] truncate bg-indigo-950/20 px-2 py-0.5 rounded border border-indigo-500/20">
-                  {selectedNode.tenantLock}
+                  {selectedNode.tenantLock ?? "Unknown"}
                 </span>
               </div>
             </div>
@@ -522,7 +503,7 @@ export default function NetworkTopologyPanel() {
               <Database className="w-3.5 h-3.5 text-indigo-400" />
               x402 Evidence Ledger
             </span>
-            <span className="text-[8px] bg-indigo-950/30 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded uppercase tracking-widest animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.2)]">
+            <span className="text-[8px] bg-indigo-950/30 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded uppercase tracking-widest shadow-[0_0_8px_rgba(99,102,241,0.2)]">
               Anchor RLS
             </span>
           </div>
