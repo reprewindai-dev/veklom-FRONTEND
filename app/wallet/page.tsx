@@ -7,6 +7,7 @@ import { Card, PageHeader, Skeleton, StatCard, Table, Button, ErrorBox } from "@
 import { api } from "@/lib/api";
 import { unwrapList } from "@/types/api";
 import { useState } from "react";
+import { sendGAEvent } from "@next/third-parties/google";
 
 export default function WalletPage() {
   const balance = useApi<any>("/api/v1/wallet/balance");
@@ -19,6 +20,7 @@ export default function WalletPage() {
   async function topup(amount?: number) {
     setBusy(true); setErr(undefined);
     try {
+      sendGAEvent({ event: 'wallet_topup_initiated', value: amount || 0 });
       const res = await api<any>("/api/v1/wallet/topup/checkout", { body: { amount } });
       if (res?.url) window.location.href = res.url;
     } catch (e) {

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { AlertOctagon, X, ShieldAlert, KeyRound, Sparkles, CheckCircle2, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { sendGAEvent } from "@next/third-parties/google";
 
 interface InterventionEvent {
   type: string;
@@ -53,6 +54,8 @@ export default function AmbientIntervention() {
           }
         })
       );
+      
+      sendGAEvent({ event: 'ambient_intervention_resolved', value: eventData?.type || 'unknown' });
       
       await new Promise(resolve => setTimeout(resolve, 300));
       setIsOpen(false);

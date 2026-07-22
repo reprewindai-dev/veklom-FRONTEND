@@ -147,8 +147,21 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       const isPublicPage = isPublicRoute(window.location.pathname);
       if (res.status === 402) {
         if (!isPublicPage) {
-          const currentPath = window.location.pathname + window.location.search;
-          window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
+          const paymentRequiredHeader = res.headers.get("payment-required");
+          const facilitatorUrl = res.headers.get("x-402-facilitator-url");
+          
+          const event = new CustomEvent("X402PaymentIntervention", {
+            detail: { 
+                type: "PAYMENT_REQUIRED", 
+                message: msg,
+                paymentRequiredHeader,
+                facilitatorUrl
+            }
+          });
+          window.dispatchEvent(event);
+          
+          // Throw a silent error so the UI doesn't crash, allowing the modal to handle the payment flow
+          throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json);
         }
       } else if (res.status === 403 || res.status === 401) {
         const isAuthTokenError = msg.toLowerCase().includes("invalid or expired token") || 

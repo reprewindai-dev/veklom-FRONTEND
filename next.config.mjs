@@ -126,10 +126,34 @@ const nextConfig = {
         destination: `${BACKEND_URL}/protocol.json`,
       },
       {
+        // PGL calls
+        source: "/api/v1/pgl/:path*",
+        destination: `${process.env.PGL_URL || "https://pgl.veklom.com"}/api/v1/pgl/:path*`,
+      },
+      {
+        // CAPPO calls
+        source: "/api/v1/cappo/:path*",
+        destination: `${process.env.CAPPO_URL || "https://cappo.veklom.com"}/api/v1/cappo/:path*`,
+      },
+      {
+        // VNP calls
+        source: "/api/v1/vnp/:path*",
+        destination: `${process.env.VNP_URL || "https://vnp.veklom.com"}/api/v1/vnp/:path*`,
+      },
+      {
+        // APEX calls
+        source: "/api/v1/apex/:path*",
+        destination: `${process.env.APEX_URL || "https://apex.veklom.com"}/api/v1/apex/:path*`,
+      },
+      {
+        // ABIDE calls
+        source: "/api/v1/abide/:path*",
+        destination: `${process.env.ABIDE_URL || "https://abide.veklom.com"}/api/v1/abide/:path*`,
+      },
+      {
         // PGL ledger calls go to the dedicated ledger service
-
         source: "/api/v1/ledger/:path*",
-        destination: "https://pgl.veklom.com/api/v1/ledger/:path*",
+        destination: `${process.env.PGL_URL || "https://pgl.veklom.com"}/api/v1/ledger/:path*`,
       },
       {
         // Proxy GPC canvas to backend static mount

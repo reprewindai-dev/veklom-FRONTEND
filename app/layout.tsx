@@ -4,7 +4,9 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
 import AmbientIntervention from "@/components/ambient/AmbientIntervention";
+import GoogleAnalyticsUserSync from "@/components/GoogleAnalyticsUserSync";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import CookieBanner from "@/components/CookieBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 const BASE = "";
@@ -110,9 +112,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             {children}
             <AmbientIntervention />
+            <GoogleAnalyticsUserSync />
           </AuthProvider>
         </WebMCPProvider>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-KCZM27WWX7"} />
+        <CookieBanner />
       </body>
     </html>
   );

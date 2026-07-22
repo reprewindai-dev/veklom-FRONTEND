@@ -134,18 +134,15 @@ export default function Home() {
 
           <motion.div variants={fadeUpVariants} className="flex flex-wrap items-center justify-center gap-4 mb-20">
             <Link href="/signup" className="bg-white text-black px-8 py-4 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center gap-2 text-lg shadow-lg shadow-white/5">
-              Start Free <ArrowRight className="w-5 h-5" />
+              Join Waitlist <ArrowRight className="w-5 h-5" />
             </Link>
-            <a href="#live-demo" className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-lg font-bold hover:bg-white/10 transition-colors flex items-center gap-2 text-lg">
-              See Live Demo
-            </a>
           </motion.div>
 
           {/* High Density Metric Row */}
           <motion.div variants={fadeUpVariants} className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mb-20 border-y border-white/5 py-8 bg-white/[0.01] backdrop-blur-sm px-6 rounded-2xl">
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-extrabold text-[#FFB800] font-mono mb-2">99.9%</div>
-              <div className="text-xs text-gray-400 uppercase tracking-widest font-mono">Live Uptime SLA</div>
+              <div className="text-xs text-gray-400 uppercase tracking-widest font-mono">Uptime SLA</div>
             </div>
             <div className="text-center border-l border-white/5">
               <div className="text-3xl md:text-4xl font-extrabold text-[#FFB800] font-mono mb-2">&lt;200ms</div>
@@ -174,7 +171,7 @@ export default function Home() {
                 <p className="text-sm text-gray-400 leading-relaxed mb-6">
                   Run the governed demo in the secured control-plane surface. The public landing page stays static and stable; the live trace executes inside the authenticated runtime.
                 </p>
-                <Link href="/dev#runtime-demo" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                <Link href="https://terminal.veklom.com" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
                   Open live trace <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -601,7 +598,7 @@ export default function Home() {
                   <span className="text-[10px] uppercase font-semibold font-mono px-2 py-0.5 rounded bg-white/5 border border-white/5 text-gray-300">Shared Nodes</span>
                 </div>
               </div>
-              <Link href="/signup" className="btn btn-ghost w-full">Start Free</Link>
+              <Link href="/signup" className="btn btn-ghost w-full">Join Waitlist</Link>
             </div>
 
             {/* Card 2 */}
@@ -672,7 +669,7 @@ export default function Home() {
                   <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> BYOK provider config</li>
                 </ul>
               </div>
-              <Link href="/signup" className="btn btn-ghost w-full mt-8">Start Free</Link>
+              <Link href="/signup" className="btn btn-ghost w-full mt-8">Join Waitlist</Link>
             </div>
 
             {/* Founding */}
