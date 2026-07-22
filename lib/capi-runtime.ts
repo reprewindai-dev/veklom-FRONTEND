@@ -1,5 +1,5 @@
 export const CAPI_RUNTIME_URL =
-  process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL || "";
+  process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL || "https://capi.veklom.com";
 
 export const CAPI_RUNTIME_LABEL = "CAPPO Backend";
 
