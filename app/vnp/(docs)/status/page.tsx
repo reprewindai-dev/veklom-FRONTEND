@@ -1,112 +1,358 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
-import { api } from '@/lib/api';
+import React, { useCallback, useEffect, useState } from "react";
+import { ShieldCheck, RefreshCw, Server } from "lucide-react";
+import {
+  TOPOLOGY_ENDPOINT,
+  CANONICAL_TOPOLOGY_URL,
+  formatFreshness,
+  formatTimestamp,
+  nodeConnectivityState,
+  proofStateClasses,
+  type ProofState,
+  type VnpTopology,
+  type VnpTopologyNode,
+  type VnpTopologyResponse,
+} from "@/lib/vnp-topology";
 
-interface VnpMetrics {
-  total_probes_recorded: number;
-  total_slashed_minor: number;
-  active_validators: number;
-  avg_composite_score: number;
+interface UptimeResult {
+  available: boolean;
+  source: string;
+  reason?: string;
+  data?: unknown;
+}
+
+interface HealthResult {
+  status?: string;
+  version?: string;
+  service?: string;
+  timestamp?: string;
+}
+
+function ProofPill({ state }: { state: ProofState }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${proofStateClasses(
+        state
+      )}`}
+    >
+      {state}
+    </span>
+  );
+}
+
+function StatusRow({
+  title,
+  state,
+  value,
+  basis,
+  window: measurementWindow,
+  detail,
+}: {
+  title: string;
+  state: ProofState;
+  value: string;
+  basis: string;
+  window: string;
+  detail?: string;
+}) {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <h3 className="text-lg font-bold text-white">{title}</h3>
+        <ProofPill state={state} />
+      </div>
+      <div className="text-2xl font-mono text-white mb-3">{value}</div>
+      {detail && <p className="text-sm text-gray-400 leading-relaxed mb-3">{detail}</p>}
+      <dl className="text-xs text-gray-500 space-y-1 font-mono">
+        <div className="flex gap-2">
+          <dt className="text-gray-600 uppercase tracking-wider shrink-0">Basis</dt>
+          <dd className="text-gray-400 break-all">{basis}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="text-gray-600 uppercase tracking-wider shrink-0">Window</dt>
+          <dd className="text-gray-400">{measurementWindow}</dd>
+        </div>
+      </dl>
+    </div>
+  );
 }
 
 export default function StatusPage() {
-  const [metricsData, setMetricsData] = useState<VnpMetrics | null>(null);
-  const [lastError, setLastError] = useState<string | null>(null);
+  const [topology, setTopology] = useState<VnpTopology | null>(null);
+  const [topologyOk, setTopologyOk] = useState<boolean | null>(null);
+  const [health, setHealth] = useState<HealthResult | null>(null);
+  const [healthOk, setHealthOk] = useState<boolean | null>(null);
+  const [uptime, setUptime] = useState<UptimeResult | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
+  const refresh = useCallback(async () => {
+    // Service health + topology + credentialed uptime, all read independently
+    // so one failing source never masks another.
+    const [topoRes, healthRes, uptimeRes] = await Promise.allSettled([
+      fetch(TOPOLOGY_ENDPOINT, { cache: "no-store" }),
+      fetch("/api/health", { cache: "no-store" }),
+      fetch("/api/vnp/status-uptime", { cache: "no-store" }),
+    ]);
+
+    if (topoRes.status === "fulfilled" && topoRes.value.ok) {
       try {
-        const res = await api.get<VnpMetrics>('/api/v1/vnp/metrics');
-        setMetricsData(res);
-        setLastError(null);
-      } catch (err) {
-        console.error("Failed to fetch VNP metrics", err);
-        setLastError("Disconnected");
+        const json: VnpTopologyResponse = await topoRes.value.json();
+        setTopology(json.topology ?? null);
+        setTopologyOk(Boolean(json.topology));
+      } catch {
+        setTopology(null);
+        setTopologyOk(false);
       }
-    };
-    fetchMetrics();
-    const interval = setInterval(fetchMetrics, 10000);
-    return () => clearInterval(interval);
+    } else {
+      setTopology(null);
+      setTopologyOk(false);
+    }
+
+    if (healthRes.status === "fulfilled" && healthRes.value.ok) {
+      try {
+        setHealth(await healthRes.value.json());
+        setHealthOk(true);
+      } catch {
+        setHealth(null);
+        setHealthOk(false);
+      }
+    } else {
+      setHealth(null);
+      setHealthOk(false);
+    }
+
+    if (uptimeRes.status === "fulfilled" && uptimeRes.value.ok) {
+      try {
+        setUptime(await uptimeRes.value.json());
+      } catch {
+        setUptime(null);
+      }
+    } else {
+      setUptime(null);
+    }
+
+    setUpdatedAt(new Date().toISOString());
+    setLoading(false);
   }, []);
 
-  const probesCount = metricsData?.total_probes_recorded ?? 0;
-  const activeValidators = metricsData?.active_validators ?? 0;
-  const compositeScore = metricsData?.avg_composite_score ?? 0;
-  const slashedTotal = metricsData?.total_slashed_minor
-    ? `$${(metricsData.total_slashed_minor / 1_000_000).toFixed(6)}`
-    : "$0.000000";
-  const isConnected = Boolean(metricsData && probesCount > 0);
-  const statusLabel = lastError ?? (isConnected ? "Connected" : "Config Incomplete");
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 15000);
+    return () => clearInterval(interval);
+  }, [refresh]);
 
-  const metrics = [
-    { label: "Physical Probes Recorded", value: probesCount.toLocaleString(), status: statusLabel },
-    { label: "Active Validators", value: activeValidators.toLocaleString(), status: activeValidators > 0 ? "Connected" : "Config Incomplete" },
-    { label: "Total SLA Slashed (USDC)", value: slashedTotal, status: "Connected" },
-    { label: "Robust Scoring Composite", value: compositeScore ? compositeScore.toFixed(2) : "Pending", status: compositeScore ? "Connected" : "Config Incomplete" }
-  ];
+  const nodes: VnpTopologyNode[] = topology?.nodes ?? [];
+  const expected = topology?.expectedNodes ?? 5;
+  const registered = topology?.registeredNodes ?? nodes.length;
+  const connected =
+    topology?.activeNodes ??
+    nodes.filter((n) => (n.status_str ?? "").toLowerCase() === "connected").length;
+
+  // ── Row: Service health ────────────────────────────────────────────────────
+  const healthState: ProofState =
+    healthOk === null ? "Unknown" : healthOk && health?.status ? "Present" : "Needs proof";
+  const healthValue =
+    healthOk && health?.status ? String(health.status) : healthOk === false ? "Unreachable" : "…";
+  const healthDetail =
+    healthOk && health
+      ? `Backend reports service "${health.service ?? "unknown"}" version ${
+          health.version ?? "unknown"
+        }. This reflects the reported process state, not an availability guarantee.`
+      : "The service health endpoint did not return a healthy status.";
+
+  // ── Row: VNP node telemetry ────────────────────────────────────────────────
+  const telemetryState: ProofState =
+    topologyOk === null
+      ? "Unknown"
+      : topologyOk === false
+      ? "Needs proof"
+      : connected >= expected && expected > 0
+      ? "Present"
+      : "Needs proof";
+  const telemetryValue =
+    topologyOk === false
+      ? "Source unavailable"
+      : `${connected}/${expected} connected · ${registered}/${expected} registered`;
+  const telemetryDetail =
+    topologyOk === false
+      ? "The canonical beacon topology endpoint could not be read."
+      : connected === 0
+      ? "All registered nodes are reporting a non-connected state with stale heartbeats. No node is currently live."
+      : "Connectivity is derived from each node's returned status and heartbeat freshness, not from the presence of historical observations.";
+
+  // ── Row: API uptime window ─────────────────────────────────────────────────
+  const uptimeState: ProofState = uptime?.available ? "Present" : "Needs proof";
+  const uptimeValue = uptime?.available ? JSON.stringify(uptime.data) : "No public-safe evidence";
+  const uptimeBasis = `${uptime?.source ?? "GET /api/v1/platform/uptime"} (read server-side via /api/vnp/status-uptime)`;
+  const uptimeDetail = uptime?.available
+    ? "Uptime window read through a server-side route handler that holds credentials; no credentials are exposed to the browser."
+    : uptime?.reason ??
+      "Requires authenticated BYOS credentials; no public-safe credentialed source is available.";
+
+  // ── Row: Process uptime ────────────────────────────────────────────────────
+  // /api/health does not expose a process-uptime counter, so we do not invent one.
+  const processState: ProofState = "Needs proof";
+  const processValue = "Not exposed";
+  const processDetail =
+    "The service health endpoint does not return a process-uptime counter, so no uptime duration can be shown without fabrication.";
+
+  const updatedLabel = updatedAt ? formatTimestamp(updatedAt) : "…";
 
   return (
     <div className="space-y-12 pb-24">
       <div>
-        <div className="flex items-center gap-3 mb-6">
-          <h1 className="text-4xl font-extrabold tracking-tight">Network Status & Uptime</h1>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            {statusLabel}
-          </span>
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <h1 className="text-4xl font-extrabold tracking-tight">Network Status &amp; Evidence</h1>
+          <button
+            onClick={() => refresh()}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
         </div>
-        <p className="text-xl text-gray-400 leading-relaxed mb-8">
-          Live BYOS telemetry from physical probes, settlement entries, validators, and robust scoring.
+        <p className="text-xl text-gray-400 leading-relaxed mb-2">
+          Every claim below shows only what the backend actually returned, with its source and
+          measurement window. Where evidence is absent, the row reads{" "}
+          <span className="text-amber-300 font-semibold">Needs proof</span> rather than a
+          fabricated uptime or &ldquo;Connected&rdquo; label.
         </p>
-      </div>
-
-      <div className={`${isConnected ? "bg-green-500/10 border-green-500/20" : "bg-yellow-500/10 border-yellow-500/20"} border rounded-xl p-8 flex items-center justify-between mb-12`}>
-        <div>
-          <h2 className={`text-2xl font-bold mb-2 ${isConnected ? "text-green-400" : "text-yellow-300"}`}>
-            {isConnected ? "Physical Probe Telemetry Connected" : "Physical Probe Telemetry Pending"}
-          </h2>
-          <p className={isConnected ? "text-green-200/70" : "text-yellow-100/70"}>
-            {isConnected
-              ? "The Veklom Nexus Protocol is reading live probe and settlement data from the BYOS backend."
-              : "The BYOS metric route is reachable but has not returned recorded physical probes yet."}
-          </p>
-        </div>
-        <div className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${isConnected ? "bg-green-500/20 border-green-500/30" : "bg-yellow-500/20 border-yellow-500/30"}`}>
-          {isConnected ? <CheckCircle2 className="w-8 h-8 text-green-400" /> : <AlertCircle className="w-8 h-8 text-yellow-300" />}
-        </div>
+        <p className="text-sm text-gray-500 font-mono">
+          updated_at: {updatedLabel} · source: {CANONICAL_TOPOLOGY_URL}
+        </p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-6">
-        {metrics.map((metric, i) => (
-          <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-xl flex flex-col justify-between h-32">
-            <span className="text-gray-400 text-sm uppercase tracking-wider font-bold">{metric.label}</span>
-            <div className="flex items-end justify-between">
-              <span className="text-3xl font-bold font-mono text-white">{metric.value}</span>
-              <div className={`${metric.status === "Connected" ? "text-green-400 bg-green-400/10" : "text-yellow-300 bg-yellow-400/10"} flex items-center gap-2 text-xs px-2 py-1 rounded`}>
-                <span className={`w-2 h-2 rounded-full ${metric.status === "Connected" ? "bg-green-400" : "bg-yellow-300"} animate-pulse`} />
-                {metric.status}
-              </div>
-            </div>
-          </div>
-        ))}
+        <StatusRow
+          title="Service health"
+          state={healthState}
+          value={healthValue}
+          basis="GET /api/health"
+          window="Point-in-time (last fetch)"
+          detail={healthDetail}
+        />
+        <StatusRow
+          title="VNP node telemetry"
+          state={telemetryState}
+          value={telemetryValue}
+          basis={`GET ${TOPOLOGY_ENDPOINT} (topology.nodes)`}
+          window="Point-in-time (last fetch)"
+          detail={telemetryDetail}
+        />
+        <StatusRow
+          title="API uptime window"
+          state={uptimeState}
+          value={uptimeValue}
+          basis={uptimeBasis}
+          window={uptime?.available ? "As reported by upstream" : "n/a — source unavailable"}
+          detail={uptimeDetail}
+        />
+        <StatusRow
+          title="Process uptime"
+          state={processState}
+          value={processValue}
+          basis="GET /api/health (no uptime field)"
+          window="n/a — not measured"
+          detail={processDetail}
+        />
       </div>
 
-      <div className="mt-12 bg-white/5 border border-white/10 rounded-xl p-8">
+      {/* Per-node telemetry table — the raw evidence behind the telemetry row */}
+      <section>
         <div className="flex items-center gap-3 mb-6">
+          <Server className="w-6 h-6 text-[#FFB800]" />
+          <h2 className="text-2xl font-bold">Per-node telemetry</h2>
+        </div>
+        {topologyOk === false ? (
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-400">
+            The canonical beacon topology endpoint could not be read. No node evidence is available.
+          </div>
+        ) : nodes.length === 0 ? (
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-400">
+            {loading ? "Loading node telemetry…" : "The topology response returned no nodes."}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {nodes.map((node) => {
+              const conn = nodeConnectivityState(node);
+              return (
+                <div
+                  key={node.id}
+                  className="bg-white/5 border border-white/10 rounded-xl p-6"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{node.name}</h3>
+                      <p className="text-sm text-gray-400">
+                        {node.physicalLocation ?? node.region} · {node.region}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <ProofPill state={conn.state} />
+                      <p className="text-xs text-gray-500 mt-1">{conn.reason}</p>
+                    </div>
+                  </div>
+                  <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 text-sm font-mono">
+                    <div>
+                      <dt className="text-gray-600 text-xs uppercase tracking-wider">Registration</dt>
+                      <dd className="text-gray-200">{node.registrationStatus ?? "unknown"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-600 text-xs uppercase tracking-wider">Active keys</dt>
+                      <dd className="text-gray-200">{node.activeKeyCount ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-600 text-xs uppercase tracking-wider">
+                        Operational status
+                      </dt>
+                      <dd className="text-gray-200">
+                        {node.status_str ?? "—"}
+                        {node.status ? ` (${node.status})` : ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-600 text-xs uppercase tracking-wider">Heartbeat</dt>
+                      <dd className="text-gray-200">
+                        {formatFreshness(node.heartbeatFreshnessSeconds)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-600 text-xs uppercase tracking-wider">Observations</dt>
+                      <dd className="text-gray-200">
+                        {typeof node.observationCount === "number"
+                          ? node.observationCount.toLocaleString()
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-600 text-xs uppercase tracking-wider">
+                        Last observation
+                      </dt>
+                      <dd className="text-gray-200">{formatTimestamp(node.lastObservation)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <div className="bg-white/5 border border-white/10 rounded-xl p-8">
+        <div className="flex items-center gap-3 mb-4">
           <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
-          <h3 className="text-xl font-bold">Cryptographic Status Receipts</h3>
+          <h3 className="text-xl font-bold">How to read this page</h3>
         </div>
-        <p className="text-gray-400 leading-relaxed mb-6">
-          x402 settlement evidence is read from the BYOS settlement ledger, while CAPPO supplies governed runtime enforcement through ExecutionIdentityV1 and LAW 0 execution controls.
+        <p className="text-gray-400 leading-relaxed">
+          A badge is not proof. <span className="text-emerald-300 font-semibold">Present</span> means
+          the backend returned the stated evidence at fetch time;{" "}
+          <span className="text-amber-300 font-semibold">Needs proof</span> means the required
+          evidence was absent or the source was unreachable. Node connectivity is derived from each
+          node&rsquo;s returned status and heartbeat freshness, never from the existence of a node
+          record or a nonzero observation count.
         </p>
-        <div className="bg-black/50 p-4 rounded-lg font-mono text-sm text-gray-300 border border-white/10">
-          $ vnp-cli network verify --depth 1000
-        </div>
       </div>
     </div>
   );

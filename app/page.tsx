@@ -196,6 +196,94 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* Intercept → Gate → Anchor — primary mental model */}
+      <section className="py-20 border-t border-white/5 bg-[#0A0A0C] relative scroll-mt-16" id="intercept-gate-anchor">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <span className="inline-flex items-center gap-1 text-[#FFB800] text-xs font-bold uppercase tracking-widest bg-[#FFB800]/5 border border-[#FFB800]/10 px-3 py-1 rounded-full mb-4">
+              <ShieldCheck className="w-3 h-3" /> The Veklom Model
+            </span>
+            <h2 className="text-4xl font-extrabold tracking-tight mb-4">Intercept. Gate. Anchor.</h2>
+            <p className="text-gray-400 text-lg leading-relaxed">
+              Three moves define everything Veklom does: intercept consequential agent actions before
+              they run, gate them against identity and policy, and anchor the outcome as verifiable
+              evidence.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Intercept */}
+            <div className="card obsidian-glass p-8 flex flex-col border-l-4 border-l-[#FFB800]/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
+                  <Fingerprint className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <span className="text-gray-500 text-xs font-mono">01 · INTERCEPT</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3">Intercept</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                Consequential agent actions are intercepted before execution. The SDK hooks the call
+                at the edge so nothing reaches the real world unchecked.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/vnp/sdk/fastapi" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  FastAPI SDK <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/vnp/sdk/python" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Python SDK <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Gate */}
+            <div className="card obsidian-glass p-8 flex flex-col border-l-4 border-l-[#FFB800]/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
+                  <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <span className="text-gray-500 text-xs font-mono">02 · GATE</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3">Gate</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                Identity, policy, approvals, budgets, and governance authorize or reject the action.
+                Anything not explicitly allowed is denied.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/vnp/governance" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Governance <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Anchor */}
+            <div className="card obsidian-glass p-8 flex flex-col border-l-4 border-l-[#FFB800]/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
+                  <Server className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <span className="text-gray-500 text-xs font-mono">03 · ANCHOR</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3">Anchor</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-1">
+                Outcomes are anchored with signed observations and hash-chained provenance for a
+                replayable audit trail.
+              </p>
+              <div className="inline-flex items-center gap-2 mb-6 px-2.5 py-1 rounded-full text-xs font-semibold border text-amber-300 bg-amber-500/10 border-amber-500/30 self-start">
+                External anchoring: Needs proof
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/vnp/topology" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Topology <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/vnp/status" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Status <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* The Problem Section */}
       <section className="py-24 border-t border-white/5 bg-[#0B0B0D] relative scroll-mt-16" id="problem">
         <div className="max-w-7xl mx-auto px-6">
