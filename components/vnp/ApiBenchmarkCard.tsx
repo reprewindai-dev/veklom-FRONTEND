@@ -1,5 +1,9 @@
 "use client";
 
+import useSWR from "swr";
+import {
+  Info, Target, Database, FlaskConical, Gauge,
+  AlertTriangle, ShieldCheck,
 import type { ComponentType, ReactNode } from "react";
 import useSWR from "swr";
 import {
@@ -241,6 +245,12 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function Section({
+  index, title, icon: Icon, children,
+}: {
+  index: number;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
   index,
   title,
   icon: Icon,
@@ -296,6 +306,10 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
   const d = data;
   const perf = d.performance;
   const fmt = (v: number | null, suffix = "") => (v === null || v === undefined ? null : `${v}${suffix}`);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
   const completenessAxes: CompletenessAxis[] = [
     {
       label: "Details",
@@ -387,6 +401,10 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
           VNP BenchmarkCard
         </h2>
         <span className="text-[9px] font-mono text-[#6E6E73] uppercase tracking-widest">
+          7-section standardized documentation · live registry data
+        </span>
+      </div>
+
           7-section standardized documentation - live registry data
         </span>
       </div>
@@ -415,6 +433,10 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
 
       <Section index={2} title="Purpose & Users" icon={Target}>
         <Field label="Goal">{d.purpose_and_users.goal}</Field>
+        <Field label="Audience">{d.purpose_and_users.audience.join(" · ")}</Field>
+        <Field label="Tasks">{d.purpose_and_users.tasks.join(" · ")}</Field>
+        <Field label="Limitations">{d.purpose_and_users.limitations ?? "None recorded"}</Field>
+        <Field label="Out-of-Scope Uses">{d.purpose_and_users.out_of_scope_uses.join(" · ")}</Field>
         <Field label="Audience">{d.purpose_and_users.audience.join(" / ")}</Field>
         <Field label="Tasks">{d.purpose_and_users.tasks.join(" / ")}</Field>
         <Field label="Limitations">{d.purpose_and_users.limitations ?? "None recorded"}</Field>
@@ -463,11 +485,15 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
 
       <Section index={6} title="Targeted Risks" icon={AlertTriangle}>
         <Field label="Open Incidents">{d.targeted_risks.open_incident_count}</Field>
+        <Field label="Risk Categories">{d.targeted_risks.risk_categories.join(" · ")}</Field>
         <Field label="Risk Categories">{d.targeted_risks.risk_categories.join(" / ")}</Field>
         <Field label="Potential Harm">{d.targeted_risks.potential_harm}</Field>
         <Field label="Recent Incidents">
           {d.targeted_risks.recent_incidents.length ? (
             <span className="space-y-1 block">
+              {d.targeted_risks.recent_incidents.map((i, idx) => (
+                <span key={idx} className="block text-[11px]">
+                  <span className="text-[#FF7A00]">[{i.severity}]</span> {i.title} — {i.state}
               {d.targeted_risks.recent_incidents.map((incident, idx) => (
                 <span key={`${incident.title}-${idx}`} className="block text-[11px]">
                   <span className="text-[#FF7A00]">[{incident.severity}]</span> {incident.title} - {incident.state}
