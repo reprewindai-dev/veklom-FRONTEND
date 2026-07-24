@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldAlert, Zap, RotateCcw, FileCheck2, Cpu } from "lucide-react";
 import RequestPane from "./demo-panes/RequestPane";
 import SwarmMap from "@/components/terminal/components/SwarmMap";
@@ -50,8 +50,13 @@ export default function HostileAgentDemo() {
   const [busy, setBusy] = useState<string | null>(null);
   
   // Real dynamic state
-  const [sessionId] = useState(`tx_${Math.random().toString(36).substring(2, 10)}`);
-  const [nonce] = useState(`nonce_${Math.random().toString(36).substring(2, 12)}`);
+  const [sessionId, setSessionId] = useState("");
+  const [nonce, setNonce] = useState("");
+
+  useEffect(() => {
+    setSessionId(`tx_${Math.random().toString(36).substring(2, 10)}`);
+    setNonce(`nonce_${Math.random().toString(36).substring(2, 12)}`);
+  }, []);
 
   // Agents for the SwarmMap
   const [demoAgents, setDemoAgents] = useState<AgentNode[]>(INITIAL_AGENTS);

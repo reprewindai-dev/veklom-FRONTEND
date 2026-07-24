@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 import { api, fetcher } from "@/lib/api";
-import { ethers } from "ethers";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -45,12 +44,16 @@ import type {
 // ============ Helpers ============
 
 const fmtUSD = (n: number | undefined | null) => {
-  if (n === undefined || n === null || isNaN(n)) return "—";
+  if (n === undefined || n === null || isNaN(n)) return "$0";
   return "$" + Math.round(n).toLocaleString("en-US");
 };
 const fmtMs = (n: number | undefined | null) => {
-  if (n === undefined || n === null || isNaN(n)) return "—";
+  if (n === undefined || n === null || isNaN(n)) return "no data";
   return `${n.toFixed(1)}ms`;
+};
+const fmtPct = (n: number | undefined | null) => {
+  if (n === undefined || n === null) return "no data yet";
+  return `${n}%`;
 };
 
 const STATUS_COLORS: Record<BondStatusLevel, { bg: string; border: string; text: string; label: string }> = {
@@ -77,6 +80,23 @@ interface StakingMarket {
   outcome?: string | null;
 }
 
+interface StakingRouteState {
+  generated_at: string;
+  source: string;
+  proof: {
+    state: "verified" | "partial" | "error";
+    reason: string;
+    probes: Array<{ route: string; state: "verified" | "needs_proof" | "error"; status: number; detail?: string }>;
+  };
+  staking: any;
+  markets: StakingMarket[];
+  marketProof: { state: "verified" | "needs_proof" | "error"; reason: string };
+  writeActions: {
+    verifierRegistration: { route: string; state: string };
+    stakePlacement: { route: string; state: string };
+  };
+}
+
 // ============ Main Component ============
 
 interface StakingProtocolProps {
@@ -84,34 +104,25 @@ interface StakingProtocolProps {
 }
 
 export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
-  // ---- Markets ----
-  const { data: marketData, mutate: mutateMarkets } = useSWR<StakingMarket[]>(
-    "/api/v1/x402/staking/markets",
-    fetcher,
-    { refreshInterval: 10000 },
-  );
-  const markets = Array.isArray(marketData) ? marketData : [];
-
-  // ---- Backend State ----
-  const { data: stateData } = useSWR<any>(
-    "/api/v1/x402/staking/state",
+  const { data: stakingRoute, mutate: mutateStakingRoute } = useSWR<StakingRouteState>(
+    "/staking-protocol/state",
     fetcher,
     { refreshInterval: 10000 },
   );
 
+  const stateData = stakingRoute?.staking;
+  const markets = Array.isArray(stakingRoute?.markets) ? stakingRoute.markets : [];
   const providers: ProviderBondView[] = stateData?.providers || [];
-  const protocolStats = stateData?.protocolStats || {
-    totalValueBonded: 0, activeApis: 0, activeVerifiers: 0, totalPenalties: 0, settlementRate: 100, epochsProcessed: 0
-  };
+  const protocolStats = stateData?.protocolStats || {};
   const settlements: EpochSettlement[] = stateData?.settlements || [];
   const verifiers: VerifierNode[] = stateData?.verifiers || [];
   const kdeCurves = stateData?.kdeCurves || {};
   const VNP_PARAMS = {
-    k: stateData?.vnpParams?.k ?? 3,
-    lambda: stateData?.vnpParams?.lambda ?? 2.0,
-    challengeTierA: stateData?.vnpParams?.challengeTierA || { min: 10, max: 500 },
-    challengeTierB: stateData?.vnpParams?.challengeTierB || { min: 1000, max: 50000 },
-    consensusWeights: stateData?.vnpParams?.consensusWeights || { kde: 0.6, historical: 0.3, shadow: 0.1 }
+    k: stateData?.vnpParams?.k,
+    lambda: stateData?.vnpParams?.lambda,
+    challengeTierA: stateData?.vnpParams?.challengeTierA,
+    challengeTierB: stateData?.vnpParams?.challengeTierB,
+    consensusWeights: stateData?.vnpParams?.consensusWeights,
   };
 
   // ---- KDE for selected API ----
@@ -139,58 +150,6 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
     }
   }, [markets, selectedMarketId]);
 
-  // ---- Wallet Registration ----
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  const connectWallet = async () => {
-    if (typeof (window as any).ethereum === "undefined") {
-      alert("Please install MetaMask to connect your wallet.");
-      return;
-    }
-    try {
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      setWalletAddress(address);
-    } catch (err) {
-      console.error("Failed to connect wallet", err);
-    }
-  };
-
-  const registerAsVerifier = async () => {
-    if (!walletAddress) return;
-    setIsRegistering(true);
-    try {
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-      const signer = await provider.getSigner();
-      
-      const message = `Register Veklom Verifier Node\nAddress: ${walletAddress}\nNonce: ${Date.now()}`;
-      const signature = await signer.signMessage(message);
-      
-      const res = await api<{ success: boolean; message?: string }>("/api/v1/x402/staking/register-verifier", {
-        body: {
-          message,
-          signature,
-          asn: "AS12345", // Mock ASN for v1
-          region: "us-east-1"
-        }
-      });
-      
-      if (res.success) {
-        alert("Successfully registered as a Verifier Node!");
-      } else {
-        alert("Registration failed: " + res.message);
-      }
-    } catch (err) {
-      console.error("Failed to register", err);
-      alert("Error during registration.");
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
   const handleStake = useCallback(async () => {
     if (!selectedMarketId || stakePending) return;
     const amount = parseFloat(stakeAmount);
@@ -202,40 +161,76 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
     setStakeResult(null);
     try {
       const res = await api<{ success: boolean; new_balance: number; volume: number; yesPrice: number; noPrice: number }>(
-        "/api/v1/x402/staking/stake",
+        "/api/v1/benchmarks/staking/stake",
         { body: { market_id: selectedMarketId, outcome: stakeOutcome, amount } },
       );
       setStakeResult({ ok: true, msg: `Staked $${amount.toFixed(2)} on ${stakeOutcome}. New balance: $${res.new_balance.toFixed(2)}` });
-      mutateMarkets();
+      mutateStakingRoute();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Stake failed";
       setStakeResult({ ok: false, msg });
     } finally {
       setStakePending(false);
     }
-  }, [selectedMarketId, stakeAmount, stakeOutcome, stakePending, mutateMarkets]);
+  }, [selectedMarketId, stakeAmount, stakeOutcome, stakePending, mutateStakingRoute]);
 
   const stakeNum = parseFloat(stakeAmount) || 0;
-  const netStake = Math.round(stakeNum * (1 - 0.025));
+  const netStake = stakeNum * (1 - 0.025);
+  const stakePlacementAvailable = stakingRoute?.writeActions?.stakePlacement?.state === "available_with_auth";
+  const verifierRegistrationAvailable = stakingRoute?.writeActions?.verifierRegistration?.state === "available_with_auth";
 
   return (
     <div className="space-y-8 relative">
-      {/* COMING SOON OVERLAY */}
-      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl">
-        <div className="text-center p-8 bg-[#0D0D0D] border border-[#FFB800]/30 rounded-2xl shadow-2xl">
-          <Globe className="w-12 h-12 text-[#FFB800] mx-auto mb-4 opacity-80" />
-          <h2 className="text-3xl font-mono text-white mb-2">STAKING PROTOCOL</h2>
-          <p className="text-[#A1A1A6] font-mono uppercase tracking-widest">Coming Soon</p>
-          <p className="text-sm text-[#A1A1A6] mt-4 max-w-md">Decentralized prediction markets for API benchmarking (PolyMarket-style) are currently in development.</p>
+      <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#A1A1A6]">Staking Proof State</div>
+            <div className="text-sm text-white mt-1">{stakingRoute?.proof.reason || "Loading BYOS staking proof..."}</div>
+          </div>
+          <div className="lg:ml-auto flex flex-wrap gap-2">
+            {(stakingRoute?.proof?.probes || []).map((probe) => (
+              <span
+                key={probe.route}
+                className={`px-2 py-1 rounded border text-[10px] font-mono ${
+                  probe.state === "verified"
+                    ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                    : probe.state === "needs_proof"
+                      ? "border-amber-500/30 text-amber-300 bg-amber-500/10"
+                      : "border-rose-500/30 text-rose-300 bg-rose-500/10"
+                }`}
+              >
+                {probe.route} · {probe.status}
+              </span>
+            ))}
+          </div>
+        </div>
+        {stakingRoute?.marketProof?.state !== "verified" && (
+          <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+            {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
+          </div>
+        )}
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
+          <div className={`rounded border px-3 py-2 ${verifierRegistrationAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
+            Verifier registration: {stakingRoute?.writeActions?.verifierRegistration?.state || "loading"}
+          </div>
+          <div className={`rounded border px-3 py-2 ${stakePlacementAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
+            Stake placement: {stakingRoute?.writeActions?.stakePlacement?.state || "loading"}
+          </div>
         </div>
       </div>
       {/* Protocol Stats */}
+      {protocolStats.probeWorkersActive === false && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/8 border border-amber-500/20 text-[11px] font-mono text-amber-400">
+          <Activity className="w-3 h-3 shrink-0" />
+          Probe workers offline — latency measurements will populate once validators connect and begin measuring.
+        </div>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]" },
-          { label: "Active APIs", value: protocolStats.activeApis === undefined || isNaN(protocolStats.activeApis) ? "—" : String(protocolStats.activeApis), icon: Server, color: "text-cyan-400" },
-          { label: "Active Verifiers", value: protocolStats.activeVerifiers === undefined || isNaN(protocolStats.activeVerifiers) ? "—" : String(protocolStats.activeVerifiers), icon: Users, color: "text-[#FFB800]" },
-          { label: "Settlement Rate", value: protocolStats.settlementRate === undefined || isNaN(protocolStats.settlementRate) ? "—" : `${protocolStats.settlementRate}%`, icon: CheckCircle, color: "text-emerald-400" },
+          { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]", sub: protocolStats.totalValueBonded === 0 ? "No validators staked" : undefined },
+          { label: "Active APIs", value: protocolStats.activeApis != null ? String(protocolStats.activeApis) : "0", icon: Server, color: "text-cyan-400" },
+          { label: "Active Verifiers", value: protocolStats.activeVerifiers != null ? String(protocolStats.activeVerifiers) : "0", icon: Users, color: "text-[#FFB800]", sub: protocolStats.activeVerifiers === 0 ? "None registered" : undefined },
+          { label: "Settlement Rate", value: fmtPct(protocolStats.settlementRate), icon: CheckCircle, color: protocolStats.settlementRate == null ? "text-[#A1A1A6]" : "text-emerald-400" },
           { label: "Total Penalties", value: fmtUSD(protocolStats.totalPenalties), icon: AlertTriangle, color: "text-rose-400" },
         ].map((stat) => (
           <div key={stat.label} className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-4">
@@ -244,6 +239,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#A1A1A6]">{stat.label}</span>
             </div>
             <div className={`text-2xl font-medium ${stat.color}`}>{stat.value}</div>
+            {stat.sub && <div className="text-[9px] text-[#555] font-mono mt-1">{stat.sub}</div>}
           </div>
         ))}
       </div>
@@ -262,7 +258,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           |S<sub>o</sub>(t) - S<sub>p</sub>| {"<="} k{"*"}&sigma;(t) ;{" "}
           <span className="text-rose-400">&lambda;</span> {"*"} (|S<sub>o</sub>(t) - S<sub>p</sub>| - k{"*"}&sigma;(t)){" "}
           <span className="text-[#A1A1A6]">otherwise {"}"}</span>
-          <span className="text-[#A1A1A6] ml-4">{"// k="}{VNP_PARAMS.k}{", λ="}{VNP_PARAMS.lambda}</span>
+          <span className="text-[#A1A1A6] ml-4">{"// k="}{VNP_PARAMS.k ?? "—"}{", λ="}{VNP_PARAMS.lambda ?? "—"}</span>
         </div>
       </div>
 
@@ -281,8 +277,12 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           <div>Status</div>
           <div className="text-right">Bond&nbsp;&nbsp;Penalty/Ep</div>
         </div>
-        {providers.map((p) => {
-          const sc = STATUS_COLORS[p.status];
+        {providers.map((p: any) => {
+          const awaiting = p.data_status === "awaiting_probes";
+          const deviation = p.deviation || null;
+          const sc = awaiting
+            ? { bg: "bg-[#1A1A1A]", border: "border-[#333]", text: "text-[#555]", label: "no data" }
+            : (STATUS_COLORS[(p.status as keyof typeof STATUS_COLORS)] || STATUS_COLORS.warning);
           const isExpanded = expandedBond === p.apiId;
           return (
             <div key={p.apiId}>
@@ -293,46 +293,65 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 <div className="col-span-2">
                   <div className="text-sm text-white">{p.name}</div>
                   <div className="text-[10px] font-mono text-[#A1A1A6]">{p.provider}</div>
+                  {awaiting && (
+                    <div className="text-[9px] font-mono text-amber-500/60 mt-0.5">awaiting probe data</div>
+                  )}
                 </div>
                 <div className="font-mono text-sm text-[#A1A1A6]">{fmtMs(p.targetP95Ms)}</div>
-                <div className="font-mono text-sm text-white">{fmtMs(p.observedP95Ms)}</div>
-                <div className="font-mono text-sm text-[#A1A1A6]">{p.deviation.deviationMs.toFixed(1)}ms</div>
+                <div className={`font-mono text-sm ${awaiting ? "text-[#444]" : "text-white"}`}>
+                  {awaiting ? "—" : fmtMs(p.observedP95Ms)}
+                </div>
+                <div className={`font-mono text-sm ${awaiting ? "text-[#444]" : "text-[#A1A1A6]"}`}>
+                  {awaiting || !deviation ? "—" : fmtMs(deviation.deviationMs)}
+                </div>
                 <div>
                   <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono ${sc.bg} ${sc.border} ${sc.text} border`}>
                     {sc.label}
                   </span>
                 </div>
                 <div className="text-right font-mono text-xs">
-                  <span className="text-[#A1A1A6]">{fmtUSD(p.bondAmountUsdc)}</span>
-                  <span className="text-rose-400 ml-2">{p.deviation.penaltyUsdc > 0 ? `-${fmtUSD(p.deviation.penaltyUsdc)}` : "$0"}</span>
+                  <span className="text-[#A1A1A6]">{p.bondAmountUsdc > 0 ? fmtUSD(p.bondAmountUsdc) : "$0"}</span>
+                  <span className="text-rose-400 ml-2">
+                    {deviation && deviation.penaltyUsdc > 0 ? `-${fmtUSD(deviation.penaltyUsdc)}` : "$0"}
+                  </span>
                   {isExpanded ? <ChevronUp className="w-3 h-3 inline ml-1" /> : <ChevronDown className="w-3 h-3 inline ml-1" />}
                 </div>
               </div>
               {isExpanded && (
-                <div className="px-5 py-4 bg-[#111111] border-t border-[#1A1A1A] grid grid-cols-4 gap-4 text-xs">
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Tolerance Band</div>
-                    <div className="text-white font-mono">&plusmn;{p.deviation.toleranceMs.toFixed(1)}ms (k={VNP_PARAMS.k})</div>
-                  </div>
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Excess Deviation</div>
-                    <div className="text-white font-mono">{p.deviation.excessMs.toFixed(1)}ms</div>
-                  </div>
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Consensus Score</div>
-                    <div className="text-white font-mono">{p.consensus.finalScore.toFixed(1)}ms</div>
-                  </div>
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Total Slashed</div>
-                    <div className="text-rose-400 font-mono">{fmtUSD(p.slashedTotalUsdc)}</div>
-                  </div>
+                <div className="px-5 py-4 bg-[#111111] border-t border-[#1A1A1A] text-xs">
+                  {awaiting ? (
+                    <div className="text-[#555] font-mono text-center py-2">
+                      No probe measurements in the last 24h. Connect a validator worker to begin measuring this API.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Tolerance Band</div>
+                        <div className="text-white font-mono">&plusmn;{fmtMs(deviation?.toleranceMs)} (k={VNP_PARAMS.k ?? "—"})</div>
+                      </div>
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Excess Deviation</div>
+                        <div className="text-white font-mono">{fmtMs(deviation?.excessMs)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Uptime (24h)</div>
+                        <div className="text-white font-mono">{p.uptimeRatio != null ? `${(p.uptimeRatio * 100).toFixed(2)}%` : "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Total Slashed</div>
+                        <div className="text-rose-400 font-mono">{fmtUSD(p.slashedTotalUsdc)}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           );
         })}
         {providers.length === 0 && (
-          <div className="p-10 text-center text-[#6E6E73] text-sm">Awaiting leaderboard data...</div>
+          <div className="p-10 text-center text-[#6E6E73] text-sm">
+            No APIs registered yet. Register an API to begin VNP monitoring.
+          </div>
         )}
       </div>
 
@@ -343,9 +362,12 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           <div className="flex items-center gap-3 mb-4">
             <Zap className="w-4 h-4 text-emerald-400" />
             <span className="text-sm font-semibold">Live Settlement Feed</span>
-            <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              EPOCH {protocolStats.epochsProcessed}
+            <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono text-[#A1A1A6]">
+              {protocolStats.epochsProcessed > 0 ? (
+                <><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> EPOCH {protocolStats.epochsProcessed}</>
+              ) : (
+                <span className="text-[#555]">No settlements yet</span>
+              )}
             </span>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
@@ -423,15 +445,15 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             </div>
 
             <div className="text-[10px] font-mono text-[#A1A1A6]">
-              Platform fee: 2.5% | Net stake after fee: <span className="text-white">${netStake}</span>
+              Platform fee: 2.5% | Net stake after fee: <span className="text-white">${netStake.toFixed(2)}</span>
             </div>
 
             <button
               onClick={handleStake}
-              disabled={!selectedMarketId || stakePending}
+              disabled={!selectedMarketId || stakePending || !stakePlacementAvailable}
               className="w-full py-2.5 rounded-lg text-sm font-medium bg-[#FFB800]/10 border border-[#FFB800]/30 text-[#FFB800] hover:bg-[#FFB800]/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {stakePending ? "Processing..." : `Stake ${stakeOutcome} — $${stakeNum.toFixed(2)} USDC`}
+              {stakePending ? "Processing..." : stakePlacementAvailable ? `Stake ${stakeOutcome} — $${stakeNum.toFixed(2)} USDC` : "Stake disabled until BYOS returns verified markets"}
             </button>
 
             {stakeResult && (
@@ -457,12 +479,12 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <span className="text-[10px] font-mono text-[#A1A1A6]">Lightweight Challenge</span>
             </div>
             <div className="space-y-1.5 text-xs text-[#A1A1A6]">
-              <div><span className="text-white font-mono">Stake: ${VNP_PARAMS.challengeTierA.min} - ${VNP_PARAMS.challengeTierA.max} USDC</span></div>
+              <div><span className="text-white font-mono">Stake: {fmtUSD(VNP_PARAMS.challengeTierA?.min)} - {fmtUSD(VNP_PARAMS.challengeTierA?.max)} USDC</span></div>
               <div>Evidence: Signed request/response pair + latency + timestamp</div>
               <div>Resolution: Auto-checked against verifier distribution</div>
               <div>Speed: Sub-second (smart contract validation)</div>
             </div>
-            <div className="mt-3 text-[10px] text-emerald-400 font-mono">99% of challenges resolve at this tier</div>
+            <div className="mt-3 text-[10px] text-amber-300 font-mono">Resolution telemetry needs verified settlement rows before live-rate claims are displayed.</div>
           </div>
 
           <div className="bg-[#111111] border border-[#1A1A1A] rounded-lg p-4">
@@ -471,7 +493,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <span className="text-[10px] font-mono text-[#A1A1A6]">Escalation</span>
             </div>
             <div className="space-y-1.5 text-xs text-[#A1A1A6]">
-              <div><span className="text-white font-mono">Stake: ${VNP_PARAMS.challengeTierB.min} - ${VNP_PARAMS.challengeTierB.max} USDC</span></div>
+              <div><span className="text-white font-mono">Stake: {fmtUSD(VNP_PARAMS.challengeTierB?.min)} - {fmtUSD(VNP_PARAMS.challengeTierB?.max)} USDC</span></div>
               <div>Trigger: Deviation {">"} X&sigma; AND contradicts consensus</div>
               <div>Resolution: Commit-reveal + deeper audit</div>
               <div>Speed: 6-48 hours (KDE consensus + governance review)</div>
@@ -507,11 +529,11 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <div className="text-xs font-mono text-[#A1A1A6] mb-2">Settlement Architecture</div>
             <div className="space-y-3">
               {[
-                "Agent attaches micro-stake ($0.001 USDC) to x402 payment header",
-                "Off-chain aggregator batches outcomes per epoch",
-                "If API meets VNP target: agent stake earns fractional yield from provider bond",
-                "If API fails: auto-slash triggers micro-refund + penalty from provider bond",
-                "Periodic on-chain settlement (net balances) on Base L2 — sub-$0.001 per anchor",
+                "Protocol target: agent attaches micro-stake ($0.001 USDC) to x402 payment header",
+                "Protocol target: off-chain aggregator batches outcomes per epoch",
+                "Needs settlement proof: yield from provider bond after SLA success",
+                "Needs settlement proof: slash/refund after verified SLA failure",
+                "Needs on-chain proof: periodic net-balance settlement on Base L2",
               ].map((step, i) => (
                 <div key={i} className="flex items-start gap-3 text-xs text-[#A1A1A6]">
                   <span className="w-5 h-5 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-[9px] font-mono flex items-center justify-center shrink-0 mt-0.5">
@@ -556,12 +578,15 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <div className="font-mono text-sm text-[#A1A1A6]">{v.measurementCount.toLocaleString()}</div>
             <div className="text-right flex items-center justify-end gap-2">
               <span className="font-mono text-sm text-[#A1A1A6]">{v.accuracy.toFixed(1)}%</span>
-              <span className="px-2 py-0.5 rounded text-[9px] uppercase font-mono bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                Active
+              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono border ${v.active ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-300"}`}>
+                {v.active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
         ))}
+        {verifiers.length === 0 && (
+          <div className="p-10 text-center text-[#6E6E73] text-sm">No verifier rows returned by BYOS staking state.</div>
+        )}
       </div>
 
       {/* KDE Consensus Visualization */}

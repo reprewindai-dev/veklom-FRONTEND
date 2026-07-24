@@ -4,7 +4,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+# Reduce memory footprint of npm ci
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # ─── Stage 2: builder ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -17,6 +18,9 @@ COPY . .
 # Build args that get baked into the Next.js bundle at build time
 ARG NEXT_PUBLIC_API_BASE_URL=""
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+# Allow up to 4GB memory, OS has 4GB swap space now.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 
 
 RUN npm run build

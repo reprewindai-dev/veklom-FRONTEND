@@ -27,6 +27,8 @@
     "components/terminal/data/veklom-agents",
     "components/terminal/main.tsx",
     "components/terminal/setupTests.ts",
-    "components/terminal/vite-env.d.ts"
+    "components/terminal/vite-env.d.ts",
+    "temp_*.tsx",
+    "scratch/**"
   ]
 }

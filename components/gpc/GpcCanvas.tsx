@@ -26,8 +26,8 @@ import ReactFlow, {
   OnConnect,
   Connection,
   addEdge,
-  applyEdgeChanges,
   applyNodeChanges,
+  applyEdgeChanges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -227,7 +227,7 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
             }
           }
         });
-        setCanvasNodes((nodes) => applyNodeChanges(changes, nodes));
+        setCanvasNodes((nds) => applyNodeChanges(changes, nds));
       },
       [setCanvasNodes]
     );
@@ -240,7 +240,7 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
             canvasStore.deleteEdge(change.id);
           }
         });
-        setCanvasEdges((edges) => applyEdgeChanges(changes, edges));
+        setCanvasEdges((eds) => applyEdgeChanges(changes, eds));
       },
       [setCanvasEdges]
     );

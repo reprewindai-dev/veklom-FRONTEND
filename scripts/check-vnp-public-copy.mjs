@@ -24,11 +24,31 @@ const forbidden = [
   "Unbiased " + "10" + "-D Composite Scores",
   "LOCKED SPECIFICATION " + "v0.1.5",
   "v0.1.5",
-  "capi.veklom",
+  "cAPI backend",
   "VERIFIED (x402 Circuit)",
   "RPN Active",
   "autonomously slashed",
   "x402 USDC ROUTE PAYMENTS (REAL)",
+  "Signed telemetry', weight: 'Partial'",
+  "Signed telemetry\", weight: \"Partial\"",
+  "Robust scoring', weight: 'Partial'",
+  "Robust scoring\", weight: \"Partial\"",
+  "x402 settlement evidence', weight: 'Connected'",
+  "x402 settlement evidence\", weight: \"Connected\"",
+  "\"x402 settlement evidence\", status: \"Connected\"",
+  "\"merkle_root\": \"0x",
+  "merkle_root: \"0x",
+  "DEMO MODE: VNP_TOPOLOGY_MESH",
+  "VNP VNP Methodology",
+  "Helsinki",
+  "30s Sync",
+  "Every 30 seconds",
+  "Gnomledger vault",
+  "automatically slashed",
+  "We have tied physics directly",
+  "we verified that applying x402",
+  "reduces runaway compute consumption by over 94",
+  "You can deploy it today with zero-trust guarantees",
 ];
 
 function files(root) {
@@ -49,6 +69,7 @@ const failures = [];
 for (const file of roots.flatMap(files)) {
   const text = readFileSync(file, "utf8");
   for (const term of forbidden) {
+    if (file === "README.md" && term === "capi.veklom") continue;
     if (text.includes(term)) {
       failures.push(`${file}: ${term}`);
     }
@@ -57,6 +78,19 @@ for (const file of roots.flatMap(files)) {
 
 if (failures.length) {
   console.error("Forbidden VNP public copy found:\n" + failures.join("\n"));
+  process.exit(1);
+}
+
+const blogIndex = JSON.parse(readFileSync("data/blog-index.json", "utf8"));
+const seenSlugs = new Set();
+const duplicateSlugs = [];
+for (const post of blogIndex) {
+  if (seenSlugs.has(post.slug)) duplicateSlugs.push(post.slug);
+  seenSlugs.add(post.slug);
+}
+
+if (duplicateSlugs.length) {
+  console.error("Duplicate VNP blog slugs found:\n" + duplicateSlugs.join("\n"));
   process.exit(1);
 }
 

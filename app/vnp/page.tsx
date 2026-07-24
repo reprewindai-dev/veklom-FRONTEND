@@ -7,6 +7,25 @@ import { Activity, Globe, Server, Shield, Zap, ArrowRight, Check, Search, Code, 
 import { motion } from "framer-motion";
 import VNPFooter from "@/components/vnp/VNPFooter";
 
+type VerificationStackItem = {
+  section: string;
+  status: string;
+};
+
+type VnpPublicManifest = {
+  verification_stack?: VerificationStackItem[];
+};
+
+const fallbackVerificationStack: VerificationStackItem[] = [
+  { section: 'Physical measurements', status: 'Disconnected' },
+  { section: 'Signed telemetry', status: 'Disconnected' },
+  { section: 'Route beacons', status: 'Disconnected' },
+  { section: 'Robust scoring', status: 'Disconnected' },
+  { section: 'x402 settlement evidence', status: 'Disconnected' },
+  { section: 'PGL audit trails', status: 'Disconnected' },
+  { section: 'Agent/runtime enforcement', status: 'Auth Required' }
+];
+
 const NetworkTopologyPanel = dynamicImport(
   () => import("@/components/vnp/NetworkTopologyPanel"),
   { ssr: false, loading: () => <div className="h-[500px] bg-white/5 rounded-xl animate-pulse" /> }
@@ -27,6 +46,34 @@ const staggerContainer = {
 };
 
 export default function VNPLandingPage() {
+  const [verificationStack, setVerificationStack] = React.useState<VerificationStackItem[]>(fallbackVerificationStack);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function loadVerificationStack() {
+      try {
+        const response = await fetch('/api/vnp.json', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) return;
+        const manifest = (await response.json()) as VnpPublicManifest;
+        if (!cancelled && manifest.verification_stack?.length) {
+          setVerificationStack(manifest.verification_stack);
+        }
+      } catch {
+        // Keep conservative fallback statuses if backend-derived manifest is unavailable.
+      }
+    }
+
+    loadVerificationStack();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden selection:bg-[#FFB800]/30 relative z-10 font-sans">
       
@@ -71,8 +118,8 @@ export default function VNPLandingPage() {
             VNP Methodology v1.0
           </motion.div>
           
-          <motion.h1 variants={fadeUpVariants} className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            Cryptographically Verifiable <br />
+          <motion.h1 variants={fadeUpVariants} className="max-w-4xl mx-auto text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight text-balance">
+            Cryptographic <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FFE6A8] to-[#FFB800]">
               API telemetry for the M2M Economy.
             </span>
@@ -156,18 +203,10 @@ export default function VNPLandingPage() {
               </p>
               
               <div className="space-y-4">
-                {[
-                  { name: 'Physical measurements', weight: 'Live' },
-                  { name: 'Signed telemetry', weight: 'Partial' },
-                  { name: 'Route beacons', weight: 'Connected' },
-                  { name: 'Robust scoring', weight: 'Partial' },
-                  { name: 'x402 settlement evidence', weight: 'Connected' },
-                  { name: 'PGL audit trails', weight: 'Connected' },
-                  { name: 'Agent/runtime enforcement', weight: 'Auth Required' }
-                ].map((item, i) => (
+                {verificationStack.map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#FFB800]/30 transition-colors">
-                    <span className="font-medium text-gray-300">{item.name}</span>
-                    <span className="font-mono text-[#FFB800] font-bold">{item.weight}</span>
+                    <span className="font-medium text-gray-300">{item.section}</span>
+                    <span className="font-mono text-[#FFB800] font-bold">{item.status}</span>
                   </div>
                 ))}
               </div>
@@ -178,7 +217,7 @@ export default function VNPLandingPage() {
               <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
                 <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-mono text-gray-400">DEMO MODE: VNP_TOPOLOGY_MESH</span>
+                  <span className="text-xs font-mono text-gray-400">BACKEND VIEW: VNP_TOPOLOGY_MESH</span>
                 </div>
                 <div className="h-[500px] overflow-hidden p-6 relative bg-[#060608]">
                   <div className="transform scale-[0.85] origin-top-left w-[117%] h-[117%] pointer-events-none">

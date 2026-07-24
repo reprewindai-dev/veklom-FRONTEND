@@ -4,10 +4,12 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
 import AmbientIntervention from "@/components/ambient/AmbientIntervention";
+import GoogleAnalyticsUserSync from "@/components/GoogleAnalyticsUserSync";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import CookieBanner from "@/components/CookieBanner";
 
 const inter = Inter({ subsets: ["latin"] });
-const BASE = "/control-plane-next";
+const BASE = "";
 const TITLE = "Veklom Control Plane";
 const DESC = "Veklom — the Sovereign AI Hub. Test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.";
 // Official Veklom brand package (raster) served at the site root + /static/branding.
@@ -39,13 +41,13 @@ export const metadata: Metadata = {
     shortcut: [{ url: "/favicon.svg" }],
     apple: [{ url: "/apple-touch-icon.png" }],
   },
-  manifest: `${BASE}/site.webmanifest`,
+  manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
     siteName: "Veklom · Sovereign AI Hub",
     title: TITLE,
     description: DESC,
-    url: `${BASE}/`,
+    url: "/",
     images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — Sovereign AI Hub" }],
   },
   twitter: {
@@ -110,9 +112,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             {children}
             <AmbientIntervention />
+            <GoogleAnalyticsUserSync />
           </AuthProvider>
         </WebMCPProvider>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-KCZM27WWX7"} />
+        <CookieBanner />
       </body>
     </html>
   );

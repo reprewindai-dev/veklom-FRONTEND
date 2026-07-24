@@ -4,33 +4,33 @@
  */
 
 import React, { useState } from 'react';
-import { DuelSession, DuelPlayer, WalletState } from './types';
-import { Users, Copy, Plus, ArrowRight, Zap, CheckCircle2, ShieldAlert, Coins, RefreshCw, LogOut, Swords, Cpu } from 'lucide-react';
+import { DuelSession, WalletState } from './types';
+import { Users, Copy, Plus, ArrowRight, Zap, CheckCircle2, Coins, RefreshCw, LogOut, Swords } from 'lucide-react';
 
 interface DuelInviteBlockProps {
   wallet: WalletState;
   activeDuel: DuelSession | null;
+  openLobbies: Array<{ id: string; host_wallet_address: string; player_count: number; max_players: number; created_at: string | null }>;
+  onRefreshLobbies: () => void;
   onCreateDuel: () => void;
   onJoinDuel: (id: string) => void;
   onLeaveDuel: () => void;
-  onToggleSimulatePeer: () => void;
-  onPlaceSimulatedBet: (bets: { player: number; banker: number; tie: number }) => void;
-  onSimulatePeerEject: () => void;
-  isSimulatedPeerActive: boolean;
   onStartDuelCountdown: () => void;
+  liveGameplayEnabled: boolean;
+  multiplayerExecutionVerified?: boolean;
 }
 
 export function DuelInviteBlock({
   wallet,
   activeDuel,
+  openLobbies,
+  onRefreshLobbies,
   onCreateDuel,
   onJoinDuel,
   onLeaveDuel,
-  onToggleSimulatePeer,
-  onPlaceSimulatedBet,
-  onSimulatePeerEject,
-  isSimulatedPeerActive,
   onStartDuelCountdown,
+  liveGameplayEnabled,
+  multiplayerExecutionVerified = false,
 }: DuelInviteBlockProps) {
   const [joinInput, setJoinInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -45,6 +45,7 @@ export function DuelInviteBlock({
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!liveGameplayEnabled) return;
     if (joinInput.trim()) {
       onJoinDuel(joinInput.trim().toUpperCase());
     }
@@ -76,7 +77,7 @@ export function DuelInviteBlock({
         </div>
         {activeDuel && (
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/30">
-            LOBBY SYNC: ACTIVE
+            LOBBY SYNC: ROUTE BACKED
           </span>
         )}
       </div>
@@ -84,9 +85,7 @@ export function DuelInviteBlock({
       {!activeDuel ? (
         <div className="space-y-4">
           <p className="text-xs text-slate-400 leading-relaxed">
-            Invite another connected wallet to a real-time <span className="text-purple-400 font-bold">head-to-head duel</span>! 
-            You will stake USDC in the exact same consensus round loop, watch the packet sequence stream in unison, and eject independently. 
-            The highest surviving ejector secures the ultimate bragging rights and claims a non-dilutive staking bonus.
+            BYOS lobby creation and peer discovery are route-backed. Synchronized PVP round execution stays locked until BYOS proves a real round-sync endpoint.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -103,9 +102,12 @@ export function DuelInviteBlock({
               <button
                 id="btn-create-duel-lobby"
                 onClick={onCreateDuel}
-                className="w-full bg-purple-600/90 text-white hover:bg-purple-600 font-bold uppercase tracking-wider text-[11px] py-2 rounded transition-all duration-150 flex items-center justify-center gap-1.5"
+                disabled={!liveGameplayEnabled}
+                className={`w-full font-bold uppercase tracking-wider text-[11px] py-2 rounded transition-all duration-150 flex items-center justify-center gap-1.5 ${
+                  liveGameplayEnabled ? 'bg-purple-600/90 text-white hover:bg-purple-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" /> Initialize Lobby
+                <Plus className="w-3.5 h-3.5" /> {liveGameplayEnabled ? 'Initialize Lobby' : 'Needs Endpoint'}
               </button>
             </div>
 
@@ -126,13 +128,17 @@ export function DuelInviteBlock({
                     type="text"
                     value={joinInput}
                     onChange={(e) => setJoinInput(e.target.value)}
+                    disabled={!liveGameplayEnabled}
                     placeholder="DUEL-XXXX"
                     className="flex-1 bg-[#090b11] border border-white/10 rounded px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-purple-500 uppercase"
                   />
                   <button
                     id="btn-join-duel-lobby"
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase text-[11px] px-3.5 rounded transition-colors flex items-center justify-center"
+                    disabled={!liveGameplayEnabled}
+                    className={`font-bold uppercase text-[11px] px-3.5 rounded transition-colors flex items-center justify-center ${
+                      liveGameplayEnabled ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
                   >
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
@@ -141,14 +147,60 @@ export function DuelInviteBlock({
             </div>
           </div>
 
+          <div className="bg-[#050609] border border-white/5 rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-400" /> Open BYOS Lobbies
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Join a real wallet lobby discovered from the BYOS lobby endpoint.
+                </p>
+              </div>
+              <button
+                id="btn-refresh-duel-lobbies"
+                onClick={onRefreshLobbies}
+                className="px-2.5 py-1 border border-white/10 hover:border-emerald-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-300"
+              >
+                <RefreshCw className="w-3 h-3 inline mr-1" /> Refresh
+              </button>
+            </div>
+
+            {openLobbies.length === 0 ? (
+              <div className="border border-dashed border-white/10 rounded p-3 text-[11px] text-slate-500">
+                No open BYOS lobbies are available right now.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {openLobbies.map((lobby) => (
+                  <div key={lobby.id} className="flex items-center justify-between gap-3 border border-white/5 bg-[#090b11] rounded p-2.5">
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold font-mono text-emerald-400">{lobby.id}</div>
+                      <div className="text-[10px] text-slate-500 font-mono truncate">
+                        Host {lobby.host_wallet_address.slice(0, 6)}...{lobby.host_wallet_address.slice(-4)} · {lobby.player_count}/{lobby.max_players}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onJoinDuel(lobby.id)}
+                      disabled={!liveGameplayEnabled || lobby.player_count >= lobby.max_players}
+                      className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-[10px] font-bold uppercase"
+                    >
+                      Join
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="bg-[#0c0d13]/50 border border-white/5 rounded-lg p-3.5">
             <h4 className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1">
               <Coins className="w-3.5 h-3.5 text-purple-400" /> Duel PVP Staking Protocols:
             </h4>
             <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-500">
-              <li>Both players synchronize to the exact same pre-shuffled consensus stream sequence.</li>
-              <li>Ejections are resolved independently. Ejecting too early secures safe gains but might lose the Duel; waiting too long can trigger a total crash loss!</li>
-              <li>You can open this page in a second browser window or tab to play against yourself in real-time.</li>
+              <li>Read routes are allowed to display BYOS leaderboard and history proof.</li>
+              <li>Write routes must prove session creation, wager lock, outcome settlement, and synchronized round execution before PVP gameplay unlocks.</li>
+              <li>No local peer result or local settlement is accepted as production proof.</li>
             </ul>
           </div>
         </div>
@@ -174,15 +226,6 @@ export function DuelInviteBlock({
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {!peerPlayer && (
-                <button
-                  id="btn-simulate-peer-duel"
-                  onClick={onToggleSimulatePeer}
-                  className="bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/30 font-bold uppercase text-[10px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5"
-                >
-                  <Cpu className="w-3.5 h-3.5" /> Simulate Peer
-                </button>
-              )}
               <button
                 id="btn-leave-duel-lobby"
                 onClick={onLeaveDuel}
@@ -267,14 +310,14 @@ export function DuelInviteBlock({
               </div>
             </div>
 
-            {/* Player 2 (Peer / Simulated) */}
+            {/* Player 2 (Peer) */}
             <div className={`bg-[#050609] border rounded-lg p-4 relative ${peerPlayer ? 'border-purple-500/15' : 'border-dashed border-white/10'}`}>
               {peerPlayer ? (
                 <>
                   <div className="absolute top-2 right-2 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping" />
                     <span className="text-[8px] font-mono text-purple-400 uppercase font-bold">
-                      {isSimulatedPeerActive ? "Simulated Peer" : "Connected Peer"}
+                      Connected Peer
                     </span>
                   </div>
                   <div className="space-y-3">
@@ -314,38 +357,6 @@ export function DuelInviteBlock({
                         </span>
                       </div>
                     </div>
-
-                    {/* Simulation Controller controls */}
-                    {isSimulatedPeerActive && activeDuel.status === 'lobby' && (
-                      <div className="bg-purple-500/10 border border-purple-500/20 p-2 rounded space-y-1.5">
-                        <span className="text-[8px] font-mono text-purple-400 uppercase tracking-widest block font-bold">
-                          // Simulate Peer Bet:
-                        </span>
-                        <div className="flex gap-1">
-                          <button
-                            id="btn-sim-bet-a"
-                            onClick={() => onPlaceSimulatedBet({ player: 5, banker: 0, tie: 0 })}
-                            className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 font-bold text-[9px] py-1 rounded flex-1 border border-blue-500/20 uppercase"
-                          >
-                            Bet $5 Agent A
-                          </button>
-                          <button
-                            id="btn-sim-bet-b"
-                            onClick={() => onPlaceSimulatedBet({ player: 0, banker: 5, tie: 0 })}
-                            className="bg-amber-600/20 hover:bg-amber-600/40 text-amber-400 font-bold text-[9px] py-1 rounded flex-1 border border-amber-500/20 uppercase"
-                          >
-                            Bet $5 Agent B
-                          </button>
-                          <button
-                            id="btn-sim-bet-tie"
-                            onClick={() => onPlaceSimulatedBet({ player: 0, banker: 0, tie: 2 })}
-                            className="bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 font-bold text-[9px] py-1 rounded flex-1 border border-purple-500/20 uppercase"
-                          >
-                            Bet $2 Tie
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Actions / Status */}
                     <div className="pt-1.5">
@@ -404,7 +415,9 @@ export function DuelInviteBlock({
                       ? "Lock in your prediction stake to complete prep phase."
                       : peerPlayer?.status !== 'ready'
                       ? "Waiting for connected peer to lock in stakes..."
-                      : "All stakes successfully locked. Core routing synchronizers operational."}
+                      : multiplayerExecutionVerified
+                        ? "All stakes locked. BYOS synchronized round execution is verified."
+                        : "All stakes locked. BYOS round-sync endpoint still needs proof before PVP execution."}
                   </p>
                 </div>
               </div>
@@ -413,10 +426,10 @@ export function DuelInviteBlock({
                 <button
                   id="btn-initiate-duel-routing"
                   onClick={onStartDuelCountdown}
-                  disabled={myPlayer?.status !== 'ready' || peerPlayer?.status !== 'ready'}
+                  disabled={myPlayer?.status !== 'ready' || peerPlayer?.status !== 'ready' || !multiplayerExecutionVerified}
                   className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 font-bold uppercase tracking-wider text-xs px-6 py-2.5 rounded transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20"
                 >
-                  <Swords className="w-4 h-4" /> Initiate Duel
+                  <Swords className="w-4 h-4" /> {multiplayerExecutionVerified ? "Initiate Duel" : "Needs Round-Sync"}
                 </button>
               )}
             </div>
@@ -453,26 +466,6 @@ export function DuelInviteBlock({
                 </div>
               </div>
 
-              {/* Simulated peer ejection controls */}
-              {isSimulatedPeerActive && peerPlayer && peerPlayer.status === 'ready' && (
-                <div className="bg-purple-950/40 border border-purple-500/20 p-2.5 rounded flex items-center justify-between gap-4">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] font-mono text-purple-400 uppercase font-bold tracking-wider block">
-                      // Local Simulated Controller:
-                    </span>
-                    <p className="text-[11px] text-slate-400">
-                      As local developer, you can click here to eject the simulated Peer in real-time.
-                    </p>
-                  </div>
-                  <button
-                    id="btn-sim-peer-eject"
-                    onClick={onSimulatePeerEject}
-                    className="bg-gradient-to-r from-purple-600 to-purple-800 text-white hover:from-purple-500 hover:to-purple-700 font-bold uppercase text-[10px] px-4 py-2 rounded transition-all flex items-center gap-1.5 shadow"
-                  >
-                    <Zap className="w-3.5 h-3.5" /> Eject Peer Now
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -533,14 +526,10 @@ export function DuelInviteBlock({
               <div className="flex gap-2.5">
                 <button
                   id="btn-duel-reset"
-                  onClick={() => {
-                    // Back to lobby
-                    onToggleSimulatePeer();
-                    onToggleSimulatePeer(); // Toggle to refresh state
-                  }}
+                  onClick={onLeaveDuel}
                   className="bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase text-[10.5px] py-2 px-4 rounded flex-1 transition-all flex items-center justify-center gap-1.5"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" /> Start New Duel Match
+                  <RefreshCw className="w-3.5 h-3.5" /> Return To Lobby List
                 </button>
               </div>
             </div>

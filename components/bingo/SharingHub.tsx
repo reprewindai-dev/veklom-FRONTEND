@@ -124,7 +124,7 @@ export default function SharingHub({ player }: SharingHubProps) {
             <span className="flex items-center gap-1">
               <Cpu className="w-3 h-3 text-[#00f3ff]" /> INTERLINK-CAPI SYNCHRONIZED
             </span>
-            <span>BASE MAINNET X402</span>
+            <span>X402 PROOF PENDING</span>
           </div>
         </div>
 
@@ -138,12 +138,12 @@ export default function SharingHub({ player }: SharingHubProps) {
             {sharing ? (
               <>
                 <Sparkles className="w-4 h-4 animate-spin text-black" />
-                ENCRYPTING TELEMETRY & PUBLISHING...
+                PREPARING LOCAL SHARE CARD...
               </>
             ) : shared ? (
               <>
                 <Check className="w-4 h-4 text-black" />
-                BROADCAST PUBLISHED TO WARPCAST & X!
+                SHARE CARD READY
               </>
             ) : (
               <>
@@ -156,7 +156,7 @@ export default function SharingHub({ player }: SharingHubProps) {
 
         {shared && (
           <div className="p-3 bg-green-950/40 border border-green-500/30 rounded-xl text-center text-[10px] font-mono text-green-300 animate-fade-in">
-            [TRANSMISSION LOG]: Ticket signature dispatched to on-chain social routers. Your friends in the Base hub can now audit your biometric coherence score!
+            [TRANSMISSION LOG]: Local share card prepared. On-chain social routing is disabled until backend proof endpoints exist.
           </div>
         )}
       </div>

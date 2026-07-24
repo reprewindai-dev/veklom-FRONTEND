@@ -8,17 +8,19 @@ export const dynamic = "force-dynamic";
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSignMessage, useSendTransaction } from 'wagmi';
+import { encodeFunctionData } from 'viem';
 import { WalletState, LeaderboardEntry, WagerTransaction, EscrowState, PushNotification, TelemetryPacket, TelemetryDuelHand, DailyChallenge, getPacketDetails, DuelSession, DuelPlayer } from '@/components/agent-dual/types';
 import { ArenaChart } from '@/components/agent-dual/ArenaChart';
 import { WalletBlock } from '@/components/agent-dual/WalletBlock';
 import { FacilitatorBlock } from '@/components/agent-dual/FacilitatorBlock';
 import { LeaderboardBlock } from '@/components/agent-dual/LeaderboardBlock';
 import { NotificationCenter } from '@/components/agent-dual/NotificationCenter';
-import { RustCodeViewer } from '@/components/agent-dual/RustCodeViewer';
 import { ChallengesBlock } from '@/components/agent-dual/ChallengesBlock';
 import { QuantumReplayModal } from '@/components/agent-dual/QuantumReplayModal';
 import { DuelInviteBlock } from '@/components/agent-dual/DuelInviteBlock';
 import { FlameMeter } from '@/components/agent-dual/FlameMeter';
+import { WalletProviders } from './WalletProviders';
 import { 
   Flame, 
   Coins, 
@@ -30,7 +32,6 @@ import {
   Activity, 
   RefreshCw,
   Award,
-  BookOpen,
   Cpu,
   Sparkles,
   Eye,
@@ -42,7 +43,6 @@ import {
   Check
 } from 'lucide-react';
 
-// Pre-seeded competitive players for realism
 const INITIAL_LEADERBOARD: LeaderboardEntry[] = [];
 
 const INITIAL_CHALLENGES: DailyChallenge[] = [
@@ -105,28 +105,92 @@ const INITIAL_CHALLENGES: DailyChallenge[] = [
 
 const API_BASE_URL = '/api/v1/duel';
 
-export default function App() {
+interface DuelRouteState {
+  generated_at: string;
+  source: { byos: string; cappo: string };
+  proof: {
+    state: 'verified' | 'partial' | 'error';
+    reason: string;
+    probes: Array<{ route: string; state: 'verified' | 'needs_proof' | 'needs_endpoint' | 'error'; status: number; detail?: string }>;
+  };
+  capabilities: Record<string, string>;
+  liveGameplayEnabled: boolean;
+  leaderboard: LeaderboardEntry[];
+  history: any[];
+  settlementSummary?: {
+    success?: boolean;
+    source?: string;
+    base_block?: {
+      block_height?: number;
+      proof_source?: string;
+      verified_at?: string;
+    } | null;
+    pool_liquidity?: {
+      amount_usdc?: number;
+      amount_micro?: number;
+      proof_source?: string;
+      verified_at?: string;
+    } | null;
+    latest_settlement?: {
+      tx_hash?: string;
+      block_height?: number;
+      gas?: number;
+      gas_used?: number;
+      gas_price_wei?: number;
+      effective_gas_price_wei?: number;
+      call_data?: string;
+      function_selector?: string;
+      settled_at?: string;
+    } | null;
+    settlement_time?: string | null;
+    settled_wagers?: number;
+    settled_volume_usdc?: number;
+    proofs?: Record<string, string>;
+  } | null;
+}
+
+type BetLane = 'player' | 'banker' | 'tie';
+
+type BackendLobbyPlayer = {
+  wallet_address: string;
+  session_id: string;
+  status: 'joined' | 'ready' | 'ejected' | 'left' | string;
+  bet_type: BetLane | null;
+  wager_id: string | null;
+  wager_amount_usdc: number;
+  ejected_multiplier: number | null;
+  payout_usdc: number;
+};
+
+type BackendLobby = {
+  id: string;
+  host_wallet_address: string;
+  status: 'open' | 'running' | 'ended' | 'closed' | string;
+  max_players: number;
+  player_count: number;
+  players: BackendLobbyPlayer[];
+  created_at: string | null;
+};
+
+function AgentDuelApp() {
+  const { signMessageAsync } = useSignMessage();
+  const { sendTransactionAsync } = useSendTransaction();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionToken, setActiveSessionToken] = useState<string | null>(null);
   // 1. Navigation tab state
-  const [activeTab, setActiveTab] = useState<'arena' | 'escrow' | 'rust-specs' | 'challenges' | 'duel' | 'explorer'>('arena');
+  const [activeTab, setActiveTab] = useState<'arena' | 'escrow' | 'challenges' | 'duel' | 'explorer'>('arena');
 
   // 1b. Duel Invite Real-time States
   const [activeDuel, setActiveDuel] = useState<DuelSession | null>(null);
-  const [isSimulatedPeerActive, setIsSimulatedPeerActive] = useState<boolean>(false);
+  const [openDuelLobbies, setOpenDuelLobbies] = useState<BackendLobby[]>([]);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
-  // 1bb. Base Chain Live Simulation States
-  const [blockHeight, setBlockHeight] = useState<number>(18429104);
+  // 1bb. Base Chain audit search state. Chain metadata is displayed only when returned by BYOS.
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
 
-  // Live increment blocks with real L2 speed (~2s)
   useEffect(() => {
     fetchLeaderboard();
-    const timer = setInterval(() => {
-      setBlockHeight((prev) => prev + 1);
-    }, 2000);
-    return () => clearInterval(timer);
   }, []);
 
   // 1c. Configurable CRT Scanline States
@@ -140,23 +204,23 @@ export default function App() {
     idWallet: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     paymentWallet: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     network: "Base Mainnet",
-    verificationDomain: "veklom-id.vercel.app",
+    verificationDomain: "id.veklom.com",
     connected: false,
-    balanceEth: 0.145,
-    balanceUsdc: 250 // Starting faucet balance in USDC
+    balanceEth: 0,
+    balanceUsdc: 0
   });
 
   // 3. Web3 Escrow Facilitator state
-  const [escrow, setEscrow] = useState<EscrowState>({
-    totalSecuredUsdc: 145890.30,
+  const escrow: EscrowState = {
+    totalSecuredUsdc: 0,
     facilitatorFeePercent: 1.50,
     gasPriceGwei: 15,
     contractAddress: "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     veklomVerified: true
-  });
+  };
 
   // 4. Game states
-  const [bankroll, setBankroll] = useState(250); // Synchronised with wallet.balanceUsdc
+  const [bankroll, setBankroll] = useState(0);
   const [roundIndex, setRoundIndex] = useState(1);
   const [winStreak, setWinStreak] = useState(0);
   const [bestMulti, setBestMulti] = useState(0);
@@ -193,6 +257,7 @@ export default function App() {
   const [m2mStrategy, setM2mStrategy] = useState<'smart' | 'martingale' | 'tie-hunt' | 'random'>('smart');
   const [m2mLogs, setM2mLogs] = useState<{ id: string; time: string; msg: string; type: 'info' | 'success' | 'warn' | 'error' | 'metric' }[]>([]);
   const [m2mSpeed, setM2mSpeed] = useState<number>(1);
+  const [isAuthorizingWager, setIsAuthorizingWager] = useState<boolean>(false);
 
   // Computed properties for 100% downstream compatibility
   const wagerAmount = Number((bets.player + bets.banker + bets.tie).toFixed(2));
@@ -206,8 +271,16 @@ export default function App() {
   // 5. Historical lists & Telemetry push notifications
   const [notifications, setNotifications] = useState<PushNotification[]>([]);
   const [roundFeed, setRoundFeed] = useState<WagerTransaction[]>([]);
-  const [lastTenCrashes, setLastTenCrashes] = useState<number[]>([1.45, 2.10, 1.12, 3.50, 1.85, 1.20, 5.40, 1.05, 2.30, 1.60]);
+  const [lastTenCrashes, setLastTenCrashes] = useState<number[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(INITIAL_LEADERBOARD);
+  const [duelRouteState, setDuelRouteState] = useState<DuelRouteState | null>(null);
+  const settlementSummary = duelRouteState?.settlementSummary;
+  const latestSettlement = settlementSummary?.latest_settlement;
+  const baseBlockHeight = settlementSummary?.base_block?.block_height;
+  const poolLiquidityUsdc = settlementSummary?.pool_liquidity?.amount_usdc;
+  const settlementTime = settlementSummary?.settlement_time || latestSettlement?.settled_at;
+  const gasTelemetryVerified = settlementSummary?.proofs?.gas_telemetry === 'verified';
+  const selectedProofTx = roundFeed.find((tx) => tx.callData || tx.gasUsed || tx.functionSelector) || roundFeed[0];
 
   // Replay state
   const [lastLostRound, setLastLostRound] = useState<{
@@ -266,7 +339,7 @@ export default function App() {
     if (wallet.connected) {
       setBankroll(wallet.balanceUsdc);
     } else {
-      setBankroll(bankroll === 250 ? 250 : bankroll); // Keep current bankroll to allow micro payout increments
+      setBankroll(0);
     }
   }, [wallet.connected, wallet.balanceUsdc]);
 
@@ -333,10 +406,7 @@ export default function App() {
           chosenWager = 0.25;
           if (chosenWager > bankroll) chosenWager = 0.05;
           newBets[spot] = chosenWager;
-          if (bankroll > 2.0 && Math.random() < 0.3) {
-            newBets.tie = 0.05; 
-          }
-          addM2mLog(`[Bot Smart] Grid trend bet: $${chosenWager.toFixed(2)} on [${spot.toUpperCase()}]`, "info");
+          addM2mLog(`[Bot Smart] Single-lane trend bet: $${chosenWager.toFixed(2)} on [${spot.toUpperCase()}]`, "info");
         }
 
         setBets(newBets);
@@ -394,6 +464,16 @@ export default function App() {
     };
   }, [m2mEnabled, phase, multiplier, bankroll, m2mStrategy, m2mSpeed]);
 
+  useEffect(() => {
+    if (activeDuel || m2mEnabled || (phase !== 'crashed' && phase !== 'ejected')) return;
+
+    const resetTimer = window.setTimeout(() => {
+      prepareNextSinglePlayerRound('auto');
+    }, 4500);
+
+    return () => window.clearTimeout(resetTimer);
+  }, [activeDuel, m2mEnabled, phase]);
+
   // Audio helper function to execute synthesizer sound events
   const playSfx = (freq: number, duration: number, type: OscillatorType = 'sine', volume = 0.15, delay = 0) => {
     try {
@@ -438,6 +518,25 @@ export default function App() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
     setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
+  };
+
+  const prepareNextSinglePlayerRound = (source: 'auto' | 'manual' = 'manual') => {
+    if (timerId.current) {
+      clearInterval(timerId.current);
+      timerId.current = null;
+    }
+    if (activeDuel) return;
+    setPhase('idle');
+    setMultiplier(1.0);
+    setChartPoints([]);
+    setActiveHand(null);
+    setVisiblePacketsCount(0);
+    setRoundWinner(null);
+    setBets({ player: 0, banker: 0, tie: 0 });
+    crashAt.current = 1.0;
+    if (source === 'manual') {
+      addNotification('tx_success', 'Next Round Ready', 'Choose one chip and one lane to start another BYOS-backed wager.');
+    }
   };
 
   const updateChallengeProgress = (
@@ -536,33 +635,48 @@ export default function App() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/leaderboard`);
+      const stateUrl = wallet.address ? `/agent-duel/state?wallet=${encodeURIComponent(wallet.address)}` : '/agent-duel/state';
+      const res = await fetch(stateUrl, { cache: 'no-store' });
       const data = await res.json();
-      if (data.success && data.leaderboard) {
+      setDuelRouteState(data);
+      if (Array.isArray(data.leaderboard)) {
         setLeaderboard(data.leaderboard);
       }
     } catch (e) {
-      console.warn("Failed to fetch leaderboard from backend:", e);
+      console.warn("Failed to fetch Agent Duel proof state:", e);
     }
   };
 
   const fetchHistory = async (address: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/player/${address}/history`);
+      const res = await fetch(`/agent-duel/state?wallet=${encodeURIComponent(address)}`, { cache: 'no-store' });
       const data = await res.json();
-      if (data.success && data.wagers) {
-        const mappedFeed: WagerTransaction[] = data.wagers.map((w: any) => ({
-          id: w.id.toString(),
-          txHash: w.session_id,
-          timestamp: new Date(w.created_at).toLocaleTimeString(),
+      setDuelRouteState(data);
+      if (data.capabilities?.readHistory !== 'verified') {
+        setRoundFeed([]);
+        setLastTenCrashes([]);
+        return;
+      }
+
+      if (Array.isArray(data.history)) {
+        const mappedFeed: WagerTransaction[] = data.history.map((w: any) => ({
+          id: String(w.id ?? w.tx_hash ?? w.session_id),
+          txHash: String(w.tx_hash ?? w.transaction_hash ?? w.session_id ?? ''),
+          timestamp: w.created_at ? new Date(w.created_at).toLocaleTimeString() : '',
           agent: w.bet_type === 'player' ? 'A' : 'B',
-          wagerAmount: w.wager_amount_usdc,
-          multiplier: w.payout_multiplier || 0,
-          payout: w.payout_usdc || 0,
+          wagerAmount: Number(w.wager_amount_usdc ?? w.amount_usdc ?? 0),
+          multiplier: Number(w.payout_multiplier ?? w.multiplier ?? 0),
+          payout: Number(w.payout_usdc ?? w.payout ?? 0),
           status: w.outcome === 'won' ? 'success' : w.outcome === 'lost' ? 'crashed' : 'pending',
-          network: 'Base'
-        }));
+          network: 'Base',
+          blockHeight: typeof w.block_height === 'number' ? w.block_height : null,
+          gasUsed: typeof w.gas_used === 'number' ? w.gas_used : null,
+          gasPriceWei: typeof w.gas_price_wei === 'number' ? w.gas_price_wei : null,
+          callData: typeof w.call_data === 'string' ? w.call_data : null,
+          functionSelector: typeof w.function_selector === 'string' ? w.function_selector : null,
+        })).filter((tx: WagerTransaction) => tx.txHash.length > 0);
         setRoundFeed(mappedFeed);
+        setLastTenCrashes(mappedFeed.map((tx) => tx.multiplier).filter((value) => value > 0).slice(-10));
       }
     } catch (e) {
       console.warn("Failed to fetch history from backend:", e);
@@ -577,15 +691,43 @@ export default function App() {
         `Contacting registry for ${address.slice(0, 8)}...`
       );
 
+      const domain = window.location.host;
+      const uri = `${window.location.origin}/agent-dual`;
+      const nonceResponse = await fetch(`${API_BASE_URL}/session/nonce`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet_address: address,
+          domain,
+          uri,
+          chain_id: 8453,
+        }),
+      });
+      const nonceData = await nonceResponse.json();
+      if (!nonceResponse.ok || !nonceData.success || !nonceData.message) {
+        throw new Error(nonceData.detail || nonceData.error || 'Failed to issue wallet-auth challenge');
+      }
+
+      addNotification(
+        'tx_success',
+        'Wallet Signature Required',
+        'Approve the Veklom Agent Duel sign-in message to prove wallet ownership.'
+      );
+
+      const signature = await signMessageAsync({ message: nonceData.message });
       const response = await fetch(`${API_BASE_URL}/session/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet_address: address }),
+        body: JSON.stringify({
+          wallet_address: address,
+          message: nonceData.message,
+          signature,
+        }),
       });
       const data = await response.json();
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to initialize session');
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.error || 'Failed to initialize signed session');
       }
 
       const backendBalance = Number(data.player.balance_usdc);
@@ -599,11 +741,12 @@ export default function App() {
       }));
       setBankroll(backendBalance);
       setActiveSessionId(data.session_id);
+      setActiveSessionToken(data.session_token);
 
       addNotification(
         'tx_success', 
         'Veklom Identity Handshake Completed', 
-        `Linked address ${address.slice(0, 8)}... persistent balance: $${backendBalance.toFixed(2)} USDC`
+        `Signed wallet ${address.slice(0, 8)}... persistent balance: $${backendBalance.toFixed(2)} USDC`
       );
 
       // Load history and leaderboard
@@ -618,6 +761,8 @@ export default function App() {
 
   const handleWalletDisconnect = () => {
     setWallet((prev) => ({ ...prev, connected: false, address: null }));
+    setActiveSessionId(null);
+    setActiveSessionToken(null);
     addNotification(
       'collapse', 
       'Wallet Decoupled', 
@@ -625,32 +770,17 @@ export default function App() {
     );
   };
 
-  const handleFaucetDeposit = () => {
-    // Faucet claims
-    setWallet((prev) => ({ ...prev, balanceUsdc: prev.balanceUsdc + 250 }));
-    addNotification(
-      'tx_success',
-      'Gas Faucet Dispensed',
-      '+$250 USDC test-fuel credited to wallet.'
-    );
-    playSfx(587, 0.2, 'sine', 0.1);
-  };
-
-  const handleEscrowDeposit = (amount: number) => {
-    setEscrow((prev) => ({ ...prev, totalSecuredUsdc: prev.totalSecuredUsdc + amount }));
-    if (wallet.connected) {
-      setWallet((prev) => ({ ...prev, balanceUsdc: Math.max(0, prev.balanceUsdc - amount) }));
-    }
-    addNotification(
-      'tx_success',
-      'Escrow Collateral Boosted',
-      `Locked $${amount} USDC securely in registry.`
-    );
-    playSfx(659, 0.25, 'triangle', 0.15);
-  };
-
   const handleRebet = () => {
     if (phase !== 'idle') return;
+    const previousActiveBets = [
+      previousBets.player > 0,
+      previousBets.banker > 0,
+      previousBets.tie > 0,
+    ].filter(Boolean).length;
+    if (previousActiveBets !== 1) {
+      addNotification('collapse', 'Rebet Failed', 'Previous wager is not a single-lane stake.');
+      return;
+    }
     const totalProposed = Number((previousBets.player + previousBets.banker + previousBets.tie).toFixed(2));
     if (totalProposed > bankroll) {
       addNotification('collapse', 'Rebet Failed', 'Insufficient balance to repeat previous bets.');
@@ -662,6 +792,10 @@ export default function App() {
 
   const handleDoubleBets = () => {
     if (phase !== 'idle') return;
+    if (activeBetEntries().length !== 1) {
+      addNotification('collapse', 'Double Failed', 'Choose exactly one lane before doubling.');
+      return;
+    }
     const proposedBets = {
       player: Number((bets.player * 2).toFixed(2)),
       banker: Number((bets.banker * 2).toFixed(2)),
@@ -677,9 +811,105 @@ export default function App() {
   };
 
   const handleClearBets = () => {
-    if (phase !== 'idle') return;
+    if (phase !== 'idle' || isAuthorizingWager) return;
     setBets({ player: 0, banker: 0, tie: 0 });
     playSfx(330, 0.15, 'sine', 0.1);
+  };
+
+  const placeSingleLaneBet = (lane: BetLane) => {
+    if (phase !== 'idle' || isAuthorizingWager) return;
+    if (activeChip > bankroll) {
+      addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
+      return;
+    }
+    setBets({
+      player: lane === 'player' ? activeChip : 0,
+      banker: lane === 'banker' ? activeChip : 0,
+      tie: lane === 'tie' ? activeChip : 0,
+    });
+    playSfx(880, 0.05, 'sine', 0.15);
+  };
+
+  const removeLaneBet = (lane: BetLane, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (phase !== 'idle' || isAuthorizingWager) return;
+    setBets((prev) => ({
+      ...prev,
+      [lane]: 0,
+    }));
+    playSfx(330, 0.08, 'sine', 0.1);
+  };
+
+  const activeBetEntries = (): Array<{ type: BetLane; amount: number }> => {
+    return ([
+      { type: 'player' as const, amount: bets.player },
+      { type: 'banker' as const, amount: bets.banker },
+      { type: 'tie' as const, amount: bets.tie },
+    ]).filter((bet) => bet.amount > 0);
+  };
+
+  const backendLobbyToDuelSession = (lobby: BackendLobby): DuelSession => {
+    const players = lobby.players
+      .filter((player) => player.status !== 'left')
+      .reduce<{ [address: string]: DuelPlayer }>((acc, player) => {
+        const betsForPlayer = {
+          player: player.bet_type === 'player' ? Number(player.wager_amount_usdc || 0) : 0,
+          banker: player.bet_type === 'banker' ? Number(player.wager_amount_usdc || 0) : 0,
+          tie: player.bet_type === 'tie' ? Number(player.wager_amount_usdc || 0) : 0,
+        };
+        acc[player.wallet_address] = {
+          address: player.wallet_address,
+          connected: true,
+          balanceUsdc: 0,
+          bets: betsForPlayer,
+          wagerAmount: Number(player.wager_amount_usdc || 0),
+          ejected: player.status === 'ejected',
+          ejectedMulti: player.ejected_multiplier,
+          payout: Number(player.payout_usdc || 0),
+          status: player.status === 'ready' ? 'ready' : player.status === 'ejected' ? 'ejected' : 'pending',
+        };
+        return acc;
+      }, {});
+
+    return {
+      id: lobby.id,
+      status: lobby.status === 'ended' ? 'ended' : lobby.status === 'running' ? 'running' : 'lobby',
+      hostAddress: lobby.host_wallet_address,
+      players,
+      countdownSeconds: 0,
+      activeHand: null,
+      crashAt: 0,
+      multiplier: 1.0,
+      winnerAddress: null,
+      timestamp: lobby.created_at ? new Date(lobby.created_at).toLocaleTimeString() : new Date().toLocaleTimeString(),
+    };
+  };
+
+  const fetchOpenDuelLobbies = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies?status=open`, { cache: 'no-store' });
+      const data = await response.json();
+      if (data.success && Array.isArray(data.lobbies)) {
+        setOpenDuelLobbies(data.lobbies);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch Agent Duel lobbies:", err);
+    }
+  };
+
+  const refreshActiveDuelLobby = async (lobbyId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(lobbyId)}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (data.success && data.lobby) {
+        setActiveDuel((prev) => {
+          if (prev && prev.status !== 'lobby') return prev;
+          return backendLobbyToDuelSession(data.lobby);
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to refresh Agent Duel lobby:", err);
+    }
   };
 
   // --- REAL-TIME PVP DUEL CONVENIENCE HANDLERS ---
@@ -755,7 +985,7 @@ export default function App() {
               updatedPlayers[data.address] = {
                 address: data.address,
                 connected: true,
-                balanceUsdc: data.balanceUsdc || 250,
+                balanceUsdc: Number(data.balanceUsdc ?? 0),
                 bets: { player: 0, banker: 0, tie: 0 },
                 wagerAmount: 0,
                 ejected: false,
@@ -785,7 +1015,7 @@ export default function App() {
               updatedPlayers[data.address] = {
                 address: data.address,
                 connected: true,
-                balanceUsdc: data.balanceUsdc || 250,
+                balanceUsdc: Number(data.balanceUsdc ?? 0),
                 bets: { player: 0, banker: 0, tie: 0 },
                 wagerAmount: 0,
                 ejected: false,
@@ -983,6 +1213,20 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [activeDuel?.status, activeDuel?.countdownSeconds]);
 
+  useEffect(() => {
+    if (activeTab !== 'duel') return;
+    fetchOpenDuelLobbies();
+    const timer = window.setInterval(fetchOpenDuelLobbies, 5000);
+    return () => window.clearInterval(timer);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!activeDuel?.id || activeDuel.status !== 'lobby') return;
+    refreshActiveDuelLobby(activeDuel.id);
+    const timer = window.setInterval(() => refreshActiveDuelLobby(activeDuel.id), 2500);
+    return () => window.clearInterval(timer);
+  }, [activeDuel?.id, activeDuel?.status]);
+
   // Handle URL Session Join
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -993,210 +1237,98 @@ export default function App() {
     }
   }, [wallet.connected]);
 
-  const handleCreateDuel = () => {
-    const id = "DUEL-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const session: DuelSession = {
-      id,
-      status: 'lobby',
-      hostAddress: myAddress,
-      players: {
-        [myAddress]: {
-          address: myAddress,
-          connected: true,
-          balanceUsdc: wallet.balanceUsdc,
-          bets: { player: 0, banker: 0, tie: 0 },
-          wagerAmount: 0,
-          ejected: false,
-          ejectedMulti: null,
-          payout: 0,
-          status: 'pending'
-        }
-      },
-      countdownSeconds: 0,
-      activeHand: null,
-      crashAt: 0,
-      multiplier: 1.0,
-      winnerAddress: null,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setActiveDuel(session);
-    addNotification('tx_success', 'Duel Lobby Created', `Lobby initialized with Session ID ${id}. Share with a friend.`);
-  };
-
-  const handleJoinDuel = (id: string) => {
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const session: DuelSession = {
-      id,
-      status: 'lobby',
-      hostAddress: "0xHostAddressPlaceholder",
-      players: {
-        [myAddress]: {
-          address: myAddress,
-          connected: true,
-          balanceUsdc: wallet.balanceUsdc,
-          bets: { player: 0, banker: 0, tie: 0 },
-          wagerAmount: 0,
-          ejected: false,
-          ejectedMulti: null,
-          payout: 0,
-          status: 'pending'
-        }
-      },
-      countdownSeconds: 0,
-      activeHand: null,
-      crashAt: 0,
-      multiplier: 1.0,
-      winnerAddress: null,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setActiveDuel(session);
-    
-    setTimeout(() => {
-      if (channelRef.current) {
-        channelRef.current.postMessage({
-          type: 'PEER_JOINED',
-          address: myAddress,
-          balanceUsdc: wallet.balanceUsdc
-        });
-      }
-    }, 300);
-
-    addNotification('tx_success', 'Joined Duel Lobby', `Successfully connected to Session ID ${id}. Waiting for host...`);
-  };
-
-  const handleLeaveDuel = () => {
-    setActiveDuel(null);
-    setIsSimulatedPeerActive(false);
-    addNotification('collapse', 'Left Duel Session', 'You have disconnected from the PVP lobby.');
-  };
-
-  const handleToggleSimulatePeer = () => {
-    if (!activeDuel) return;
-    const peerAddress = "0xPeerWallet" + Math.random().toString(36).substring(2, 6).toUpperCase();
-    
-    setIsSimulatedPeerActive((prev) => {
-      const nextVal = !prev;
-      setActiveDuel((duel) => {
-        if (!duel) return null;
-        const updatedPlayers = { ...duel.players };
-        if (nextVal) {
-          updatedPlayers[peerAddress] = {
-            address: peerAddress,
-            connected: true,
-            balanceUsdc: 250,
-            bets: { player: 0, banker: 0, tie: 0 },
-            wagerAmount: 0,
-            ejected: false,
-            ejectedMulti: null,
-            payout: 0,
-            status: 'pending'
-          };
-          addNotification('tx_success', 'Simulated Peer Added', `Simulated Peer address connected: ${peerAddress}`);
-        } else {
-          const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-          Object.keys(updatedPlayers).forEach((addr) => {
-            if (addr !== myAddress) {
-              delete updatedPlayers[addr];
-            }
-          });
-          addNotification('collapse', 'Simulated Peer Removed', 'Peer disconnected from the lobby.');
-        }
-        return { ...duel, players: updatedPlayers };
+  const handleCreateDuel = async () => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      addNotification('collapse', 'Lobby Blocked', 'Connect a wallet-backed BYOS session before hosting multiplayer.');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken,
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          wallet_address: wallet.address,
+        }),
       });
-      return nextVal;
-    });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.message || `Lobby create failed (${response.status}).`);
+      }
+      setActiveDuel(backendLobbyToDuelSession(data.lobby));
+      fetchOpenDuelLobbies();
+      addNotification('tx_success', 'BYOS Duel Lobby Created', `Lobby ${data.lobby.id} is visible to connected Agent Duel players.`);
+    } catch (err: any) {
+      addNotification('collapse', 'Lobby Create Failed', err.message || 'BYOS lobby endpoint rejected the request.');
+    }
   };
 
-  const handlePlaceSimulatedBet = (simBets: { player: number; banker: number; tie: number }) => {
-    if (!activeDuel) return;
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const peerEntry = Object.entries(activeDuel.players).find(([addr]) => addr !== myAddress);
-    if (!peerEntry) return;
-    const peerAddress = peerEntry[0];
-
-    setActiveDuel((prev) => {
-      if (!prev) return null;
-      const updatedPlayers = { ...prev.players };
-      const totalWager = simBets.player + simBets.banker + simBets.tie;
-      updatedPlayers[peerAddress] = {
-        ...updatedPlayers[peerAddress],
-        bets: simBets,
-        wagerAmount: totalWager,
-        balanceUsdc: Number((updatedPlayers[peerAddress].balanceUsdc - totalWager).toFixed(2)),
-        status: 'ready'
-      };
-      return { ...prev, players: updatedPlayers };
-    });
-    playSfx(660, 0.05, 'sine', 0.1);
+  const handleJoinDuel = async (id: string) => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      addNotification('collapse', 'Join Blocked', 'Connect a wallet-backed BYOS session before joining multiplayer.');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(id.trim().toUpperCase())}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken,
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          wallet_address: wallet.address,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.message || `Lobby join failed (${response.status}).`);
+      }
+      setActiveDuel(backendLobbyToDuelSession(data.lobby));
+      fetchOpenDuelLobbies();
+      addNotification('tx_success', 'Joined BYOS Duel Lobby', `Connected to lobby ${data.lobby.id}.`);
+    } catch (err: any) {
+      addNotification('collapse', 'Lobby Join Failed', err.message || 'BYOS lobby endpoint rejected the request.');
+    }
   };
 
-  const handleSimulatePeerEject = () => {
-    if (!activeDuel || activeDuel.status !== 'running') return;
-    const finalMulti = multiplier;
-    const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-    const peerEntry = Object.entries(activeDuel.players).find(([addr]) => addr !== myAddress);
-    if (!peerEntry) return;
-    const peerAddress = peerEntry[0];
-
-    setActiveDuel((prev) => {
-      if (!prev) return null;
-      const updatedPlayers = { ...prev.players };
-      if (updatedPlayers[peerAddress] && updatedPlayers[peerAddress].status === 'ready') {
-        const outcome = prev.activeHand?.outcome || 'player';
-        let payout = 0;
-        if (outcome === 'player') {
-          payout = updatedPlayers[peerAddress].bets.player * finalMulti * 2.0;
-        } else if (outcome === 'banker') {
-          payout = updatedPlayers[peerAddress].bets.banker * finalMulti * 1.95;
-        } else if (outcome === 'tie') {
-          payout = updatedPlayers[peerAddress].bets.tie * finalMulti * 9.0;
-          payout += (updatedPlayers[peerAddress].bets.player + updatedPlayers[peerAddress].bets.banker) * finalMulti;
-        }
-
-        updatedPlayers[peerAddress] = {
-          ...updatedPlayers[peerAddress],
-          status: 'ejected',
-          ejected: true,
-          ejectedMulti: finalMulti,
-          payout: Number(payout.toFixed(2))
-        };
-        
-        addNotification('tx_success', `Peer Ejected at ${finalMulti.toFixed(2)}x`, `Peer secured potential payout of $${payout.toFixed(2)} USDC.`);
+  const handleLeaveDuel = async () => {
+    const leavingLobbyId = activeDuel?.id;
+    if (leavingLobbyId && wallet.address && activeSessionId && activeSessionToken) {
+      try {
+        await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(leavingLobbyId)}/leave`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-duel-session-token': activeSessionToken,
+          },
+          body: JSON.stringify({
+            session_id: activeSessionId,
+            wallet_address: wallet.address,
+          }),
+        });
+      } catch (err) {
+        console.warn("Failed to leave BYOS Duel lobby:", err);
       }
-
-      const allFinished = Object.values(updatedPlayers).every(p => (p as DuelPlayer).status === 'ejected' || (p as DuelPlayer).status === 'crashed');
-      if (allFinished) {
-        clearInterval(timerId.current);
-        setPhase('ejected');
-        setVisiblePacketsCount(3);
-        setLastTenCrashes((prev) => [...prev.slice(1), crashAt.current]);
-        
-        const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
-        
-        const myPayout = finalDuelState.players[myAddress]?.payout || 0;
-        const newBalance = Number((bankroll + myPayout).toFixed(2));
-        if (wallet.connected) {
-          setWallet((v) => ({ ...v, balanceUsdc: newBalance }));
-        } else {
-          setBankroll(newBalance);
-        }
-
-        return {
-          ...prev,
-          status: 'ended',
-          players: finalDuelState.players,
-          winnerAddress: finalDuelState.winnerAddress
-        };
-      }
-
-      return { ...prev, players: updatedPlayers };
-    });
-    playSfx(587.33, 0.2, 'sine', 0.25);
+    }
+    setActiveDuel(null);
+    fetchOpenDuelLobbies();
+    addNotification('collapse', 'Left Duel Session', 'You have disconnected from the BYOS PVP lobby.');
   };
 
   const handleStartDuelCountdown = () => {
     if (!activeDuel || activeDuel.status !== 'lobby') return;
+    if (duelRouteState?.capabilities?.multiplayerExecution !== 'verified') {
+      addNotification(
+        'collapse',
+        'PVP Round-Sync Needs Proof',
+        'BYOS lobby discovery is live, but synchronized multiplayer round execution is not proven yet.'
+      );
+      return;
+    }
     
     const hand = executeRoutingSync();
     
@@ -1406,129 +1538,170 @@ export default function App() {
     };
   };
 
-  const signWager = async (amount: number) => {
-    const fromAddr = wallet.address || "0x6a20f24cc341f72c2f573eb5";
-    const toAddr = "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970"; // Treasury address
-    const rawAmount = Math.round(amount * 1_000_000).toString(); // USDC decimals
-    
-    const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
-    if (!wallet.connected || !hasEthereum) {
-      // Local dev mode test proof bypass format
-      const testProof = `test_proof_valid_${Math.random().toString(36).substring(2, 10)}`;
-      return testProof;
+  const waitForSettlementProof = async (wagerId: string, txHash: string) => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      throw new Error("Missing signed BYOS session for settlement confirmation.");
+    }
+    let lastMessage = "Settlement proof is pending Base confirmation.";
+    for (let attempt = 0; attempt < 18; attempt += 1) {
+      const res = await fetch(`${API_BASE_URL}/wagers/${encodeURIComponent(wagerId)}/settlement-proof`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken,
+        },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          wallet_address: wallet.address,
+          settlement_tx_hash: txHash,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) return data;
+      lastMessage = data?.detail || data?.message || `Settlement proof rejected by BYOS (${res.status}).`;
+      if (![404, 409, 502].includes(res.status)) {
+        throw new Error(lastMessage);
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 5000));
+    }
+    throw new Error(lastMessage);
+  };
+
+  const sendBaseAccountWager = async (bet: { type: BetLane; amount: number }) => {
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      throw new Error("Connect a signed Base Account session before placing a wager.");
+    }
+    const idempotencyKey = `${activeSessionId}:${bet.type}:${bet.amount}:${Date.now()}:${crypto.randomUUID()}`;
+    const prepareRes = await fetch(`${API_BASE_URL}/wager/prepare`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-duel-session-token': activeSessionToken,
+      },
+      body: JSON.stringify({
+        session_id: activeSessionId,
+        wallet_address: wallet.address,
+        bet_type: bet.type,
+        wager_amount_usdc: bet.amount,
+        idempotency_key: idempotencyKey,
+      }),
+    });
+    const prepared = await prepareRes.json().catch(() => null);
+    if (!prepareRes.ok || !prepared?.success) {
+      throw new Error(prepared?.detail || prepared?.message || `Wager prepare rejected by BYOS (${prepareRes.status}).`);
     }
 
-    try {
-      const nonce = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      const now = Math.floor(Date.now() / 1000);
-      
-      const typedData = {
-        types: {
-          EIP712Domain: [
-            { name: 'name', type: 'string' },
-            { name: 'version', type: 'string' },
-            { name: 'chainId', type: 'uint256' },
-            { name: 'verifyingContract', type: 'address' },
-          ],
-          TransferWithAuthorization: [
-            { name: 'from', type: 'address' },
+    const settlement = prepared.settlement;
+    const usdcContract = settlement.usdc_contract as `0x${string}`;
+    const treasury = settlement.to as `0x${string}`;
+    const valueMicroUsdc = BigInt(settlement.value_micro_usdc);
+    const data = encodeFunctionData({
+      abi: [
+        {
+          name: 'transfer',
+          type: 'function',
+          stateMutability: 'nonpayable',
+          inputs: [
             { name: 'to', type: 'address' },
             { name: 'value', type: 'uint256' },
-            { name: 'validAfter', type: 'uint256' },
-            { name: 'validBefore', type: 'uint256' },
-            { name: 'nonce', type: 'bytes32' },
           ],
+          outputs: [{ name: '', type: 'bool' }],
         },
-        primaryType: 'TransferWithAuthorization' as const,
-        domain: {
-          name: 'USD Coin',
-          version: '2',
-          chainId: 8453, // Base Mainnet
-          verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        },
-        message: {
-          from: fromAddr,
-          to: toAddr,
-          value: rawAmount,
-          validAfter: now,
-          validBefore: now + 3600,
-          nonce: nonce,
-        },
-      };
+      ],
+      functionName: 'transfer',
+      args: [treasury, valueMicroUsdc],
+    });
 
-      const signature = await (window as any).ethereum.request({
-        method: 'dash_signTypedData_v4' in (window as any).ethereum ? 'dash_signTypedData_v4' : 'eth_signTypedData_v4',
-        params: [fromAddr, JSON.stringify(typedData)],
-      });
-
-      const payload = {
-        payload: {
-          authorization: {
-            from: fromAddr,
-            to: toAddr,
-            value: rawAmount,
-            validAfter: String(now),
-            validBefore: String(now + 3600),
-            nonce: nonce,
-          },
-          signature,
-        },
-      };
-
-      return btoa(JSON.stringify(payload));
-    } catch (err) {
-      console.error("MetaMask sign failed, falling back to dev test proof", err);
-      return `test_proof_fallback_${Math.random().toString(36).substring(2, 10)}`;
-    }
+    const txHash = await sendTransactionAsync({
+      to: usdcContract,
+      data,
+      value: BigInt(0),
+      chainId: 8453,
+    });
+    const proof = await waitForSettlementProof(prepared.wager_id, txHash);
+    return {
+      wager_id: prepared.wager_id,
+      tx_hash: txHash,
+      settlement_proof: proof.settlement_proof,
+      status: proof.wager?.status || 'locked',
+    };
   };
 
   // Launch routing crash loop
   const initiateRoute = async () => {
-    if (phase === 'running') return;
+    if (phase === 'running' || isAuthorizingWager) return;
+    if (!duelRouteState?.liveGameplayEnabled) {
+      addNotification('collapse', 'Live Duel Execution Disabled', duelRouteState?.proof.reason || 'BYOS duel wager/session/outcome endpoints need production proof.');
+      return;
+    }
     
     const totalWager = Number((bets.player + bets.banker + bets.tie).toFixed(2));
     if (totalWager <= 0) {
       addNotification('collapse', 'Pre-flight Check Failed', 'Please place at least one micropayment chip on the betting board.');
       return;
     }
+    const betsToSubmit = activeBetEntries();
+    if (betsToSubmit.length !== 1) {
+      addNotification('collapse', 'Pre-flight Check Failed', 'Choose exactly one lane: Agent A, Agent B, or Tie.');
+      return;
+    }
     if (totalWager > bankroll) {
       addNotification('collapse', 'Execution Blocked', 'Insufficient USDC balance to fulfill stake.');
       return;
     }
-
-    addNotification(
-      'tx_success',
-      'Consensus Check',
-      'Requesting dual authorization signature...'
-    );
+    if (!wallet.address || !activeSessionId || !activeSessionToken) {
+      addNotification('collapse', 'Execution Blocked', 'Connect a wallet-backed BYOS session before placing a wager.');
+      return;
+    }
 
     // Call backend to lock wager
+    setIsAuthorizingWager(true);
     try {
-      const signature = await signWager(totalWager);
-      
-      const betsToSubmit = [];
-      if (bets.player > 0) betsToSubmit.push({ type: 'player', amount: bets.player });
-      if (bets.banker > 0) betsToSubmit.push({ type: 'banker', amount: bets.banker });
-      if (bets.tie > 0) betsToSubmit.push({ type: 'tie', amount: bets.tie });
-      
-      for (const bet of betsToSubmit) {
-        const res = await fetch(`${API_BASE_URL}/wager`, {
+      addNotification(
+        'tx_success',
+        'Base Account Payment',
+        `Approve the $${totalWager.toFixed(2)} USDC transfer in Base Account. The round starts only after BYOS verifies the Base transaction receipt.`
+      );
+      const bet = betsToSubmit[0];
+      addM2mLog(`Base Account wager send requested: $${totalWager.toFixed(2)} USDC on ${bet.type.toUpperCase()}.`, "info");
+      addNotification(
+        'tx_success',
+        'BYOS Payment Prepared',
+        'Creating an idempotent BYOS wager row before the Base Account transfer opens.'
+      );
+
+      const data = await sendBaseAccountWager(bet);
+      addM2mLog(`BYOS verified Base settlement: ${bet.type.toUpperCase()} $${bet.amount.toFixed(2)} USDC (${data.tx_hash}).`, "success");
+
+      if (activeDuel?.status === 'lobby') {
+        const readyRes = await fetch(`${API_BASE_URL}/lobbies/${encodeURIComponent(activeDuel.id)}/ready`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'payment-signature': signature
+            'x-duel-session-token': activeSessionToken,
           },
           body: JSON.stringify({
-            session_id: activeSessionId || 'd7b752bc-07b7-52bc-07b7-52bc07b752bc',
+            session_id: activeSessionId,
+            wallet_address: wallet.address,
             bet_type: bet.type,
+            wager_id: data.wager_id,
             wager_amount_usdc: bet.amount,
-            wallet_address: wallet.address || '0x6a20f24cc341f72c2f573eb5'
-          })
+          }),
         });
-        const data = await res.json();
-        if (!data.success) {
-          throw new Error(data.message || 'Wager placement rejected by consensus rules.');
+        const readyData = await readyRes.json().catch(() => null);
+        if (!readyRes.ok || !readyData?.success) {
+          throw new Error(readyData?.detail || readyData?.message || `Lobby ready state rejected by BYOS (${readyRes.status}).`);
         }
+        setActiveDuel(backendLobbyToDuelSession(readyData.lobby));
+        fetchOpenDuelLobbies();
+        addNotification(
+          'tx_success',
+          'Multiplayer Stake Locked',
+          `BYOS marked lobby ${activeDuel.id} ready with $${bet.amount.toFixed(2)} USDC on ${bet.type.toUpperCase()}.`
+        );
+        setPreviousBets(bets);
+        setBets({ player: 0, banker: 0, tie: 0 });
+        return;
       }
 
       // Set engine states
@@ -1567,8 +1740,8 @@ export default function App() {
 
       addNotification(
         'tx_success',
-        'Quantum Wager Locked',
-        `Locked $${totalWager.toFixed(2)} USDC on Duel Routing Board.`
+        'Wager Locked - Route Starting',
+        `BYOS accepted $${totalWager.toFixed(2)} USDC on ${bet.type.toUpperCase()}. Multiplier is now live.`
       );
 
       // Play starting hum
@@ -1606,31 +1779,38 @@ export default function App() {
       }, 50);
 
     } catch (err: any) {
-      addNotification('collapse', 'Wager Rejected', err.message || 'Payment gateway returned 402.');
+      const message = err.message || 'Payment gateway returned 402.';
+      addNotification('collapse', 'Wager Rejected', message);
+      addM2mLog(`Manual wager rejected: ${message}`, "error");
       setPhase('idle');
       return;
+    } finally {
+      setIsAuthorizingWager(false);
     }
   };
 
-  const handleRoundOutcome = async (winner: 'A' | 'B' | null) => {
+  const handleRoundOutcome = async (winner: 'A' | 'B' | null, finalMulti: number) => {
     try {
+      if (!activeSessionId || !activeSessionToken) {
+        throw new Error('Missing BYOS duel session; outcome not recorded.');
+      }
       const finalOutcome = winner === 'A' ? 'player' : winner === 'B' ? 'banker' : 'tie';
       const res = await fetch(`${API_BASE_URL}/outcome`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-duel-session-token': activeSessionToken
+        },
         body: JSON.stringify({
-          session_id: activeSessionId || 'd7b752bc-07b7-52bc-07b7-52bc07b752bc',
-          outcome: finalOutcome
+          session_id: activeSessionId,
+          outcome: finalOutcome,
+          payout_multiplier: finalMulti
         })
       });
       const data = await res.json();
       if (data.success) {
         if (wallet.address) {
-          const profileRes = await fetch(`${API_BASE_URL}/session/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wallet_address: wallet.address }),
-          });
+          const profileRes = await fetch(`${API_BASE_URL}/player/${encodeURIComponent(wallet.address)}/profile`, { cache: 'no-store' });
           const profileData = await profileRes.json();
           if (profileData.success) {
             const backendBalance = Number(profileData.player.balance_usdc);
@@ -1647,9 +1827,7 @@ export default function App() {
   };
 
   const triggerCrash = (finalMulti: number) => {
-    handleRoundOutcome(roundWinner);
-    setLastTenCrashes((prev) => [...prev.slice(1), finalMulti]);
-
+    handleRoundOutcome(roundWinner, finalMulti);
     if (activeDuel) {
       setPhase('crashed');
       setMultiplier(finalMulti);
@@ -1681,20 +1859,6 @@ export default function App() {
         } else {
           setBankroll(newBalance);
         }
-
-        const txHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-        const newTx: WagerTransaction = {
-          id: Math.random().toString(),
-          txHash,
-          timestamp: new Date().toLocaleTimeString(),
-          agent: selectedAgent,
-          wagerAmount: totalWager,
-          multiplier: finalMulti,
-          payout: myPayout,
-          status: isActualWin ? 'success' : 'crashed',
-          network: wallet.network
-        };
-        setRoundFeed((prevFeed) => [newTx, ...prevFeed]);
 
         addNotification(
           isActualWin ? 'tx_success' : 'collapse',
@@ -1755,21 +1919,6 @@ export default function App() {
     // Clear current bets
     setBets({ player: 0, banker: 0, tie: 0 });
 
-    // Save history
-    const txHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    const newTx: WagerTransaction = {
-      id: Math.random().toString(),
-      txHash,
-      timestamp: new Date().toLocaleTimeString(),
-      agent: bets.player >= bets.banker ? 'A' : 'B',
-      wagerAmount: totalWager,
-      multiplier: finalMulti,
-      payout: 0,
-      status: 'crashed',
-      network: wallet.network
-    };
-    setRoundFeed((prev) => [newTx, ...prev]);
-
     // Update streak stats
     setWinStreak(0);
     setRoundIndex((r) => r + 1);
@@ -1829,8 +1978,6 @@ export default function App() {
           clearInterval(timerId.current);
           setPhase('ejected');
           setVisiblePacketsCount(3);
-          setLastTenCrashes((prev) => [...prev.slice(1), crashAt.current]);
-          
           const finalDuelState = resolveDuelPayouts(updatedPlayers, prev.activeHand!, crashAt.current);
           
           const myPayout = finalDuelState.players[myAddress]?.payout || 0;
@@ -1874,8 +2021,6 @@ export default function App() {
     clearInterval(timerId.current);
     setPhase('ejected');
     setVisiblePacketsCount(3); // reveal final packets
-    setLastTenCrashes((prev) => [...prev.slice(1), crashAt.current]);
-
     const totalWager = Number((bets.player + bets.banker + bets.tie).toFixed(2));
     
     // Calculate Payout based on real telemetry outcome!
@@ -1951,21 +2096,6 @@ export default function App() {
     // Clear current bets
     setBets({ player: 0, banker: 0, tie: 0 });
 
-    // Save history
-    const txHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    const newTx: WagerTransaction = {
-      id: Math.random().toString(),
-      txHash,
-      timestamp: new Date().toLocaleTimeString(),
-      agent: bets.player >= bets.banker ? 'A' : 'B',
-      wagerAmount: totalWager,
-      multiplier: finalMulti,
-      payout: totalPayout,
-      status: 'success',
-      network: wallet.network
-    };
-    setRoundFeed((prev) => [newTx, ...prev]);
-
     // Update Daily Challenges on ejection finish
     if (isActualWin) {
       updateChallengeProgress('streak', winStreak + 1, 'max');
@@ -2020,8 +2150,8 @@ export default function App() {
   const handleResetSimulator = () => {
     if (timerId.current) clearInterval(timerId.current);
     if (botTimerId.current) clearTimeout(botTimerId.current);
-    setWallet((prev) => ({ ...prev, balanceUsdc: 250 }));
-    setBankroll(250);
+    setWallet((prev) => ({ ...prev, balanceUsdc: 0 }));
+    setBankroll(0);
     setRoundIndex(1);
     setWinStreak(0);
     setBestMulti(0);
@@ -2034,11 +2164,14 @@ export default function App() {
     setMultiplier(1.0);
     setChartPoints([]);
     setRoundFeed([]);
+    setLastTenCrashes([]);
+    setActiveSessionId(null);
+    setActiveSessionToken(null);
     setNotifications([]);
     setLeaderboard(INITIAL_LEADERBOARD);
     setM2mEnabled(false);
     setM2mLogs([]);
-    addNotification('tx_success', 'Simulator Reset', 'Telemetry metrics flushed to baseline parameters.');
+    addNotification('tx_success', 'Local Setup Reset', 'Local controls returned to unproven baseline state.');
     playSfx(440, 0.3, 'sine', 0.1);
   };
 
@@ -2154,17 +2287,11 @@ export default function App() {
                 </button>
 
                 {showDisplaySettings && (
-                  <div className="absolute right-0 mt-2 w-64 bg-[#0a0c12]/95 border border-white/10 rounded-md p-4 shadow-xl z-50 font-sans backdrop-blur-md">
+                  <div className="absolute right-0 mt-2 w-64 bg-[#0a0c12] border border-white/10 rounded-md p-4 shadow-xl z-50 font-sans">
                     <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
                       <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 font-mono uppercase">
                         <Settings className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '6s' }} /> Display Config
                       </span>
-                      <button 
-                        onClick={() => setShowDisplaySettings(false)}
-                        className="text-slate-500 hover:text-slate-300 text-xs font-bold px-1.5 py-0.5 rounded border border-white/5 bg-white/5"
-                      >
-                        ✕
-                      </button>
                     </div>
 
                     <div className="space-y-4">
@@ -2210,7 +2337,7 @@ export default function App() {
                       )}
 
                       <div className="border-t border-white/5 pt-2 text-[10px] text-slate-500 leading-relaxed font-mono">
-                        Adjusting CRT scanlines controls grid pattern density to enhance legibility and eye comfort.
+                        Adjusting CRT scanlines changes the overlay opacity applied across this Agent Duel surface.
                       </div>
                     </div>
                   </div>
@@ -2263,16 +2390,6 @@ export default function App() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('rust-specs')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors border ${
-                activeTab === 'rust-specs'
-                  ? "bg-white/5 border-white/10 text-white font-semibold"
-                  : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-blue-400" /> Rust Architecture
-            </button>
-            <button
               id="btn-tab-duel"
               onClick={() => setActiveTab('duel')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors border relative ${
@@ -2305,6 +2422,38 @@ export default function App() {
           </div>
 
           <main className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+            <div className="bg-[#0d0f16] border border-white/10 rounded-lg p-4 shadow-lg shadow-blue-900/5">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500">Agent Duel Proof State</div>
+                  <div className="text-sm text-white mt-1">
+                    {duelRouteState?.proof.reason || 'Loading BYOS and cAPI duel proof state...'}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1 font-mono">
+                    Gameplay persistence: {duelRouteState?.liveGameplayEnabled ? 'verified' : 'disabled until session, wager, and outcome endpoints are proven'}
+                  </div>
+                </div>
+                <div className="lg:ml-auto flex flex-wrap gap-2">
+                  {duelRouteState?.proof.probes.map((probe) => (
+                    <span
+                      key={probe.route}
+                      className={`px-2 py-1 rounded border text-[10px] font-mono ${
+                        probe.state === 'verified'
+                          ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                          : probe.state === 'needs_endpoint'
+                            ? 'border-rose-500/30 text-rose-300 bg-rose-500/10'
+                            : probe.state === 'needs_proof'
+                              ? 'border-amber-500/30 text-amber-300 bg-amber-500/10'
+                              : 'border-red-500/30 text-red-300 bg-red-500/10'
+                      }`}
+                      title={probe.detail || probe.route}
+                    >
+                      {probe.route} · {probe.status}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             {/* TAB CONTENT: ARENA */}
             {activeTab === 'arena' && (
@@ -2341,7 +2490,7 @@ export default function App() {
                     </div>
                   )}
                   
-                  {/* Real-time Multiplier Trend Index */}
+                  {/* Route-backed multiplier trend index */}
                   <div id="multiplier-trend-panel" className="bg-[#0b0c10] border border-white/10 rounded-lg p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-blue-500/5">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5">
@@ -2349,7 +2498,7 @@ export default function App() {
                         <span className="text-white font-bold uppercase font-mono tracking-wider text-[11px]">Consensus Trend Index</span>
                       </div>
                       <span className="text-slate-400 text-[10px] block font-sans">
-                        Last 10 round multiplier outcomes of the Veklom protocol.
+                        BYOS round history only; empty until live gameplay endpoints are proven.
                       </span>
                     </div>
                     
@@ -2357,69 +2506,85 @@ export default function App() {
                       {/* Trend line SVG sparkline */}
                       <div className="flex items-center gap-2 bg-[#0d0f16] border border-white/5 rounded px-3 py-1.5 shrink-0">
                         <div className="text-[9px] font-mono text-slate-500 uppercase leading-none text-right">
-                          <span className="text-emerald-400 font-bold block">{Math.max(...lastTenCrashes).toFixed(1)}x</span>
-                          <span className="text-slate-600 block mt-1">Trend</span>
+                          <span className="text-amber-400 font-bold block">
+                            {lastTenCrashes.length > 0 ? `${Math.max(...lastTenCrashes).toFixed(1)}x` : 'Needs proof'}
+                          </span>
+                          <span className="text-slate-600 block mt-1">BYOS</span>
                         </div>
-                        <svg className="w-24 h-8 overflow-visible" viewBox="0 0 100 30" id="trend-sparkline-svg">
-                          <line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 2" />
-                          <path
-                            d={(() => {
+                        {lastTenCrashes.length > 0 ? (
+                          <svg className="w-24 h-8 overflow-visible" viewBox="0 0 100 30" id="trend-sparkline-svg">
+                            <line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 2" />
+                            <path
+                              d={(() => {
+                                const transformed = lastTenCrashes.map(v => Math.log(v));
+                                const minT = Math.min(...transformed);
+                                const maxT = Math.max(...transformed);
+                                const rangeT = maxT - minT || 1;
+                                const denominator = Math.max(lastTenCrashes.length - 1, 1);
+                                return lastTenCrashes.map((val, idx) => {
+                                  const x = (idx / denominator) * 100;
+                                  const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
+                                  return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
+                                }).join(' ');
+                              })()}
+                              fill="none"
+                              stroke="#3b82f6"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                            />
+                            {lastTenCrashes.map((val, idx) => {
                               const transformed = lastTenCrashes.map(v => Math.log(v));
                               const minT = Math.min(...transformed);
                               const maxT = Math.max(...transformed);
                               const rangeT = maxT - minT || 1;
-                              return lastTenCrashes.map((val, idx) => {
-                                const x = (idx / 9) * 100;
-                                const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
-                                return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
-                              }).join(' ');
-                            })()}
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
-                          />
-                          {lastTenCrashes.map((val, idx) => {
-                            const transformed = lastTenCrashes.map(v => Math.log(v));
-                            const minT = Math.min(...transformed);
-                            const maxT = Math.max(...transformed);
-                            const rangeT = maxT - minT || 1;
-                            const x = (idx / 9) * 100;
-                            const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
-                            const isNewest = idx === 9;
-                            return (
-                              <circle
-                                key={idx}
-                                cx={x}
-                                cy={y}
-                                r={isNewest ? 3 : 1.5}
-                                fill={isNewest ? '#f43f5e' : val >= 2.0 ? '#10b981' : '#3b82f6'}
-                                className={isNewest ? 'animate-ping' : ''}
-                              />
-                            );
-                          })}
-                        </svg>
+                              const denominator = Math.max(lastTenCrashes.length - 1, 1);
+                              const x = (idx / denominator) * 100;
+                              const y = 30 - 3 - ((Math.log(val) - minT) / rangeT) * 24;
+                              const isNewest = idx === lastTenCrashes.length - 1;
+                              return (
+                                <circle
+                                  key={idx}
+                                  cx={x}
+                                  cy={y}
+                                  r={isNewest ? 3 : 1.5}
+                                  fill={isNewest ? '#f43f5e' : val >= 2.0 ? '#10b981' : '#3b82f6'}
+                                  className={isNewest ? 'animate-ping' : ''}
+                                />
+                              );
+                            })}
+                          </svg>
+                        ) : (
+                          <div className="w-24 h-8 flex items-center justify-center text-[9px] font-mono text-slate-500 uppercase border border-dashed border-white/10 rounded">
+                            No history
+                          </div>
+                        )}
                       </div>
 
                       {/* Pill list of results */}
                       <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-full sm:max-w-[340px] md:max-w-none scrollbar-none">
-                        {lastTenCrashes.map((val, idx) => (
-                          <div 
-                            key={idx} 
-                            className={`px-2 py-1 rounded text-[10px] font-bold font-mono border transition-all hover:scale-105 duration-200 shrink-0 ${
-                              val >= 2.0 
-                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                                : val >= 1.2
-                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                                : 'bg-red-500/10 border-red-500/20 text-red-400'
-                            }`}
-                            title={`Round ${idx + 1}`}
-                          >
-                            {val.toFixed(2)}x
+                        {lastTenCrashes.length > 0 ? (
+                          lastTenCrashes.map((val, idx) => (
+                            <div
+                              key={idx}
+                              className={`px-2 py-1 rounded text-[10px] font-bold font-mono border transition-all hover:scale-105 duration-200 shrink-0 ${
+                                val >= 2.0
+                                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                  : val >= 1.2
+                                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+                              }`}
+                              title={`Round ${idx + 1}`}
+                            >
+                              {val.toFixed(2)}x
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-2.5 py-1 rounded border border-amber-500/20 bg-amber-500/10 text-amber-300 text-[10px] font-bold font-mono uppercase shrink-0">
+                            Awaiting BYOS proof
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2462,158 +2627,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Quantum Telemetry Packet Registry Visualizer */}
-                  <div className="bg-[#0b0c10] border border-white/10 rounded-lg p-5 space-y-4 shadow-lg shadow-blue-500/5">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2 flex-wrap gap-2">
-                       <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-bold flex items-center gap-1.5">
-                        <Cpu className="w-3.5 h-3.5 text-blue-400 animate-spin" />
-                        <span>// Quantum Telemetry Registry Sync</span>
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {lastLostRound && (
-                          <button
-                            onClick={() => setIsReplayModalOpen(true)}
-                            className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded text-[10px] font-mono text-red-400 font-extrabold uppercase tracking-wider transition-all duration-150 animate-pulse cursor-pointer shadow shadow-red-500/5"
-                          >
-                            <Eye className="w-3.5 h-3.5" /> Quantum Replay
-                          </button>
-                        )}
-                        {activeHand && (
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
-                            activeHand.natural ? 'bg-amber-500/20 text-yellow-400 border border-amber-500/30' : 'bg-slate-500/10 text-slate-400'
-                          }`}>
-                            {activeHand.natural ? '⚡ Natural 8/9!' : 'Standard Settlement'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* PLAYER TELEMETRY CONTAINER */}
-                      <div className={`p-4 rounded border transition-all ${
-                        activeHand && activeHand.outcome === 'player' && phase !== 'running'
-                          ? 'bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/10'
-                          : 'bg-[#06070a]/90 border-white/5'
-                      }`}>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-bold text-blue-400 font-sans flex items-center gap-1">
-                            ⚡ AGENT A (Vector North)
-                          </span>
-                          {activeHand && visiblePacketsCount >= 2 && (
-                            <span className="text-xs font-mono font-bold bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">
-                              {visiblePacketsCount >= 3 ? activeHand.playerScore : ((activeHand.playerPackets[0].scoreValue + activeHand.playerPackets[1].scoreValue) % 10)} Pts
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="flex gap-2 min-h-[90px] items-center justify-center bg-black/20 rounded p-2 border border-white/[0.02]">
-                          {activeHand ? (
-                            activeHand.playerPackets.map((packet, idx) => {
-                              const isVisible = (idx < 2 && visiblePacketsCount >= idx + 1) || (idx === 2 && visiblePacketsCount >= 3);
-                              if (!isVisible) {
-                                  return (
-                                    <div key={idx} className="w-14 h-20 bg-blue-950/20 border border-blue-500/20 text-blue-500/30 font-mono text-center rounded flex items-center justify-center text-[10px] select-none animate-pulse">
-                                      [🔒]
-                                    </div>
-                                  );
-                                }
-                                const details = getPacketDetails(packet);
-                                return (
-                                  <div 
-                                    key={idx} 
-                                    className={`w-14 h-20 rounded border flex flex-col justify-between p-2 select-none font-mono text-center shadow-lg transition-all animate-[slideIn_0.25s_ease-out] ${details.borderClass}`}
-                                    style={{ boxShadow: `0 4px 12px ${details.glowColor}` }}
-                                  >
-                                    <div className="text-[8px] font-bold text-slate-500 text-left leading-none">
-                                      {details.label}
-                                    </div>
-                                    <div className={`text-xs font-black tracking-tighter ${details.colorClass}`}>
-                                      {details.hexValue}
-                                    </div>
-                                    <div className="text-[8px] text-right text-slate-400 font-extrabold leading-none">
-                                      WGT:{packet.scoreValue}
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">// Awaiting block deal...</span>
-                            )}
-                          </div>
-                        </div>
-  
-                        {/* BANKER TELEMETRY CONTAINER */}
-                        <div className={`p-4 rounded border transition-all ${
-                          activeHand && activeHand.outcome === 'banker' && phase !== 'running'
-                            ? 'bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/10'
-                            : 'bg-[#06070a]/90 border-white/5'
-                        }`}>
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-amber-500 font-sans flex items-center gap-1">
-                              🌀 AGENT B (Quiet Switch)
-                            </span>
-                            {activeHand && visiblePacketsCount >= 2 && (
-                              <span className="text-xs font-mono font-bold bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded border border-amber-500/20">
-                                {visiblePacketsCount >= 3 ? activeHand.bankerScore : ((activeHand.bankerPackets[0].scoreValue + activeHand.bankerPackets[1].scoreValue) % 10)} Pts
-                              </span>
-                            )}
-                          </div>
-  
-                          <div className="flex gap-2 min-h-[90px] items-center justify-center bg-black/20 rounded p-2 border border-white/[0.02]">
-                            {activeHand ? (
-                              activeHand.bankerPackets.map((packet, idx) => {
-                                const isVisible = (idx < 2 && visiblePacketsCount >= idx + 1) || (idx === 2 && visiblePacketsCount >= 3);
-                                if (!isVisible) {
-                                  return (
-                                    <div key={idx} className="w-14 h-20 bg-amber-950/20 border border-amber-500/20 text-amber-500/30 font-mono text-center rounded flex items-center justify-center text-[10px] select-none animate-pulse">
-                                      [🔒]
-                                    </div>
-                                  );
-                                }
-                                const details = getPacketDetails(packet);
-                                return (
-                                  <div 
-                                    key={idx} 
-                                    className={`w-14 h-20 rounded border flex flex-col justify-between p-2 select-none font-mono text-center shadow-lg transition-all animate-[slideIn_0.25s_ease-out] ${details.borderClass}`}
-                                    style={{ boxShadow: `0 4px 12px ${details.glowColor}` }}
-                                  >
-                                    <div className="text-[8px] font-bold text-slate-500 text-left leading-none">
-                                      {details.label}
-                                    </div>
-                                    <div className={`text-xs font-black tracking-tighter ${details.colorClass}`}>
-                                      {details.hexValue}
-                                    </div>
-                                    <div className="text-[8px] text-right text-slate-400 font-extrabold leading-none">
-                                      WGT:{packet.scoreValue}
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">// Awaiting block deal...</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                    {/* Winner Outcome Banner Strip */}
-                    {activeHand && phase !== 'running' && (
-                      <div className={`p-2 rounded text-center font-mono text-xs font-bold uppercase tracking-wider animate-pulse ${
-                        activeHand.outcome === 'player'
-                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          : activeHand.outcome === 'banker'
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      }`}>
-                        {activeHand.outcome === 'player' 
-                          ? '⚡ VECTOR NORTH (A) WINS THE TELEMETRY DUEL!' 
-                          : activeHand.outcome === 'banker' 
-                          ? '🌀 QUIET SWITCH (B) WINS THE TELEMETRY DUEL!' 
-                          : '🤝 QUANTUM EQUILIBRIUM TIE SETTLEMENT!'}
-                      </div>
-                    )}
-                  </div>
-
                   {/* Chips Selection Bar for high precision betting */}
                   <div className="bg-[#0d0f16] border border-white/10 rounded-lg p-4 space-y-3.5 shadow-lg shadow-blue-900/5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-2">
@@ -2621,25 +2634,25 @@ export default function App() {
                         <h3 className="text-xs font-bold font-mono text-slate-400 uppercase tracking-widest">
                           // Micropayment Chip Selector
                         </h3>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">Pick active chip, then tap Routing board below to stack stakes</p>
+                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">Pick a chip, then choose exactly one lane: Agent A, Agent B, or Tie</p>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
                         <button 
-                          disabled={phase !== 'idle'} 
+                          disabled={phase !== 'idle' || isAuthorizingWager} 
                           onClick={handleRebet}
                           className="px-2.5 py-1 border border-white/10 hover:border-blue-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-350 disabled:opacity-30"
                         >
                           Rebet Prev
                         </button>
                         <button 
-                          disabled={phase !== 'idle'} 
+                          disabled={phase !== 'idle' || isAuthorizingWager} 
                           onClick={handleDoubleBets}
                           className="px-2.5 py-1 border border-white/10 hover:border-amber-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-355 disabled:opacity-30"
                         >
                           Double
                         </button>
                         <button 
-                          disabled={phase !== 'idle'} 
+                          disabled={phase !== 'idle' || isAuthorizingWager} 
                           onClick={handleClearBets}
                           className="px-2.5 py-1 border border-red-500/10 hover:border-red-500/30 rounded bg-red-500/5 hover:bg-red-500/10 transition-colors font-mono text-[9px] uppercase font-bold text-red-400 disabled:opacity-30"
                         >
@@ -2661,7 +2674,7 @@ export default function App() {
                         return (
                           <button
                             key={chip.value}
-                            disabled={phase !== 'idle'}
+                            disabled={phase !== 'idle' || isAuthorizingWager}
                             onClick={() => {
                               setActiveChip(chip.value);
                               playSfx(523, 0.04, 'sine', 0.08);
@@ -2686,21 +2699,12 @@ export default function App() {
                     
                     {/* PLAYER NEON AREA */}
                     <div
-                      onClick={() => {
-                        if (phase !== 'idle') return;
-                        const proposed = Number((bets.player + activeChip).toFixed(2));
-                        if (proposed + bets.banker + bets.tie > bankroll) {
-                          addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
-                          return;
-                        }
-                        setBets((prev) => ({ ...prev, player: proposed }));
-                        playSfx(880, 0.05, 'sine', 0.15);
-                      }}
+                      onClick={() => placeSingleLaneBet('player')}
                       className={`p-4 rounded-lg border text-left transition-all relative ${
                         bets.player > 0
                           ? 'bg-blue-500/5 border-blue-500 shadow-md shadow-blue-500/5'
                           : 'bg-[#0d0f16] border-white/5 hover:border-blue-500/20'
-                      } ${phase !== 'idle' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      } ${phase !== 'idle' || isAuthorizingWager ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-black font-sans text-blue-400 tracking-wider">⚡ AGENT A (Vector)</span>
@@ -2716,29 +2720,25 @@ export default function App() {
                       </div>
 
                       {bets.player > 0 && (
-                        <div className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-blue-500 border border-white/30 text-[8px] font-black font-mono text-white flex items-center justify-center animate-bounce">
-                          •
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => removeLaneBet('player', event)}
+                          className="absolute -top-2 right-2 h-6 min-w-10 px-2 rounded bg-blue-500 border border-white/30 text-[9px] font-black font-mono text-white flex items-center justify-center shadow-md shadow-blue-500/20 hover:bg-blue-400"
+                          title="Remove Agent A stake"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
 
                     {/* TIE EQUILIBRIUM NEON AREA */}
                     <div
-                      onClick={() => {
-                        if (phase !== 'idle') return;
-                        const proposed = Number((bets.tie + activeChip).toFixed(2));
-                        if (proposed + bets.player + bets.banker > bankroll) {
-                          addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
-                          return;
-                        }
-                        setBets((prev) => ({ ...prev, tie: proposed }));
-                        playSfx(880, 0.05, 'sine', 0.15);
-                      }}
+                      onClick={() => placeSingleLaneBet('tie')}
                       className={`p-4 rounded-lg border text-left transition-all relative ${
                         bets.tie > 0
                           ? 'bg-emerald-500/5 border-emerald-500 shadow-md shadow-emerald-500/5'
                           : 'bg-[#0d0f16] border-white/5 hover:border-emerald-500/20'
-                      } ${phase !== 'idle' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      } ${phase !== 'idle' || isAuthorizingWager ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-black font-sans text-emerald-400 tracking-wider">🤝 TIE</span>
@@ -2754,29 +2754,25 @@ export default function App() {
                       </div>
 
                       {bets.tie > 0 && (
-                        <div className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-emerald-500 border border-white/30 text-[8px] font-black font-mono text-white flex items-center justify-center animate-bounce">
-                          •
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => removeLaneBet('tie', event)}
+                          className="absolute -top-2 right-2 h-6 min-w-10 px-2 rounded bg-emerald-500 border border-white/30 text-[9px] font-black font-mono text-white flex items-center justify-center shadow-md shadow-emerald-500/20 hover:bg-emerald-400"
+                          title="Remove Tie stake"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
 
                     {/* BANKER NEON AREA */}
                     <div
-                      onClick={() => {
-                        if (phase !== 'idle') return;
-                        const proposed = Number((bets.banker + activeChip).toFixed(2));
-                        if (proposed + bets.player + bets.tie > bankroll) {
-                          addNotification('collapse', 'Allocation Blocked', 'Insufficient bankroll USDC.');
-                          return;
-                        }
-                        setBets((prev) => ({ ...prev, banker: proposed }));
-                        playSfx(880, 0.05, 'sine', 0.15);
-                      }}
+                      onClick={() => placeSingleLaneBet('banker')}
                       className={`p-4 rounded-lg border text-left transition-all relative ${
                         bets.banker > 0
                           ? 'bg-amber-500/5 border-amber-500 shadow-md shadow-amber-500/5'
                           : 'bg-[#0d0f16] border-white/5 hover:border-amber-500/20'
-                      } ${phase !== 'idle' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      } ${phase !== 'idle' || isAuthorizingWager ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-black font-sans text-amber-500 tracking-wider">🌀 AGENT B (Switch)</span>
@@ -2792,9 +2788,14 @@ export default function App() {
                       </div>
 
                       {bets.banker > 0 && (
-                        <div className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-amber-500 border border-white/30 text-[8px] font-black font-mono text-white flex items-center justify-center animate-bounce">
-                          •
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => removeLaneBet('banker', event)}
+                          className="absolute -top-2 right-2 h-6 min-w-10 px-2 rounded bg-amber-500 border border-white/30 text-[9px] font-black font-mono text-black flex items-center justify-center shadow-md shadow-amber-500/20 hover:bg-amber-400"
+                          title="Remove Agent B stake"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
 
@@ -2804,7 +2805,7 @@ export default function App() {
                   <div className="bg-[#0d0f16] border border-white/10 p-5 rounded-lg flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-blue-900/5">
                     <div className="w-full md:w-auto">
                       <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2 font-bold">
-                        Combined Stake Allocation
+                        Active Single-Lane Stake
                       </span>
                       <div className="text-sm font-black font-mono text-white flex items-baseline gap-2">
                         <span className="text-lg text-amber-500">${wagerAmount.toFixed(2)} USDC</span> staked on this cycle
@@ -2815,14 +2816,22 @@ export default function App() {
                     </div>
 
                     <div className="w-full md:w-auto shrink-0">
-                      {phase !== 'running' ? (
+                      {phase === 'crashed' || phase === 'ejected' ? (
+                        <button
+                          id="btn-next-agent-duel-round"
+                          onClick={() => prepareNextSinglePlayerRound('manual')}
+                          className="w-full md:w-auto py-3 px-10 bg-gradient-to-br from-emerald-600 to-teal-800 hover:from-emerald-500 hover:to-teal-700 rounded-lg text-white font-sans font-extrabold text-sm uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/30 select-none cursor-pointer flex items-center justify-center gap-2 border border-emerald-500/35"
+                        >
+                          <RefreshCw className="w-4 h-4 text-white" /> Next Round
+                        </button>
+                      ) : phase !== 'running' ? (
                         <button
                           id="btn-trigger-route"
                           onClick={initiateRoute}
-                          disabled={bankroll <= 0 || wagerAmount <= 0}
+                          disabled={bankroll <= 0 || wagerAmount <= 0 || isAuthorizingWager}
                           className="w-full md:w-auto py-3 px-10 bg-gradient-to-br from-blue-600 to-indigo-800 hover:from-blue-500 hover:to-indigo-700 disabled:opacity-40 rounded-lg text-white font-sans font-extrabold text-sm uppercase tracking-widest transition-all shadow-lg shadow-blue-900/40 select-none cursor-pointer flex items-center justify-center gap-2 border border-blue-500/35"
                         >
-                          <Play className="w-4 h-4 fill-white text-white" /> Initiate Route Trace
+                          <Play className="w-4 h-4 fill-white text-white" /> {isAuthorizingWager ? 'Authorizing Payment...' : 'Initiate Route Trace'}
                         </button>
                       ) : (
                         <button
@@ -2845,25 +2854,24 @@ export default function App() {
                     wallet={wallet}
                     onConnect={handleWalletConnect}
                     onDisconnect={handleWalletDisconnect}
-                    onRefreshBalance={handleFaucetDeposit}
                   />
 
-                  {/* M2M SYSTEM AUTOMATION & HFT BOT CONSOLE */}
+                  {/* Optional automated wager console */}
                   <div className="bg-[#0b0c10] border border-white/10 rounded-lg p-5 font-mono space-y-4 shadow-lg shadow-emerald-500/5">
                     <div className="flex items-center justify-between border-b border-white/5 pb-2">
                       <div className="flex items-center gap-1.5 text-slate-350">
                         <Cpu className={`w-4 h-4 text-emerald-400 ${m2mEnabled ? 'animate-spin' : ''}`} />
-                        <span className="text-xs font-bold uppercase tracking-wider">M2M Automated HFT Bot</span>
+                        <span className="text-xs font-bold uppercase tracking-wider">Optional Auto-Wager Routine</span>
                       </div>
                       <button
                         onClick={() => {
                           const newState = !m2mEnabled;
                           setM2mEnabled(newState);
                           if (newState) {
-                            addM2mLog("HFT Core spawned. Automated network bidding initiated...", "success");
+                            addM2mLog("Auto-wager routine enabled. Wallet approvals are still required for paid wagers.", "success");
                             playSfx(523, 0.1, 'sine', 0.15);
                           } else {
-                            addM2mLog("HFT Core halted by user sign-off.", "warn");
+                            addM2mLog("Auto-wager routine paused by user.", "warn");
                             playSfx(330, 0.1, 'sine', 0.15);
                           }
                         }}
@@ -2873,9 +2881,12 @@ export default function App() {
                             : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
                         }`}
                       >
-                        {m2mEnabled ? '● Bot Active' : '○ Bot Dormant'}
+                        {m2mEnabled ? 'Auto-Wager On' : 'Auto-Wager Off'}
                       </button>
                     </div>
+                    <p className="text-[10px] leading-relaxed text-slate-500">
+                      Manual play does not require this routine. It only suggests repeat wager cycles; Base Account approval and BYOS receipt verification remain required before each paid round starts.
+                    </p>
 
                     {/* Strategy Selector */}
                     <div className="space-y-1.5">
@@ -2979,9 +2990,10 @@ export default function App() {
                       <span>// Protocol Rules</span>
                     </div>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>Choose Vector North [⚡] or Quiet Switch [🌀] as your primary lane racer.</li>
-                      <li>Initiate route. Multiplier grows exponentially.</li>
-                      <li>Ensure you Eject before the random network collapse occurs. If hijacked, staked USDC is forfeited.</li>
+                      <li>Select one chip, then exactly one lane: Agent A, Tie, or Agent B.</li>
+                      <li>Press Initiate Route Trace and approve the Base Account USDC transfer.</li>
+                      <li>The round starts only after BYOS verifies the Base receipt and locks that wager.</li>
+                      <li>Eject before network collapse. If the route crashes first, the locked stake is forfeited.</li>
                     </ul>
                   </div>
                 </div>
@@ -3005,9 +3017,9 @@ export default function App() {
                       dApp Escrow Collaterals & Settlement Pool
                     </h2>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      This application operates asynchronously under the standard <span className="text-white">x402 Facilitator Protocol</span>. 
-                      Collateral allocations and settlement cycles are logged permanently on the Base Mainnet blockchain. 
-                      Every wager committed during the Agent Duel game interacts directly with the on-chain escrow, triggering automatic distribution of prizes when players eject prior to network crash bounds.
+                      This view tracks the <span className="text-white">x402 Facilitator Protocol</span> routes required for Agent Duel.
+                      Current production proof is read-only until BYOS returns verified session, wager, and outcome endpoints.
+                      No local escrow, payout, or on-chain settlement is treated as live without route proof.
                     </p>
 
                     <div className="bg-[#050608] p-4 rounded-lg border border-white/5 space-y-3">
@@ -3045,7 +3057,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <FacilitatorBlock escrow={escrow} onDepositCollateral={handleEscrowDeposit} />
+                  <FacilitatorBlock escrow={escrow} />
                 </div>
 
               </div>
@@ -3063,39 +3075,20 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB CONTENT: RUST CODE ARCHITECTURE */}
-            {activeTab === 'rust-specs' && (
-              <div id="tab-rust-view" className="space-y-4">
-                <div className="bg-[#0d0f16] border border-white/10 p-5 rounded-lg space-y-2 shadow-lg shadow-blue-900/5">
-                  <h2 className="text-base font-bold text-white uppercase font-sans flex items-center gap-2">
-                    <Coins className="w-5 h-5 text-blue-400" />
-                    High-Performance Multi-File Rust backend Configs
-                  </h2>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Below is the live code preview of the clean, production-grade Rust architecture designed for local and containerized deployments. 
-                    This layout leverages the <span className="text-white">Axum Web Framework</span> for lightweight asynchronous routing, 
-                    <span className="text-white">SQLx</span> for asynchronous PostgreSQL connections, and standard <span className="text-white">Tracing Telemetry</span> JSON formatting.
-                  </p>
-                </div>
-
-                <RustCodeViewer />
-              </div>
-            )}
-
             {/* TAB CONTENT: CONSENSUS DUEL */}
             {activeTab === 'duel' && (
               <div id="tab-duel-view" className="space-y-6">
                 <DuelInviteBlock
                   wallet={wallet}
                   activeDuel={activeDuel}
+                  openLobbies={openDuelLobbies}
+                  onRefreshLobbies={fetchOpenDuelLobbies}
                   onCreateDuel={handleCreateDuel}
                   onJoinDuel={handleJoinDuel}
                   onLeaveDuel={handleLeaveDuel}
-                  onToggleSimulatePeer={handleToggleSimulatePeer}
-                  onPlaceSimulatedBet={handlePlaceSimulatedBet}
-                  onSimulatePeerEject={handleSimulatePeerEject}
-                  isSimulatedPeerActive={isSimulatedPeerActive}
                   onStartDuelCountdown={handleStartDuelCountdown}
+                  liveGameplayEnabled={!!duelRouteState?.liveGameplayEnabled}
+                  multiplayerExecutionVerified={duelRouteState?.capabilities?.multiplayerExecution === 'verified'}
                 />
               </div>
             )}
@@ -3111,12 +3104,16 @@ export default function App() {
                       <h2 className="text-sm font-bold text-white uppercase tracking-wider">// Base Mainnet L2 Sandboxed Ledger Explorer</h2>
                     </div>
                     <p className="text-xs text-slate-400">
-                      Real-time transactional audit log for the Veklom x402 Game Engine. All consensus stakes, ejections, and settlements are permanently logged with zero latency.
+                      Route-backed audit view for the Veklom x402 Game Engine. Transaction rows remain empty until BYOS returns verified wager history.
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/30 px-3 py-1.5 rounded text-blue-400 text-xs">
-                    <Cpu className="w-3.5 h-3.5 animate-spin" />
-                    <span>L2 Gas: <span className="font-bold">0.005 Gwei ($0.00003)</span></span>
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs ${
+                    gasTelemetryVerified
+                      ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
+                      : 'bg-amber-500/10 border border-amber-500/30 text-amber-300'
+                  }`}>
+                    <Cpu className="w-3.5 h-3.5" />
+                    <span>Gas telemetry: <span className="font-bold">{gasTelemetryVerified ? 'Verified' : 'Needs proof'}</span></span>
                   </div>
                 </div>
 
@@ -3124,31 +3121,38 @@ export default function App() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Base Block Height</span>
-                    <span className="text-lg font-bold text-white block mt-1">#{blockHeight.toLocaleString()}</span>
-                    <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      Secured (L2 Instant)
+                    <span className={`text-lg font-bold block mt-1 ${baseBlockHeight ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {baseBlockHeight ? baseBlockHeight.toLocaleString() : 'Needs proof'}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-semibold mt-0.5 block flex items-center gap-1">
+                      {baseBlockHeight ? 'Base RPC eth_blockNumber via BYOS' : 'Waiting for BYOS transaction metadata'}
                     </span>
                   </div>
                   
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Contract Transactions</span>
-                    <span className="text-lg font-bold text-blue-400 block mt-1">{(roundFeed.length + 1547).toLocaleString()}</span>
-                    <span className="text-[9px] text-slate-400 mt-0.5 block">Total verified executions</span>
+                    <span className="text-lg font-bold text-blue-400 block mt-1">{roundFeed.length.toLocaleString()}</span>
+                    <span className="text-[9px] text-slate-400 mt-0.5 block">Verified BYOS history rows</span>
                   </div>
 
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">x402 Pool Liquidity</span>
-                    <span className="text-lg font-bold text-amber-500 block mt-1">${(145890.30 + (wallet.address ? 250 : 0)).toLocaleString(undefined, {minimumFractionDigits: 2})} USDC</span>
+                    <span className={`text-lg font-bold block mt-1 ${typeof poolLiquidityUsdc === 'number' ? 'text-emerald-400' : 'text-amber-500'}`}>
+                      {typeof poolLiquidityUsdc === 'number' ? `$${poolLiquidityUsdc.toFixed(3)} USDC` : 'Needs proof'}
+                    </span>
                     <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
-                      Verified Escrow OK
+                      {typeof poolLiquidityUsdc === 'number' ? 'Treasury USDC balanceOf via Base RPC' : 'Waiting for BYOS wager settlement endpoint'}
                     </span>
                   </div>
 
                   <div className="bg-[#0c0d12] border border-white/5 p-4 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Settlement Time</span>
-                    <span className="text-lg font-bold text-white block mt-1">~2.0 Seconds</span>
-                    <span className="text-[9px] text-slate-400 mt-0.5 block">Average Base block interval</span>
+                    <span className={`text-lg font-bold block mt-1 ${settlementTime ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {settlementTime ? new Date(settlementTime).toLocaleTimeString() : 'Needs proof'}
+                    </span>
+                    <span className="text-[9px] text-slate-400 mt-0.5 block">
+                      {settlementTime ? 'Latest verified settlement proof' : 'Returned by settlement history endpoint'}
+                    </span>
                   </div>
                 </div>
 
@@ -3179,10 +3183,10 @@ export default function App() {
                   <div className="px-5 py-4 border-b border-white/10 bg-[#0a0c12] flex items-center justify-between">
                     <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                       <Activity className="w-4 h-4 text-blue-400" />
-                      Verified L2 Transaction Ledger ({roundFeed.length} Game Rounds logged this session)
+                      BYOS Wager History Ledger ({roundFeed.length} verified rows)
                     </h3>
                     <span className="text-[9px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase font-bold">
-                      Real-time Feed
+                      Route-backed Feed
                     </span>
                   </div>
 
@@ -3191,7 +3195,7 @@ export default function App() {
                       <div className="max-w-md mx-auto space-y-2">
                         <p className="text-slate-400 font-bold uppercase tracking-wide">// No Transaction Ledger Records Yet</p>
                         <p className="text-slate-500 text-[11px] leading-relaxed">
-                          Place a chip on the betting grid and trigger a round trace inside the <span className="text-blue-400">Cyber Arena</span>. Complete transactions will automatically appear here on Basescan in real time!
+                          BYOS has not returned verified wager history for this wallet yet. Local generated tx hashes are not shown as settlement proof.
                         </p>
                       </div>
                     </div>
@@ -3221,9 +3225,6 @@ export default function App() {
                               );
                             })
                             .map((tx, idx) => {
-                              const block = blockHeight - (idx * 3) - 1;
-                              const secondsAgo = (idx * 5) + 3;
-                              const formattedAge = secondsAgo < 60 ? `${secondsAgo}s ago` : `${Math.floor(secondsAgo / 60)}m ${secondsAgo % 60}s ago`;
                               const isWin = tx.payout > tx.wagerAmount;
                               
                               return (
@@ -3272,18 +3273,18 @@ export default function App() {
 
                                   {/* Block Height */}
                                   <td className="py-3.5 px-4 font-mono text-slate-400">
-                                    #{block.toLocaleString()}
+                                    {tx.blockHeight ? tx.blockHeight.toLocaleString() : 'Needs proof'}
                                   </td>
 
                                   {/* Age */}
                                   <td className="py-3.5 px-4 text-slate-400 font-sans">
-                                    {formattedAge}
+                                    {tx.timestamp || 'BYOS'}
                                   </td>
 
                                   {/* From */}
                                   <td className="py-3.5 px-4 font-mono">
                                     <span className="text-slate-400 select-all">
-                                      {wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : '0xMyWalletAddress...'}
+                                      {wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'Needs wallet proof'}
                                     </span>
                                   </td>
 
@@ -3312,31 +3313,33 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Bytecode Argument Decoder Section (Provides extreme technical authenticity) */}
+                {/* BYOS transaction metadata is shown only when returned by verified history routes. */}
                 {roundFeed.length > 0 && (
                   <div className="bg-[#0b0c10] border border-white/10 p-5 rounded-lg space-y-3">
                     <div className="flex items-center gap-1.5 text-white uppercase text-xs font-bold">
                       <Cpu className="w-4 h-4 text-blue-400" />
-                      <span>// Live EVM Decoder Inspector</span>
+                      <span>// EVM Decoder Inspector</span>
                     </div>
                     <p className="text-slate-400 text-xs">
-                      Below is the raw decrypted ABI bytecode payloads compiled on-chain for the most recent game transaction:
+                      Raw input payloads are displayed only when BYOS returns verified transaction calldata for the selected row.
                     </p>
                     <div className="bg-[#050608] border border-white/5 rounded p-3 text-[10px] text-slate-400 space-y-2">
                       <div className="flex justify-between border-b border-white/[0.03] pb-1.5">
                         <span className="text-slate-500">Contract ABI Function:</span>
-                        <span className="text-blue-400 font-bold">executeEscrowEject(address player, uint256 wager, uint256 ejectMulti)</span>
+                        <span className={`font-bold ${selectedProofTx?.functionSelector ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {selectedProofTx?.functionSelector || 'Needs BYOS calldata proof'}
+                        </span>
                       </div>
                       <div className="space-y-1">
                         <span className="text-slate-500 block">Raw Input Payload (Data):</span>
-                        <div className="bg-black/40 p-2 rounded text-[9px] text-amber-500 select-all break-all leading-relaxed">
-                          0x438df9a2000000000000000000000000{wallet.address?.slice(2) || '3a74772e925b54F7dAD7FD95c9Ba30825033f970'}000000000000000000000000000000000000000000000000000000000000004c00000000000000000000000000000000000000000000000000000000000000a5
+                        <div className={`bg-black/40 p-2 rounded text-[9px] select-all break-all leading-relaxed ${selectedProofTx?.callData ? 'text-emerald-300' : 'text-amber-500'}`}>
+                          {selectedProofTx?.callData || 'Needs proof'}
                         </div>
                       </div>
                       <div className="flex justify-between pt-1 text-[9px]">
-                        <span>Gas Limit: <span className="text-white">65,000</span></span>
-                        <span>Gas Price: <span className="text-white">0.00501 Gwei</span></span>
-                        <span>Facilitator Nonce: <span className="text-amber-500">#{roundFeed.length + 84}</span></span>
+                        <span>Gas Limit: <span className={latestSettlement?.gas ? 'text-emerald-400' : 'text-amber-400'}>{latestSettlement?.gas ? latestSettlement.gas.toLocaleString() : 'Needs proof'}</span></span>
+                        <span>Gas Price: <span className={selectedProofTx?.gasPriceWei ? 'text-emerald-400' : 'text-amber-400'}>{selectedProofTx?.gasPriceWei ? `${selectedProofTx.gasPriceWei} wei` : 'Needs proof'}</span></span>
+                        <span>Facilitator Nonce: <span className="text-amber-400">Needs proof</span></span>
                       </div>
                     </div>
                   </div>
@@ -3360,5 +3363,18 @@ export default function App() {
         replayData={lastLostRound}
       />
     </div>
+  );
+}
+
+export default function App() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
+  return (
+    <WalletProviders>
+      <AgentDuelApp />
+    </WalletProviders>
   );
 }

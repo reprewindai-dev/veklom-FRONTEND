@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pipeline } from '@/components/pipeline/Pipeline';
-import type { PhaseTrace } from '@/lib/covenant/types';
+import type { PhaseTrace } from '@/lib/cappo/types';
+import { getToken } from '@/lib/api';
 import { 
   Users, 
   ShieldAlert, 
@@ -149,7 +150,7 @@ const TRACE_NODES: TraceNode[] = [
     subtitle: 'Active Secret Swapper',
     latency: '0.05ms',
     description: 'Swaps static machine secrets with short-lived, in-context x402 token nonces. Real secrets are never revealed to the LLM agent.',
-    successDetails: 'Static AWS secret swapped with short-lived token nonce UACP_NONCE.X402_VALID_4AF. Raw key isolated.',
+    successDetails: 'Static secret remains isolated. Nonce proof is displayed only when returned by the backend execution receipt.',
     failDetails: 'Bypassed. Cryptographic key swapping aborted due to earlier policy veto.',
     langsmithComparison: 'Aembit manages tokens blindly without semantic context. Veklom couples credentials directly with natural language policy compilation.'
   }
@@ -163,7 +164,7 @@ interface LedgerBlock {
   action: string;
   vnpStake: string;
   evidenceHash: string;
-  status: 'SUCCESS' | 'SLASHED';
+  status: 'SUCCESS' | 'BLOCKED' | 'NEEDS_PROOF';
 }
 
 export default function VanguardPlayground() {
@@ -178,39 +179,16 @@ export default function VanguardPlayground() {
   const [trace, setTrace] = useState<PhaseTrace[] | null>(null);
   const [runId, setRunId] = useState<number>(0);
   const [logs, setLogs] = useState<string[]>([]);
-  const [slashedStake, setSlashedStake] = useState<number>(0);
-  const [vnpBalance, setVnpBalance] = useState<number>(5000);
-  const [yieldApy, setYieldApy] = useState<number>(12.4);
+  const [vnpBalance] = useState<number | null>(null);
+  const [yieldApy] = useState<number | null>(null);
   const [selectedNode, setSelectedNode] = useState<TraceNode>(TRACE_NODES[0]);
-  const [nonceToken, setNonceToken] = useState<string>('UACP_NONCE.X402_VALID_4AF3B861A7C20');
+  const [nonceToken, setNonceToken] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState<boolean>(false);
-  const [lastActionStatus, setLastActionStatus] = useState<string>('🛡️ SLA fully verified (0 Slashed)');
+  const [lastActionStatus, setLastActionStatus] = useState<string>('Needs backend execution proof');
   const [floatingValue, setFloatingValue] = useState<string | null>(null);
   const [floatingColor, setFloatingValueColor] = useState<string>('text-green-400');
 
-  // Ledger state initialized with historical blocks
-  const [ledger, setLedger] = useState<LedgerBlock[]>([
-    {
-      index: 1045,
-      timestamp: '22:12:04 UTC',
-      prevHash: '0x8f2d5e3c1b4a9f',
-      hash: '0x9a3e2c1b8f4d5e',
-      action: 'TREASURY_DISBURSEMENT',
-      vnpStake: '+12 VNP (SLA Yield)',
-      evidenceHash: 'sha256(0x9d2e1b4a...)',
-      status: 'SUCCESS'
-    },
-    {
-      index: 1044,
-      timestamp: '21:45:18 UTC',
-      prevHash: '0x7e1d5c2b3a8f4e',
-      hash: '0x8f2d5e3c1b4a9f',
-      action: 'DEVOPS_BLUEPRINT_COMPILE',
-      vnpStake: '+8 VNP (SLA Yield)',
-      evidenceHash: 'sha256(0x8c3b1a2f...)',
-      status: 'SUCCESS'
-    }
-  ]);
+  const [ledger, setLedger] = useState<LedgerBlock[]>([]);
 
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
@@ -221,18 +199,77 @@ export default function VanguardPlayground() {
     }
   }, [logs]);
 
-  // Handle active non-human key rotation (Aembit 10x overtake)
+  const extractProofId = (payload: any): string => {
+    return String(
+      payload?.evidence_hash ||
+      payload?.result?.evidence_hash ||
+      payload?.receipt_id ||
+      payload?.result?.receipt_id ||
+      payload?.run_id ||
+      payload?.result?.run_id ||
+      payload?.execution_id ||
+      payload?.result?.execution_id ||
+      payload?.log_id ||
+      payload?.result?.log_id ||
+      ''
+    );
+  };
+
+  const traceFromPayload = (payload: any): PhaseTrace[] => {
+    const backendTrace = Array.isArray(payload?.trace)
+      ? payload.trace
+      : Array.isArray(payload?.result?.trace)
+      ? payload.result.trace
+      : [];
+
+    if (backendTrace.length) {
+      return backendTrace.map((item: any, index: number) => ({
+        phase: Number(item.phase ?? index + 1),
+        name: String(item.name ?? item.stage ?? `cAPI Phase ${index + 1}`),
+        status: item.status === 'error' || item.status === 'fail' || item.ok === false ? 'fail' : 'pass',
+        summary: String(item.summary ?? item.message ?? item.status ?? 'cAPI phase returned.'),
+        duration_ms: Number(item.duration_ms ?? item.latency_ms ?? 0),
+        detail: typeof item === 'object' && item ? item : {},
+      }));
+    }
+
+    return [{
+      phase: 1,
+      name: 'cAPI Execute',
+      status: payload?.status === 'error' ? 'fail' : 'pass',
+      summary: extractProofId(payload)
+        ? `Backend proof emitted: ${extractProofId(payload)}`
+        : 'cAPI returned without a receipt, run id, execution id, or evidence hash.',
+      duration_ms: 0,
+      detail: typeof payload === 'object' && payload ? payload : {},
+    }];
+  };
+
+  const appendBackendEvidence = (payload: any, actionName: string, status: LedgerBlock['status']) => {
+    const proofId = extractProofId(payload);
+    if (!proofId) return;
+
+    setLedger(prev => [{
+      index: prev[0] ? prev[0].index + 1 : 1,
+      timestamp: new Date().toISOString(),
+      prevHash: prev[0]?.hash || '',
+      hash: proofId,
+      action: actionName,
+      vnpStake: 'Backend proof only',
+      evidenceHash: proofId,
+      status,
+    }, ...prev]);
+  };
+
+  // Nonce rotation requires a backend receipt. This control no longer mints local tokens.
   const handleRotateNonce = () => {
     setIsRotating(true);
-    setLogs(prev => [...prev, `[SYSTEM] Rotator initiated. Revoking active credential nonce: ${nonceToken}`]);
-    
     setTimeout(() => {
-      const newHex = Math.random().toString(16).substring(2, 15).toUpperCase();
-      const newNonce = `UACP_NONCE.X402_VALID_${newHex}`;
-      setNonceToken(newNonce);
+      setNonceToken(null);
       setIsRotating(false);
-      setLogs(prev => [...prev, `[SYSTEM] Cryptographic Key Rotation Complete. Swapped context token to: ${newNonce}`]);
-    }, 1000);
+      setLastActionStatus('Needs backend nonce rotation receipt');
+      setLogs(prev => [...prev, '[SYSTEM] Nonce rotation endpoint is not wired for this panel. No local nonce was generated.']);
+    }, 250);
   };
 
   // Trigger simulated hybrid run
@@ -241,7 +278,6 @@ export default function VanguardPlayground() {
     setExecutionState('running');
     setCurrentStep(0);
     setLogs([]);
-    setSlashedStake(0);
     setFloatingValue(null);
     setTrace([]);
     const rid = Date.now();
@@ -272,9 +308,13 @@ export default function VanguardPlayground() {
     }
 
     try {
+      const token = getToken();
       const res = await fetch('/api/v1/capi/execute', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           agent_id: currentAgent,
           pgl_id: "valid_pgl", 
@@ -284,114 +324,35 @@ export default function VanguardPlayground() {
         })
       });
 
-      if (!res.body) {
-        throw new Error('No streaming body');
+      const payload = await res.json().catch(() => ({}));
+      const traceArr = traceFromPayload(payload);
+      setTrace(traceArr);
+      setCurrentStep(traceArr.length);
+      traceArr.forEach(ph => setLogs(prev => [...prev, `[GATEWAY] Phase ${ph.phase}: ${ph.summary}`]));
+
+      if (!res.ok || payload?.status === 'error') {
+        const proofId = extractProofId(payload);
+        setExecutionState('blocked');
+        setLastActionStatus(proofId ? 'Backend blocked execution with proof' : 'Backend rejected execution; proof id missing');
+        setFloatingValue(null);
+        appendBackendEvidence(payload, 'GOVERNED_RUN_BLOCKED', proofId ? 'BLOCKED' : 'NEEDS_PROOF');
+        throw new Error(payload?.error || payload?.detail || `cAPI execute failed: HTTP ${res.status}`);
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      let traceArr: PhaseTrace[] = [];
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.substring(6));
-                if (data.type === 'log') {
-                  setLogs(prev => [...prev, `[GATEWAY] Phase ${data.phase}: ${data.text}`]);
-                  setCurrentStep(data.phase);
-                  
-                  // Update trace
-                  traceArr = [...traceArr];
-                  const existingPhaseIdx = traceArr.findIndex(t => t.phase === data.phase);
-                  const isFail = data.text.includes("FAILED");
-                  
-                  const newPhase: PhaseTrace = {
-                    phase: data.phase,
-                    name: `Phase ${data.phase}`,
-                    status: isFail ? "fail" : "pass",
-                    summary: data.text,
-                    duration_ms: 10,
-                    detail: {}
-                  };
-                  
-                  if (existingPhaseIdx >= 0) {
-                    traceArr[existingPhaseIdx] = newPhase;
-                  } else {
-                    traceArr.push(newPhase);
-                  }
-                  setTrace(traceArr);
-
-                  if (isFail) {
-                    setExecutionState('blocked');
-                    setSlashedStake(250);
-                    setVnpBalance(prev => prev - 250);
-                    setYieldApy(8.2);
-                    setFloatingValue('-250 VNP');
-                    setFloatingValueColor('text-red-500 font-extrabold shadow-red-500/20');
-                    setLastActionStatus('💥 SLA Breach: Slashed 250 VNP');
-                    
-                    // Append slash block to hash-chained ledger
-                    const lastBlock = ledger[0];
-                    const newBlockHex = Math.random().toString(16).substring(2, 10);
-                    const newHash = `0x${newBlockHex}e3c1b4a9f`;
-                    const evidenceHex = Math.random().toString(16).substring(2, 10);
-                    const timestamp = new Date().toLocaleTimeString() + ' UTC';
-                    
-                    setLedger(prev => [{
-                      index: lastBlock.index + 1,
-                      timestamp,
-                      prevHash: lastBlock.hash,
-                      hash: newHash,
-                      action: 'SLA_BREACH_SLASH',
-                      vnpStake: '-250 VNP (Slashed)',
-                      evidenceHash: `sha256(0x${evidenceHex}...)`,
-                      status: 'SLASHED'
-                    }, ...prev]);
-                  }
-
-                } else if (data.type === 'error') {
-                  setLogs(prev => [...prev, `[ATTACK] ERROR: ${data.detail}`]);
-                } else if (data.type === 'receipt') {
-                  setLogs(prev => [...prev, `[SYSTEM] Receipt generated: ${data.data.receipt_id}`]);
-                  if (executionState !== 'blocked') {
-                      setExecutionState('success');
-                      setVnpBalance(prev => prev + 10);
-                      setYieldApy(12.4);
-                      setFloatingValue('+10 VNP');
-                      setFloatingValueColor('text-green-400 font-bold');
-                      setLastActionStatus('🛡️ SLA fully verified (0 Slashed)');
-                      
-                      const lastBlock = ledger[0];
-                      const newBlockHex = Math.random().toString(16).substring(2, 10);
-                      const newHash = `0x${newBlockHex}e3c1b4a9f`;
-                      const evidenceHex = Math.random().toString(16).substring(2, 10);
-                      const timestamp = new Date().toLocaleTimeString() + ' UTC';
-                      
-                      setLedger(prev => [{
-                        index: lastBlock.index + 1,
-                        timestamp,
-                        prevHash: lastBlock.hash,
-                        hash: newHash,
-                        action: 'STANDARD_CREW_RUN',
-                        vnpStake: '+10 VNP (SLA Yield)',
-                        evidenceHash: `sha256(0x${evidenceHex}...)`,
-                        status: 'SUCCESS'
-                      }, ...prev]);
-                  }
-                }
-              } catch (e) {
-                console.error("Failed to parse SSE", e);
-              }
-            }
-          }
-        }
+      const proofId = extractProofId(payload);
+      if (proofId) {
+        setExecutionState('success');
+        setNonceToken(String(payload?.nonce || payload?.result?.nonce || 'Backend did not return a nonce token'));
+        setFloatingValue('Proof recorded');
+        setFloatingValueColor('text-green-400 font-bold');
+        setLastActionStatus('Backend execution proof recorded');
+        setLogs(prev => [...prev, `[SYSTEM] Backend proof recorded: ${proofId}`]);
+        appendBackendEvidence(payload, 'GOVERNED_RUN', 'SUCCESS');
+      } else {
+        setExecutionState('blocked');
+        setLastActionStatus('Needs backend receipt or evidence hash');
+        setFloatingValue(null);
+        setLogs(prev => [...prev, '[SYSTEM] cAPI returned without a backend proof identifier. Marking this run Needs proof.']);
       }
     } catch (error) {
       setLogs(prev => [...prev, `[SYSTEM] Execution failed: ${error}`]);
@@ -404,10 +365,8 @@ export default function VanguardPlayground() {
     setActiveThreat(null);
     setCurrentStep(0);
     setLogs([]);
-    setSlashedStake(0);
     setFloatingValue(null);
-    setYieldApy(12.4);
-    setLastActionStatus('🛡️ SLA fully verified (0 Slashed)');
+    setLastActionStatus('Needs backend execution proof');
   };
 
   return (
@@ -662,11 +621,11 @@ export default function VanguardPlayground() {
                       </span>
                     ) : executionState === 'success' ? (
                       <span className="text-green-400">
-                        {nonceToken}
+                        {nonceToken || 'Backend proof recorded; no nonce token returned'}
                       </span>
                     ) : (
                       <span className="text-gray-400 italic">
-                        Shielded. Swap generated dynamically on runtime trigger.
+                        Waiting for backend execution receipt.
                       </span>
                     )}
                   </div>
@@ -685,10 +644,10 @@ export default function VanguardPlayground() {
                   <div className="text-[9px] font-mono text-gray-400 mt-2 bg-[#b8860b]/5 p-2 rounded border border-[#b8860b]/10 break-all">
                     {executionState === 'success' ? (
                       <span className="text-[#b8860b] font-bold">
-                        RESOLVED: X-Veklom-Receipt-ID: 402_RC_A7C20...
+                        RESOLVED: backend receipt recorded in evidence ledger.
                       </span>
                     ) : (
-                      <span>GATEWAY: Secrets locked in secure cAPI memory stack.</span>
+                      <span>GATEWAY: awaiting cAPI/BYOS execution proof.</span>
                     )}
                   </div>
                 </div>
@@ -700,17 +659,17 @@ export default function VanguardPlayground() {
                   className="w-full flex items-center justify-center gap-1.5 border border-[#b8860b]/20 hover:border-[#b8860b]/40 bg-[#b8860b]/5 hover:bg-[#b8860b]/10 text-[#b8860b] py-2 rounded-lg text-[10px] font-bold uppercase transition-all disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isRotating ? 'animate-spin' : ''}`} />
-                  {isRotating ? 'Rotating Secrets...' : 'Rotate cAPI Nonce'}
+                  {isRotating ? 'Checking Proof Path...' : 'Check Nonce Proof Path'}
                 </button>
               </div>
 
               <p className="text-[9px] text-gray-400 leading-relaxed">
-                Unlike Aembit, which passes tokens blindly to context, Veklom shields raw credentials entirely from the agent's LLM context, swapping short-lived nonces dynamically.
+                This panel only displays nonce or receipt data when it is returned by the backend execution response.
               </p>
             </div>
           </div>
 
-          {/* VNP SLA Staking Ledger (CrewAI Overtaken) */}
+          {/* Backend evidence ledger */}
           <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow relative overflow-hidden">
             
             {/* Floating Balance Decrement Animation */}
@@ -731,9 +690,9 @@ export default function VanguardPlayground() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                 <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-orange-400 animate-pulse" /> 4. SLA PERFORMANCE BOND
+                  <Coins className="w-4 h-4 text-orange-400 animate-pulse" /> 4. BACKEND EVIDENCE LEDGER
                 </span>
-                <span className="text-[9px] text-orange-400 font-mono">VNP_LEDGER</span>
+                <span className="text-[9px] text-orange-400 font-mono">PROOF_ONLY</span>
               </div>
 
               <div className="space-y-3">
@@ -742,50 +701,51 @@ export default function VanguardPlayground() {
                   <div className="p-3 bg-black/50 border border-white/5 rounded-xl text-center relative">
                     <span className="text-[8px] text-gray-500 uppercase block">ACTIVE STAKE</span>
                     <span className="text-xs xl:text-sm font-bold text-white mt-1 font-mono block tracking-wider">
-                      {vnpBalance.toLocaleString()} VNP
+                      {vnpBalance == null ? 'Needs proof' : `${vnpBalance.toLocaleString()} VNP`}
                     </span>
                   </div>
                   <div className="p-3 bg-black/50 border border-white/5 rounded-xl text-center">
                     <span className="text-[8px] text-gray-500 uppercase block">SLA YIELD APY</span>
-                    <span className={`text-xs xl:text-sm font-bold mt-1 font-mono block tracking-wider transition-colors duration-500 ${yieldApy > 10 ? 'text-green-400' : 'text-orange-400 animate-pulse'}`}>
-                      {yieldApy}% APY
+                    <span className="text-xs xl:text-sm font-bold mt-1 font-mono block tracking-wider transition-colors duration-500 text-orange-400">
+                      {yieldApy == null ? 'Needs proof' : `${yieldApy}% APY`}
                     </span>
                   </div>
                 </div>
 
                 {/* Status Notice */}
-                <div className={`p-2.5 rounded-lg border transition-all text-[10px] ${
-                  slashedStake > 0 
-                    ? 'border-red-500/20 bg-red-500/[0.02]' 
-                    : 'border-white/5 bg-white/[0.01]'
-                }`}>
+                <div className="p-2.5 rounded-lg border transition-all text-[10px] border-white/5 bg-white/[0.01]">
                   <span className="text-[8px] text-gray-500 uppercase block font-bold">Ledger Status Summary</span>
-                  <span className={`font-bold mt-0.5 block ${slashedStake > 0 ? 'text-red-500 animate-pulse' : 'text-green-400'}`}>
+                  <span className="font-bold mt-0.5 block text-green-400">
                     {lastActionStatus}
                   </span>
                 </div>
 
-                {/* Scrolling Hash-Chained SLA Ledger (CrewAI accountability) */}
+                {/* Scrolling backend evidence ledger */}
                 <div className="space-y-2">
                   <span className="text-[8.5px] text-gray-400 uppercase tracking-wider font-bold flex items-center gap-1">
-                    <History className="w-3.5 h-3.5 text-orange-400" /> Hash-Chained Telemetry
+                    <History className="w-3.5 h-3.5 text-orange-400" /> Backend Evidence Rows
                   </span>
                   
                   <div className="space-y-2 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+                    {ledger.length === 0 && (
+                      <div className="p-3 rounded border border-white/5 bg-black/40 text-[9px] text-gray-500">
+                        No cAPI/BYOS receipt rows returned in this browser session.
+                      </div>
+                    )}
                     {ledger.map((block) => {
-                      const isSlashed = block.status === 'SLASHED';
+                      const isBlocked = block.status === 'BLOCKED';
                       return (
                         <div 
                           key={block.index}
                           className={`p-2 rounded border text-[9px] font-mono leading-relaxed transition-all ${
-                            isSlashed 
+                            isBlocked 
                               ? 'border-red-500/30 bg-red-950/10 text-red-400' 
                               : 'border-white/5 bg-black/40 text-gray-300'
                           }`}
                         >
                           <div className="flex justify-between font-bold">
-                            <span>BLOCK #{block.index}</span>
-                            <span className={isSlashed ? 'text-red-500' : 'text-green-400'}>{block.action}</span>
+                            <span>ROW #{block.index}</span>
+                            <span className={isBlocked ? 'text-red-500' : 'text-green-400'}>{block.action}</span>
                           </div>
                           <div className="text-gray-500 text-[8.5px] flex justify-between mt-0.5 border-b border-white/5 pb-1 mb-1">
                             <span>{block.timestamp}</span>

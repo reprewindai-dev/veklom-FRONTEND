@@ -337,8 +337,8 @@ export default function MethodologyPanel() {
             </div>
             <div className="p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
               <div className="text-[10px] font-semibold text-[#A1A1A6] mb-1">Protocol</div>
-              <div className="text-[10px] text-[#6E6E73]">REST (OpenAPI 3.1) in v0.1</div>
-              <div className="text-[10px] text-[#6E6E73]">gRPC, AsyncAPI in v0.2</div>
+              <div className="text-[10px] text-[#6E6E73]">REST (OpenAPI 3.1) in VNP Methodology v1.0</div>
+              <div className="text-[10px] text-[#6E6E73]">gRPC and AsyncAPI candidates under future methodology review</div>
             </div>
           </div>
         </div>
@@ -394,7 +394,7 @@ export default function MethodologyPanel() {
               { step: "1", label: "Measurement Collection", desc: "k6 agents emit signed records from 5 regions with randomized timing" },
               { step: "2", label: "Validation Pipeline", desc: "Node signature verification, schema validation, outlier detection (3σ)" },
               { step: "3", label: "Merkle Construction", desc: "SHA-256 tree from all valid measurements in the scoring window" },
-              { step: "4", label: "Score Computation", desc: "10-dimension normalization, weighting, confidence intervals" },
+              { step: "4", label: "Score Computation", desc: "Verification-stack normalization, weighting, confidence intervals" },
               { step: "5", label: "Chain Anchoring", desc: "Merkle root + score hash → Base L2 (EIP-155:8453). Raw data → IPFS/Arweave weekly" },
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-3 p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
@@ -717,7 +717,7 @@ export default function MethodologyPanel() {
               { num: "3", label: "SVG Badge Endpoint", desc: "Shields.io-style badge for READMEs and docs" },
               { num: "4", label: "OpenAPI Extension", desc: "x-vnp-score vendor extensions in OpenAPI 3.1" },
               { num: "5", label: "x402/MPP Integration", desc: "Score field in payment manifests for agent routing" },
-              { num: "6", label: "Gateway Plugins (v0.2+)", desc: "Kong/Tyk, Postman, LangChain/MCP tool plugins" },
+              { num: "6", label: "Gateway Plugins", desc: "Kong/Tyk, Postman, LangChain/MCP tool plugins under future methodology review" },
             ].map((s) => (
               <div key={s.num} className="p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
                 <div className="text-[10px] font-mono text-[#FFB800] mb-1">{s.num}</div>
@@ -742,7 +742,7 @@ export default function MethodologyPanel() {
             <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03]">
               <div className="text-[11px] font-semibold text-[#FFB800] mb-2">Days 1–30: Lock & Publish</div>
               <div className="text-[10px] text-[#6E6E73] space-y-0.5">
-                <div>• Finalize methodology v0.1</div>
+                <div>• Publish VNP Methodology v1.0</div>
                 <div>• Publish governance charter</div>
                 <div>• Create public GitHub org + W3C CG</div>
                 <div>• Add licenses (CSL, Apache 2.0, CC BY)</div>
@@ -772,7 +772,7 @@ export default function MethodologyPanel() {
                 <div>• x402/MPP manifest integration</div>
                 <div>• Onboard 50+ APIs</div>
                 <div>• First WABCG community meeting</div>
-                <div>• Publish v0.2 roadmap</div>
+                <div>• Publish next methodology revision roadmap</div>
               </div>
             </div>
           </div>
@@ -789,28 +789,28 @@ export default function MethodologyPanel() {
       >
         <div className="space-y-3">
           <p className="text-[11px] text-[#A1A1A6]">
-            v0.1 is LOCKED until 2027-06-22. Changing the methodology retroactively destroys score comparability.
-            We lock the methodology first, measure honestly, publish results.
+            VNP Methodology v1.0 is governed through versioned change control. Changing the methodology retroactively destroys score comparability.
+            We publish the methodology first, measure honestly, and preserve historical comparability.
           </p>
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-lg border border-[#FF5C6C]/20 bg-[#FF5C6C]/[0.03]">
-              <div className="text-[10px] font-semibold text-[#FF5C6C]">Major (v0 → v1)</div>
+              <div className="text-[10px] font-semibold text-[#FF5C6C]">Major methodology revision</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">Adding/removing dimensions. 2/3 TSC + 60-day notice + parallel scoring.</div>
             </div>
             <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03]">
-              <div className="text-[10px] font-semibold text-[#FFB800]">Minor (v0.1 → v0.2)</div>
+              <div className="text-[10px] font-semibold text-[#FFB800]">Minor (v1.0 &rarr; v1.1)</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">Weight changes within existing dimensions. 2/3 TSC + 30-day comment.</div>
             </div>
             <div className="p-3 rounded-lg border border-[#3EE7A2]/20 bg-[#3EE7A2]/[0.03]">
-              <div className="text-[10px] font-semibold text-[#3EE7A2]">Patch (v0.1.0 → v0.1.1)</div>
+              <div className="text-[10px] font-semibold text-[#3EE7A2]">Patch (v1.0.0 &rarr; v1.0.1)</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">Bug fixes and measurement procedure clarifications.</div>
             </div>
           </div>
           <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03] text-[10px]">
             <div className="text-[#FFB800] font-semibold mb-1">Current Lock Status</div>
             <div className="text-[#A1A1A6]">
-              VNP Methodology v0.1.0 — LOCKED FOR MEASUREMENT. Open comment period closes 2026-06-30.
-              Scoring begins 2026-07-01. Lock expires 2027-06-22.
+              VNP Methodology v1.0 - ACTIVE MEASUREMENT BASELINE. Public methodology updated 2026-07-07.
+              Production routes report proof status from the live BYOS and CAPPO backends.
             </div>
           </div>
         </div>

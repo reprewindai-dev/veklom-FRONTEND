@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CAPI_RUNTIME_URL, capiAuthHeaderValue } from "@/lib/capi-runtime";
 
-const CAPPO_BACKEND_URL = process.env.CAPPO_BACKEND_URL || "https://cappo.veklom.com";
-const CAPPO_ADMIN_KEY = process.env.CAPPO_API_KEY || "dev-admin-key-do-not-use-in-prod";
+const CAPPO_BACKEND_URL = CAPI_RUNTIME_URL;
+const CAPPO_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 const VEKLOM_BACKEND_URL = process.env.BACKEND_URL || "https://api.veklom.com";
 
@@ -13,8 +14,9 @@ async function proxyRequest(req: NextRequest) {
   let headers = new Headers(req.headers);
   headers.delete("host"); // Let the native fetch set the host
   headers.delete("connection");
+  headers.delete("x-api-key"); // Never allow clients to select an upstream credential
 
-  const targetBase = path === "/v1/exec" || path.startsWith("/v1/exec/")
+  const targetBase = path === "/v1/exec" || path.startsWith("/v1/exec/") || path.startsWith("/api/v1/capi/")
     ? CAPPO_BACKEND_URL
     : VBB_BACKEND_URL;
 

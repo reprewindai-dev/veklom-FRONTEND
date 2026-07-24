@@ -6,6 +6,7 @@ Production frontend for the Veklom sovereign AI control plane and Veklom Nexus P
 
 - Public application: `https://veklom.com`
 - VNP standard and docs entry: `https://veklom.com/vnp`
+- Standalone VNP product surface: `https://vnp.veklom.com`
 - Developer surface: `https://veklom.dev`
 - Backend API: `https://api.veklom.com`
 
@@ -64,8 +65,11 @@ VBB_BACKEND_URL=https://api.veklom.com
 Governed runtime backend:
 
 ```bash
-CAPPO_BACKEND_URL=https://cappo.veklom.com
+CAPPO_BACKEND_URL=https://capi.veklom.com
+CAPPO_API_KEY=<configured in Coolify>
 ```
+
+Legacy `CAPI_*` environment names may still exist for compatibility, but the implementation repo and backend authority are `reprewindai-dev/cappo-backend`.
 
 Production client code should call same-origin routes where possible, for example:
 
@@ -143,6 +147,6 @@ Do not document Vercel as the deployment target for this repo.
 
 ## Notes
 
-- PGL Genome DNA is a separate identity/lineage concept and should not be removed just because the VNP API scoring visual moved away from DNA/helix imagery.
+- PGL Gnomledger identity/lineage data is separate from the VNP API scoring visual and should not be removed just because the public benchmark card moved away from DNA/helix imagery.
 - The VNP API benchmark card should remain methodology-backed and API-specific.
 - Public docs belong inside the app under `/vnp/docs`, not an external docs domain.

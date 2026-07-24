@@ -23,7 +23,7 @@ export default function GenomeLedgerOnboarding() {
         <div className="w-1/3 flex flex-col gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-light text-white tracking-tight">
-              Genome <span className="text-hazard-amber font-bold">Ledger</span>
+              <span className="text-hazard-amber font-bold">Gnomledger</span>
             </h1>
             <p className="text-white/40 text-sm leading-relaxed max-w-sm">
               Provisioning Sovereign Authority node. Establishing secure telemetry and immutable operational chains.

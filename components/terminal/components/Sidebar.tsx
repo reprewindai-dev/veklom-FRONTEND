@@ -31,7 +31,10 @@ import {
   ExternalLink,
   Crown,
   Search,
-  Gamepad2
+  Gamepad2,
+  KeyRound,
+  Webhook,
+  Settings
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -42,6 +45,8 @@ interface SidebarProps {
   mcpHeartbeat: string;
   throughput: number;
   agentsCount: number;
+  proofPercent?: number;
+  sourceStates?: Record<string, "online" | "degraded" | "needs_proof">;
 }
 
 interface MenuItem {
@@ -57,7 +62,13 @@ interface MenuSection {
   items: MenuItem[];
 }
 
-export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: SidebarProps) {
+export default function Sidebar({
+  mcpHeartbeat,
+  throughput,
+  agentsCount,
+  proofPercent = 0,
+  sourceStates = {},
+}: SidebarProps) {
   const pathname = usePathname();
   const { me } = useAuth();
 
@@ -73,7 +84,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
     {
       title: 'BUILD',
       items: [
-        { id: 'spine', name: 'Pipelines & GPC', icon: GitBranch, href: '/pipelines', isLive: true },
+        { id: 'gpc', name: 'Pipelines & GPC', icon: GitBranch, href: '/gpc', isLive: true },
         { id: 'repo-risk', name: 'Repo Risk Gate', icon: ShieldAlert, href: '/repogate', isLive: true },
       ]
     },
@@ -97,7 +108,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
         { id: 'staking', name: 'Staking Protocol', icon: Coins, href: '/staking' },
         { id: 'duel', name: 'Agent Duel', icon: Sword, href: '/agent-duel' },
         { id: 'id', name: 'Veklom ID', icon: Fingerprint, href: '/veklom-id' },
-        { id: 'veklom-discovery', name: 'Veklom Discovery', icon: Search, href: '/benchmarks/discovery', isLive: true },
+        { id: 'veklom-discovery', name: 'Veklom Discovery', icon: Search, href: '/discovery', isLive: true },
         { id: 'bingo', name: 'Bingo 2060', icon: Gamepad2, href: '/bingo' },
       ]
     },
@@ -124,6 +135,21 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
       ]
     });
   }
+
+  const itemProbeState = (item: MenuItem): "online" | "degraded" | "needs_proof" => {
+    if (item.id === "overview") return sourceStates.overview || (mcpHeartbeat === "online" ? "online" : "needs_proof");
+    if (["runtime", "interlink"].includes(item.id)) return sourceStates.capi || sourceStates.cappo || "needs_proof";
+    if (["swarm-map", "spine", "repo-risk", "playground", "nexus", "runs", "staking", "duel", "id", "veklom-discovery", "bingo", "committee", "treasury", "api-keys", "webhooks", "integrations"].includes(item.id)) {
+      return sourceStates.byos || "needs_proof";
+    }
+    return "needs_proof";
+  };
+
+  const probeLabel = (state: "online" | "degraded" | "needs_proof") =>
+    state === "online" ? "LIVE" : state === "degraded" ? "DEGRADED" : "NEEDS PROOF";
+
+  const probeClass = (state: "online" | "degraded" | "needs_proof") =>
+    state === "online" ? "text-matrix-emerald" : state === "degraded" ? "text-[#FFAB00]" : "text-laser-red";
 
   return (
     <aside className="w-64 h-full border-r border-[#ffffff0a] bg-void-black flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto scrollbar-hide">
@@ -158,6 +184,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
               {section.items.map((item) => {
                 const IsActive = pathname === item.href;
                 const Icon = item.icon;
+                const probeState = itemProbeState(item);
                 return (
                   <Link
                     key={item.id}
@@ -176,10 +203,10 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
                       </div>
                     </div>
 
-                    {item.isLive && (
-                      <div className="flex items-center gap-1 text-[8px] font-bold text-matrix-emerald">
-                        <div className="w-1 h-1 rounded-full bg-matrix-emerald animate-pulse" />
-                        LIVE
+                    {(item.isLive || probeState !== "needs_proof") && (
+                      <div className={`flex items-center gap-1 text-[8px] font-bold ${probeClass(probeState)}`}>
+                        <div className={`w-1 h-1 rounded-full ${probeState === "online" ? "bg-matrix-emerald animate-pulse" : probeState === "degraded" ? "bg-[#FFAB00]" : "bg-laser-red"}`} />
+                        {probeLabel(probeState)}
                       </div>
                     )}
                   </Link>
@@ -217,7 +244,7 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
             </span>
             <span className={`flex items-center gap-1.5 font-bold ${mcpHeartbeat === 'online' ? 'text-matrix-emerald' : 'text-laser-red'}`}>
               <span className={`w-1.5 h-1.5 ${mcpHeartbeat === 'online' ? 'bg-matrix-emerald animate-fast-pulse' : 'bg-laser-red'} `} />
-              {mcpHeartbeat.toUpperCase()}
+              {mcpHeartbeat === 'online' ? 'ONLINE' : mcpHeartbeat === 'degraded' ? 'DEGRADED' : 'NEEDS PROOF'}
             </span>
           </div>
 
@@ -228,8 +255,8 @@ export default function Sidebar({ mcpHeartbeat, throughput, agentsCount }: Sideb
           </div>
 
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-white/40 uppercase">Consensus Rate:</span>
-            <span className="text-white/80 font-bold">99.98%</span>
+            <span className="text-white/40 uppercase">Proof Sources:</span>
+            <span className="text-white/80 font-bold">{proofPercent}%</span>
           </div>
         </div>
       </div>

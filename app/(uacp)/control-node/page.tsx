@@ -2,9 +2,9 @@
 
 
 import { useState, useEffect, useRef } from "react";
-import { initialStreamState, connectStream, shouldAcceptEvent, isHeartbeatExpired, StreamMachineState } from "@/lib/covenant/machines/streamMachine";
-import { reduceRunState, RunState } from "@/lib/covenant/machines/runMachine";
-import type { SseEvent } from "@/lib/covenant/generated/sse";
+import { initialStreamState, connectStream, shouldAcceptEvent, isHeartbeatExpired, StreamMachineState } from "@/lib/cappo/machines/streamMachine";
+import { reduceRunState, RunState } from "@/lib/cappo/machines/runMachine";
+import type { SseEvent } from "@/lib/cappo/generated/sse";
 import { api, apiUrl } from "@/lib/api";
 
 import { useApi } from "@/hooks/useApi";
@@ -67,7 +67,8 @@ interface ProbeResult<T = unknown> {
 }
 
 interface BackendSourceState {
-  id: "byos" | "cappo";
+  id: "byos" | "capi";
+  legacy_id?: string;
   label: string;
   repo: string;
   role: string;
@@ -101,7 +102,7 @@ interface WorkspaceData {
 
 interface CapiExecutionStart {
   run_id: string;
-  stream_token: string;
+  stream_token?: string;
 }
 
 // ── Page ───────────────────────────────────────────────────────────────────────
@@ -110,6 +111,7 @@ export default function ControlNodePage() {
 
   const [streamState, setStreamState] = useState<StreamMachineState>(initialStreamState());
   const [runState, setRunState] = useState<RunState>("not_started");
+  const [lastRunId, setLastRunId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   function handleEvent(evt: SseEvent, generation: number) {
@@ -149,6 +151,12 @@ export default function ControlNodePage() {
       });
 
       const { run_id, stream_token } = res;
+      setLastRunId(run_id);
+      if (!stream_token) {
+        setRunState("succeeded");
+        setStreamState(prev => ({ ...prev, connection: "completed" }));
+        return;
+      }
       const streamUrl = apiUrl(`/api/v1/capi/stream/${run_id}`);
 
       setStreamState(prev => ({ ...prev, connection: "connected" }));
@@ -192,8 +200,16 @@ export default function ControlNodePage() {
   const systemOperational = canonical.data?.state === "healthy";
   const isWorkspaceReady = !!workspace.data?.id;
   const proofCount = canonical.data?.usage.proof_count ?? 0;
-  const expectedProofCount = canonical.data?.canonical_source_count ?? 2;
+  const expectedProofCount = canonical.data?.canonical_source_count ?? 5;
   const canonicalSources = canonical.data?.sources ?? [];
+  const byosSource = canonicalSources.find((source) => source.id === "byos");
+  const capiSource = canonicalSources.find((source) => source.id === "capi" || source.legacy_id === "cappo");
+  const byosHealthy = byosSource?.state === "healthy";
+  const capiHealthy = capiSource?.state === "healthy";
+  const capiPolicyCount = Array.isArray((capiSource?.overview.data as any)?.policies)
+    ? ((capiSource?.overview.data as any).policies as unknown[]).length
+    : 0;
+  const capiPoliciesVerified = capiPolicyCount > 0;
   const auditRows = audit.data?.events?.map((ev) => ({
     id: ev.id,
     title: ev.event_type,
@@ -215,7 +231,7 @@ export default function ControlNodePage() {
 
   if (canonical.data?.state === "needs_proof" && !canonical.isLoading) {
     verdictTitle = "Canonical backends need proof";
-    verdictSubtitle = "Veklom BYOS and CAPPO are unreachable or returned no operational proof.";
+    verdictSubtitle = "veklom BYOS backend and CAPPO Backend/CAPPO are unreachable or returned no operational proof.";
     verdictState = 'critical';
   } else if (!systemOperational && !canonical.isLoading) {
     verdictTitle = "Production readiness degraded";
@@ -235,7 +251,7 @@ export default function ControlNodePage() {
     verdictState = 'warning';
   } else if (workspace.isLoading || canonical.isLoading) {
     verdictTitle = "Assessing readiness...";
-    verdictSubtitle = "Syncing with Veklom BYOS and CAPPO canonical backends.";
+    verdictSubtitle = "Syncing with veklom BYOS backend and CAPPO Backend/CAPPO.";
     verdictState = 'neutral';
   }
 
@@ -243,6 +259,11 @@ export default function ControlNodePage() {
     n === undefined ? "—" : n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
   const spendToday = usageSummary.total_cost_usd;
   const hasSpendToday = typeof spendToday === "number" && Number.isFinite(spendToday);
+  const proofLabel = (ok: boolean | undefined, loading: boolean) =>
+    loading ? "SYNCING" : ok ? "OBSERVED" : "NEEDS PROOF";
+  const auditTrace = audit.isLoading ? "SYNCING" : auditRows.length > 0 ? "ACTIVE" : "NEEDS PROOF";
+  const evidenceSync = canonical.isLoading ? "SYNCING" : `${proofCount}/${expectedProofCount} SOURCES`;
+  const nodeProtection = systemOperational && isWorkspaceReady ? "PROOF SOURCES VERIFIED" : "NEEDS PROOF";
 
   return (
     <div className="relative p-6 md:p-10 h-full overflow-y-auto bg-[#030303] selection:bg-[#00E5FF]/30 text-white scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
@@ -285,7 +306,9 @@ export default function ControlNodePage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Policy Mode</span>
-              <span className="text-white/90 text-xs font-medium tracking-wide">Zero-Trust Active</span>
+              <span className={`text-xs font-medium tracking-wide ${capiPoliciesVerified ? "text-white/90" : "text-[#FFAB00]"}`}>
+                {capiPoliciesVerified ? "Zero-Trust Active" : "Needs proof"}
+              </span>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Last Sync</span>
@@ -302,20 +325,20 @@ export default function ControlNodePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <ActionRow
               type="do_now"
-              title="Complete workspace identity"
-              subtitle="Identity graph unavailable without PGL sync."
-              actionText="Finish Setup"
+              title={isWorkspaceReady ? "Workspace identity verified" : "Complete workspace identity"}
+              subtitle={isWorkspaceReady ? `Workspace ${workspace.data?.id} returned by live BYOS route.` : "Identity graph unavailable from live workspace route."}
+              actionText={isWorkspaceReady ? "View PGL" : "Finish Setup"}
             />
             <ActionRow
               type="review"
-              title="Review GPU health degradation"
-              subtitle="Node latency spike detected in Hetzner pool."
-              actionText="View Infra"
+              title="Review cAPI proof source"
+              subtitle={capiSource ? `${capiSource.label}: ${capiSource.state.replace("_", " ")}` : "CAPPO Backend source probe pending."}
+              actionText="View cAPI"
             />
             <ActionRow
               type="open"
               title="Open Runtime Enforcement"
-              subtitle="2 policies flagged for drift."
+              subtitle={capiHealthy ? "CAPPO runtime proof is returning from cAPI." : "Runtime enforcement needs cAPI proof."}
               actionText="Go to Queue"
             />
           </div>
@@ -369,26 +392,26 @@ export default function ControlNodePage() {
                   <div className="space-y-4 text-[11px] font-mono">
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Policy Engine</span>
-                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">ENFORCING</span>
+                      <span className={capiPoliciesVerified ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{proofLabel(capiPoliciesVerified, canonical.isLoading)}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Approval Mode</span>
-                      <span className="text-white/90 tracking-wider">HUMAN-IN-LOOP</span>
+                      <span className="text-white/90 tracking-wider">{capiPoliciesVerified ? `COVENANT POLICY (${capiPolicyCount})` : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Budget Guard</span>
-                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">ARMED</span>
+                      <span className={hasSpendToday ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{hasSpendToday ? "OBSERVED" : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Circuit Breaker</span>
-                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">CLOSED</span>
+                      <span className={byosHealthy && capiHealthy ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{byosHealthy && capiHealthy ? "OBSERVED" : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">VNP Staking</span>
-                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">BONDED</span>
+                      <span className="text-[#FFAB00] font-bold tracking-wider">NEEDS PROOF</span>
                     </div>
-                    <div className="pt-2 mt-4 bg-gradient-to-r from-[#00FF66]/10 to-transparent border-l-2 border-[#00FF66] text-[#00FF66] px-3 py-2 tracking-[0.2em] text-[10px] uppercase shadow-[inset_0_0_20px_rgba(0,255,102,0.05)]">
-                      NODE FULLY PROTECTED
+                    <div className={`pt-2 mt-4 bg-gradient-to-r ${nodeProtection === "PROOF SOURCES VERIFIED" ? "from-[#00FF66]/10 border-[#00FF66] text-[#00FF66]" : "from-[#FFAB00]/10 border-[#FFAB00] text-[#FFAB00]"} to-transparent border-l-2 px-3 py-2 tracking-[0.2em] text-[10px] uppercase shadow-[inset_0_0_20px_rgba(0,255,102,0.05)]`}>
+                      {nodeProtection}
                     </div>
                   </div>
                 </PanelCard>
@@ -397,23 +420,23 @@ export default function ControlNodePage() {
                   <div className="space-y-4 text-[11px] font-mono">
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Last Run ID</span>
-                      <span className="text-[#00E5FF]/30 italic">None yet</span>
+                      <span className="text-[#00E5FF]/70">{lastRunId || "Needs proof"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Last Ext. Action</span>
-                      <span className="text-[#00E5FF]/30 italic">None yet</span>
+                      <span className="text-[#00E5FF]/70">{runState === "not_started" ? "Needs proof" : runState}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Audit Trace</span>
-                      <span className="text-[#00FF66] font-bold tracking-wider text-glow-emerald">ACTIVE</span>
+                      <span className={auditTrace === "ACTIVE" ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{auditTrace}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Replay State</span>
-                      <span className="text-white/90 tracking-wider">ENABLED</span>
+                      <span className="text-white/90 tracking-wider">{capiHealthy ? "CAPI LEDGER" : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Evidence Sync</span>
-                      <span className="text-white/90 tracking-wider">100% COMPLETE</span>
+                      <span className="text-white/90 tracking-wider">{evidenceSync}</span>
                     </div>
                     <button className="w-full mt-4 bg-[#00E5FF]/5 border border-[#00E5FF]/20 text-[#00E5FF]/50 hover:bg-[#00E5FF]/10 hover:text-[#00E5FF] hover:border-[#00E5FF]/40 transition-all duration-300 rounded px-3 py-2 tracking-[0.1em] text-[10px] uppercase text-center cursor-not-allowed">
                       DOWNLOAD LATEST EVIDENCE
@@ -494,10 +517,10 @@ export default function ControlNodePage() {
 
                   <div className="p-3 border border-[#FFAB00]/30 bg-[#FFAB00]/5 rounded-lg backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-[#FFAB00]/90 font-medium font-sans text-sm tracking-wide">Budget Nearing Cap</span>
-                      <span className="text-[9px] bg-[#FFAB00]/10 text-[#FFAB00] border border-[#FFAB00]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">WARNING</span>
+                      <span className="text-[#FFAB00]/90 font-medium font-sans text-sm tracking-wide">{hasSpendToday ? "Budget Signal Observed" : "Budget Proof Unavailable"}</span>
+                      <span className="text-[9px] bg-[#FFAB00]/10 text-[#FFAB00] border border-[#FFAB00]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">{hasSpendToday ? "OBSERVED" : "NEEDS PROOF"}</span>
                     </div>
-                    <div className="text-[11px] text-white/50 mb-3 font-mono leading-relaxed">Workspace budget is at 85% of monthly allowance.</div>
+                    <div className="text-[11px] text-white/50 mb-3 font-mono leading-relaxed">{hasSpendToday ? `Live canonical usage reports $${spendToday.toFixed(4)} spend.` : "No live billing signal returned by BYOS or cAPI canonical probes."}</div>
                     <Link href="/budget">
                       <button className="text-[9px] px-3 py-1.5 border border-[#FFAB00]/40 bg-[#FFAB00]/10 hover:bg-[#FFAB00]/20 text-white/90 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,171,0,0.15)]">MANAGE BUDGET</button>
                     </Link>
@@ -525,18 +548,11 @@ export default function ControlNodePage() {
                       />
                     ))
                   ) : (
-                    <>
-                      <TimelineEvent
-                          title="Health Check Completed"
-                          time={new Date().toLocaleTimeString()}
-                          detail={`Subsystems verified across control plane.`}
-                      />
-                      <TimelineEvent
-                          title="Initial Deploy"
-                          time="2 HOURS AGO"
-                          detail="Container spun up via automated Coolify pipeline. Routing verified."
-                      />
-                    </>
+                    <TimelineEvent
+                      title="Needs proof"
+                      time=""
+                      detail="Live audit route returned no events for this workspace."
+                    />
                   )}
                 </div>
               </PanelCard>
@@ -550,11 +566,11 @@ export default function ControlNodePage() {
               <div className="h-[1px] flex-1 bg-gradient-to-r from-[#00E5FF]/20 to-transparent"></div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              <Link href="/runtime"><LaunchpadCard title="Runtime Enforcement" status="Review policy drift" count={2} urgency="normal" /></Link>
-              <Link href="/pipelines"><LaunchpadCard title="Pipelines & GPC" status="Waiting approval" count={1} urgency="high" /></Link>
-              <Link href="/governance"><LaunchpadCard title="Governance" status="Trust updates" count={3} urgency="low" /></Link>
-              <Link href="/interlink"><LaunchpadCard title="Interlink Console" status="Blocked executions" count={0} urgency="low" /></Link>
-              <Link href="/nexus"><LaunchpadCard title="Nexus Protocol" status="Telemetry warming up" count={0} urgency="low" /></Link>
+              <Link href="/runtime"><LaunchpadCard title="Runtime Enforcement" status={capiHealthy ? "cAPI proof observed" : "Needs proof"} count={capiHealthy ? 1 : 0} urgency={capiHealthy ? "low" : "normal"} /></Link>
+              <Link href="/gpc"><LaunchpadCard title="Pipelines & GPC" status={usageSummary.active_pipelines !== undefined ? "Live active pipelines" : "Needs proof"} count={usageSummary.active_pipelines ?? 0} urgency="normal" /></Link>
+              <Link href="/governance"><LaunchpadCard title="Governance" status={auditRows.length ? "Audit events" : "Needs proof"} count={auditRows.length} urgency={auditRows.some((e) => e.isAlert) ? "high" : "low"} /></Link>
+              <Link href="/interlink"><LaunchpadCard title="CAPPO Backend" status={capiHealthy ? "CAPPO online" : "Needs proof"} count={proofCount} urgency={capiHealthy ? "low" : "normal"} /></Link>
+              <Link href="/nexus"><LaunchpadCard title="Nexus Protocol" status="Needs proof" count={0} urgency="low" /></Link>
             </div>
           </div>
 

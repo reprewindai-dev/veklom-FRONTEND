@@ -1,8 +1,6 @@
 // lib/hooks/useVeklomAPI.ts
 import { useState, useCallback } from 'react';
-
-const API_BASE = process.env.NEXT_PUBLIC_VEKLOM_API_URL || 'http://api.veklom.com';
-const API_KEY = process.env.NEXT_PUBLIC_VEKLOM_API_KEY || 'demo_key';
+import { api } from '@/lib/api';
 
 export interface APIError {
   message: string;
@@ -28,29 +26,12 @@ export function useVeklomAPI() {
       setError(null);
 
       try {
-        const url = `${API_BASE}${endpoint}`;
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        };
-
-        if (options?.useAuth !== false) {
-          headers['X-API-Key'] = API_KEY;
-        }
-
-        const response = await fetch(url, {
+        const data = await api<T>(endpoint, {
           method: options?.method || 'GET',
-          headers,
-          body: options?.body ? JSON.stringify(options.body) : undefined,
+          headers: options?.headers,
+          body: options?.body,
+          unauth: options?.useAuth === false,
         });
-
-        if (!response.ok) {
-          throw new Error(
-            `API Error: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const data: T = await response.json();
         return data;
       } catch (err) {
         const apiError: APIError = {

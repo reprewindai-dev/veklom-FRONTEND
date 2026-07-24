@@ -69,7 +69,7 @@ export function useWebMCP() {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Routes a tool call through the MCPAPI Backend Governance Pipeline
+   * Routes a tool call through the Interlink CAPI Backend Governance Pipeline
    */
   const executeGovernedAction = useCallback(async (intent: ExecutionIntent, onProgress?: (log: string) => void): Promise<ExecutionReceipt> => {
     setIsExecuting(true);
@@ -77,7 +77,7 @@ export function useWebMCP() {
     setLastReceipt(null);
 
     try {
-      // 1. Send the Execution Intent to the Veklom MCPAPI backend (Now streams via SSE)
+      // 1. Send the Execution Intent to the Veklom Interlink CAPI backend (Now streams via SSE)
       const token = getToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export function useWebMCP() {
 
     } catch (err: any) {
       console.error('[WebMCP] Governance Error:', err);
-      const errMessage = err.message || 'Execution blocked by MCPAPI';
+      const errMessage = err.message || 'Execution blocked by Interlink CAPI';
       setError(errMessage);
       
       const receipt: ExecutionReceipt = {
@@ -177,7 +177,7 @@ export function useWebMCP() {
 
   /**
    * Registers a capability as a WebMCP browser tool that automatically wraps 
-   * its execution in the MCPAPI governance pipeline.
+   * its execution in the Interlink CAPI governance pipeline.
    */
   const registerGovernedTool = useCallback((name: string, description: string, inputSchema: WebMCPToolInputSchema) => {
     if (typeof window === 'undefined' || !window.navigator.modelContext) return;
@@ -187,7 +187,7 @@ export function useWebMCP() {
       description,
       inputSchema,
       execute: async (input: any) => {
-        // Agent calls tool -> Tool automatically routes through MCPAPI
+        // Agent calls tool -> Tool automatically routes through Interlink CAPI
         return await executeGovernedAction({
           agent_id: input.agent_id || 'anonymous-agent',
           pgl_id: input.pgl_id || 'badsig', // Default to badsig for anonymous tests

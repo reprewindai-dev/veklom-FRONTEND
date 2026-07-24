@@ -34,9 +34,9 @@ export const MODULES: ModuleDef[] = [
   { slug: "benchmarks", label: "Nexus Protocol", href: "/benchmarks", group: "nexus", minTier: "free", description: "VNP-certified API trust leaderboard and SLA staking markets.", icon: "ActivitySquare", sidebar: true },
   { slug: "vnp-incidents", label: "Incidents & Slashing", href: "/vnp-incidents", group: "nexus", minTier: "free", description: "Live SLA breaches, cryptographic evidence, and PGL dispute resolution.", icon: "ShieldAlert", sidebar: true },
   { slug: "benchmarks-pgl", label: "PGL Identity Layer", href: "/benchmarks?tab=pgl", group: "nexus", minTier: "free", description: "PGL Immutable Identity and M2M trust operations.", icon: "Fingerprint", sidebar: false },
-  { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "nexus", minTier: "free", description: "API Trust Leaderboard with 10-dimension scoring.", icon: "Shield", sidebar: false },
+  { slug: "benchmarks-trust", label: "Trust Node Matrix", href: "/benchmarks?tab=trust", group: "nexus", minTier: "free", description: "API Trust Leaderboard with VNP v1.0 verification scoring.", icon: "Shield", sidebar: false },
   { slug: "benchmarks-consensus", label: "Consensus Vector", href: "/benchmarks?tab=consensus", group: "nexus", minTier: "free", description: "Multi-node measurement consensus and epoch history.", icon: "Network", sidebar: false },
-  { slug: "benchmarks-methodology", label: "Methodology", href: "/benchmarks?tab=methodology", group: "nexus", minTier: "free", description: "VNP scoring methodology, dimensions, and provenance spec.", icon: "BookOpen", sidebar: false },
+  { slug: "benchmarks-methodology", label: "Methodology", href: "/benchmarks?tab=methodology", group: "nexus", minTier: "free", description: "VNP Methodology v1.0 verification inputs and provenance spec.", icon: "BookOpen", sidebar: false },
   
   { slug: "benchmarks-arena", label: "Authority Arena", href: "/benchmarks/arena", group: "nexus", minTier: "free", description: "Interactive agent character creator and consensus pipeline playground.", icon: "Gamepad2", sidebar: false },
   { slug: "benchmarks-runtime-lab", label: "Gateway Trust Contract Lab", href: "/benchmarks/runtime-lab", group: "nexus", minTier: "free", description: "7-step deterministic pipeline, EAT token signing, policy presets, and cryptographic evidence ledger.", icon: "ShieldCheck", sidebar: false },
@@ -45,12 +45,13 @@ export const MODULES: ModuleDef[] = [
   { slug: "benchmarks-staking", label: "Staking Protocol", href: "/benchmarks?tab=staking", group: "ecosystem", minTier: "free", description: "SLA staking markets (pending Nexus Protocol completion).", icon: "BarChart2", sidebar: true },
   { slug: "agent-duel", label: "Agent Dual", href: "/agent-dual", group: "ecosystem", minTier: "free", description: "Multi-agent debate arena running on Base.", icon: "Swords", sidebar: true },
   { slug: "bingo", label: "BINGO 2060", href: "/bingo", group: "ecosystem", minTier: "free", description: "M2M Galactic Tournament.", icon: "Gamepad2", sidebar: true },
-  { slug: "veklom-id", label: "Veklom ID", href: "https://veklom-id.vercel.app", group: "ecosystem", minTier: "free", description: "Decentralized Sovereign Operator Registry.", icon: "Fingerprint", sidebar: true },
-  { slug: "benchmarks-discovery", label: "Veklom Discovery", href: "https://veklomdiscovery.vercel.app", group: "ecosystem", minTier: "free", description: "x402 payments, ACP agents, Base MCP wallet, ENS resolution, on-chain reputation ledger.", icon: "Globe2", sidebar: false },
+  { slug: "veklom-id", label: "Veklom ID", href: "/veklom-id", group: "ecosystem", minTier: "free", description: "Decentralized Sovereign Operator Registry.", icon: "Fingerprint", sidebar: true },
+  { slug: "discovery", label: "Veklom Discovery", href: "/discovery", group: "ecosystem", minTier: "free", description: "x402 payments, ACP agents, Base MCP wallet, ENS resolution, on-chain reputation ledger.", icon: "Globe2", sidebar: false },
 
 
   // 5. ⚖️ Governance & Security
   { slug: "governance", label: "Governance & Identity", href: "/governance", group: "govern", minTier: "starter", description: "Operator trust score, rank progression, immutable event ledger, and identity verification.", icon: "Scale", sidebar: true },
+  { slug: "pgl-studio", label: "PGL Studio", href: "/pgl", group: "govern", minTier: "free", description: "Programmable Governance Ledger onboarding and identity shell.", icon: "Fingerprint", sidebar: true },
   { slug: "interlink", label: "Interlink", href: "/interlink", group: "govern", minTier: "free", description: "cAPI execution proofs and 9-phase ledger.", icon: "ShieldAlert", sidebar: true },
   { slug: "audit", label: "Audit Log", href: "/audit", group: "govern", minTier: "pro", description: "Tamper-evident audit trail.", icon: "FileSearch", sidebar: false },
   { slug: "compliance", label: "Compliance", href: "/compliance", group: "govern", minTier: "sovereign", description: "Frameworks and evidence packages.", icon: "ShieldCheck", sidebar: false },

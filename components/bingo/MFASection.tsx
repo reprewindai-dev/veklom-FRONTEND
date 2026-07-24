@@ -4,30 +4,22 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldCheck, Cpu, Key, RefreshCw, Smartphone } from 'lucide-react';
+import { ShieldCheck, Cpu, Key, Smartphone } from 'lucide-react';
 import { Player } from './types';
 
 interface MFASectionProps {
+  apiBase: string;
   onAuthenticated: (player: Player) => void;
 }
 
-export default function MFASection({ onAuthenticated }: MFASectionProps) {
+export default function MFASection({ apiBase, onAuthenticated }: MFASectionProps) {
   const [username, setUsername] = useState('');
-  const [walletAddress, setWalletAddress] = useState('0x3a74772e925b54F7dAD7FD95c9Ba30825033f970');
+  const [walletAddress, setWalletAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaSecret, setMfaSecret] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [error, setError] = useState('');
-
-  const generateRandomWallet = () => {
-    const chars = '0123456789abcdef';
-    let addr = '0x';
-    for (let i = 0; i < 40; i++) {
-      addr += chars[Math.floor(Math.random() * 16)];
-    }
-    setWalletAddress(addr);
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +36,7 @@ export default function MFASection({ onAuthenticated }: MFASectionProps) {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${apiBase}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, walletAddress }),
@@ -75,7 +67,7 @@ export default function MFASection({ onAuthenticated }: MFASectionProps) {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/verify-mfa', {
+      const response = await fetch(`${apiBase}/api/auth/verify-mfa`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress, mfaCode }),
@@ -142,13 +134,7 @@ export default function MFASection({ onAuthenticated }: MFASectionProps) {
               <label className="block text-[10px] font-bold text-[#00f3ff] uppercase tracking-widest font-mono">
                 Base Wallet Address
               </label>
-              <button
-                type="button"
-                onClick={generateRandomWallet}
-                className="text-[10px] text-[#bc13fe] hover:text-[#bc13fe]/80 font-mono flex items-center gap-1 cursor-pointer transition-colors"
-              >
-                <RefreshCw className="w-3 h-3" /> Gen New
-              </button>
+              <span className="text-[10px] text-white/35 font-mono">Use your real Base wallet</span>
             </div>
             <div className="relative">
               <Key className="absolute left-3 top-3.5 w-4 h-4 text-white/40" />
@@ -221,7 +207,7 @@ export default function MFASection({ onAuthenticated }: MFASectionProps) {
 
       <div className="mt-8 border-t border-white/10 pt-4 text-center">
         <p className="text-[10px] text-white/40 font-mono leading-relaxed">
-          Authorized on-chain asset mapping under Base App ID 6a20f24cc341f72c2f573eb5.
+          Base app metadata and wallet ownership proof are pending backend verification.
         </p>
       </div>
     </div>

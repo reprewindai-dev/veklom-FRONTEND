@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamicImport from "next/dynamic";
 import { 
@@ -23,14 +24,6 @@ const StakingProtocol = dynamicImport(
   () => import("@/components/vnp/StakingProtocol"),
   { ssr: false, loading: () => <div className="h-[400px] bg-white/5 rounded-xl animate-pulse" /> }
 );
-const HostileAgentDemo = dynamicImport(
-  () => import("@/app/dev/components/HostileAgentDemo"),
-  { ssr: false, loading: () => <div className="h-[600px] bg-white/5 rounded-xl animate-pulse" /> }
-);
-const GovernedExportDemo = dynamicImport(
-  () => import("@/app/dev/components/GovernedExportDemo"),
-  { ssr: false, loading: () => <div className="h-[600px] bg-white/5 rounded-xl animate-pulse" /> }
-);
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -43,6 +36,11 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const now = new Date();
   const activeBlogs = blogsData
     .filter(blog => new Date(blog.publishDate) <= now)
@@ -136,18 +134,15 @@ export default function Home() {
 
           <motion.div variants={fadeUpVariants} className="flex flex-wrap items-center justify-center gap-4 mb-20">
             <Link href="/signup" className="bg-white text-black px-8 py-4 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center gap-2 text-lg shadow-lg shadow-white/5">
-              Start Free <ArrowRight className="w-5 h-5" />
+              Join Waitlist <ArrowRight className="w-5 h-5" />
             </Link>
-            <a href="#live-demo" className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-lg font-bold hover:bg-white/10 transition-colors flex items-center gap-2 text-lg">
-              See Live Demo
-            </a>
           </motion.div>
 
           {/* High Density Metric Row */}
           <motion.div variants={fadeUpVariants} className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mb-20 border-y border-white/5 py-8 bg-white/[0.01] backdrop-blur-sm px-6 rounded-2xl">
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-extrabold text-[#FFB800] font-mono mb-2">99.9%</div>
-              <div className="text-xs text-gray-400 uppercase tracking-widest font-mono">Live Uptime SLA</div>
+              <div className="text-xs text-gray-400 uppercase tracking-widest font-mono">Uptime SLA</div>
             </div>
             <div className="text-center border-l border-white/5">
               <div className="text-3xl md:text-4xl font-extrabold text-[#FFB800] font-mono mb-2">&lt;200ms</div>
@@ -167,11 +162,123 @@ export default function Home() {
           <motion.div variants={fadeUpVariants} id="live-demo" className="relative scroll-mt-24 w-full">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-3xl opacity-50 rounded-3xl -z-10" />
             <div className="grid md:grid-cols-2 gap-8">
-                <HostileAgentDemo />
-                <GovernedExportDemo />
+              <div className="card obsidian-glass p-8 text-left">
+                <div className="flex items-center gap-3 mb-5">
+                  <ShieldAlert className="w-5 h-5 text-[#FFB800]" />
+                  <span className="text-xs tracking-[0.14em] text-[#FFB800] font-bold uppercase">Runtime Interception</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">Hostile agent interception</h2>
+                <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                  Run the governed demo in the secured control-plane surface. The public landing page stays static and stable; the live trace executes inside the authenticated runtime.
+                </p>
+                <Link href="https://terminal.veklom.com" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Open live trace <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="card obsidian-glass p-8 text-left">
+                <div className="flex items-center gap-3 mb-5">
+                  <FileSpreadsheet className="w-5 h-5 text-[#FFB800]" />
+                  <span className="text-xs tracking-[0.14em] text-[#FFB800] font-bold uppercase">Governed Export</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">Cross-boundary proof flow</h2>
+                <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                  See the BYOS guardrail path, CAPPO execution proof, and x402 settlement evidence from the live runtime without loading terminal-only code on the homepage.
+                </p>
+                <Link href="/vnp/docs" className="inline-flex items-center gap-2 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Open VNP docs <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* Intercept → Gate → Anchor — primary mental model */}
+      <section className="py-20 border-t border-white/5 bg-[#0A0A0C] relative scroll-mt-16" id="intercept-gate-anchor">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <span className="inline-flex items-center gap-1 text-[#FFB800] text-xs font-bold uppercase tracking-widest bg-[#FFB800]/5 border border-[#FFB800]/10 px-3 py-1 rounded-full mb-4">
+              <ShieldCheck className="w-3 h-3" /> The Veklom Model
+            </span>
+            <h2 className="text-4xl font-extrabold tracking-tight mb-4">Intercept. Gate. Anchor.</h2>
+            <p className="text-gray-400 text-lg leading-relaxed">
+              Three moves define everything Veklom does: intercept consequential agent actions before
+              they run, gate them against identity and policy, and anchor the outcome as verifiable
+              evidence.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Intercept */}
+            <div className="card obsidian-glass p-8 flex flex-col border-l-4 border-l-[#FFB800]/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
+                  <Fingerprint className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <span className="text-gray-500 text-xs font-mono">01 · INTERCEPT</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3">Intercept</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                Consequential agent actions are intercepted before execution. The SDK hooks the call
+                at the edge so nothing reaches the real world unchecked.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/vnp/sdk/fastapi" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  FastAPI SDK <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/vnp/sdk/python" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Python SDK <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Gate */}
+            <div className="card obsidian-glass p-8 flex flex-col border-l-4 border-l-[#FFB800]/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
+                  <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <span className="text-gray-500 text-xs font-mono">02 · GATE</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3">Gate</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                Identity, policy, approvals, budgets, and governance authorize or reject the action.
+                Anything not explicitly allowed is denied.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/vnp/governance" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Governance <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Anchor */}
+            <div className="card obsidian-glass p-8 flex flex-col border-l-4 border-l-[#FFB800]/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
+                  <Server className="w-6 h-6 text-[#FFB800]" />
+                </div>
+                <span className="text-gray-500 text-xs font-mono">03 · ANCHOR</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3">Anchor</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-1">
+                Outcomes are anchored with signed observations and hash-chained provenance for a
+                replayable audit trail.
+              </p>
+              <div className="inline-flex items-center gap-2 mb-6 px-2.5 py-1 rounded-full text-xs font-semibold border text-amber-300 bg-amber-500/10 border-amber-500/30 self-start">
+                External anchoring: Needs proof
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/vnp/topology" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Topology <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/vnp/status" className="inline-flex items-center gap-1.5 text-[#FFB800] hover:text-[#FFD366] font-bold text-sm uppercase tracking-wider">
+                  Status <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* The Problem Section */}
@@ -491,7 +598,7 @@ export default function Home() {
                   <span className="text-[10px] uppercase font-semibold font-mono px-2 py-0.5 rounded bg-white/5 border border-white/5 text-gray-300">Shared Nodes</span>
                 </div>
               </div>
-              <Link href="/signup" className="btn btn-ghost w-full">Start Free</Link>
+              <Link href="/signup" className="btn btn-ghost w-full">Join Waitlist</Link>
             </div>
 
             {/* Card 2 */}
@@ -562,7 +669,7 @@ export default function Home() {
                   <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> BYOK provider config</li>
                 </ul>
               </div>
-              <Link href="/signup" className="btn btn-ghost w-full mt-8">Start Free</Link>
+              <Link href="/signup" className="btn btn-ghost w-full mt-8">Join Waitlist</Link>
             </div>
 
             {/* Founding */}
@@ -635,7 +742,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {activeBlogs.map(blog => {
+            {mounted && activeBlogs.map(blog => {
               const formattedDate = new Date(blog.publishDate).toLocaleDateString('en-US', {
                 year: 'numeric', month: 'short', day: 'numeric'
               });

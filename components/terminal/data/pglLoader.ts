@@ -5,9 +5,6 @@ export interface PGLAgent {
   status: string;
 }
 
-// Fallback registry for safety/dev if network fails
-import fallbackRegistry from './veklom-agents/master-agent-army/pgl_registry.json';
-
 // Toggles between live API vs Local Dev Backend based on VITE_ env vars
 // If you want to force local, set NEXT_PUBLIC_USE_LOCAL_BACKEND=true in .env
 export let API_BASE_URL = process.env.NEXT_PUBLIC_USE_LOCAL_BACKEND === 'true' 
@@ -15,15 +12,11 @@ export let API_BASE_URL = process.env.NEXT_PUBLIC_USE_LOCAL_BACKEND === 'true'
   : ''; // Same origin routing via Next.js server proxy in production
 
 let CAPPO_BASE_URL = process.env.NEXT_PUBLIC_USE_LOCAL_BACKEND === 'true'
-  ? 'http://localhost:8001'
-  : 'https://api.cappo.veklom.com';
+  ? 'https://capi.veklom.com'
+  : 'https://capi.veklom.com';
 
 export const setCapiBaseUrl = (url: string) => {
   API_BASE_URL = url;
-  // If it's a localhost URL, we might need to adjust CAPPO as well if they are on adjacent ports
-  if (url.includes('localhost:8088')) {
-     CAPPO_BASE_URL = 'http://localhost:8001'; // Standard CAPPO local
-  }
 };
 
 export const establishBackendHandshake = async (): Promise<PGLAgent[]> => {
@@ -42,8 +35,8 @@ export const establishBackendHandshake = async (): Promise<PGLAgent[]> => {
     const data = await response.json();
     return data as PGLAgent[];
   } catch (error) {
-    console.error('[HANDSHAKE ERROR] Failed to connect to backend PGL Registry. Falling back to local offline registry.', error);
-    return fallbackRegistry as PGLAgent[];
+    console.error('[HANDSHAKE ERROR] Backend PGL Registry unavailable.', error);
+    return [];
   }
 };
 
@@ -75,21 +68,17 @@ export const triggerCAPIExecution = async (
     payload
   };
 
-  const generateHash = (prefix: string) => {
-    return `${prefix}_${Math.random().toString(36).substring(2, 10)}`;
-  };
-  const traceId = generateHash('trx');
+  const traceId = crypto.randomUUID();
 
   const headers: any = {
     'Content-Type': 'application/json',
     'Accept': 'text/event-stream',
-    'X-Veklom-Origin-Node': API_BASE_URL,
+    'X-Veklom-Origin-Node': 'control-plane-terminal',
     'X-Veklom-Trace-Id': traceId,
-    'X-Veklom-Timestamp': Date.now().toString(),
-    'X-Veklom-Audit-Sig': generateHash('sig')
+    'X-Veklom-Timestamp': Date.now().toString()
   };
 
-  let response = await fetch(`${API_BASE_URL}/api/v1/capi/execute`, {
+  let response = await fetch(`/api/v1/capi/execute`, {
     method: 'POST',
     headers,
     body: JSON.stringify(intent)
@@ -117,20 +106,13 @@ export const triggerCAPIExecution = async (
           });
         }
         
-        // At this point, the user is connected via Reown AppKit!
+        // At this point, the user is connected via Reown AppKit.
         const connectedAccount = getAccount(config);
         headers['X-Wallet-Address'] = connectedAccount.address;
-        
-        // For standard x402, we would send the on-chain tx here and attach the receipt.
-        // For demo purposes and immediate verification of the real modal:
-        alert(`Wallet Connected: ${connectedAccount.address}\n\nx402 Challenge Received:\nPrice: ${decoded.accepts[0]?.price}\nPay To: ${decoded.accepts[0]?.payTo}`);
-        
-        // Re-attempt request with authenticated wallet header
-        response = await fetch(`${API_BASE_URL}/api/v1/capi/execute`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(intent)
-        });
+
+        throw new Error(
+          `x402 payment challenge received for ${decoded.accepts?.[0]?.price || 'unknown price'} to ${decoded.accepts?.[0]?.payTo || 'unknown pay_to'}. Terminal execution requires a frontend wallet_sendCalls/eth_sendTransaction settlement path before retrying. Connected wallet: ${connectedAccount.address}`
+        );
       } catch (err) {
         console.error('[x402] Failed to process payment challenge:', err);
       }

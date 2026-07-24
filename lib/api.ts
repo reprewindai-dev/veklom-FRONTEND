@@ -51,6 +51,25 @@ export interface RequestOpts {
   headers?: Record<string, string>;
 }
 
+const PUBLIC_ROUTE_PREFIXES = [
+  "/",
+  "/blog",
+  "/vnp",
+  "/benchmarks",
+  "/pricing",
+  "/claim",
+  "/discovery",
+  "/dev",
+  "/login",
+  "/signup",
+];
+
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTE_PREFIXES.some((route) => (
+    route === "/" ? pathname === "/" : pathname === route || pathname.startsWith(`${route}/`)
+  ));
+}
+
 export function apiBaseUrl(): string {
   if (API_BASE) return API_BASE;
   if (typeof window !== "undefined") {
@@ -86,6 +105,7 @@ export function apiUrl(path: string, query?: RequestOpts["query"]): string {
 export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Accept": "application/json",
+    ...(opts.headers || {}),
   };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (!opts.unauth) {
@@ -124,9 +144,25 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       `HTTP ${res.status}`;
       
     if (typeof window !== "undefined") {
+      const isPublicPage = isPublicRoute(window.location.pathname);
       if (res.status === 402) {
-        const currentPath = window.location.pathname + window.location.search;
-        window.location.href = `/treasury/?reason=payment-required&returnTo=${encodeURIComponent(currentPath)}`;
+        if (!isPublicPage) {
+          const paymentRequiredHeader = res.headers.get("payment-required");
+          const facilitatorUrl = res.headers.get("x-402-facilitator-url");
+          
+          const event = new CustomEvent("X402PaymentIntervention", {
+            detail: { 
+                type: "PAYMENT_REQUIRED", 
+                message: msg,
+                paymentRequiredHeader,
+                facilitatorUrl
+            }
+          });
+          window.dispatchEvent(event);
+          
+          // Throw a silent error so the UI doesn't crash, allowing the modal to handle the payment flow
+          throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json);
+        }
       } else if (res.status === 403 || res.status === 401) {
         const isAuthTokenError = msg.toLowerCase().includes("invalid or expired token") || 
                                  msg.toLowerCase().includes("invalid token") || 
@@ -150,6 +186,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
         }
         
         // Governance lock - redirect to Trust / Security center or login
+        if (isPublicPage) {
+          throw new ApiError(res.status, String(msg), json);
+        }
+
         if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {
           if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login";
@@ -172,12 +212,11 @@ function safeJson(t: string) {
 }
 
 api.get = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'GET' });
-api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, { 
+api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, {
   ...opts, 
   method: 'POST',
-  body: body ? JSON.stringify(body) : undefined,
+  body,
   headers: {
-    'Content-Type': 'application/json',
     ...(opts?.headers || {})
   }
 });

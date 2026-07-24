@@ -18,7 +18,7 @@ export async function getJSON<T>(url: string): Promise<T> {
 
 export function refreshLive(): void {
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("covenant:refresh"));
+    window.dispatchEvent(new Event("cappo:refresh"));
   }
 }
 

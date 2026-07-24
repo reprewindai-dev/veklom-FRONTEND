@@ -322,7 +322,7 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
                 })}
               </div>
               <div className="mt-3 pt-3 border-t border-[#1F1F1F] text-[9px] font-mono text-[#6E6E73]">
-                Rankings update every ~5 minutes · VNP Methodology v0.1 locked
+                Rankings update every ~5 minutes · VNP Methodology v1.0
               </div>
             </div>
           </div>

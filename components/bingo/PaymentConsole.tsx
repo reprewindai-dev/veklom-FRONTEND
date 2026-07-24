@@ -48,7 +48,7 @@ export default function PaymentConsole({
             </h3>
           </div>
           <p className="text-xs text-white/50 mt-0.5 font-sans">
-            Secured on-chain settlement for M2M interactions
+            Watches Bingo settlement state; paid actions wait for real wallet proof
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function PaymentConsole({
                 HTTP 402 - PAYMENT REQUIRED
               </h4>
               <p className="text-[10px] text-white/70 font-mono leading-relaxed mt-1">
-                The Interlink-cAPI Gateway intercepted a telepathic selection requiring on-chain signature.
+                The Bingo gateway requires a real Base wallet payment before this paid action can run.
               </p>
             </div>
           </div>
@@ -127,28 +127,11 @@ export default function PaymentConsole({
             {showDetails && (
               <pre className="text-[8px] bg-black/60 p-3 rounded-lg text-[#00f3ff]/75 font-mono whitespace-pre-wrap leading-normal border border-white/10">
                 {`{
-  domain: {
-    name: "USD Coin",
-    version: "2",
-    chainId: 8453,
-    verifyingContract: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-  },
-  types: {
-    TransferWithAuthorization: [
-      { name: "from", type: "address" },
-      { name: "to", type: "address" },
-      { name: "value", type: "uint256" },
-      { name: "validBefore", type: "uint256" },
-      { name: "nonce", type: "bytes32" }
-    ]
-  },
-  message: {
-    from: "${walletAddress}",
-    to: "${pendingPaymentReq.accepts[0].payTo}",
-    value: "100000", // 0.10 USDC (6 decimals)
-    validBefore: ${Math.floor(Date.now() / 1000) + 3600},
-    nonce: "0x${Array.from({length:64},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('')}"
-  }
+  status: "needs_wallet_proof",
+  from: "${walletAddress}",
+  payTo: "${pendingPaymentReq.accepts[0].payTo}",
+  price: "${pendingPaymentReq.accepts[0].price} USDC",
+  requiredNextStep: "Base Account wallet_sendCalls or eth_sendTransaction, then backend X-PAYMENT proof ingestion"
 }`}
               </pre>
             )}
@@ -165,14 +148,14 @@ export default function PaymentConsole({
               onClick={onSignAndPay}
               className="w-2/3 bg-gradient-to-r from-[#00f3ff] to-[#bc13fe] text-black font-black text-[10px] font-mono tracking-widest py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,243,255,0.4)] cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all"
             >
-              <FileSignature className="w-4 h-4 text-black" /> SIGN & AUTHORIZE RAIL
+              <FileSignature className="w-4 h-4 text-black" /> NEEDS BASE WALLET PROOF
             </button>
           </div>
         </div>
       ) : (
         <div className="mb-6 p-4 bg-black/40 border border-white/10 rounded-xl text-center">
           <p className="text-[10px] text-white/40 font-mono leading-relaxed">
-            [X402 ACTIVE STATUS]: Monitoring HTTP interceptors. Telepathic selections require EIP-3009 secure signatures.
+            [X402 PROOF STATUS]: Monitoring Bingo backend. Paid actions require a real Base wallet payment and backend proof ingestion.
           </p>
         </div>
       )}
@@ -180,12 +163,12 @@ export default function PaymentConsole({
       {/* Transaction History Ledger */}
       <div>
         <h4 className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-3">
-          On-Chain Action Registry (Base Mainnet)
+          Settlement Proof Registry (Base Mainnet)
         </h4>
 
         {transactions.length === 0 ? (
           <div className="text-center py-6 border border-dashed border-white/10 rounded-xl">
-            <p className="text-[10px] font-mono text-white/30">No actions synced on-chain yet</p>
+            <p className="text-[10px] font-mono text-white/30">No verified settlement rows yet</p>
           </div>
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">

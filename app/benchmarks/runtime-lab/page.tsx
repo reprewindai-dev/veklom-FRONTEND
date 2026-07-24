@@ -396,14 +396,14 @@ export default function App() {
     }
   };
 
-  // Step 5: Execute Tool via MCP Gateway
+  // Step 5: Execute Tool via Interlink Gateway
   const executeSecureTool = async () => {
     setExecutingTool(true);
     setExecutionError(null);
     setExecutionResult(null);
 
     try {
-      const res = await fetch("https://mcpapi.vercel.app/api/request", {
+      const res = await fetch("/api/v1/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -425,14 +425,14 @@ export default function App() {
       }
       if (data.verdict?.decision === "allow") {
         setExecutionResult({
-          output: data.output?.response || "Executed via cAPI MCP successfully.",
+          output: data.output?.response || "Executed via CAPPO successfully.",
           proof: data.verdict?.proof,
           cost: data.verdict?.cost
         });
         fetchWalletInfo();
         fetchLedger();
       } else {
-        setExecutionError(data.verdict?.reason || "Secure execution failed or was denied by cAPI governance");
+        setExecutionError(data.verdict?.reason || "Secure execution failed or was denied by CAPPO governance");
       }
     } catch (e) {
       console.error(e);
@@ -1058,12 +1058,12 @@ export default function App() {
                 )}
               </AnimatePresence>
 
-              {/* STAGE 5: SECURE EXECUTION - THE MCP GATEWAY CHAMBER */}
+              {/* STAGE 5: SECURE EXECUTION - THE INTERLINK GATEWAY CHAMBER */}
               <div className="border-t border-cyan-950/40 pt-5">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="px-1.5 py-0.5 bg-[#10b981] text-[#022c22] rounded text-[10px] font-bold">STAGE 5</span>
-                    MCP Gateway Safe Tool Chamber
+                    Interlink Gateway Safe Tool Chamber
                   </label>
                   <span className="text-[10px] text-slate-400">Synapse RPC Execution Layer</span>
                 </div>
@@ -1130,7 +1130,7 @@ export default function App() {
                     >
                       <div className="flex items-center gap-1.5 font-bold mb-1">
                         <AlertTriangle className="w-4 h-4 text-red-400" />
-                        <span>MCP GATEWAY SECURITY CONSTRAINT REJECTION</span>
+                        <span>INTERLINK GATEWAY SECURITY CONSTRAINT REJECTION</span>
                       </div>
                       <p className="text-[11px] opacity-90">{executionError}</p>
                       <div className="mt-2.5 pt-2 border-t border-red-900/40 text-[10px] block font-bold uppercase text-red-300">
@@ -1148,7 +1148,7 @@ export default function App() {
                     >
                       <div className="flex items-center gap-1.5 font-bold mb-1">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>MCP GATEWAY AUTHORIZED SYSTEM CALL SUCCESS</span>
+                        <span>INTERLINK GATEWAY AUTHORIZED SYSTEM CALL SUCCESS</span>
                       </div>
                       
                       <div className="space-y-1 mt-1 text-[11px]">
@@ -1535,4 +1535,3 @@ export default function App() {
     </Shell>
   );
 }
-

@@ -10,8 +10,8 @@ import type { BenchmarkApiEntry } from '@/lib/vnp/types';
 import ApiBenchmarkCard from '@/components/vnp/ApiBenchmarkCard';
 
 function gradeFor(score: number): { letter: string; color: string } {
-  if (score >= 90) return { letter: 'A+', color: '#00FF66' };
-  if (score >= 80) return { letter: 'A',  color: '#00FF66' };
+  if (score >= 90) return { letter: 'A+', color: '#FFB800' };
+  if (score >= 80) return { letter: 'A',  color: '#FFB800' };
   if (score >= 70) return { letter: 'B',  color: '#FFB800' };
   if (score >= 60) return { letter: 'C',  color: '#FFAB00' };
   if (score >= 50) return { letter: 'D',  color: '#FF7A00' };
@@ -31,22 +31,16 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
 
   const score = api?.govScore ?? 80;
   const grade = gradeFor(score);
+  const score = typeof api?.govScore === "number" ? api.govScore : null;
+  const grade = score === null ? null : gradeFor(score);
+  const apiName = api?.name ?? "VNP Benchmark Registry";
+  const apiVersion = api ? "v1.0.0" : "scorecard pending";
 
   const copyEmbed = () => {
     navigator.clipboard.writeText(`[![VNP Score](https://control.veklom.com/api/vnp/badge/${apiId}.svg)](https://control.veklom.com/benchmarks/${apiId})`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  if (!api) {
-    return (
-      <Shell>
-        <div className="min-h-[400px] flex flex-col items-center justify-center font-mono text-xs text-[#6E6E73] gap-2">
-          <span>Retrieving API telemetry details...</span>
-        </div>
-      </Shell>
-    );
-  }
 
   return (
     <Shell>
@@ -59,29 +53,39 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
         <div className="bg-[#0A0A0A] border border-[#1F1F1F] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[9px] font-mono font-bold tracking-widest text-[#FFB800] bg-[#FFB800]/10 border border-[#FFB800]/20 px-2 py-0.5 rounded">VERIFIED API</span>
-              <span className="text-[10px] font-mono text-[#6E6E73]">v1.0.0</span>
+              <span className="text-[9px] font-mono font-bold tracking-widest text-[#FFB800] bg-[#FFB800]/10 border border-[#FFB800]/20 px-2 py-0.5 rounded">
+                {api ? "VERIFIED API" : "REGISTRY LOOKUP LIMITED"}
+              </span>
+              <span className="text-[10px] font-mono text-[#6E6E73]">{apiVersion}</span>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">{api.name}</h1>
-            <p className="text-[#6E6E73] text-xs font-mono mt-1">VNP ID: {api.id}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight">{apiName}</h1>
+            <p className="text-[#6E6E73] text-xs font-mono mt-1">VNP ID: {apiId}</p>
           </div>
 
           <div className="flex items-center gap-4 bg-[#141414] border border-[#1F1F1F] rounded-xl px-5 py-3.5">
             <div>
               <div className="text-[10px] font-mono text-[#6E6E73]">COMPOSITE SCORE</div>
-              <div className="text-3xl font-black font-mono text-white mt-0.5">{score.toFixed(1)}</div>
+              <div className="text-3xl font-black font-mono text-white mt-0.5">
+                {score === null ? "Needs proof" : score.toFixed(1)}
+              </div>
             </div>
-            <div
-              className="text-2xl font-black font-mono px-3 py-1.5 rounded-lg border"
-              style={{ color: grade.color, borderColor: `${grade.color}30`, backgroundColor: `${grade.color}10` }}
-            >
-              {grade.letter}
-            </div>
+            {grade ? (
+              <div
+                className="text-2xl font-black font-mono px-3 py-1.5 rounded-lg border"
+                style={{ color: grade.color, borderColor: `${grade.color}30`, backgroundColor: `${grade.color}10` }}
+              >
+                {grade.letter}
+              </div>
+            ) : (
+              <div className="text-[10px] font-mono px-3 py-2 rounded-lg border border-[#FF7A00]/20 bg-[#FF7A00]/10 text-[#FF7A00] uppercase tracking-widest">
+                No claim
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* BenchmarkCard — seven-section standardized documentation */}
+          {/* BenchmarkCard - seven-section standardized documentation */}
           <div className="md:col-span-2 space-y-6">
             <ApiBenchmarkCard apiId={apiId} />
           </div>
@@ -94,11 +98,13 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
               <div className="flex justify-center bg-[#050505] border border-[#1F1F1F] rounded-xl py-4">
                 <svg width="200" height="28" viewBox="0 0 200 28" xmlns="http://www.w3.org/2000/svg">
                   <rect width="200" height="28" rx="4" fill="#0A0A0A" stroke="#242424" strokeWidth="0.5" />
-                  <rect width="64" height="28" rx="4" fill={grade.color} />
-                  <rect x="60" width="4" height="28" fill={grade.color} />
+                  <rect width="64" height="28" rx="4" fill={grade?.color ?? "#FF7A00"} />
+                  <rect x="60" width="4" height="28" fill={grade?.color ?? "#FF7A00"} />
                   <text x="32" y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fontFamily="monospace" fill="#000">VNP</text>
-                  <text x="136" y="11" textAnchor="middle" fontSize="8" fontFamily="monospace" fill="#A1A1A6">{api.name.slice(0, 16)}</text>
-                  <text x="136" y="21" textAnchor="middle" fontSize="9" fontWeight="bold" fontFamily="monospace" fill={grade.color}>{score.toFixed(1)}</text>
+                  <text x="136" y="11" textAnchor="middle" fontSize="8" fontFamily="monospace" fill="#A1A1A6">{apiName.slice(0, 16)}</text>
+                  <text x="136" y="21" textAnchor="middle" fontSize="9" fontWeight="bold" fontFamily="monospace" fill={grade?.color ?? "#FF7A00"}>
+                    {score === null ? "Needs proof" : score.toFixed(1)}
+                  </text>
                 </svg>
               </div>
               <button

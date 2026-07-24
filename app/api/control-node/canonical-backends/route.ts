@@ -4,6 +4,7 @@ import {
   canonicalBackends,
   canonicalBackendUrl,
 } from "@/lib/canonical-backends";
+import { capiAuthHeaderValue } from "@/lib/capi-runtime";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ interface ProbeResult<T = unknown> {
 
 interface BackendSourceState {
   id: CanonicalBackendConfig["id"];
+  legacy_id?: string;
   label: string;
   repo: string;
   role: CanonicalBackendConfig["role"];
@@ -58,7 +60,7 @@ function backendHeaders(
   const headers = authHeaders(req) as Record<string, string>;
 
   if (backend.authMode === "server-api-key") {
-    const apiKey = process.env.CAPPO_API_KEY || process.env.CAPPO_BACKEND_API_KEY;
+    const apiKey = capiAuthHeaderValue();
     if (apiKey) {
       headers["X-API-Key"] = apiKey;
     }
@@ -73,6 +75,15 @@ async function probe<T>(
   backend: CanonicalBackendConfig,
   path: string,
 ): Promise<ProbeResult<T>> {
+  if (!path) {
+    return {
+      ok: false,
+      status: null,
+      route: "Needs proof",
+      latency_ms: 0,
+      error: "Operational overview endpoint is not configured",
+    };
+  }
   const started = Date.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4500);
@@ -117,22 +128,31 @@ function sourceState(
   overview: ProbeResult,
   sourceOfTruth?: ProbeResult,
 ): BackendSourceState {
+  const requiresOverview = !!backend.overviewPath || !!backend.sourceOfTruthPath;
+
   const state: ProbeState = health.ok
-    ? overview.ok || sourceOfTruth?.ok
-      ? "healthy"
-      : "degraded"
+    ? requiresOverview
+      ? overview.ok || sourceOfTruth?.ok
+        ? "healthy"
+        : "degraded"
+      : "healthy"
     : "needs_proof";
 
   const proof_signal = sourceOfTruth?.ok
     ? "source-of-truth snapshot verified"
+    : overview.ok && sourceOfTruth
+      ? `workspace overview verified; source-of-truth ${sourceOfTruth.status ? `HTTP ${sourceOfTruth.status}` : "needs proof"}`
     : overview.ok
       ? "workspace overview verified"
       : health.ok
-        ? "health only; operational proof unavailable"
+        ? requiresOverview
+          ? "health only; operational proof unavailable"
+          : "health verified"
         : "Needs proof";
 
   return {
     id: backend.id,
+    legacy_id: backend.id === "capi" ? "cappo" : undefined,
     label: backend.label,
     repo: backend.repo,
     role: backend.role,
@@ -180,7 +200,7 @@ export async function GET(req: NextRequest) {
     configs.map(async (backend) => {
       const [health, overview, sourceOfTruth] = await Promise.all([
         probe(req, backend, backend.healthPath),
-        probe(req, backend, backend.overviewPath),
+        probe(req, backend, backend.overviewPath || ""),
         backend.sourceOfTruthPath
           ? probe(req, backend, backend.sourceOfTruthPath)
           : Promise.resolve(undefined),

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-capi/edge';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
@@ -10,6 +11,31 @@ export function middleware(request: NextRequest) {
     if (url.pathname === '/') {
       url.pathname = '/dev';
       return NextResponse.rewrite(url);
+    }
+  }
+
+  // Route gpc.veklom.com to /gpc
+  if (hostname === 'gpc.veklom.com') {
+    if (url.pathname === '/') {
+      url.pathname = '/gpc';
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // interlink-cAPI: Edge Interception for capabilities
+  if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
+    const identity = await getExecutionIdentity(request);
+    
+    // We determine required capabilities based on the route.
+    const requiredCaps = ['openai_api_key']; // Default for these restricted routes
+    const { missing } = hasRequiredCapabilities(identity, requiredCaps);
+
+    if (missing.length > 0) {
+      // Intercept and redirect to the edge-prompt to fulfill requirements
+      const promptUrl = new URL('/edge-prompt', request.url);
+      promptUrl.searchParams.set('missing', missing.join(','));
+      promptUrl.searchParams.set('returnTo', url.pathname + url.search);
+      return NextResponse.redirect(promptUrl);
     }
   }
 

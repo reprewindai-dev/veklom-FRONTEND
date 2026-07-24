@@ -8,7 +8,7 @@ export interface WalletState {
   idWallet: string; // 0x3a74772e925b54F7dAD7FD95c9Ba30825033f970
   paymentWallet: string; // 0x3a74772e925b54F7dAD7FD95c9Ba30825033f970
   network: string; // Base Mainnet
-  verificationDomain: string; // veklom-id.vercel.app
+  verificationDomain: string; // id.veklom.com
   connected: boolean;
   balanceEth: number;
   balanceUsdc: number;
@@ -21,7 +21,7 @@ export interface LeaderboardEntry {
   totalWonUsdc: number;
   bestMultiplier: number;
   streak: number;
-  agentPreference: 'Vector North' | 'Quiet Switch' | 'Balanced';
+  agentPreference: string;
 }
 
 export interface WagerTransaction {
@@ -34,6 +34,11 @@ export interface WagerTransaction {
   payout: number;
   status: 'pending' | 'success' | 'crashed' | 'refunded';
   network: string;
+  blockHeight?: number | null;
+  gasUsed?: number | null;
+  gasPriceWei?: number | null;
+  callData?: string | null;
+  functionSelector?: string | null;
 }
 
 export interface EscrowState {
