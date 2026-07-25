@@ -29,8 +29,6 @@ export default function ApiDetailPage({ params }: { params: Promise<{ apiId: str
     [lbData, apiId]
   );
 
-  const score = api?.govScore ?? 80;
-  const grade = gradeFor(score);
   const score = typeof api?.govScore === "number" ? api.govScore : null;
   const grade = score === null ? null : gradeFor(score);
   const apiName = api?.name ?? "VNP Benchmark Registry";
