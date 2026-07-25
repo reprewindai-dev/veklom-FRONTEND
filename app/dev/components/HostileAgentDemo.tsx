@@ -54,8 +54,8 @@ export default function HostileAgentDemo() {
   const [nonce, setNonce] = useState("");
 
   useEffect(() => {
-    setSessionId(`tx_${Math.random().toString(36).substring(2, 10)}`);
-    setNonce(`nonce_${Math.random().toString(36).substring(2, 12)}`);
+    setSessionId(`tx_${crypto.randomUUID().substring(0, 8)}`);
+    setNonce(`nonce_${crypto.randomUUID().substring(0, 10)}`);
   }, []);
 
   // Agents for the SwarmMap

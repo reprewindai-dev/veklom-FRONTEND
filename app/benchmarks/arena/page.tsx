@@ -856,7 +856,7 @@ export default function App() {
                       setWorkflowType("sequential");
                       if (pipelineSteps.length === 0 && agents.length > 0) {
                         setPipelineSteps(agents.map(a => ({
-                          id: `step-${Math.random()}`,
+                          id: `step-${crypto.randomUUID()}`,
                           agentId: a.id,
                           instruction: "Analyze and build on the draft context."
                         })));
@@ -1508,7 +1508,7 @@ export default function App() {
       {/* FOOTER AUDIT SECTION */}
       <footer className="border-t border-neutral-800 bg-black py-4 px-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-neutral-500 uppercase tracking-[0.2em] gap-4 z-10 relative">
         <div>CLUSTER: US-CENTRAL-ALPHA</div>
-        <div>SESSION UID: {Math.floor(1000 + Math.random() * 9000)}-AA{Math.floor(10 + Math.random() * 89)}-{Math.floor(1000 + Math.random() * 9000)}XB // UNRESTRICTED COGNITION DIRECTIVE</div>
+        <div>SESSION UID: VEKLOM-ALPHA-SESSION // UNRESTRICTED COGNITION DIRECTIVE</div>
         <p className="max-w-4xl mx-auto">
           Built securely on Veklom. CAPI Runtime Protocol Active. Authority verification continuous.
         </p>

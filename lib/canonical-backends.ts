@@ -133,6 +133,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       overviewPath: undefined,
       authMode: "forward-bearer",
     },
+    {
+      id: "lockerphycer",
+      label: "Lockerphycer Security Core",
+      repo: "lockerphycer",
+      role: "execution-engine",
+      baseUrl: trimTrailingSlash(process.env.LOCKERPHYCER_URL || "http://lockerphycer-api:8000"),
+      healthPath: "/health",
+      overviewPath: undefined,
+      authMode: "server-api-key",
+    },
   ];
 }
 

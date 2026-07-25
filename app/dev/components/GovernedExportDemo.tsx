@@ -56,7 +56,7 @@ export default function GovernedExportDemo() {
 
   const simulateRun = async () => {
     setBusy("run");
-    const newSessionId = "demo_export_" + Math.random().toString(36).substring(7);
+    const newSessionId = "demo_export_" + crypto.randomUUID().substring(0, 8);
     const newNonce = "nonce_" + Date.now();
     setSessionId(newSessionId);
     setNonce(newNonce);

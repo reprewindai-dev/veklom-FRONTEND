@@ -46,23 +46,23 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
   };
 
   const getVerificationRows = (api: ApiState) => {
-    const region = api.regions["us-east"];
+    const region = api.regions?.["us-east"];
     const rows: Record<string, { value: string; bar: number }> = {
       "Physical measurements": {
-        value: `${region.p99}ms`,
-        bar: Math.min(100, Math.max(0, 100 - region.p99 / 18)),
+        value: region?.p99 != null ? `${region.p99}ms` : "Unmeasured",
+        bar: region?.p99 != null ? Math.min(100, Math.max(0, 100 - region.p99 / 18)) : 0,
       },
       "Signed telemetry": {
-        value: "Ed25519 path",
-        bar: api.compositeScore > 90 ? 96 : 84,
+        value: api.compositeScore != null ? "Ed25519 path" : "Insufficient Evidence",
+        bar: api.compositeScore > 90 ? 96 : (api.compositeScore != null ? 84 : 0),
       },
       "Route beacons": {
-        value: "5 regions",
-        bar: 90,
+        value: api.regions ? `${Object.keys(api.regions).length} regions` : "Unmeasured",
+        bar: api.regions ? 90 : 0,
       },
       "Robust scoring": {
-        value: `${api.compositeScore}`,
-        bar: Math.min(100, Math.max(0, api.compositeScore)),
+        value: api.compositeScore != null ? `${api.compositeScore}` : "-",
+        bar: api.compositeScore != null ? Math.min(100, Math.max(0, api.compositeScore)) : 0,
       },
       "x402 settlement evidence": {
         value: api.x402Ready ? "Connected" : "Config incomplete",
@@ -173,14 +173,14 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                 <div className="flex flex-col items-end">
                   <div className="flex items-baseline gap-3">
                     <span className="text-4xl font-black font-mono text-emerald-400 tracking-tighter">
-                      {api.compositeScore}
+                      {api.compositeScore != null ? api.compositeScore : "-"}
                     </span>
                     <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm uppercase font-mono px-3 py-1 rounded font-extrabold">
-                      {grade}
+                      {api.compositeScore != null ? grade : "N/A"}
                     </span>
                   </div>
                   <span className="text-[10px] text-slate-500 font-mono uppercase tracking-widest mt-1">
-                    Confidence: {(api.compositeScore - 1.2).toFixed(1)}–{(api.compositeScore + 1.3).toFixed(1)}
+                    Confidence: {api.compositeScore != null ? `${(api.compositeScore - 1.2).toFixed(1)}–${(api.compositeScore + 1.3).toFixed(1)}` : "Unmeasured"}
                   </span>
                 </div>
               </div>
@@ -190,21 +190,21 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                 <div className="p-6 flex flex-col justify-center items-center text-center">
                   <span className="text-[11px] font-bold text-slate-400 tracking-widest uppercase mb-2">Geo-Adjusted Latency</span>
                   <div className="text-3xl font-black text-[#00E5FF] font-mono tracking-tighter mb-1 drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-                    {Math.max(12, api.regions["us-east"].p99 - 45)}ms
+                    {api.regions?.["us-east"]?.p99 != null ? `${Math.max(12, api.regions["us-east"].p99 - 45)}ms` : "-"}
                   </div>
                   <span className="text-[10px] text-slate-500 font-medium">Routing + system overhead only.</span>
                 </div>
                 <div className="p-6 flex flex-col justify-center items-center text-center">
                   <span className="text-[11px] font-bold text-slate-400 tracking-widest uppercase mb-2">Error Rate</span>
                   <div className="text-3xl font-black text-emerald-400 font-mono tracking-tighter mb-1 drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                    {api.regions["us-east"].errorRate}%
+                    {api.regions?.["us-east"]?.errorRate != null ? `${api.regions["us-east"].errorRate}%` : "-"}
                   </div>
                   <span className="text-[10px] text-slate-500 font-medium">Fast and correct, or it fails.</span>
                 </div>
                 <div className="p-6 flex flex-col justify-center items-center text-center">
                   <span className="text-[11px] font-bold text-slate-400 tracking-widest uppercase mb-2">Observed Availability</span>
                   <div className="text-3xl font-black text-white font-mono tracking-tighter mb-1">
-                    {api.regions["us-east"].uptime}%
+                    {api.regions?.["us-east"]?.uptime != null ? `${api.regions["us-east"].uptime}%` : "-"}
                   </div>
                   <span className="text-[10px] text-slate-500 font-medium">Real uptime, not SLA marketing.</span>
                 </div>
@@ -305,9 +305,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-900/50">
-                        {(Object.keys(api.regions) as Array<keyof typeof api.regions>).map((reg) => {
+                        {(Object.keys(api.regions || {}) as Array<keyof typeof api.regions>).map((reg) => {
                           const rData = api.regions[reg];
-                          const geoAdjusted = rData.geoAdjustedLatency || Math.max(12, rData.p99 - 45); 
+                          const geoAdjusted = rData?.geoAdjustedLatency ?? (rData?.p99 != null ? Math.max(12, rData.p99 - 45) : null); 
                           
                           let regionName = "US-East (Ashburn)";
                           if (reg === "us-west") regionName = "US-West (Hillsboro)";
@@ -315,14 +315,14 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                           if (reg === "ap-southeast") regionName = "AP-Southeast (Singapore)";
                           if (reg === "ap-northeast") regionName = "EU-North (Nuremberg)";
 
-                          const isHighRisk = rData.errorRate > 1 || geoAdjusted > 300;
+                          const isHighRisk = rData?.errorRate > 1 || (geoAdjusted != null && geoAdjusted > 300);
 
                           return (
                             <tr key={reg} className="group hover:bg-[#0c1119]/50 transition-colors">
                               <td className="py-3 font-bold text-slate-300">{regionName}</td>
-                              <td className="py-3 text-right font-black text-[#00E5FF]">{geoAdjusted}</td>
-                              <td className={`py-3 text-right ${rData.errorRate > 0 ? "text-amber-400" : "text-emerald-400"}`}>{rData.errorRate}%</td>
-                              <td className="py-3 text-right text-slate-400">{rData.uptime}% / 12k</td>
+                              <td className="py-3 text-right font-black text-[#00E5FF]">{geoAdjusted != null ? geoAdjusted : "-"}</td>
+                              <td className={`py-3 text-right ${rData?.errorRate > 0 ? "text-amber-400" : "text-emerald-400"}`}>{rData?.errorRate != null ? `${rData.errorRate}%` : "-"}</td>
+                              <td className="py-3 text-right text-slate-400">{rData?.uptime != null ? `${rData.uptime}%` : "-"} / 12k</td>
                               <td className="py-3 text-right">
                                 {isHighRisk ? (
                                   <span className="text-[9px] text-red-400 uppercase tracking-widest font-bold flex items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> DEGRADED</span>
@@ -370,8 +370,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
 
         {/* 5-Region Telemetry Cards Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          {(Object.keys(selectedApi.regions) as Array<keyof typeof selectedApi.regions>).map((reg) => {
+          {(Object.keys(selectedApi?.regions || {}) as Array<keyof typeof selectedApi.regions>).map((reg) => {
             const m: RegionMetric = selectedApi.regions[reg];
+            if (!m) return null;
             const p99Color = m.p99 < 350 ? "text-emerald-400" : m.p99 < 800 ? "text-blue-400" : "text-amber-400";
 
             return (
@@ -381,22 +382,22 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                 </span>
 
                 <div className="text-center py-1">
-                  <span className={`text-[#10b981] font-bold font-mono block ${p99Color}`}>{m.p99}ms</span>
+                  <span className={`text-[#10b981] font-bold font-mono block ${m.p99 != null ? p99Color : 'text-slate-500'}`}>{m.p99 != null ? `${m.p99}ms` : "-"}</span>
                   <span className="text-[7.5px] text-slate-500 font-mono block uppercase font-bold">P99 Latency</span>
                 </div>
 
                 <div className="text-[9px] font-mono whitespace-nowrap text-slate-400 space-y-1 border-t border-slate-900 pt-1.5">
                   <div className="flex justify-between">
                     <span className="text-slate-600">p50:</span>
-                    <span className="text-slate-200">{m.p50}ms</span>
+                    <span className="text-slate-200">{m.p50 != null ? `${m.p50}ms` : "-"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Availability:</span>
-                    <span className="text-emerald-400">{m.uptime}%</span>
+                    <span className="text-emerald-400">{m.uptime != null ? `${m.uptime}%` : "-"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Error rate:</span>
-                    <span className={m.errorRate > 1 ? "text-amber-400" : "text-emerald-400"}>{m.errorRate}%</span>
+                    <span className={m.errorRate > 1 ? "text-amber-400" : "text-emerald-400"}>{m.errorRate != null ? `${m.errorRate}%` : "-"}</span>
                   </div>
                 </div>
               </div>
