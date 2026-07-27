@@ -119,8 +119,9 @@ function sourceState(
   overview: ProbeResult,
   sourceOfTruth?: ProbeResult,
 ): BackendSourceState {
+  const protocolManifestOnly = overview.route === "/protocol.json";
   const state: ProbeState = health.ok
-    ? overview.ok || sourceOfTruth?.ok
+    ? sourceOfTruth?.ok || (overview.ok && !protocolManifestOnly)
       ? "healthy"
       : "degraded"
     : "needs_proof";
@@ -130,14 +131,16 @@ function sourceState(
     : overview.ok && sourceOfTruth
       ? `workspace overview verified; source-of-truth ${sourceOfTruth.status ? `HTTP ${sourceOfTruth.status}` : "needs proof"}`
     : overview.ok
-      ? "workspace overview verified"
+      ? protocolManifestOnly
+        ? "health + protocol manifest verified; operational proof unavailable"
+        : "workspace overview verified"
       : health.ok
         ? "health only; operational proof unavailable"
         : "Needs proof";
 
   return {
     id: backend.id,
-    legacy_id: backend.id === "capi" ? "cappo" : undefined,
+    legacy_id: undefined,
     label: backend.label,
     repo: backend.repo,
     role: backend.role,

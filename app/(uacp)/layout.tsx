@@ -11,7 +11,7 @@ import { api } from '@/lib/api';
 type ProbeState = "online" | "degraded" | "needs_proof";
 
 interface CanonicalSource {
-  id: "byos" | "capi";
+  id: "byos" | "capi" | "cappo" | "pgl" | "lockerphycer";
   legacy_id?: string;
   state: "healthy" | "degraded" | "needs_proof";
 }

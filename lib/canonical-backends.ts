@@ -4,12 +4,14 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi";
+export type CanonicalBackendId = "byos" | "capi" | "cappo" | "pgl" | "lockerphycer";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
   | "governed-runtime"
-  | "ledger";
+  | "governed-authorization/execution"
+  | "ledger"
+  | "security/command";
 
 export type CanonicalBackendAuthMode = "forward-bearer" | "server-api-key";
 
@@ -33,6 +35,10 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     "https://api.veklom.com";
 
   const capiUrl = CAPI_RUNTIME_URL;
+  const cappoUrl = process.env.CAPPO_URL || "https://cappo.veklom.com";
+  const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
+  const lockerphycerUrl =
+    process.env.LOCKERPHYCER_URL || "https://command.veklom.com";
 
   return [
     {
@@ -56,6 +62,36 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       overviewPath: "/v1/vnp/methodology",
       sourceOfTruthPath: "/v1/audit/ledger",
       authMode: "server-api-key",
+    },
+    {
+      id: "cappo",
+      label: "CAPPO governed authorization/execution",
+      repo: "cappo-backend",
+      role: "governed-authorization/execution",
+      baseUrl: trimTrailingSlash(cappoUrl),
+      healthPath: "/health",
+      overviewPath: "/protocol.json",
+      authMode: "forward-bearer",
+    },
+    {
+      id: "pgl",
+      label: "gnomledger Policy Governance Ledger",
+      repo: "gnomledger",
+      role: "ledger",
+      baseUrl: trimTrailingSlash(pglUrl),
+      healthPath: "/health",
+      overviewPath: "/protocol.json",
+      authMode: "forward-bearer",
+    },
+    {
+      id: "lockerphycer",
+      label: "Lockerphycer security command plane",
+      repo: "lockerphycer",
+      role: "security/command",
+      baseUrl: trimTrailingSlash(lockerphycerUrl),
+      healthPath: "/health",
+      overviewPath: "/protocol.json",
+      authMode: "forward-bearer",
     },
   ];
 }
