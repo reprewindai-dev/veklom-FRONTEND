@@ -467,14 +467,10 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
       <Section index={6} title="Targeted Risks" icon={AlertTriangle}>
         <Field label="Open Incidents">{d.targeted_risks.open_incident_count}</Field>
         <Field label="Risk Categories">{d.targeted_risks.risk_categories.join(" · ")}</Field>
-        <Field label="Risk Categories">{d.targeted_risks.risk_categories.join(" / ")}</Field>
         <Field label="Potential Harm">{d.targeted_risks.potential_harm}</Field>
         <Field label="Recent Incidents">
           {d.targeted_risks.recent_incidents.length ? (
             <span className="space-y-1 block">
-              {d.targeted_risks.recent_incidents.map((i, idx) => (
-                <span key={idx} className="block text-[11px]">
-                  <span className="text-[#FF7A00]">[{i.severity}]</span> {i.title} — {i.state}
               {d.targeted_risks.recent_incidents.map((incident, idx) => (
                 <span key={`${incident.title}-${idx}`} className="block text-[11px]">
                   <span className="text-[#FF7A00]">[{incident.severity}]</span> {incident.title} - {incident.state}
