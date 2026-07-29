@@ -295,9 +295,6 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
   const perf = d.performance;
   const fmt = (v: number | null, suffix = "") => (v === null || v === undefined ? null : `${v}${suffix}`);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
   const completenessAxes: CompletenessAxis[] = [
     {
       label: "Details",
@@ -390,10 +387,6 @@ export default function ApiBenchmarkCard({ apiId }: { apiId: string }) {
         </h2>
         <span className="text-[9px] font-mono text-[#6E6E73] uppercase tracking-widest">
           7-section standardized documentation · live registry data
-        </span>
-      </div>
-
-          7-section standardized documentation - live registry data
         </span>
       </div>
 
