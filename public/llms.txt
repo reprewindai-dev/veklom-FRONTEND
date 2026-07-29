@@ -1,0 +1,14 @@
+# Veklom Control Plane
+
+Veklom is the Sovereign AI Hub. It allows you to test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.
+
+## Documentation
+- API Docs: https://veklom.com/docs
+- OpenAPI Spec: https://veklom.com/openapi.json
+
+## Features
+- Agentic Governance
+- API Benchmarking
+- Runtime Authority
+- Physics-based SLAs
+- Nexus Protocol & x402

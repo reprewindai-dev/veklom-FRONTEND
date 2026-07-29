@@ -1,9 +1,6 @@
 "use client";
 
-import useSWR from "swr";
-import {
-  Info, Target, Database, FlaskConical, Gauge,
-  AlertTriangle, ShieldCheck,
+
 import type { ComponentType, ReactNode } from "react";
 import useSWR from "swr";
 import {
@@ -251,15 +248,6 @@ function Section({
   title: string;
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
-  index,
-  title,
-  icon: Icon,
-  children,
-}: {
-  index: number;
-  title: string;
-  icon: ComponentType<{ className?: string }>;
-  children: ReactNode;
 }) {
   return (
     <section className="border border-[#1F1F1F] bg-[#080909] rounded-xl p-5 relative overflow-hidden">

@@ -33,6 +33,9 @@ ENV NODE_ENV=production
 ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
 
+LABEL org.opencontainers.image.source="veklom-control-plane"
+LABEL org.opencontainers.image.revision="cef14986bf8b5beb6254f6d163b3e0e9ab3a9bc4"
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser  --system --uid 1001 nextjs
 

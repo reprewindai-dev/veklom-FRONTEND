@@ -21,6 +21,30 @@ const nextConfig = {
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
   staticPageGenerationTimeout: 1000,
+  compress: true,
+  async headers() {
+    return [
+      {
+        source: '/images/:all*(svg|jpg|png|webp)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
+
   webpack: (config, { isServer }) => {
     // wagmi / viem / mppx / ox use dynamic requires incompatible with
     // Next.js server-side bundling. Mark them external on the server —
