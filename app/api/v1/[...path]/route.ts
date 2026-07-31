@@ -179,7 +179,7 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
       if (!rawIntent) {
         return NextResponse.json({ error: 'Missing required field: rawIntent' }, { status: 400 });
       }
-      const blueprint = compileAbideBlueprint(rawIntent);
+      const blueprint = await compileAbideBlueprint(rawIntent);
       return NextResponse.json(blueprint);
     } catch (err: any) {
       return NextResponse.json({ error: err.message || 'Abide compilation failure' }, { status: 500 });
