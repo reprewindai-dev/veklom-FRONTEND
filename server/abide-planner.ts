@@ -20,7 +20,7 @@ Intent to compile: ${rawIntent}`;
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama3', // Default to llama3, can be swapped via ENV if needed
+        model: 'llama3:8b', // Swapped to explicit 8b parameter as requested
         prompt: systemPrompt,
         stream: false,
         format: 'json'
