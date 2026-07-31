@@ -58,10 +58,20 @@ function forwardedHeaders(req: NextRequest): Headers {
   headers.delete("connection");
   headers.delete("content-length");
   headers.delete("x-api-key");
+  
+  // Security Fix: Prevent client from spoofing authority headers
+  headers.delete("x-user-role");
+  headers.delete("x-user-credits");
+  headers.delete("x-agent-confidence");
 
   headers.set("accept", "application/json");
   headers.set("x-veklom-runtime-proxy", "control-plane");
   headers.set("x-veklom-runtime-source", "interlink-capi");
+  
+  // Hardcode server-side authority for now (pending full auth session wiring)
+  headers.set("x-user-role", "operator");
+  headers.set("x-user-credits", "9999");
+  headers.set("x-agent-confidence", "1.0");
 
   const apiKey = capiAuthHeaderValue();
   if (apiKey) headers.set("x-api-key", apiKey);
@@ -143,7 +153,13 @@ export async function POST(req: NextRequest) {
     });
 
     const text = await response.text();
-    const data = text ? safeJson(text) : {};
+    let data;
+    try {
+      data = text ? safeJson(text) : {};
+    } catch (e) {
+      return NextResponse.json({ error: "Fail-Closed: Invalid JSON response from model", detail: "Malformed AI Output. Execution Blocked." }, { status: 502, headers: { "cache-control": "no-store" } });
+    }
+    
     if (!response.ok) {
       return NextResponse.json(data || { error: "CAPPO Backend execution unavailable" }, {
         status: response.status,
@@ -185,6 +201,6 @@ function safeJson(text: string): any {
   try {
     return JSON.parse(text);
   } catch {
-    return { response: text };
+    throw new Error("Invalid JSON");
   }
 }
