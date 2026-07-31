@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
 
   if (fullPath === 'ollama/status') {
     const url = new URL(req.url);
-    const endpoint = url.searchParams.get('endpoint') || 'http://localhost:11434';
+    const endpoint = url.searchParams.get('endpoint') || process.env.OLLAMA_URL || 'http://167.233.202.195:11434';
     const status = await checkOllamaHealth(endpoint);
     return NextResponse.json(status);
   }
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
 
   if (fullPath === 'scan/infra') {
     const startTime = Date.now();
-    const ollamaStatus = await checkOllamaHealth('http://localhost:11434');
+    const ollamaStatus = await checkOllamaHealth(process.env.OLLAMA_URL || 'http://167.233.202.195:11434');
 
     const scanResult = {
       scanId: `scan_infra_${Date.now().toString(36)}`,

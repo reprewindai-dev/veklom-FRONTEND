@@ -17,7 +17,7 @@ function getGeminiClient(): GoogleGenAI {
 }
 
 // Probe local Ollama daemon
-export async function checkOllamaHealth(endpoint: string = 'http://localhost:11434'): Promise<OllamaStatus> {
+export async function checkOllamaHealth(endpoint: string = process.env.OLLAMA_URL || 'http://167.233.202.195:11434'): Promise<OllamaStatus> {
   const startMs = Date.now();
   try {
     const controller = new AbortController();

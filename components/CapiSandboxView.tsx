@@ -21,7 +21,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
     JSON.stringify({ targetFilePath: 'src/components/App.tsx', optimizationLevel: 'O2' }, null, 2)
   );
   const [customModel, setCustomModel] = useState<string>('llama3.2:latest');
-  const [ollamaEndpoint, setOllamaEndpoint] = useState<string>('http://localhost:11434');
+  const [ollamaEndpoint, setOllamaEndpoint] = useState<string>('http://167.233.202.195:11434');
   const [byokKey, setByokKey] = useState<string>('');
   const [containsPii, setContainsPii] = useState<boolean>(false);
   const [x402LeaseToken, setX402LeaseToken] = useState<string>('');
