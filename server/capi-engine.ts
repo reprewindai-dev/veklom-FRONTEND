@@ -102,21 +102,26 @@ export async function executeCAPIInvocation(req: CAPIInvocationRequest): Promise
   let outputResult: any = null;
 
   if (activeHarness === 'ollama') {
-    adapterBridgeLogs.push(`[Ollama Adapter] Target endpoint: ${req.ollamaEndpoint || 'http://localhost:11434'}`);
-    adapterBridgeLogs.push(`[Ollama Adapter] Model selected: ${req.customModel || 'llama3.2:latest'} (100% First-Class Local Sovereign Mode)`);
+    // Canonical sovereign endpoint — injected via Coolify env vars (OLLAMA_URL, OLLAMA_MODEL)
+    const CANONICAL_OLLAMA_URL = process.env.OLLAMA_URL || 'http://167.233.202.195:11434';
+    const CANONICAL_OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:latest';
+    const resolvedEndpoint = req.ollamaEndpoint || CANONICAL_OLLAMA_URL;
+    const resolvedModel = req.customModel || CANONICAL_OLLAMA_MODEL;
+    adapterBridgeLogs.push(`[Ollama Adapter] Target endpoint: ${resolvedEndpoint}`);
+    adapterBridgeLogs.push(`[Ollama Adapter] Model selected: ${resolvedModel} (100% First-Class Local Sovereign Mode)`);
     
     rawPromptTranslation = `SYSTEM (Ollama Local cAPI Bridge):\nSkill: ${req.skillId}\nEI Token: ${eiToken}\nInputs: ${JSON.stringify(req.parameters)}\nOutput format: JSON strictly verified against veklom-skill-spec`;
 
     // Attempt real call if connected or fallback gracefully
-    const ollamaStatus = await checkOllamaHealth(req.ollamaEndpoint || 'http://localhost:11434');
+    const ollamaStatus = await checkOllamaHealth(resolvedEndpoint);
     if (ollamaStatus.connected && !isDemo) {
       try {
         adapterBridgeLogs.push(`[Ollama Live Execution] Dispatching payload to local daemon...`);
-        const ollamaRes = await fetch(`${req.ollamaEndpoint || 'http://localhost:11434'}/api/generate`, {
+        const ollamaRes = await fetch(`${resolvedEndpoint}/api/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: req.customModel || ollamaStatus.activeModel || 'llama3.2:latest',
+            model: resolvedModel,
             prompt: `${rawPromptTranslation}\nExecute task with parameters: ${JSON.stringify(req.parameters)}`,
             stream: false
           })
@@ -124,7 +129,7 @@ export async function executeCAPIInvocation(req: CAPIInvocationRequest): Promise
         const ollamaJson = await ollamaRes.json() as { response?: string };
         outputResult = {
           executionType: 'REAL_OLLAMA_LOCAL_DAEMON',
-          modelUsed: req.customModel || ollamaStatus.activeModel,
+          modelUsed: resolvedModel,
           rawOutput: ollamaJson.response || 'Local Ollama execution completed successfully.',
           evaluatedParameters: req.parameters,
           localDataSovereignty: 'GUARANTEED_ZERO_TELEMETRY_LEAK',
@@ -141,7 +146,7 @@ export async function executeCAPIInvocation(req: CAPIInvocationRequest): Promise
         executionType: isDemo ? 'DEMO_SANDBOX_SIMULATION' : 'VEKLOM_LOCAL_CAPI_WORKER',
         skillId: req.skillId,
         harness: 'ollama',
-        model: req.customModel || 'llama3.2:latest',
+        model: resolvedModel,
         parametersProcessed: req.parameters,
         result: `Successfully executed capability '${req.skillId}' using local Ollama adapter.`,
         dataSovereignty: 'LOCAL_SOVEREIGN_SANDBOX',

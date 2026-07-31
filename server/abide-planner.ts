@@ -7,8 +7,10 @@ export async function compileAbideBlueprint(rawIntent: string): Promise<AbideBlu
 
   let compiledSteps: AbideStep[] = [];
   
-  // Ollama execution (EUC standard)
-  const OLLAMA_URL = 'http://167.233.202.195:11434/api/generate';
+  // Ollama execution (EUC standard — Ollama is first-class, not a fallback)
+  // OLLAMA_URL and OLLAMA_MODEL are injected via Coolify environment variables.
+  const OLLAMA_URL = process.env.OLLAMA_URL || 'http://167.233.202.195:11434/api/generate';
+  const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:latest';
   const systemPrompt = `You are the ABIDE (Intent-to-Blueprint) compiler. 
 Your job is to convert messy human intent into a deterministic JSON array of execution steps.
 Each step must have: stepId, title, capabilityRequired, harnessRecommendation (always 'ollama'), dependencies (array of stepIds), and subtasks (array of strings).
@@ -20,7 +22,7 @@ Intent to compile: ${rawIntent}`;
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama3:8b', // Swapped to explicit 8b parameter as requested
+        model: OLLAMA_MODEL,
         prompt: systemPrompt,
         stream: false,
         format: 'json'
