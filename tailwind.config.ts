@@ -79,6 +79,13 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px -8px rgba(0,0,0,0.6)",
+        "cos-card": "0 1px 0 rgba(255,255,255,0.06) inset, 0 22px 70px -38px rgba(0,229,255,0.38), 0 14px 35px -22px rgba(0,0,0,0.85)",
+        "cos-glow": "0 0 0 1px rgba(0,229,255,0.18), 0 18px 70px -28px rgba(0,229,255,0.5)",
+      },
+      backgroundImage: {
+        "cos-grid": "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+        "cos-sheen": "linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.015) 42%, transparent 70%)",
+        "cos-border": "linear-gradient(135deg, rgba(0,229,255,0.52), rgba(255,255,255,0.10) 42%, rgba(0,229,255,0.12))",
       },
       keyframes: {
         scanline: {

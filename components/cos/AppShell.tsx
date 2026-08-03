@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Clock3, Command, Cpu, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { LeftNav } from "./LeftNav";
 import { VeklomLogo } from "./VeklomLogo";
@@ -28,17 +29,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
   const identity = loading ? "Loading identity" : me?.email || me?.name || "Requester identity unavailable";
   return (
-    <div className="cos-shell flex min-h-screen bg-cos-bg font-sans text-cos-text">
-      <div className="fixed inset-0 -z-0 bg-[radial-gradient(circle_at_78%_0%,rgba(0,229,255,0.08),transparent_30%),linear-gradient(180deg,#0A0E1A_0%,#080B14_100%)]" />
+    <div className="cos-shell relative flex min-h-screen overflow-hidden bg-cos-bg font-sans text-cos-text">
+      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_78%_0%,rgba(0,229,255,0.13),transparent_29%),radial-gradient(circle_at_16%_92%,rgba(0,229,255,0.055),transparent_27%),linear-gradient(180deg,#0A0E1A_0%,#080B14_100%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-0 bg-cos-grid bg-[size:56px_56px] opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent_78%)]" />
       <div className="relative z-10 flex min-h-screen w-full flex-col">
-        <header className="flex min-h-[68px] items-center justify-between gap-4 border-b border-cos-border bg-cos-bg/90 px-4 backdrop-blur-xl lg:px-6">
-          <div className="flex items-center gap-5"><VeklomLogo /><span className="hidden border-l border-cos-border pl-5 font-mono text-[10px] uppercase tracking-[0.22em] text-cos-steel md:inline">Capability Operating System</span></div>
-          <div className="flex items-center gap-3 text-xs">
-            <button onClick={() => setSandbox((value) => !value)} className="rounded-full border border-cos-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-cos-steel hover:border-cos-accent/50"><span className={sandbox ? "text-cos-warn" : "text-cos-accent"}>{sandbox ? "SANDBOX" : "PROD MODE"}</span></button>
-            <div className="hidden items-center gap-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>
-            <div className="hidden items-center gap-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
-            <button onClick={() => setPaletteOpen(true)} className="rounded-lg border border-cos-border p-2 text-cos-steel hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>
-            <span className="hidden items-center gap-1 font-mono text-[10px] text-cos-steel xl:flex"><Clock3 size={13} />{clock}</span>
+        <header className="relative flex min-h-[76px] items-center justify-between gap-4 border-b border-cos-border/80 bg-cos-bg/70 px-4 shadow-[0_12px_35px_-28px_rgba(0,229,255,0.8)] backdrop-blur-2xl lg:px-7">
+          <div className="pointer-events-none absolute inset-x-0 bottom-[-1px] h-px bg-gradient-to-r from-transparent via-cos-accent/55 to-transparent" />
+          <div className="flex items-center gap-5"><VeklomLogo /><span className="hidden border-l border-cos-border pl-5 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel md:inline">Capability Operating System</span><span className="hidden rounded border border-cos-accent/25 px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-cos-steel lg:inline">M2M Trust Infrastructure</span></div>
+          <div className="flex items-center gap-2 text-xs">
+            <button onClick={() => setSandbox((value) => !value)} className="rounded-full border border-cos-border bg-cos-surface2/60 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-cos-steel transition hover:border-cos-accent/50"><span className={sandbox ? "text-cos-warn" : "text-cos-accent"}>{sandbox ? "SANDBOX" : "PROD MODE"}</span></button>
+            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>
+            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
+            <button onClick={() => setPaletteOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>
+            <span className="hidden items-center gap-1 rounded-full border border-cos-border px-3 py-2 font-mono text-[10px] text-cos-steel xl:flex"><Clock3 size={13} />{clock}</span>
           </div>
         </header>
         <div className="flex min-h-0 flex-1"><LeftNav onTerminal={() => setTerminalOpen(true)} /><main className="min-w-0 flex-1 overflow-y-auto">{children}</main></div>

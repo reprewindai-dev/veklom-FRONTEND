@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Activity,
   BookOpenCheck,
@@ -38,7 +39,7 @@ export function LeftNav({ onTerminal }: { onTerminal: () => void }) {
     <Link href={href} key={href} className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${pathname === href ? "bg-cos-accent/10 text-cos-accent" : "text-cos-muted hover:bg-cos-surface2 hover:text-cos-text"}`}>
       <Icon size={16} strokeWidth={pathname === href ? 2.4 : 1.8} />
       <span>{label}</span>
-      {pathname === href && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-cos-accent shadow-[0_0_10px_#00E5FF]" />}
+      {pathname === href && <motion.span layoutId="cos-nav-active" className="ml-auto h-1.5 w-1.5 rounded-full bg-cos-accent shadow-[0_0_10px_#00E5FF]" transition={{ type: "spring", stiffness: 500, damping: 35 }} />}
     </Link>
   );
   return (
