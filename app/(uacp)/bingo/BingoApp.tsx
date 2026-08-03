@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Player, BiometricResonance, LobbyState, GlobalJackpotState, Challenge, PaymentRequirement } from '@/components/bingo/types';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { WalletProviders } from '../../agent-dual/WalletProviders';
 import HolographicBoard from '@/components/bingo/HolographicBoard';
 import NeuralInterface from '@/components/bingo/NeuralInterface';
 import CommunalResonanceEngine from '@/components/bingo/CommunalResonanceEngine';
@@ -33,8 +34,6 @@ interface BingoProofState {
   };
   capabilities: Record<string, string>;
 }
-
-import { WalletProviders } from '../../agent-dual/WalletProviders';
 
 // Helper to generate a reproducible standard BINGO card
 function generateBingoCard(seed: string): number[][] {
@@ -69,7 +68,7 @@ function generateBingoCard(seed: string): number[][] {
   return card;
 }
 
-function BingoApp() {
+function BingoContent() {
   const { data: bingoProof } = useApi<BingoProofState>('/bingo/state', { refreshInterval: 30000 });
   const [player, setPlayer] = useState<Player | null>(null);
   const [resonance, setResonance] = useState<BiometricResonance>({
@@ -1041,6 +1040,8 @@ function BingoApp() {
 
 export default function App() {
   return (
-    <BingoApp />
+    <WalletProviders>
+      <BingoContent />
+    </WalletProviders>
   );
 }

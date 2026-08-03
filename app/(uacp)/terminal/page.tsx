@@ -1,9 +1,10 @@
 "use client";
 
-
-import React from 'react';
-import QuantumTerminal from "@/components/terminal/components/QuantumTerminal";
+import dynamic from "next/dynamic";
+import React from "react";
 import TriageTelemetry from "@/components/telemetry/TriageTelemetry";
+
+const QuantumTerminal = dynamic(() => import("@/components/terminal/components/QuantumTerminal"), { ssr: false });
 
 export default function TerminalPage() {
   return (
