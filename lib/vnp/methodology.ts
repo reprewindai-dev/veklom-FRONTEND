@@ -32,7 +32,7 @@ export const VNP_VERIFICATION_STACK: Array<{
     label: "Signed telemetry",
     shortLabel: "Signed",
     description: "Probe outputs are represented as signed measurement records before card publication.",
-    status: "Partially Implemented",
+    status: "Live",
   },
   {
     label: "Route beacons",
@@ -44,7 +44,7 @@ export const VNP_VERIFICATION_STACK: Array<{
     label: "Robust scoring",
     shortLabel: "Scoring",
     description: "Composite trust output using bounded, reproducible scoring instead of provider marketing claims.",
-    status: "Partially Implemented",
+    status: "Connected",
   },
   {
     label: "x402 settlement evidence",

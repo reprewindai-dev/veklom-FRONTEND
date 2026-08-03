@@ -10,3 +10,5 @@ coverage
 tsconfig.tsbuildinfo
 openapi.json
 route_catalog.txt
+
+.vercel

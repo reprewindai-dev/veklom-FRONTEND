@@ -1,7 +1,8 @@
 /**
- * VNP v0.1 Constants — Dimension weights, thresholds, regions, and grading bands.
+ * VNP Methodology v1.0 constants — verification input weights, thresholds,
+ * regions, and grading bands.
  *
- * The weighting is intentionally asymmetric per the locked methodology:
+ * The weighting is intentionally asymmetric per the current methodology:
  * - p99 latency highest weight (outliers break agents)
  * - Error/correctness next (fast but wrong is unusable)
  * - x402/MPP included because VNP launches into a machine-payments ecosystem
@@ -10,7 +11,7 @@
 import type { VNPDimensionId, VNPGrade, VNPRegionId } from "./types";
 
 // ---------------------------------------------------------------------------
-// Dimension definitions with canonical weights (must sum to 1.0)
+// Verification input definitions with canonical weights (must sum to 1.0)
 // ---------------------------------------------------------------------------
 export interface DimensionDef {
   id: VNPDimensionId;

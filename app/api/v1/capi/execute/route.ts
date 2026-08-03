@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { capiAuthHeaderValue, capiExecutionUrl } from "@/lib/capi-runtime";
+import { hasBearerAuthorization } from "@/lib/authorization";
 
 const MAX_EXEC_BODY_BYTES = 512 * 1024;
 
@@ -56,10 +57,21 @@ function forwardedHeaders(req: NextRequest): Headers {
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
+  headers.delete("x-api-key");
+  
+  // Security Fix: Prevent client from spoofing authority headers
+  headers.delete("x-user-role");
+  headers.delete("x-user-credits");
+  headers.delete("x-agent-confidence");
 
   headers.set("accept", "application/json");
   headers.set("x-veklom-runtime-proxy", "control-plane");
   headers.set("x-veklom-runtime-source", "interlink-capi");
+  
+  // Hardcode server-side authority for now (pending full auth session wiring)
+  headers.set("x-user-role", "operator");
+  headers.set("x-user-credits", "9999");
+  headers.set("x-agent-confidence", "1.0");
 
   const apiKey = capiAuthHeaderValue();
   if (apiKey) headers.set("x-api-key", apiKey);
@@ -67,42 +79,87 @@ function forwardedHeaders(req: NextRequest): Headers {
   return headers;
 }
 
-function normalizeCapiPayload(body: any): Record<string, unknown> {
-  const action = typeof body?.action === "string" ? body.action : "execute";
+function normalizeCapiPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const action = typeof body.action === "string" ? body.action : null;
+  const agentId = typeof body.agent_id === "string" ? body.agent_id : null;
+  const capabilityId = typeof body.capability_id === "string"
+    ? body.capability_id
+    : typeof body.capability === "string"
+      ? body.capability
+      : null;
+
+  if (!action || !agentId || !capabilityId) {
+    throw new Error("agent_id, capability_id, and action are required");
+  }
+
   return {
-    agent_id: body?.agent_id && body.agent_id !== "agent-test" ? body.agent_id : "agent-atlas",
-    capability_id: body?.capability_id || body?.capability || "cap-search",
+    agent_id: agentId,
+    capability_id: capabilityId,
     action,
     input: {
-      target_protocol: body?.target_protocol || "capi",
-      payload: body?.payload || {},
-      workspace_id: body?.workspace_id || "default",
+      target_protocol: body.target_protocol || "capi",
+      payload: body.payload || {},
+      workspace_id: body.workspace_id || "default",
     },
-    approvals: Array.isArray(body?.approvals) ? body.approvals : undefined,
+    approvals: Array.isArray(body.approvals) ? body.approvals : undefined,
+    security: body.security,
   };
 }
 
 export async function POST(req: NextRequest) {
+  if (!hasBearerAuthorization(req.headers.get("authorization"))) {
+    return NextResponse.json({ error: "Bearer authorization required" }, { status: 401 });
+  }
   const validation = validateRequest(req);
   if (validation) return validation;
 
-  let body: any;
+  let rawBody: unknown;
   try {
-    body = await req.json();
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  if (!rawBody || typeof rawBody !== "object" || Array.isArray(rawBody)) {
+    return NextResponse.json({ error: "JSON object body required" }, { status: 400 });
+  }
+
   try {
+    const apiKey = capiAuthHeaderValue();
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "CAPI_BACKEND_API_KEY is not configured" },
+        { status: 503 },
+      );
+    }
+
+    let payload: Record<string, unknown>;
+    try {
+      payload = normalizeCapiPayload(rawBody as Record<string, unknown>);
+    } catch {
+      return NextResponse.json(
+        { error: "agent_id, capability_id, and action are required" },
+        { status: 400 },
+      );
+    }
+
+    const headers = forwardedHeaders(req);
+    headers.set("x-api-key", apiKey);
     const response = await fetch(capiExecutionUrl(), {
       method: "POST",
-      headers: forwardedHeaders(req),
-      body: JSON.stringify(normalizeCapiPayload(body)),
+      headers,
+      body: JSON.stringify(payload),
       cache: "no-store",
     });
 
     const text = await response.text();
-    const data = text ? safeJson(text) : {};
+    let data;
+    try {
+      data = text ? safeJson(text) : {};
+    } catch (e) {
+      return NextResponse.json({ error: "Fail-Closed: Invalid JSON response from model", detail: "Malformed AI Output. Execution Blocked." }, { status: 502, headers: { "cache-control": "no-store" } });
+    }
+    
     if (!response.ok) {
       return NextResponse.json(data || { error: "CAPPO Backend execution unavailable" }, {
         status: response.status,
@@ -144,6 +201,6 @@ function safeJson(text: string): any {
   try {
     return JSON.parse(text);
   } catch {
-    return { response: text };
+    throw new Error("Invalid JSON");
   }
 }

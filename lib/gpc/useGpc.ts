@@ -116,70 +116,96 @@ export function useGpc(options: UseGpcOptions = {}) {
           compilationResult.parallel_levels
         );
 
-        // Open SSE connection for streaming execution
-        const eventSource = new EventSource(
-          `${baseUrl}/execute?pipeline_id=${actualPipelineId}`,
-          {
-            withCredentials: true,
-          }
-        );
-
-        eventSource.addEventListener('message', (event) => {
-          try {
-            const data: ExecutionEvent = JSON.parse(event.data);
-
-            switch (data.event) {
-              case 'start':
-                executionStore.startExecution(
-                  actualPipelineId,
-                  compilationResult.execution_order,
-                  compilationResult.parallel_levels
-                );
-                break;
-
-              case 'node_start':
-                if (data.node_id) {
-                  executionStore.setCurrentNode(data.node_id);
-                  executionStore.updateNodeStatus(data.node_id, {
-                    status: 'running',
-                    progress: (data.index || 0) * 20,
-                  });
-                }
-                break;
-
-              case 'node_complete':
-                if (data.node_id) {
-                  executionStore.updateNodeStatus(data.node_id, {
-                    status: 'success',
-                    progress: 100,
-                  });
-                  if (data.preview) {
-                    previewStore.setPreview(data.node_id, data.preview);
-                  }
-                }
-                break;
-
-              case 'complete':
-                executionStore.completeExecution();
-                options.onSuccess?.('Pipeline executed successfully');
-                eventSource.close();
-                break;
-
-              case 'error':
-                throw new Error(data.error || data.message || 'Execution error');
+        const response = await fetch(`/api/v1/capi/execute`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+            Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
+          },
+          body: JSON.stringify({
+            agent_id: "gpc-pipeline",
+            instruction: "Execute visual pipeline",
+            target_protocol: "gpc",
+            action: "execute",
+            payload: {
+              pipeline_id: actualPipelineId,
+              graph: graph
             }
-          } catch (err) {
-            console.error('Error parsing SSE event:', err);
-          }
+          })
         });
 
-        eventSource.addEventListener('error', () => {
-          const errorMsg = 'Execution connection lost';
-          setError(errorMsg);
-          options.onError?.(errorMsg);
-          executionStore.failExecution(errorMsg);
-          eventSource.close();
-        });
+        if (!response.ok) {
+          throw new Error(`cAPI execution failed: ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("No response body");
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || "";
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.substring(6).trim();
+              if (!dataStr) continue;
+              
+              try {
+                const data: ExecutionEvent = JSON.parse(dataStr);
+
+                switch (data.event) {
+                  case 'start':
+                    executionStore.startExecution(
+                      actualPipelineId,
+                      compilationResult.execution_order,
+                      compilationResult.parallel_levels
+                    );
+                    break;
+
+                  case 'node_start':
+                    if (data.node_id) {
+                      executionStore.setCurrentNode(data.node_id);
+                      executionStore.updateNodeStatus(data.node_id, {
+                        status: 'running',
+                        progress: (data.index || 0) * 20,
+                      });
+                    }
+                    break;
+
+                  case 'node_complete':
+                    if (data.node_id) {
+                      executionStore.updateNodeStatus(data.node_id, {
+                        status: 'success',
+                        progress: 100,
+                      });
+                      if (data.preview) {
+                        previewStore.setPreview(data.node_id, data.preview);
+                      }
+                    }
+                    break;
+
+                  case 'complete':
+                    executionStore.completeExecution();
+                    options.onSuccess?.('Pipeline executed successfully');
+                    break;
+
+                  case 'error':
+                    throw new Error(data.error || data.message || 'Execution error');
+                }
+              } catch (err) {
+                console.error('Error parsing SSE event:', err);
+              }
+            }
+          }
+        }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Execution failed';
         setError(errorMsg);

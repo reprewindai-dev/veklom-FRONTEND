@@ -44,12 +44,16 @@ import type {
 // ============ Helpers ============
 
 const fmtUSD = (n: number | undefined | null) => {
-  if (n === undefined || n === null || isNaN(n)) return "—";
+  if (n === undefined || n === null || isNaN(n)) return "$0";
   return "$" + Math.round(n).toLocaleString("en-US");
 };
 const fmtMs = (n: number | undefined | null) => {
-  if (n === undefined || n === null || isNaN(n)) return "—";
+  if (n === undefined || n === null || isNaN(n)) return "no data";
   return `${n.toFixed(1)}ms`;
+};
+const fmtPct = (n: number | undefined | null) => {
+  if (n === undefined || n === null) return "no data yet";
+  return `${n}%`;
 };
 
 const STATUS_COLORS: Record<BondStatusLevel, { bg: string; border: string; text: string; label: string }> = {
@@ -172,8 +176,8 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
 
   const stakeNum = parseFloat(stakeAmount) || 0;
   const netStake = stakeNum * (1 - 0.025);
-  const stakePlacementAvailable = stakingRoute?.writeActions.stakePlacement.state === "available_with_auth";
-  const verifierRegistrationAvailable = stakingRoute?.writeActions.verifierRegistration.state === "available_with_auth";
+  const stakePlacementAvailable = stakingRoute?.writeActions?.stakePlacement?.state === "available_with_auth";
+  const verifierRegistrationAvailable = stakingRoute?.writeActions?.verifierRegistration?.state === "available_with_auth";
 
   return (
     <div className="space-y-8 relative">
@@ -184,7 +188,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <div className="text-sm text-white mt-1">{stakingRoute?.proof.reason || "Loading BYOS staking proof..."}</div>
           </div>
           <div className="lg:ml-auto flex flex-wrap gap-2">
-            {stakingRoute?.proof.probes.map((probe) => (
+            {(stakingRoute?.proof?.probes || []).map((probe) => (
               <span
                 key={probe.route}
                 className={`px-2 py-1 rounded border text-[10px] font-mono ${
@@ -200,27 +204,33 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             ))}
           </div>
         </div>
-        {stakingRoute?.marketProof.state !== "verified" && (
+        {stakingRoute?.marketProof?.state !== "verified" && (
           <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
             {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
           </div>
         )}
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
           <div className={`rounded border px-3 py-2 ${verifierRegistrationAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
-            Verifier registration: {stakingRoute?.writeActions.verifierRegistration.state || "loading"}
+            Verifier registration: {stakingRoute?.writeActions?.verifierRegistration?.state || "loading"}
           </div>
           <div className={`rounded border px-3 py-2 ${stakePlacementAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
-            Stake placement: {stakingRoute?.writeActions.stakePlacement.state || "loading"}
+            Stake placement: {stakingRoute?.writeActions?.stakePlacement?.state || "loading"}
           </div>
         </div>
       </div>
       {/* Protocol Stats */}
+      {protocolStats.probeWorkersActive === false && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/8 border border-amber-500/20 text-[11px] font-mono text-amber-400">
+          <Activity className="w-3 h-3 shrink-0" />
+          Probe workers offline — latency measurements will populate once validators connect and begin measuring.
+        </div>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]" },
-          { label: "Active APIs", value: protocolStats.activeApis === undefined || isNaN(protocolStats.activeApis) ? "—" : String(protocolStats.activeApis), icon: Server, color: "text-cyan-400" },
-          { label: "Active Verifiers", value: protocolStats.activeVerifiers === undefined || isNaN(protocolStats.activeVerifiers) ? "—" : String(protocolStats.activeVerifiers), icon: Users, color: "text-[#FFB800]" },
-          { label: "Settlement Rate", value: protocolStats.settlementRate === undefined || isNaN(protocolStats.settlementRate) ? "—" : `${protocolStats.settlementRate}%`, icon: CheckCircle, color: "text-emerald-400" },
+          { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]", sub: protocolStats.totalValueBonded === 0 ? "No validators staked" : undefined },
+          { label: "Active APIs", value: protocolStats.activeApis != null ? String(protocolStats.activeApis) : "0", icon: Server, color: "text-cyan-400" },
+          { label: "Active Verifiers", value: protocolStats.activeVerifiers != null ? String(protocolStats.activeVerifiers) : "0", icon: Users, color: "text-[#FFB800]", sub: protocolStats.activeVerifiers === 0 ? "None registered" : undefined },
+          { label: "Settlement Rate", value: fmtPct(protocolStats.settlementRate), icon: CheckCircle, color: protocolStats.settlementRate == null ? "text-[#A1A1A6]" : "text-emerald-400" },
           { label: "Total Penalties", value: fmtUSD(protocolStats.totalPenalties), icon: AlertTriangle, color: "text-rose-400" },
         ].map((stat) => (
           <div key={stat.label} className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-4">
@@ -229,6 +239,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#A1A1A6]">{stat.label}</span>
             </div>
             <div className={`text-2xl font-medium ${stat.color}`}>{stat.value}</div>
+            {stat.sub && <div className="text-[9px] text-[#555] font-mono mt-1">{stat.sub}</div>}
           </div>
         ))}
       </div>
@@ -266,8 +277,12 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           <div>Status</div>
           <div className="text-right">Bond&nbsp;&nbsp;Penalty/Ep</div>
         </div>
-        {providers.map((p) => {
-          const sc = STATUS_COLORS[p.status];
+        {providers.map((p: any) => {
+          const awaiting = p.data_status === "awaiting_probes";
+          const deviation = p.deviation || null;
+          const sc = awaiting
+            ? { bg: "bg-[#1A1A1A]", border: "border-[#333]", text: "text-[#555]", label: "no data" }
+            : (STATUS_COLORS[(p.status as keyof typeof STATUS_COLORS)] || STATUS_COLORS.warning);
           const isExpanded = expandedBond === p.apiId;
           return (
             <div key={p.apiId}>
@@ -278,46 +293,65 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 <div className="col-span-2">
                   <div className="text-sm text-white">{p.name}</div>
                   <div className="text-[10px] font-mono text-[#A1A1A6]">{p.provider}</div>
+                  {awaiting && (
+                    <div className="text-[9px] font-mono text-amber-500/60 mt-0.5">awaiting probe data</div>
+                  )}
                 </div>
                 <div className="font-mono text-sm text-[#A1A1A6]">{fmtMs(p.targetP95Ms)}</div>
-                <div className="font-mono text-sm text-white">{fmtMs(p.observedP95Ms)}</div>
-                <div className="font-mono text-sm text-[#A1A1A6]">{p.deviation.deviationMs.toFixed(1)}ms</div>
+                <div className={`font-mono text-sm ${awaiting ? "text-[#444]" : "text-white"}`}>
+                  {awaiting ? "—" : fmtMs(p.observedP95Ms)}
+                </div>
+                <div className={`font-mono text-sm ${awaiting ? "text-[#444]" : "text-[#A1A1A6]"}`}>
+                  {awaiting || !deviation ? "—" : fmtMs(deviation.deviationMs)}
+                </div>
                 <div>
                   <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono ${sc.bg} ${sc.border} ${sc.text} border`}>
                     {sc.label}
                   </span>
                 </div>
                 <div className="text-right font-mono text-xs">
-                  <span className="text-[#A1A1A6]">{fmtUSD(p.bondAmountUsdc)}</span>
-                  <span className="text-rose-400 ml-2">{p.deviation.penaltyUsdc > 0 ? `-${fmtUSD(p.deviation.penaltyUsdc)}` : "$0"}</span>
+                  <span className="text-[#A1A1A6]">{p.bondAmountUsdc > 0 ? fmtUSD(p.bondAmountUsdc) : "$0"}</span>
+                  <span className="text-rose-400 ml-2">
+                    {deviation && deviation.penaltyUsdc > 0 ? `-${fmtUSD(deviation.penaltyUsdc)}` : "$0"}
+                  </span>
                   {isExpanded ? <ChevronUp className="w-3 h-3 inline ml-1" /> : <ChevronDown className="w-3 h-3 inline ml-1" />}
                 </div>
               </div>
               {isExpanded && (
-                <div className="px-5 py-4 bg-[#111111] border-t border-[#1A1A1A] grid grid-cols-4 gap-4 text-xs">
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Tolerance Band</div>
-                    <div className="text-white font-mono">&plusmn;{p.deviation.toleranceMs.toFixed(1)}ms (k={VNP_PARAMS.k})</div>
-                  </div>
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Excess Deviation</div>
-                    <div className="text-white font-mono">{p.deviation.excessMs.toFixed(1)}ms</div>
-                  </div>
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Consensus Score</div>
-                    <div className="text-white font-mono">{p.consensus.finalScore.toFixed(1)}ms</div>
-                  </div>
-                  <div>
-                    <div className="text-[#A1A1A6] mb-1">Total Slashed</div>
-                    <div className="text-rose-400 font-mono">{fmtUSD(p.slashedTotalUsdc)}</div>
-                  </div>
+                <div className="px-5 py-4 bg-[#111111] border-t border-[#1A1A1A] text-xs">
+                  {awaiting ? (
+                    <div className="text-[#555] font-mono text-center py-2">
+                      No probe measurements in the last 24h. Connect a validator worker to begin measuring this API.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Tolerance Band</div>
+                        <div className="text-white font-mono">&plusmn;{fmtMs(deviation?.toleranceMs)} (k={VNP_PARAMS.k ?? "—"})</div>
+                      </div>
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Excess Deviation</div>
+                        <div className="text-white font-mono">{fmtMs(deviation?.excessMs)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Uptime (24h)</div>
+                        <div className="text-white font-mono">{p.uptimeRatio != null ? `${(p.uptimeRatio * 100).toFixed(2)}%` : "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[#A1A1A6] mb-1">Total Slashed</div>
+                        <div className="text-rose-400 font-mono">{fmtUSD(p.slashedTotalUsdc)}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           );
         })}
         {providers.length === 0 && (
-          <div className="p-10 text-center text-[#6E6E73] text-sm">Awaiting leaderboard data...</div>
+          <div className="p-10 text-center text-[#6E6E73] text-sm">
+            No APIs registered yet. Register an API to begin VNP monitoring.
+          </div>
         )}
       </div>
 
@@ -328,9 +362,12 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           <div className="flex items-center gap-3 mb-4">
             <Zap className="w-4 h-4 text-emerald-400" />
             <span className="text-sm font-semibold">Live Settlement Feed</span>
-            <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              EPOCH {protocolStats.epochsProcessed}
+            <span className="ml-auto flex items-center gap-1.5 text-[10px] font-mono text-[#A1A1A6]">
+              {protocolStats.epochsProcessed > 0 ? (
+                <><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> EPOCH {protocolStats.epochsProcessed}</>
+              ) : (
+                <span className="text-[#555]">No settlements yet</span>
+              )}
             </span>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">

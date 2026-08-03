@@ -394,7 +394,7 @@ export default function MethodologyPanel() {
               { step: "1", label: "Measurement Collection", desc: "k6 agents emit signed records from 5 regions with randomized timing" },
               { step: "2", label: "Validation Pipeline", desc: "Node signature verification, schema validation, outlier detection (3σ)" },
               { step: "3", label: "Merkle Construction", desc: "SHA-256 tree from all valid measurements in the scoring window" },
-              { step: "4", label: "Score Computation", desc: "10-dimension normalization, weighting, confidence intervals" },
+              { step: "4", label: "Score Computation", desc: "Verification-stack normalization, weighting, confidence intervals" },
               { step: "5", label: "Chain Anchoring", desc: "Merkle root + score hash → Base L2 (EIP-155:8453). Raw data → IPFS/Arweave weekly" },
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-3 p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">

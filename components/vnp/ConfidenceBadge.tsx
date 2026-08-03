@@ -7,6 +7,7 @@ const LEVEL_STYLES = {
   medium: { label: "MEDIUM", color: "#FFB800", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)" },
   low: { label: "LOW", color: "#FF9F43", bg: "rgba(255,159,67,0.1)", border: "rgba(255,159,67,0.25)" },
   provisional: { label: "PROVISIONAL", color: "#FF5C6C", bg: "rgba(255,92,108,0.1)", border: "rgba(255,92,108,0.25)" },
+  unmeasured: { label: "UNMEASURED", color: "#A1A1A6", bg: "rgba(161,161,166,0.1)", border: "rgba(161,161,166,0.25)" },
 } as const;
 
 interface ConfidenceBadgeProps {
@@ -35,7 +36,7 @@ export default function ConfidenceBadge({ confidence, showDetail = false }: Conf
       </span>
       {showDetail && (
         <span className="text-[10px] text-[#6E6E73] font-mono">
-          {confidence.sampleCount.toLocaleString()} samples &middot; &plusmn;{confidence.marginOfError}
+          {confidence.level === "unmeasured" ? "No validated measurements" : `${confidence.sampleCount.toLocaleString()} samples · ±${confidence.marginOfError}`}
         </span>
       )}
     </div>

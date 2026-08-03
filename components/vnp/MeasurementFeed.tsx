@@ -39,9 +39,11 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
   // Build feed entries from real score data — deterministic, cycling through scored APIs
   useEffect(() => {
     if (!scores || scores.length === 0) return;
+    const measuredScores = scores.filter((score) => score.status !== "unmeasured" && score.grade !== "N/A");
+    if (measuredScores.length === 0) return;
 
     // Seed initial entries from actual score data
-    const initial: FeedEntry[] = scores.slice(0, 8).flatMap((score, si) => {
+    const initial: FeedEntry[] = measuredScores.slice(0, 8).flatMap((score, si) => {
       const entries: FeedEntry[] = [];
       const region = score.regions[si % score.regions.length];
       if (!region) return entries;
@@ -76,8 +78,8 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
 
     // Cycle through real data periodically — each tick shows the next API's real scores
     const interval = setInterval(() => {
-      const idx = indexRef.current % scores.length;
-      const score = scores[idx];
+      const idx = indexRef.current % measuredScores.length;
+      const score = measuredScores[idx];
       const regionIdx = indexRef.current % VNP_REGIONS.length;
       const region = score.regions[regionIdx];
       indexRef.current++;

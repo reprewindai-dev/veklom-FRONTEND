@@ -4,7 +4,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+# Reduce memory footprint of npm ci
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # ─── Stage 2: builder ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -18,7 +19,8 @@ COPY . .
 ARG NEXT_PUBLIC_API_BASE_URL=""
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS=--max-old-space-size=1536
+# Allow up to 4GB memory, OS has 4GB swap space now.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 
 
 RUN npm run build
@@ -30,6 +32,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
+
+LABEL org.opencontainers.image.source="veklom-control-plane"
+LABEL org.opencontainers.image.revision="cef14986bf8b5beb6254f6d163b3e0e9ab3a9bc4"
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser  --system --uid 1001 nextjs

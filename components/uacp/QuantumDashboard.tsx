@@ -12,6 +12,8 @@ export function QuantumDashboard() {
   const [nodes, setNodes] = useState<{x: number, y: number, r: number, glow: boolean}[]>([]);
   const [edges, setEdges] = useState<{n1: number, n2: number}[]>([]);
 
+  const [protocol, setProtocol] = useState<any>(null);
+
   useEffect(() => {
     // Generate static deterministic topology nodes based on grid. 
     // Data-driven rendering based on actual Layer count will make it somewhat dynamic without Math.random()
@@ -44,13 +46,14 @@ export function QuantumDashboard() {
 
   const fetchData = async () => {
     try {
-      const [telRes, statusRes, healthRes, secRes, layersRes, infraRes] = await Promise.all([
+      const [telRes, statusRes, healthRes, secRes, layersRes, infraRes, protocolRes] = await Promise.all([
         fetch('/api/quantum-metrics'),
         fetch('/api/status'),
         fetch('/api/v1/sys/health'),
         fetch('/api/uacp/security'),
         fetch('/api/uacp/layers'),
-        fetch('/api/uacp/infrastructure')
+        fetch('/api/uacp/infrastructure'),
+        fetch('/protocol.json')
       ]);
       if (telRes.ok) setTelemetry(await telRes.json());
       if (statusRes.ok) setStatusState(await statusRes.json());
@@ -58,6 +61,7 @@ export function QuantumDashboard() {
       if (secRes.ok) setSecurityData(await secRes.json());
       if (layersRes.ok) setLayers(await layersRes.json());
       if (infraRes.ok) setInfra(await infraRes.json());
+      if (protocolRes.ok) setProtocol(await protocolRes.json());
     } catch (e) {
       console.error("Failed to fetch dashboard data", e);
     }
@@ -357,6 +361,26 @@ export function QuantumDashboard() {
                   )) : null}
                   {!telemetry && !health && !securityData && (
                      <div className="text-[10px] text-cyan-500/50">Awaiting telemetry datastream...</div>
+                  )}
+               </div>
+            </div>
+
+            {/* PROTOCOL MANIFEST */}
+            <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded-xl p-4 relative backdrop-blur-sm flex-1 overflow-hidden">
+               <div className="text-[10px] tracking-widest text-white/90 font-sans mb-4 flex items-center justify-between">
+                  PROTOCOL MANIFEST <span className="text-cyan-500/40 tracking-[0.2em] font-mono">...</span>
+               </div>
+               <div className="space-y-4 border-l border-cyan-900/50 pl-3 ml-1 h-[150px] overflow-y-auto pr-2 scrollbar-hide">
+                  {protocol?.capabilities ? protocol.capabilities.map((c:any, i:number) => (
+                     <div key={`cap-${i}`} className="relative">
+                        <div className="absolute left-[-16.5px] top-[4px] w-2 h-2 rounded-full border border-purple-500 bg-[#0b1219] z-10 box-content shadow-[0_0_8px_#a855f7] flex items-center justify-center">
+                           <div className="w-[2px] h-[2px] bg-purple-500 rounded-full"></div>
+                        </div>
+                        <div className="text-purple-300/90">{c.name}</div>
+                        <div className="text-[8px] text-purple-500/50 uppercase">{c.endpoint}</div>
+                     </div>
+                  )) : (
+                     <div className="text-[10px] text-cyan-500/50">Awaiting capability discovery...</div>
                   )}
                </div>
             </div>

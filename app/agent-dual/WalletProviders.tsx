@@ -1,13 +1,25 @@
 "use client";
 
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
-import { agentDuelQueryClient, agentDuelWalletConfig } from "./walletConfig";
+import { useState, useEffect } from "react";
+import { agentDuelWalletConfig } from "./walletConfig";
 
 export function WalletProviders({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  const [queryClient] = useState(() => new QueryClient());
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <>{children}</>;
+  
   return (
     <WagmiProvider config={agentDuelWalletConfig}>
-      <QueryClientProvider client={agentDuelQueryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   );
 }

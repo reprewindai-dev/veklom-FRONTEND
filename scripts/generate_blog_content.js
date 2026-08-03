@@ -15,7 +15,7 @@ const posts = [
   {
     slug: "vnp-launch-physics-based-benchmarking",
     title: "Veklom Nexus Protocol (VNP): Why We Replaced Legacy API Benchmarks with Physics",
-    excerpt: "Legacy benchmarks measure uptime from a single datacenter. VNP measures physical routing latency across 5 global regions, anchoring the results into a cryptographic ledger.",
+    excerpt: "Legacy benchmarks measure uptime from a single datacenter. VNP measures physical routing latency across 5 registered regions and labels every proof surface from backend evidence.",
     content: 
 `For years, the industry has evaluated API performance and reliability using legacy indices like ABI (API Benchmark Index) or CASC (Cloud API Service Consistency). These systems rely on generic polling, hidden methodologies, and aggregated trailing averages that smooth out the very micro-outages that break enterprise AI routing.
 
@@ -31,15 +31,15 @@ If you are routing millions of dollars of AI compute, you cannot rely on an opaq
 
 ### Introducing the Veklom Nexus Protocol (VNP)
 
-VNP is not a benchmark; it is a **physics-verified settlement network**. We have deployed five independent Hetzner edge probes across global regions (Ashburn, Falkenstein, Helsinki, Nuremberg, Hillsboro). These nodes execute high-frequency telemetry requests against production APIs, measuring raw TCP/TLS handshake latencies and Time-to-First-Byte (TTFB).
+VNP is not a marketing benchmark; it is a **physics-verified telemetry and settlement standard**. Veklom runs five registered edge probes across Ashburn, Hillsboro, Nuremberg, Falkenstein, and Singapore. These nodes execute high-frequency telemetry requests against production APIs, measuring raw TCP/TLS handshake latencies and Time-to-First-Byte (TTFB).
 
 \`\`\`mermaid
 graph TD
-    A[VNP Hub] -->|30s Sync| B[Ashburn Node]
-    A -->|30s Sync| C[Falkenstein Node]
-    A -->|30s Sync| D[Helsinki Node]
-    A -->|30s Sync| E[Nuremberg Node]
-    A -->|30s Sync| F[Hillsboro Node]
+    A[VNP Hub] -->|10s Probe Cycle| B[Ashburn Node]
+    A -->|10s Probe Cycle| C[Falkenstein Node]
+    A -->|10s Probe Cycle| D[Singapore Node]
+    A -->|10s Probe Cycle| E[Nuremberg Node]
+    A -->|10s Probe Cycle| F[Hillsboro Node]
     B -->|Ping| G((Target API))
     C -->|Ping| G
     D -->|Ping| G
@@ -49,17 +49,17 @@ graph TD
 
 #### 1. Option-C Latency Computations
 
-We do not average out the slow requests. VNP utilizes Option-C latency math—penalizing jitter and prioritizing the *worst-case* regional performance. If an API is fast in Ashburn but drops packets in Helsinki, its overall Trust Matrix score degrades.
+We do not average out the slow requests. VNP utilizes Option-C latency math—penalizing jitter and prioritizing the *worst-case* regional performance. If an API is fast in Ashburn but drops packets in Singapore or either Germany node, its overall Trust Matrix score degrades.
 
 #### 2. Cryptographic Proof of State
 
-Every 30 seconds, the VNP Hub Aggregator collects the telemetry from the five edge nodes. This state is mathematically hashed into a Merkle root and signed with an Ed25519 key pair. The result is pushed to the Gnomledger vault.
+The VNP Hub Aggregator collects telemetry from the five edge nodes and persists signed heartbeat and observation evidence. Merkle anchoring and Gnomledger publication are shown only when the backend reports that proof surface as connected.
 
 ### x402: Tying Physics to Money
 
-The true innovation of VNP is the integration with our x402 micropayment ledger. If a provider's API falls below their stated SLA in the VNP Trust Matrix, their performance bond is automatically slashed at the settlement layer.
+The true innovation of VNP is the integration with x402 route-payment evidence. If a provider's API falls below a governed policy threshold, settlement and slashing evidence must come from backend-backed receipts and ledger events before the public surface labels it live.
 
-**We have tied physics directly to financial settlement.**`
+**VNP ties physics to financial settlement only where backend evidence proves the route, receipt, and ledger state.**`
   },
   {
     slug: "black-box-problem-ai-agents",
@@ -225,7 +225,7 @@ const templates = [
   {
     titleTemplate: "x402 Implementation: Securing {service} with Micro-Stakes",
     slugTemplate: "x402-implementation-micro-stakes-{service}",
-    techs: ["LLM Providers", "Cloud SQL", "AWS Lambda", "Vercel Edge"]
+    techs: ["LLM Providers", "Cloud SQL", "AWS Lambda", "Coolify Hetzner"]
   }
 ];
 
@@ -262,7 +262,7 @@ When autonomous agents interact with ${tech}, they generate highly unpredictable
 
 ### Integrating with VNP
 
-By mapping ${tech} into the VNP VNP Methodology v1.0 verification stack, we can observe the exact physics of its failure modes. 
+By mapping ${tech} into the VNP Methodology v1.0 verification stack, operators can observe the physical signals that matter when live route evidence is connected. 
 
 \`\`\`mermaid
 pie title "${tech} Failure Modes"
@@ -272,11 +272,11 @@ pie title "${tech} Failure Modes"
     "DNS Resolution" : 10
 \`\`\`
 
-Through Option-C latency analysis, we verified that applying x402 micro-stakes to ${tech} reduces runaway compute consumption by over 94% in hostile environments.
+Through VNP Methodology v1.0, x402 micro-stakes are treated as settlement evidence only when backed by live route receipts and backend ledger state.
 
 ### The Path Forward
 
-The Sovereign Control Plane natively supports ${tech}, enforcing cryptographic lineage (PGL) on every transaction. You can deploy it today with zero-trust guarantees.`
+The Sovereign Control Plane can govern ${tech} through PGL lineage and runtime policy when the target route is wired, authenticated, and producing auditable backend evidence.`
   });
   
   techIndex++;

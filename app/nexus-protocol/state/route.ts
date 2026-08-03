@@ -6,8 +6,11 @@ export const revalidate = 0;
 
 const BYOS_API_BASE =
   process.env.BYOS_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
   "https://api.veklom.com";
+const VNP_API_BASE =
+  process.env.VNP_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_VNP_API_BASE_URL ||
+  "https://vnp.veklom.com";
 
 type ProbeState = "verified" | "needs_proof" | "error";
 
@@ -103,14 +106,15 @@ function bondHealthScore(provider: any): number {
 }
 
 function normalizeCards(metrics: any, staking: any, cappo: any) {
-  const apis = Array.isArray(metrics?.apis) ? metrics.apis : [];
+  const apis = Array.isArray(metrics) ? metrics : Array.isArray(metrics?.apis) ? metrics.apis : [];
   const providers = Array.isArray(staking?.providers) ? staking.providers : [];
   const authorizedRate = asNumber(cappo?.metrics?.authorized_rate);
   const physicalProbes = asNumber(metrics?.total_physical_probes_recorded);
 
   return apis.map((api: any) => {
     const provider = providers.find((item: any) => item?.apiId === api?.id || item?.name === api?.name) || {};
-    const composite = clampScore(asNumber(api?.compositeScore));
+    const compositeValue = api?.compositeScore ?? api?.score;
+    const composite = clampScore(asNumber(compositeValue));
     const p95Score = p95HealthScore(provider);
     const bondScore = bondHealthScore(provider);
     const cappoScore = clampScore(authorizedRate);
@@ -127,7 +131,7 @@ function normalizeCards(metrics: any, staking: any, cappo: any) {
       anchorHash: metrics?.trustBeaconMerkle || "",
       ipfsHash: "",
       txHash: metrics?.blockAnchorTx || "",
-      measurementCount: physicalProbes,
+      measurementCount: physicalProbes || asNumber(api?.measurementCount),
       targetP95Ms: provider?.targetP95Ms ?? null,
       observedP95Ms: provider?.observedP95Ms ?? null,
       bondAmountUsdc: provider?.bondAmountUsdc ?? null,
@@ -174,6 +178,17 @@ function normalizeCards(metrics: any, staking: any, cappo: any) {
 }
 
 function normalizeNodes(staking: any, metrics: any) {
+  if (Array.isArray(metrics)) {
+    return metrics.map((node: any, index: number) => ({
+      id: String(node?.id || node?.location_code || `vnp-node-${index}`),
+      name: String(node?.host_reference || node?.name || `VNP Node ${index + 1}`),
+      region: String(node?.location_code || node?.region || "unregistered"),
+      latency: asNumber(node?.latency),
+      throughput: asNumber(node?.throughput),
+      status: String(node?.status || "needs_proof"),
+      activeCycles: asNumber(node?.activeCycles),
+    }));
+  }
   const providers = Array.isArray(staking?.providers) ? staking.providers : [];
   return providers.map((provider: any, index: number) => ({
     id: String(provider?.apiId || `provider-${index}`),
@@ -188,9 +203,9 @@ function normalizeNodes(staking: any, metrics: any) {
 
 export async function GET() {
   const [metricsProbe, stakingProbe, leaderboardProbe, x402Probe, cappoProbe] = await Promise.all([
-    probeJson(BYOS_API_BASE, "/api/v1/vnp/metrics"),
+    probeJson(VNP_API_BASE, "/api/v1/nexus/scores"),
     probeJson(BYOS_API_BASE, "/api/v1/x402/staking/state"),
-    probeJson(BYOS_API_BASE, "/api/v1/benchmarks/leaderboard"),
+    probeJson(VNP_API_BASE, "/api/v1/nexus/nodes"),
     probeJson(BYOS_API_BASE, "/.well-known/x402.json"),
     probeJson(CAPI_RUNTIME_URL, "/health"),
   ]);
@@ -199,7 +214,8 @@ export async function GET() {
   const staking = stakingProbe.state === "verified" ? stakingProbe.data : null;
   const cappo = cappoProbe.state === "verified" ? cappoProbe.data : null;
   const cards = normalizeCards(metrics, staking, cappo);
-  const nodes = normalizeNodes(staking, metrics);
+  const nodeRegistry = leaderboardProbe.state === "verified" ? leaderboardProbe.data : null;
+  const nodes = normalizeNodes(staking, nodeRegistry);
   const probes = [metricsProbe, stakingProbe, leaderboardProbe, x402Probe, cappoProbe].map(({ data, ...probe }) => probe);
   const hardFailures = probes.filter((probe) => probe.state === "error").length;
   const proofGaps = probes.filter((probe) => probe.state === "needs_proof").length;
@@ -208,6 +224,7 @@ export async function GET() {
     generated_at: new Date().toISOString(),
     sources: {
       byos: trimSlash(BYOS_API_BASE),
+      vnp: trimSlash(VNP_API_BASE),
       capi: trimSlash(CAPI_RUNTIME_URL),
     },
     proof: {
@@ -222,8 +239,9 @@ export async function GET() {
     },
     metrics,
     staking,
-    leaderboard: leaderboardProbe.state === "verified" ? leaderboardProbe.data : null,
+    leaderboard: null,
     leaderboard_state: leaderboardProbe.state,
+    node_registry: nodeRegistry,
     x402: x402Probe.state === "verified" ? x402Probe.data : null,
     cappo,
     cards,

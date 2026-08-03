@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "projectType": "nextjs",
+  "poltergeistRepo": "https://github.com/reprewindai-dev/poltergeist",
+  "targets": [
+    {
+      "name": "veklom-frontend-build",
+      "type": "builder",
+      "enabled": true,
+      "buildCommand": "pnpm run build",
+      "watchPaths": [
+        "app/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}",
+        "lib/**/*.{ts,tsx}",
+        "package.json"
+      ],
+      "outputPath": ".next",
+      "postBuild": [],
+      "statusScripts": [
+        "curl -sf http://localhost:3002/api/health 2>/dev/null || echo 'Frontend UI: Not Reachable'"
+      ]
+    },
+    {
+      "name": "veklom-frontend-typecheck",
+      "type": "script",
+      "enabled": true,
+      "buildCommand": "pnpm run typecheck",
+      "watchPaths": [
+        "app/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}",
+        "lib/**/*.{ts,tsx}"
+      ],
+      "outputPath": null,
+      "statusScripts": []
+    },
+    {
+      "name": "veklom-frontend-lint",
+      "type": "script",
+      "enabled": true,
+      "buildCommand": "pnpm run lint",
+      "watchPaths": [
+        "app/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}",
+        "lib/**/*.{ts,tsx}"
+      ],
+      "outputPath": null,
+      "statusScripts": []
+    }
+  ]
+}

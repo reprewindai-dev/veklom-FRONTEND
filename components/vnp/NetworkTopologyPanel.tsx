@@ -1,193 +1,145 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useMemo, useState } from "react";
 import useSWR from "swr";
-import { fetcher, api } from "@/lib/api";
-import { Server, Activity, ShieldAlert, Zap, Cpu, Clipboard, RefreshCw, Layers, Radio, Flame, CheckCircle, Terminal, Play, Lock, Database, PlayCircle, StopCircle } from "lucide-react";
+import { fetcher } from "@/lib/api";
+import { Server, Radio, Terminal, Database } from "lucide-react";
+import {
+  TOPOLOGY_ENDPOINT,
+  formatFreshness,
+  formatTimestamp,
+  nodeConnectivityState,
+  proofStateClasses,
+  type ProofState,
+  type VnpTopology,
+  type VnpTopologyNode,
+  type VnpTopologyResponse,
+} from "@/lib/vnp-topology";
 
-interface PeerNode {
-  id: string;
-  name: string;
-  region: string;
-  status: "LEADER" | "ATTESTING" | "CHALLENGED" | "STANDBY";
-  status_str?: string;
-  x: number;
-  y: number;
-  stakeUsd: number;
-  cpuMs: number;
-  poolUtilization: number;
-  version: string;
-  tenantLock: string;
+interface X402Config {
+  enabled?: boolean;
+  network?: string;
 }
 
-interface PaymentPacket {
-  id: string;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  progress: number; // 0 to 1
-  amountUsd: number;
-  tenant: string;
-}
-
-interface SwarmTransaction {
-  id: string;
-  timestamp: string;
-  tenant: string;
-  amount: number;
-  status: "SETTLED" | "ESCROWED" | "SLASHED" | "PENDING";
-  signature: string;
+interface LedgerEntry {
+  id?: string;
+  tenant?: string;
+  amount?: number;
+  status?: string;
+  signature?: string;
   proposer?: string;
 }
+
+// Public, truth-locked topology panel.
+//
+// It renders ONLY what `GET /api/v1/beacon/topology` returns. It does NOT
+// fabricate connectivity, stake, settlement, or packet flow, and it exposes
+// NO admin/debug mutation controls (storm / slash / config) on this public
+// surface. Node connectivity is derived from each node's returned status and
+// heartbeat freshness, never from the existence of a node record.
+
+function ProofPill({ state, className = "" }: { state: ProofState; className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${proofStateClasses(
+        state
+      )} ${className}`}
+    >
+      {state}
+    </span>
+  );
+}
+
+function nodeColor(state: ProofState): { fill: string; stroke: string; led: string } {
+  switch (state) {
+    case "Present":
+    case "Verified":
+      return { fill: "#022c22", stroke: "rgba(16,185,129,0.8)", led: "#10b981" };
+    case "Needs proof":
+    case "Insufficient Evidence":
+      return { fill: "#2a1e05", stroke: "rgba(245,158,11,0.7)", led: "#f59e0b" };
+    default:
+      return { fill: "#0f172a", stroke: "rgba(148,163,184,0.6)", led: "#94a3b8" };
+  }
+}
+
 export default function NetworkTopologyPanel() {
+  const { data, error, isLoading } = useSWR<VnpTopologyResponse>(TOPOLOGY_ENDPOINT, fetcher, {
+    refreshInterval: 15000,
+  });
+  const { data: x402Config } = useSWR<X402Config>("/api/v1/x402/config", fetcher, {
+    refreshInterval: 60000,
+  });
+
   const [selectedNodeId, setSelectedNodeId] = useState<string>("");
-  const { data: topologyData, mutate: refreshTopology } = useSWR<any>("/api/v1/beacon/topology", fetcher, { refreshInterval: 5000 });
-  
-  // Real State from Backend
-  const realTopology = topologyData?.topology;
 
-  // UI State
-  const [nodes, setNodes] = useState<PeerNode[]>([]);
-  const [packets, setPackets] = useState<PaymentPacket[]>([]);
-  const [eventsLog, setEventsLog] = useState<string[]>([]);
-  const [ledgerFeed, setLedgerFeed] = useState<SwarmTransaction[]>([]);
-  const [isActiveStorm, setIsActiveStorm] = useState(false);
-  const [totalSettledUsd, setTotalSettledUsd] = useState(0);
-  const [safetyGuardActive, setSafetyGuardActive] = useState(true);
+  const topology: VnpTopology | null =
+    data && (data.status !== "error" ? data.topology ?? null : null) ? data.topology ?? null : null;
+  const sourceReachable = Boolean(data && data.status !== "error" && data.topology);
 
-  // Sync strictly real data from backend
-  useEffect(() => {
-    if (realTopology) {
-      if (realTopology.nodes) {
-        setNodes(realTopology.nodes);
-        if (realTopology.nodes.length > 0 && !selectedNodeId) {
-          setSelectedNodeId(realTopology.nodes[0].id);
-        }
-      }
-      if (realTopology.eventsLog) setEventsLog(realTopology.eventsLog);
-      if (realTopology.ledgerFeed) setLedgerFeed(realTopology.ledgerFeed);
-      if (realTopology.totalSettledUsd !== undefined) setTotalSettledUsd(realTopology.totalSettledUsd);
-      if (realTopology.isActiveStorm !== undefined) setIsActiveStorm(realTopology.isActiveStorm);
-      if (realTopology.safetyGuardActive !== undefined) setSafetyGuardActive(realTopology.safetyGuardActive);
-    }
-  }, [realTopology]);
+  const nodes: VnpTopologyNode[] = topology?.nodes ?? [];
+  const eventsLog: string[] = topology?.eventsLog ?? [];
+  const ledgerFeed = (topology?.ledgerFeed ?? []) as LedgerEntry[];
+  const totalSettledUsd = topology?.totalSettledUsd ?? 0;
 
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
+  const expected = topology?.expectedNodes ?? 5;
+  const registered = topology?.registeredNodes ?? nodes.length;
+  const connected =
+    topology?.activeNodes ??
+    nodes.filter((n) => (n.status_str ?? "").toLowerCase() === "connected").length;
 
-  // ── ACTIONS ────────────────────────────────────────────────────────────────────
-  
-  const triggerStorm = async () => {
-    try {
-      await api.post("/api/v1/admin/debug/storm", {});
-      refreshTopology();
-    } catch (err) {
-      console.error("Failed to trigger real storm:", err);
-    }
-  };
+  const selectedNode = useMemo(
+    () => nodes.find((n) => n.id === selectedNodeId) ?? nodes[0] ?? null,
+    [nodes, selectedNodeId]
+  );
 
-  const triggerAttestationChallenge = async () => {
-    try {
-      await api.post("/api/v1/admin/debug/slash", { peer: selectedNodeId });
-      refreshTopology();
-    } catch (err) {
-      console.error("Failed to trigger real slash:", err);
-    }
-  };
+  const meshState: ProofState = !sourceReachable
+    ? "Needs proof"
+    : connected >= expected && expected > 0
+    ? "Present"
+    : "Needs proof";
+  const meshLabel = !sourceReachable
+    ? "TOPOLOGY SOURCE UNAVAILABLE"
+    : `${connected}/${expected} CONNECTED · ${registered}/${expected} REGISTERED`;
 
-  const toggleSafetyGuard = async () => {
-    try {
-      await api.post("/api/v1/admin/config", { safetyGuard: !safetyGuardActive });
-      refreshTopology();
-    } catch(err) {
-      console.error("Failed to toggle guard", err);
-    }
-  };
+  const x402State: ProofState = x402Config?.enabled ? "Present" : "Needs proof";
+  const x402Label = x402Config?.enabled
+    ? `x402 protocol configured (${x402Config?.network ?? "base"})`
+    : "x402 protocol config unavailable";
+
+  const settlementState: ProofState = totalSettledUsd > 0 ? "Present" : "Needs proof";
 
   return (
-    <div id="vnp-topology-cockpit-root" className="grid grid-cols-1 lg:grid-cols-12 gap-7 animate-fade-in text-[11px] font-mono">
-      
-      {/* LEFT SPACE: Interactive SVG Graph Node Swarm (lg:col-span-8) */}
-      <div className="lg:col-span-8 flex flex-col justify-between bg-gradient-to-br from-[#080d15] to-[#04070a] border border-cyan-900/30 rounded-2xl p-5 relative overflow-hidden h-[570px] shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-        
-        {/* Glow Effects Filters */}
-        <svg className="absolute w-0 h-0">
-          <defs>
-            <filter id="laser-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="node-glow-healthy" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feComponentTransfer in="blur" result="glow">
-                <feFuncA type="linear" slope="0.5" />
-              </feComponentTransfer>
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="node-glow-challenged" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feComponentTransfer in="blur" result="glow">
-                <feFuncA type="linear" slope="0.8" />
-              </feComponentTransfer>
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            
-            <radialGradient id="grad-leader" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#047857" stopOpacity="1" />
-              <stop offset="70%" stopColor="#022c22" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#022c22" stopOpacity="0.4" />
-            </radialGradient>
-            <radialGradient id="grad-challenged" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#b91c1c" stopOpacity="1" />
-              <stop offset="70%" stopColor="#450a0a" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#450a0a" stopOpacity="0.4" />
-            </radialGradient>
-            <radialGradient id="grad-standby" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#334155" stopOpacity="1" />
-              <stop offset="70%" stopColor="#0f172a" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.4" />
-            </radialGradient>
-          </defs>
-        </svg>
-
-        {/* HUD Overlay Info Bar */}
-        <div className="flex items-center justify-between border-b border-cyan-900/30 pb-3 z-10 relative">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-[11px] font-mono">
+      {/* LEFT: node map */}
+      <div className="lg:col-span-8 flex flex-col bg-gradient-to-br from-[#080d15] to-[#04070a] border border-cyan-900/30 rounded-2xl p-5 relative overflow-hidden h-[570px]">
+        <div className="flex items-center justify-between border-b border-cyan-900/30 pb-3">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Radio className="w-5 h-5 text-emerald-400 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-              <span className="text-sm font-sans tracking-wide text-white/90">Veklom Gateway &amp; x402 Settlement Evidence</span>
+              <Radio className="w-5 h-5 text-cyan-400" />
+              <span className="text-sm font-sans tracking-wide text-white/90">
+                VNP Beacon Topology
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-emerald-300 uppercase tracking-widest bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]">
-                VNP SLA Performance
+              <span className="text-[9px] uppercase tracking-widest border px-2 py-0.5 rounded text-slate-300 bg-slate-900/50 border-slate-700/50">
+                {meshLabel}
               </span>
-              <span className="text-[9px] text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded border bg-slate-900/50 border-slate-700/50 flex items-center gap-1">
-                <CheckCircle className="w-3 h-3 text-emerald-400" /> STRICT MODE
-              </span>
+              <ProofPill state={meshState} />
             </div>
           </div>
-
           <div className="text-right flex flex-col items-end gap-1">
-            <span className="text-[9px] text-cyan-500/50 uppercase tracking-[0.2em]">x402 USDC Route Payments: Connected</span>
-            <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded px-3 py-1 flex items-center gap-2 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_5px_#34d399]"></span>
-              <span className="text-emerald-400 font-mono text-sm tracking-tight">{totalSettledUsd.toFixed(2)} $SETTLED</span>
-            </div>
+            <span className="text-[9px] uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1.5">
+              {x402Label}
+              <ProofPill state={x402State} />
+            </span>
+            <span className="text-[9px] text-slate-500">
+              source: GET {TOPOLOGY_ENDPOINT}
+            </span>
           </div>
         </div>
 
-        {/* The Vector map viewport area */}
-        <div className="flex-1 min-h-[350px] relative mt-2 select-none">
-          <svg viewBox="0 0 600 450" className="w-[100%] h-[100%] block">
-            {/* Draw grid background lines */}
+        <div className="flex-1 min-h-[300px] relative mt-2 select-none">
+          <svg viewBox="0 0 600 450" className="w-full h-full block">
             <g stroke="rgba(34, 211, 238, 0.05)" strokeWidth="1">
               {Array.from({ length: 9 }).map((_, i) => (
                 <line key={`grid-v-${i}`} x1={i * 70 + 20} y1="0" x2={i * 70 + 20} y2="450" />
@@ -197,365 +149,210 @@ export default function NetworkTopologyPanel() {
               ))}
             </g>
 
-            {/* Draw animated fiber-optic connection lines */}
+            {/* Static reference links between registered sites (no traffic claims) */}
             <g>
-              {nodes.map((n1, idx1) => 
-                nodes.slice(idx1 + 1).map((n2) => {
-                  const isLeaderCon = n1.status === "LEADER" || n2.status === "LEADER";
-                  const isChallenged = n1.status === "CHALLENGED" || n2.status === "CHALLENGED";
-                  
-                  // Base static line
-                  const strokeColor = isChallenged ? "rgba(239, 68, 68, 0.15)" : isLeaderCon ? "rgba(16, 185, 129, 0.2)" : "rgba(34, 211, 238, 0.1)";
-                  const strokeWidth = isLeaderCon ? "1.5" : "1";
-                  
-                  return (
-                    <g key={`link-${n1.id}-${n2.id}`}>
-                      {/* Glow backdrop for leader connections */}
-                      {isLeaderCon && !isChallenged && (
-                        <line x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} stroke="rgba(16, 185, 129, 0.1)" strokeWidth="4" style={{ filter: "url(#laser-glow)" }} />
-                      )}
-                      <line x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} stroke={strokeColor} strokeWidth={strokeWidth} />
-                      
-                      {/* Animated traffic flow (dashed line moving) */}
-                      {isLeaderCon && !isChallenged && (
-                        <line 
-                          x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} 
-                          stroke="rgba(16, 185, 129, 0.4)" 
-                          strokeWidth="1.5" 
-                          strokeDasharray="4 12" 
-                          className="animate-[dash_3s_linear_infinite]" 
-                        />
-                      )}
-                    </g>
-                  );
-                })
+              {nodes.map((n1, idx1) =>
+                nodes.slice(idx1 + 1).map((n2) => (
+                  <line
+                    key={`link-${n1.id}-${n2.id}`}
+                    x1={n1.x ?? 0}
+                    y1={n1.y ?? 0}
+                    x2={n2.x ?? 0}
+                    y2={n2.y ?? 0}
+                    stroke="rgba(148,163,184,0.12)"
+                    strokeWidth="1"
+                  />
+                ))
               )}
             </g>
 
-            {/* Draw simulation packets if active */}
-            {packets.map((p) => {
-              const currentX = p.fromX + (p.toX - p.fromX) * p.progress;
-              const currentY = p.fromY + (p.toY - p.fromY) * p.progress;
-              const color = p.tenant === "veklom.io" ? "#10b981" : p.tenant === "tempo_global" ? "#6366f1" : "#f59e0b";
-
-              return (
-                <g key={p.id}>
-                  <circle cx={currentX} cy={currentY} r="3" fill={color} style={{ filter: "url(#laser-glow)" }} />
-                  <circle cx={currentX} cy={currentY} r="8" fill="none" stroke={color} strokeWidth="1" opacity={(1.0 - p.progress) * 0.8} />
-                </g>
-              );
-            })}
-
-            {/* Draw interactable physical nodes */}
             {nodes.map((n) => {
-              const isSelected = selectedNodeId === n.id;
-              let fillGradient = "url(#grad-standby)";
-              let borderStroke = "rgba(34, 211, 238, 0.3)";
-              let ledColor = "#94a3b8";
-              let glowFilter = undefined;
-
-              if (n.status === "LEADER") {
-                fillGradient = "url(#grad-leader)";
-                borderStroke = "rgba(16, 185, 129, 0.8)";
-                ledColor = "#10b981";
-                glowFilter = "url(#node-glow-healthy)";
-              } else if (n.status === "CHALLENGED") {
-                fillGradient = "url(#grad-challenged)";
-                borderStroke = "rgba(239, 68, 68, 0.8)";
-                ledColor = "#ef4444";
-                glowFilter = "url(#node-glow-challenged)";
-              }
-
-              if (isSelected) {
-                borderStroke = "#22d3ee"; // Cyan for selected
-              }
-
+              const conn = nodeConnectivityState(n);
+              const c = nodeColor(conn.state);
+              const isSelected = selectedNode?.id === n.id;
               return (
-                <g 
-                  key={n.id} 
-                  transform={`translate(${n.x}, ${n.y})`}
+                <g
+                  key={n.id}
+                  transform={`translate(${n.x ?? 0}, ${n.y ?? 0})`}
                   className="cursor-pointer group outline-none"
                   onClick={() => setSelectedNodeId(n.id)}
                 >
-                  <circle cx="0" cy="0" r="30" fill="transparent" />
-
-                  {/* Selection Ring */}
+                  <circle cx="0" cy="0" r="26" fill="transparent" />
                   {isSelected && (
                     <circle
                       cx="0"
                       cy="0"
-                      r="22"
+                      r="20"
                       fill="none"
-                      stroke="rgba(34,211,238,0.5)"
-                      strokeWidth="1.5"
-                      strokeDasharray="4 4"
-                      className="animate-[spin_10s_linear_infinite]"
+                      stroke="#22d3ee"
+                      strokeWidth="1"
+                      strokeDasharray="3 3"
                     />
                   )}
-
-                  {/* Core Base */}
                   <circle
                     cx="0"
                     cy="0"
-                    r="14"
-                    fill={fillGradient}
-                    stroke={borderStroke}
+                    r="13"
+                    fill={c.fill}
+                    stroke={c.stroke}
                     strokeWidth={isSelected ? "2" : "1"}
-                    style={{ filter: glowFilter }}
-                    className="transition-transform duration-300 group-hover:scale-110"
                   />
-
-                  {/* Core Inner Ring */}
-                  <circle
-                    cx="0"
-                    cy="0"
-                    r="8"
-                    fill="none"
-                    stroke={ledColor}
-                    strokeWidth="0.5"
-                    opacity="0.5"
-                    className={n.status === "LEADER" ? "animate-[spin_4s_linear_infinite]" : undefined}
-                    strokeDasharray="2 2"
-                  />
-
-                  {/* Status LED */}
-                  <circle
-                    cx="0"
-                    cy="0"
-                    r="2.5"
-                    fill={ledColor}
-                    className={n.status === "CHALLENGED" ? "animate-ping" : undefined}
-                    style={{ filter: "url(#laser-glow)" }}
-                  />
-
-                  {/* Floating Identifier Label */}
-                  <g transform="translate(0, 28)">
-                    {/* Label background pill */}
-                    <rect x="-35" y="-8" width="70" height="14" rx="4" fill="rgba(3,7,12,0.8)" stroke={borderStroke} strokeWidth="0.5" opacity="0.8" />
+                  <circle cx="0" cy="0" r="3" fill={c.led} />
+                  <g transform="translate(0, 26)">
+                    <rect
+                      x="-38"
+                      y="-8"
+                      width="76"
+                      height="14"
+                      rx="4"
+                      fill="rgba(3,7,12,0.85)"
+                      stroke={c.stroke}
+                      strokeWidth="0.5"
+                    />
                     <text
                       x="0"
                       y="3"
-                      fill={isSelected ? "#22d3ee" : n.status === "CHALLENGED" ? "#f87171" : "#cbd5e1"}
+                      fill={isSelected ? "#22d3ee" : "#cbd5e1"}
                       fontSize="9"
                       fontFamily="monospace"
                       textAnchor="middle"
-                      className="font-medium tracking-tight group-hover:fill-white transition-colors"
                     >
-                      {n.name.includes("-") ? n.name.split("-")[1] : n.name}
+                      {n.region}
                     </text>
                   </g>
                 </g>
               );
             })}
           </svg>
+
+          {!sourceReachable && (
+            <div className="absolute inset-0 flex items-center justify-center text-center">
+              <span className="text-amber-300/80 text-xs bg-[#03070c]/70 px-4 py-2 rounded-lg border border-amber-500/20">
+                {isLoading
+                  ? "Loading beacon topology…"
+                  : error
+                  ? "Topology source unreachable — Needs proof."
+                  : "Topology source returned no nodes — Needs proof."}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Real-time system tracing console logs bar */}
         <div className="space-y-2 mt-4">
           <div className="flex items-center gap-2 text-[10px] text-cyan-500/50 uppercase tracking-widest pb-2 border-b border-cyan-900/20">
             <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-            <span>VNP Ledger Trace &amp; x402 Evidence Feed</span>
+            <span>Beacon event log (as reported)</span>
           </div>
-          <div className="h-[75px] overflow-y-auto font-mono text-[10px] leading-relaxed text-slate-300 space-y-1.5 scrollbar-thin scrollbar-thumb-cyan-900/50 p-2 bg-[#03070c]/50 rounded border border-cyan-900/10 inset-shadow">
+          <div className="h-[70px] overflow-y-auto text-[10px] leading-relaxed text-slate-300 space-y-1.5 p-2 bg-[#03070c]/50 rounded border border-cyan-900/10">
             {eventsLog.length === 0 ? (
-              <div className="text-cyan-500/30 italic">Awaiting network events...</div>
+              <div className="text-cyan-500/30 italic">No events reported by the beacon.</div>
             ) : (
-              eventsLog.map((log, idx) => {
-                let badge = "text-cyan-200/70";
-                if (log.includes("STORM")) badge = "text-amber-400 font-bold drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]";
-                if (log.includes("FAIL") || log.includes("CHALLENGE") || log.includes("slashing")) badge = "text-rose-400 font-bold";
-                if (log.includes("patched") || log.includes("restored")) badge = "text-emerald-400 font-bold";
-                if (log.includes("Row Level Security")) badge = "text-indigo-300";
-                
-                return (
-                  <div key={idx} className={`${badge} break-all flex gap-2`}>
-                    <span className="text-cyan-500/30 shrink-0">❯</span>
-                    <span>{log}</span>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-      </div>
-
-      {/* RIGHT SPACE: Controlling Command Center HUD (lg:col-span-4) */}
-      <div className="lg:col-span-4 space-y-5 flex flex-col justify-between">
-        
-        {/* Validator HUD Inspector Details */}
-        {selectedNode ? (
-          <div className="bg-gradient-to-b from-[#080d15]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-5 space-y-5 backdrop-blur-md relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
-            
-            <div className="flex items-start gap-3 border-b border-cyan-900/30 pb-4">
-              <div className={`p-2 rounded-lg border ${selectedNode.status === "LEADER" ? "bg-emerald-950/30 border-emerald-500/30" : selectedNode.status === "CHALLENGED" ? "bg-rose-950/30 border-rose-500/30" : "bg-cyan-950/20 border-cyan-900/30"}`}>
-                <Server className={`${selectedNode.status === "LEADER" ? "text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]" : selectedNode.status === "CHALLENGED" ? "text-rose-400" : "text-cyan-400"} w-5 h-5`} />
-              </div>
-              <div className="flex-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">Consensus Node</span>
-                <h3 className="text-sm font-sans font-medium text-white/90">{selectedNode.name}</h3>
-              </div>
-              <span className={`text-[9px] font-mono px-2.5 py-1 rounded border tracking-widest uppercase ${
-                selectedNode.status === "LEADER"
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                  : selectedNode.status === "CHALLENGED"
-                  ? "bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse"
-                  : selectedNode.status === "STANDBY"
-                  ? "bg-slate-800/50 text-slate-400 border-slate-700"
-                  : "bg-amber-500/10 text-amber-400 border-amber-500/30"
-              }`}>
-                {selectedNode.status_str || selectedNode.status}
-              </span>
-            </div>
-
-            <div className="space-y-4 font-mono text-[10px] text-cyan-100/60">
-              <div className="flex justify-between items-center">
-                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Jurisdiction</span>
-                <span className="text-white/90 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-900/30 uppercase">{selectedNode.region}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Active Stake (Real)</span>
-                <span className="text-emerald-400 text-[11px]">${selectedNode.stakeUsd.toLocaleString()} USD</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Latency</span>
-                <span className="text-cyan-300">{selectedNode.cpuMs.toFixed(3)} ms</span>
-              </div>
-              
-              {/* Connection Pool Meter */}
-              <div className="space-y-2 bg-[#03070c]/50 p-3 rounded-lg border border-cyan-900/20">
-                <div className="flex justify-between items-center">
-                  <span className="text-cyan-500/50 uppercase tracking-widest text-[8px]">sqlx::Pool Utilization</span>
-                  <span className={`${selectedNode.poolUtilization > 80 ? "text-amber-400" : "text-cyan-400"}`}>{selectedNode.poolUtilization}%</span>
-                </div>
-                <div className="w-full bg-[#0b1219] h-1.5 rounded-full overflow-hidden border border-cyan-900/30">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-500 ${selectedNode.status === "CHALLENGED" ? "bg-rose-500" : selectedNode.poolUtilization > 80 ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]"}`} 
-                    style={{ width: `${selectedNode.poolUtilization}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-2 border-t border-cyan-900/20">
-                <span className="uppercase tracking-widest text-[9px] text-cyan-500/50">Tenant Namespace Lock</span>
-                <span className="text-indigo-300 max-w-[140px] truncate bg-indigo-950/20 px-2 py-0.5 rounded border border-indigo-500/20">
-                  {selectedNode.tenantLock}
-                </span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-[#080d15]/50 border border-cyan-900/30 rounded-2xl p-5 flex items-center justify-center text-cyan-500/50 text-xs italic font-mono h-[280px]">
-            No live nodes connected to network.
-          </div>
-        )}
-
-        {/* Live Reactor Button Deck */}
-        <div className="p-5 bg-gradient-to-br from-[#080d15] to-[#04070a] border border-cyan-900/30 rounded-2xl relative space-y-5 shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center gap-2 font-sans font-medium text-[13px] text-white/90 border-b border-cyan-900/20 pb-3">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <span>Interactive Protocol Probes</span>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={triggerStorm}
-              disabled={isActiveStorm}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-900/40 to-amber-600/20 hover:from-amber-800/50 hover:to-amber-500/30 disabled:opacity-50 text-amber-200 border border-amber-500/30 hover:border-amber-400/50 rounded-xl font-mono text-[10px] tracking-widest transition-all duration-300 uppercase flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] group"
-            >
-              <Zap className="w-4 h-4 text-amber-400 group-hover:animate-pulse" />
-              <span>{isActiveStorm ? "Consensus Flooding..." : "Simulate Escrow Storm"}</span>
-            </button>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={triggerAttestationChallenge}
-                className="py-3 px-2 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 rounded-xl border border-rose-900/50 hover:border-rose-500/40 transition-all duration-300 flex flex-col items-center justify-center gap-1.5 group"
-                title="Requests a backend challenge for the selected node when the route is authorized"
-              >
-                <Flame className="w-4 h-4 text-rose-500 group-hover:animate-bounce shadow-[0_0_10px_rgba(244,63,94,0.2)] rounded-full" />
-                <span className="text-[9px] font-mono uppercase tracking-widest">Challenge Attest</span>
-              </button>
-
-              <button
-                onClick={toggleSafetyGuard}
-                className={`py-3 px-2 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-widest ${
-                  safetyGuardActive 
-                    ? "bg-emerald-950/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/30 hover:border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.05)]" 
-                    : "bg-[#0b1219]/80 text-cyan-500/40 border-cyan-900/30 hover:bg-[#0b1219]"
-                }`}
-              >
-                <Lock className={`w-4 h-4 ${safetyGuardActive ? "text-emerald-400" : "text-cyan-700"}`} />
-                <span>RLS: {safetyGuardActive ? "ARMED" : "OFF"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Ledger Swarm Event trace feed */}
-        <div className="bg-gradient-to-b from-[#0b1219]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-4 flex-1 flex flex-col min-h-[160px] backdrop-blur-md">
-          <div className="flex items-center justify-between border-b border-cyan-900/20 pb-3 mb-3">
-            <span className="text-[9px] text-cyan-100/50 font-mono uppercase tracking-[0.2em] flex items-center gap-2">
-              <Database className="w-3.5 h-3.5 text-indigo-400" />
-              x402 Evidence Ledger
-            </span>
-            <span className="text-[8px] bg-indigo-950/30 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded uppercase tracking-widest animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.2)]">
-              Anchor RLS
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto pr-1.5 space-y-2 custom-scrollbar">
-            {ledgerFeed.length === 0 ? (
-               <div className="flex h-full items-center justify-center text-[10px] font-mono text-cyan-500/30 italic">No ledger transactions recorded.</div>
-            ) : (
-              ledgerFeed.map((tx) => (
-                <div 
-                  key={tx.id} 
-                  className="p-3 bg-[#03070c]/60 border border-cyan-900/20 hover:border-cyan-700/40 rounded-lg flex items-center justify-between transition-colors duration-300 group"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-sans font-medium text-white/90 text-xs">{tx.tenant}</span>
-                      <span className="text-[9px] text-cyan-500/40 font-mono tracking-wider">({tx.id})</span>
-                    </div>
-                    <span className="text-[9px] text-cyan-100/30 block font-mono">Proposer: {tx.proposer}</span>
-                  </div>
-
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <span className={`block font-mono text-[11px] tracking-wide ${tx.status === "SLASHED" ? "text-rose-400 drop-shadow-[0_0_5px_rgba(244,63,94,0.3)]" : tx.status === "ESCROWED" ? "text-amber-400" : "text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]"}`}>
-                      ${tx.amount.toFixed(6)}
-                    </span>
-                    <span className="text-[8px] text-cyan-500/30 font-mono group-hover:text-cyan-500/50 transition-colors">{tx.signature}</span>
-                  </div>
+              eventsLog.map((log, idx) => (
+                <div key={idx} className="text-cyan-200/70 break-all flex gap-2">
+                  <span className="text-cyan-500/30 shrink-0">❯</span>
+                  <span>{log}</span>
                 </div>
               ))
             )}
           </div>
         </div>
-
       </div>
-      
-      {/* Global CSS overrides for this component */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes dash {
-          to { stroke-dashoffset: -32; }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(8, 145, 178, 0.05);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(8, 145, 178, 0.2);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(8, 145, 178, 0.4);
-        }
-      `}} />
+
+      {/* RIGHT: inspector + honest ledger */}
+      <div className="lg:col-span-4 space-y-5 flex flex-col">
+        {selectedNode ? (
+          <NodeInspector node={selectedNode} />
+        ) : (
+          <div className="bg-[#080d15]/50 border border-cyan-900/30 rounded-2xl p-5 flex items-center justify-center text-cyan-500/50 text-xs italic h-[280px]">
+            No node telemetry available.
+          </div>
+        )}
+
+        <div className="bg-gradient-to-b from-[#0b1219]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-4 flex-1 flex flex-col min-h-[160px]">
+          <div className="flex items-center justify-between border-b border-cyan-900/20 pb-3 mb-3">
+            <span className="text-[9px] text-cyan-100/50 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Database className="w-3.5 h-3.5 text-indigo-400" />
+              x402 settlement ledger
+            </span>
+            <ProofPill state={settlementState} />
+          </div>
+          <div className="flex-1 overflow-y-auto pr-1.5 space-y-2">
+            {ledgerFeed.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-[10px] text-cyan-500/30 italic">
+                No ledger settlements recorded.
+              </div>
+            ) : (
+              ledgerFeed.map((tx, idx) => (
+                <div
+                  key={tx.id ?? idx}
+                  className="p-3 bg-[#03070c]/60 border border-cyan-900/20 rounded-lg flex items-center justify-between"
+                >
+                  <div className="space-y-1">
+                    <span className="font-sans font-medium text-white/90 text-xs">
+                      {tx.tenant ?? "—"}
+                    </span>
+                    <span className="text-[9px] text-cyan-100/30 block">
+                      {tx.status ?? "—"}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] text-emerald-400">
+                    {typeof tx.amount === "number" ? `$${tx.amount.toFixed(6)}` : "—"}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NodeInspector({ node }: { node: VnpTopologyNode }) {
+  const conn = nodeConnectivityState(node);
+  const rows: Array<[string, string]> = [
+    ["Region", node.region],
+    ["Physical location", node.physicalLocation ?? "—"],
+    ["Jurisdiction", node.jurisdiction ?? "—"],
+    ["Registration", node.registrationStatus ?? "unknown"],
+    ["Active keys", node.activeKeyCount != null ? String(node.activeKeyCount) : "—"],
+    ["Operational status", `${node.status_str ?? "—"}${node.status ? ` (${node.status})` : ""}`],
+    ["Heartbeat", formatFreshness(node.heartbeatFreshnessSeconds)],
+    [
+      "Observations",
+      typeof node.observationCount === "number"
+        ? node.observationCount.toLocaleString()
+        : "—",
+    ],
+    ["Last observation", formatTimestamp(node.lastObservation)],
+    ["Version", node.version ?? "—"],
+  ];
+
+  return (
+    <div className="bg-gradient-to-b from-[#080d15]/90 to-[#03070c]/90 border border-cyan-900/30 rounded-2xl p-5 space-y-4">
+      <div className="flex items-start gap-3 border-b border-cyan-900/30 pb-4">
+        <div className="p-2 rounded-lg border bg-cyan-950/20 border-cyan-900/30">
+          <Server className="text-cyan-400 w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <span className="text-[9px] uppercase tracking-[0.2em] text-cyan-500/50 block mb-0.5">
+            VNP Node
+          </span>
+          <h3 className="text-sm font-sans font-medium text-white/90">{node.name}</h3>
+        </div>
+        <ProofPill state={conn.state} />
+      </div>
+      <p className="text-[10px] text-cyan-100/50 leading-relaxed">{conn.reason}</p>
+      <dl className="space-y-2.5 text-[10px]">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex justify-between items-center gap-3">
+            <dt className="uppercase tracking-widest text-[9px] text-cyan-500/50 shrink-0">
+              {label}
+            </dt>
+            <dd className="text-white/90 text-right break-all">{value}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

@@ -1,0 +1,91 @@
+name: Poltergeist Ops Agent - Frontend
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  workflow_run:
+    workflows: ["veklom-FRONTEND CI/CD"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr-guardian:
+    name: "👻 Poltergeist PR Guardian"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze Diff for Violations
+        id: diff_analysis
+        run: |
+          set +e
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          VIOLATIONS=""
+          
+          # Anti-pattern 1: hardcoding generic SaaS dashboards
+          if git diff origin/main...HEAD -- '*.tsx' '*.ts' | grep -q -i 'dashboard\|saas'; then
+            VIOLATIONS="${VIOLATIONS}\n❌ **Generic SaaS language detected.** The VNP UI is a command center, not a standard B2B app."
+          fi
+          
+          # Anti-pattern 2: unauthenticated endpoints (not using api.ts)
+          if git diff origin/main...HEAD -- '*.tsx' '*.ts' | grep -q 'fetch('; then
+            VIOLATIONS="${VIOLATIONS}\n⚠️ **Raw fetch() detected.** Always ensure the Authorization bearer token is attached via \`api.ts\`."
+          fi
+
+          echo "violations<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$VIOLATIONS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post PR Summary Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const violations = `${{ steps.diff_analysis.outputs.violations }}`.trim();
+            const hasViolations = violations.length > 0;
+            const status = hasViolations ? '⚠️ Issues Found' : '✅ Clean';
+            const body = `## 👻 Poltergeist PR Report (Frontend)\n\n**Status:** ${status}\n\n${hasViolations ? `### Canonicality Violations\n${violations}` : '### No canonicality violations detected.'}`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+  deployment-verifier:
+    name: "👻 Poltergeist Deployment Verifier"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+      - name: Verify control.veklom.com
+        run: |
+          echo "Waiting for control.veklom.com..."
+          sleep 10
+          HTTP=$(curl -sk https://control.veklom.com -o /dev/null -w '%{http_code}')
+          if [ "$HTTP" = "200" ]; then
+            DEPENDENCY=$(curl -sk -w '%{http_code}' https://control.veklom.com/api/health/dependencies)
+            if ! printf '%s' "$DEPENDENCY" | grep -q '"status":"healthy".*200$'; then
+              echo "Deployment proof unavailable: dependency health is not healthy"
+              exit 1
+            fi
+            echo "Deployment successful: root HTTP $HTTP and dependency proof healthy"
+          else
+            echo "Deployment failed: HTTP $HTTP"
+            exit 1
+          fi

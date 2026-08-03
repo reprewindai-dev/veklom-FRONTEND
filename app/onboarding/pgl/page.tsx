@@ -315,7 +315,7 @@ export default function PGLOnboardingPage() {
                     <div className="flex items-center gap-2">
                       <Fingerprint className="text-brand-400 w-4 h-4" />
                       <span className="text-xs font-mono font-bold uppercase tracking-wider text-ink-300">
-                        Genome Ledger (PGL) — Identity & Attestation Verification Swarm
+                        Gnomledger (PGL) — Identity & Attestation Verification Swarm
                       </span>
                     </div>
                     <div className="text-[10px] font-mono text-brand-400/80 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded-full">
@@ -380,7 +380,7 @@ export default function PGLOnboardingPage() {
         <div className="z-10 flex-1 flex flex-col">
           <div className="mb-12">
             <h1 className="text-3xl lg:text-4xl font-light tracking-tight mb-2">
-              Genome <span className="font-semibold text-brand-400">Ledger</span>
+              <span className="font-semibold text-brand-400">Gnomledger</span>
             </h1>
             <p className="text-ink-400 text-sm max-w-sm leading-relaxed">
               Provisioning Sovereign Authority node. Establishing secure telemetry

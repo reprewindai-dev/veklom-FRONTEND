@@ -28,7 +28,7 @@ export const LineageLedger: React.FC<LineageLedgerProps> = ({ nodes }) => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <GitBranch size={18} className="text-amber-400" />
-          <h2 className="text-sm font-mono uppercase tracking-widest text-white/80">Project Genome Ledger (PGL)</h2>
+          <h2 className="text-sm font-mono uppercase tracking-widest text-white/80">Gnomledger (PGL)</h2>
         </div>
         <div className="flex gap-2">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">

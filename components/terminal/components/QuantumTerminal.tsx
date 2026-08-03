@@ -333,6 +333,34 @@ export default function QuantumTerminal() {
   ];
 
   const doRealCommand = async (cmdInfo: typeof cmdMap[0], rawArgs: string) => {
+    // Route command through MCP Lock Primitives
+    pushLog(`[LOCK]    Requesting global mutex via MCP Lock Provider...`, 'sys');
+    let lockHash = '';
+    try {
+        const lockRes = await fetch(`${API_BASE_URL}/api/mcp/lock/call`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-agent-id': 'uacp-terminal',
+                'x-capability-id': 'terminal-exec'
+            },
+            body: JSON.stringify({
+                tool_name: "terminal_command",
+                arguments: { command: cmdInfo.match, raw: rawArgs },
+                security: {}
+            })
+        });
+        if (lockRes.ok) {
+            const lockData = await lockRes.json();
+            lockHash = lockData.evidence_hash;
+            pushLog(`[LOCK]    Mutex acquired. Lock ID: ${lockData.lock_id}`, 'ok');
+        } else {
+            pushLog(`[LOCK]    Failed to acquire mutex (HTTP ${lockRes.status}). Proceeding anyway...`, 'warn');
+        }
+    } catch (err: any) {
+        pushLog(`[LOCK]    MCP Provider unreachable: ${err.message}. Bypassing...`, 'warn');
+    }
+
     const requestUrl = cmdInfo.route.startsWith('http') ? cmdInfo.route : `${API_BASE_URL}${cmdInfo.route}`;
     pushLog(`[EXEC]    Triggering ${cmdInfo.match}...`, 'sys');
     pushLog(`[ROUTER]  ${cmdInfo.method} ${requestUrl}`, 'sys');
@@ -385,6 +413,10 @@ export default function QuantumTerminal() {
         }
     } catch (err: any) {
          pushLog(`[FAULT]   Network failure: ${err.message}`, 'error');
+    }
+
+    if (lockHash) {
+        pushLog(`[PGL]     Operation committed. Evidence Hash: ${lockHash}`, 'pur');
     }
 
     updateTele(0, 1);

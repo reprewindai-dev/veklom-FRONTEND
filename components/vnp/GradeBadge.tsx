@@ -10,7 +10,9 @@ interface GradeBadgeProps {
 }
 
 export default function GradeBadge({ grade, composite, size = "md" }: GradeBadgeProps) {
-  const band = gradeForScore(composite);
+  const band = grade === "N/A"
+    ? { color: "#A1A1A6", bgColor: "rgba(161,161,166,0.1)", borderColor: "rgba(161,161,166,0.25)" }
+    : gradeForScore(composite);
 
   const sizes = {
     sm: { badge: "text-xs px-1.5 py-0.5", score: "text-lg" },
@@ -34,7 +36,7 @@ export default function GradeBadge({ grade, composite, size = "md" }: GradeBadge
         className={`font-light tabular-nums ${sizes[size].score}`}
         style={{ color: band.color }}
       >
-        {composite.toFixed(1)}
+        {grade === "N/A" ? "N/A" : composite.toFixed(1)}
       </span>
     </div>
   );

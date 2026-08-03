@@ -200,7 +200,7 @@ export default function ControlNodePage() {
   const systemOperational = canonical.data?.state === "healthy";
   const isWorkspaceReady = !!workspace.data?.id;
   const proofCount = canonical.data?.usage.proof_count ?? 0;
-  const expectedProofCount = canonical.data?.canonical_source_count ?? 2;
+  const expectedProofCount = canonical.data?.canonical_source_count ?? 5;
   const canonicalSources = canonical.data?.sources ?? [];
   const byosSource = canonicalSources.find((source) => source.id === "byos");
   const capiSource = canonicalSources.find((source) => source.id === "capi" || source.legacy_id === "cappo");

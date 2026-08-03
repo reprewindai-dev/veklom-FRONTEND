@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-capi/edge';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
@@ -14,9 +14,17 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Route gpc.veklom.com to /gpc
+  if (hostname === 'gpc.veklom.com') {
+    if (url.pathname === '/') {
+      url.pathname = '/gpc';
+      return NextResponse.rewrite(url);
+    }
+  }
+
   // interlink-cAPI: Edge Interception for capabilities
   if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
-    const identity = getExecutionIdentity(request);
+    const identity = await getExecutionIdentity(request);
     
     // We determine required capabilities based on the route.
     const requiredCaps = ['openai_api_key']; // Default for these restricted routes

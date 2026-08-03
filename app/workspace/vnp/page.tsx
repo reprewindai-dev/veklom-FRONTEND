@@ -28,35 +28,24 @@ export default function WorkspaceVNPPage() {
   const [apis, setApis] = useState<ApiState[]>([]);
 
   useEffect(() => {
-    // Generate simulated dynamic state for the 30 APIs for the UI
-    const generatedApis: ApiState[] = TOP_APIS.map((apiDef, idx) => {
-      // Deterministic but varied pseudo-random base scores based on idx
-      const baseLat = 30 + (idx * 5) % 80; 
-      const baseScore = 99 - (idx % 12);
-      
-      return {
-        id: apiDef.id,
-        name: apiDef.name,
-        endpoint: `https://${apiDef.name}`,
-        version: apiDef.version,
-        compositeScore: baseScore,
-        x402Ready: true,
-        stabilityRating: baseScore >= 96 ? "AAA" : baseScore >= 92 ? "AA+" : baseScore >= 88 ? "AA" : "A",
-        grade: baseScore >= 96 ? "AAA" : baseScore >= 92 ? "AA+" : baseScore >= 88 ? "AA" : "A",
-        regions: {
-          "us-east": { p99: baseLat, p95: baseLat - 5, p50: baseLat - 10, uptime: 99.99, errorRate: 0.01, throughput: 12000, geoAdjustedLatency: Math.max(8, baseLat - 15) },
-          "us-west": { p99: baseLat + 40, p95: baseLat + 35, p50: baseLat + 30, uptime: 99.9, errorRate: 0.05, throughput: 11500, geoAdjustedLatency: Math.max(8, baseLat - 15 + 2) },
-          "eu-west": { p99: baseLat + 90, p95: baseLat + 85, p50: baseLat + 80, uptime: 99.8, errorRate: 0.1, throughput: 10000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 5) },
-          "ap-northeast": { p99: baseLat + 150, p95: baseLat + 145, p50: baseLat + 140, uptime: 99.5, errorRate: 0.2, throughput: 8000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 12) },
-          "ap-southeast": { p99: baseLat + 210, p95: baseLat + 205, p50: baseLat + 190, uptime: 99.1, errorRate: 0.5, throughput: 6000, geoAdjustedLatency: Math.max(8, baseLat - 15 + 20) },
-        }
-      } as unknown as ApiState;
-    });
+    const fetchApis = async () => {
+      try {
+        const res = await fetch('/api/v1/benchmarks/leaderboard');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        
+        const fetchedApis = Array.isArray(data) ? data : (data.leaderboard || data.scores || []);
+        
+        // Sort by composite score
+        fetchedApis.sort((a: ApiState, b: ApiState) => (b.compositeScore || 0) - (a.compositeScore || 0));
+        setApis(fetchedApis);
+      } catch (err) {
+        console.error("Failed to fetch VNP leaderboard", err);
+        setApis([]);
+      }
+    };
     
-    // Sort by composite score
-    generatedApis.sort((a, b) => b.compositeScore - a.compositeScore);
-    
-    setApis(generatedApis);
+    fetchApis();
   }, []);
 
   return (
@@ -84,7 +73,7 @@ export default function WorkspaceVNPPage() {
           <div className="flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] px-3 py-1.5 rounded text-[10px] font-mono font-bold text-emerald-400">
               <CheckCircle size={12} />
-              Demo Mode / 5-Region Edge View
+              Connected / 5-Node Signed Edge
             </span>
           </div>
         </div>

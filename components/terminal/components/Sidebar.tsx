@@ -123,9 +123,6 @@ export default function Sidebar({
       title: 'TREASURY',
       items: [
         { id: 'treasury', name: 'Workspace Treasury', icon: Wallet, href: '/treasury' },
-        { id: 'api-keys', name: 'API Keys', icon: KeyRound, href: '/treasury?tab=keys' },
-        { id: 'webhooks', name: 'Webhooks', icon: Webhook, href: '/treasury?tab=webhooks' },
-        { id: 'integrations', name: 'Integrations & Settings', icon: Settings, href: '/treasury?tab=settings' },
       ]
     }
   ];

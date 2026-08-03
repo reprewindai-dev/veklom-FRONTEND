@@ -244,7 +244,7 @@ export default function RbacPanel({ auditLogs, onExportReport, exporting }: Rbac
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 font-mono">
-                <ClipboardList className="w-4.5 h-4.5 text-emerald-400" /> PGL Genome Ledger ({filteredLogs.length})
+                <ClipboardList className="w-4.5 h-4.5 text-emerald-400" /> PGL Gnomledger ({filteredLogs.length})
               </h3>
               <span className="text-[9px] bg-[#0c121e] px-2.5 py-0.5 text-slate-500 rounded font-mono font-bold border border-slate-800">
                 Lineage View
