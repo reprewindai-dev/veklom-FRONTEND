@@ -150,11 +150,6 @@ const nextConfig = {
         destination: `${BACKEND_URL}/protocol.json`,
       },
       {
-        // PGL calls
-        source: "/api/v1/pgl/:path*",
-        destination: `${process.env.PGL_URL || "https://pgl.veklom.com"}/api/v1/pgl/:path*`,
-      },
-      {
         // CAPPO calls
         source: "/api/v1/cappo/:path*",
         destination: `${process.env.CAPPO_URL || "https://cappo.veklom.com"}/api/v1/cappo/:path*`,
