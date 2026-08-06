@@ -27,7 +27,7 @@ export default function CapabilityHome() {
   return (
     <section className="mx-auto max-w-7xl px-5 py-8 lg:px-10 lg:py-12">
       <motion.div initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-        <div><div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-cos-accent"><Sparkles size={13} />VEKLOM · M2M TRUST INFRASTRUCTURE</div><h1 className="text-4xl font-semibold tracking-tight text-cos-text md:text-5xl">What do you need to do?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">The trust layer machines pass through — prove identity, capability, governance, execution, evidence, and settlement.</p></div>
+        <div><div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-cos-accent"><Sparkles size={13} />VEKLOM · MACHINE-TO-MACHINE TRUST INFRASTRUCTURE</div><h1 className="text-4xl font-semibold tracking-tight text-cos-text md:text-5xl">What do you need to do?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">The trust layer machines pass through — prove identity, capability, governance, execution, evidence, and settlement.</p></div>
         <div className="flex items-center gap-2 text-xs text-cos-steel"><ProofBadge status="Present" /> <span>Catalog metadata</span></div>
       </motion.div>
       <CapabilitySearch value={query} onChange={setQuery} />
