@@ -6,16 +6,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const url = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : baseUrl
 
   return [
-    { url: ${url}, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
-    { url: ${url}/overview, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    { url: ${url}/vnp, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: ${url}/pgl, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: ${url}/gpc, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: ${url}/spine, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: ${url}/trust, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: ${url}/compliance, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: ${url}/blog, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
-    { url: ${url}/privacy, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 },
-    { url: ${url}/legal, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 }
+    { url: `${url}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
+    { url: `${url}/overview`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${url}/vnp`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${url}/pgl`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${url}/gpc`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${url}/spine`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${url}/trust`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${url}/compliance`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${url}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${url}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${url}/legal`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 }
   ]
 }
