@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
   // Set COS (Capability Optimistic System) as the unified public frontend
   if (url.pathname === '/' || url.pathname === '/workspace' || url.pathname === '/overview') {
-    return NextResponse.redirect(new URL('/os', request.url));
+    return NextResponse.redirect(new URL('/control-node', request.url));
   }
 
   // interlink-cAPI: Edge Interception for capabilities
