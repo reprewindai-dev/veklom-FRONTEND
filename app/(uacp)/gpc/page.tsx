@@ -170,7 +170,7 @@ export default function GpcPage() {
               Executing: {progress.completed}/{progress.total} nodes
             </span>
             <span className="text-sm text-gray-600">
-              {progress.percent.toFixed(0)}%
+              {Number(progress?.percent || 0).toFixed(0)}%
             </span>
           </div>
           <div className="w-full h-2 bg-gray-300 rounded-full overflow-hidden">

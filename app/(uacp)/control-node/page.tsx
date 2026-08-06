@@ -256,7 +256,7 @@ export default function ControlNodePage() {
   }
 
   const fmt = (n: number | undefined) =>
-    n === undefined ? "—" : n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
+    n === undefined || n === null ? "—" : Number(n) >= 1_000_000 ? `${(Number(n) / 1_000_000).toFixed(1)}M` : Number(n) >= 1_000 ? `${(Number(n) / 1_000).toFixed(1)}K` : String(n);
   const spendToday = usageSummary.total_cost_usd;
   const hasSpendToday = typeof spendToday === "number" && Number.isFinite(spendToday);
   const proofLabel = (ok: boolean | undefined, loading: boolean) =>
