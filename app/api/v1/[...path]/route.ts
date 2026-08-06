@@ -7,8 +7,8 @@ import { ContainerNodeHealth } from '../../../../types';
 
 let skillsRegistry = [...INITIAL_SKILLS_REGISTRY];
 
-export async function GET(req: NextRequest, { params }: { params: { path: string[] } }) {
-  const pathParts = params.path;
+export async function GET(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  const { path: pathParts } = await context.params;
   const fullPath = pathParts.join('/');
 
   if (fullPath === 'health') {
@@ -98,8 +98,8 @@ export async function GET(req: NextRequest, { params }: { params: { path: string
   return NextResponse.json({ error: 'Not Found' }, { status: 404 });
 }
 
-export async function POST(req: NextRequest, { params }: { params: { path: string[] } }) {
-  const pathParts = params.path;
+export async function POST(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  const { path: pathParts } = await context.params;
   const fullPath = pathParts.join('/');
 
   if (fullPath === 'capi/invoke') {
