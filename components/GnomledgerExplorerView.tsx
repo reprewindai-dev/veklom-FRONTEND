@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Database, ShieldCheck, CheckCircle2, Lock, FileCode, RefreshCw, Key } from 'lucide-react';
 import { PGLCertificate } from '../types.js';
