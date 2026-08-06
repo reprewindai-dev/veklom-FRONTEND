@@ -51,7 +51,7 @@ export default function OverviewDashboard() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
             <Link href="/" className="text-white transition-colors">Overview</Link>
-            <Link href="/terminal" className="hover:text-white transition-colors">Terminal</Link>
+            <Link href="/os" className="hover:text-white transition-colors">Capability OS</Link>
             <Link href="/settings" className="hover:text-white transition-colors">Integrations & Settings</Link>
           </div>
           <div className="flex items-center gap-4 text-sm font-medium">
@@ -108,9 +108,9 @@ export default function OverviewDashboard() {
 
           {/* Quick Actions */}
           <motion.div variants={fadeUpVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link href="/terminal" className="bg-[#111111] border border-white/10 rounded-xl p-8 hover:border-[#FFB800]/50 transition-colors flex items-center justify-between group">
+            <Link href="/os" className="bg-[#111111] border border-white/10 rounded-xl p-8 hover:border-[#FFB800]/50 transition-colors flex items-center justify-between group">
               <div>
-                <h4 className="text-xl font-bold mb-2">Launch Operator Terminal</h4>
+                <h4 className="text-xl font-bold mb-2">Launch Capability OS</h4>
                 <p className="text-sm text-gray-500">Dispatch governed intent & view telemetry</p>
               </div>
               <ArrowRight className="w-6 h-6 text-gray-600 group-hover:text-[#FFB800] transition-colors" />
