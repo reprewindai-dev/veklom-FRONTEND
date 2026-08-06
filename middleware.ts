@@ -22,8 +22,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Set COS (Capability Optimistic System) as the unified public frontend
-  if (url.pathname === '/' || url.pathname === '/workspace' || url.pathname === '/overview') {
+  // Redirect old routes to COS (Capability Optimistic System)
+  if (url.pathname === '/workspace' || url.pathname === '/overview') {
     return NextResponse.redirect(new URL('/os', request.url));
   }
 
