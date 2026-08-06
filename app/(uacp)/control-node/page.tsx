@@ -509,7 +509,7 @@ export default function ControlNodePage() {
                         <span className="text-[9px] bg-[#FF003C]/10 text-[#FF003C] border border-[#FF003C]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">BLOCKING</span>
                       </div>
                       <div className="text-[11px] text-white/50 mb-3 font-mono leading-relaxed">Identity graph unavailable for current workspace.</div>
-                      <Link href="/onboarding/pgl">
+                      <Link href="/os/onboarding">
                         <button className="text-[9px] px-3 py-1.5 border border-[#FF003C]/40 bg-[#FF003C]/10 hover:bg-[#FF003C]/20 text-white/90 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,0,60,0.15)]">RETRY SYNC</button>
                       </Link>
                     </div>

@@ -104,6 +104,11 @@ const nextConfig = {
       },
       // CANONICAL REDIRECTS: Legacy workspace → UACP v5 canonical routes
       {
+        source: "/onboarding/pgl",
+        destination: "/os/onboarding",
+        permanent: true,
+      },
+      {
         source: "/dashboard",
         destination: "/control-node",
         permanent: false,
