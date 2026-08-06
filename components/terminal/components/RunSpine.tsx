@@ -399,7 +399,7 @@ from vercel_ai import generate_text
 
 # 1. Python Vercel AI SDK Gateway middleware
 result = generate_text(
-    model="gpt-4o",
+    model="llama3.2:1b",
     middleware=pgl_middleware(
         workspace_id="0x7fca4b76a086",
         enforce_sla=True
@@ -411,7 +411,7 @@ import { pglMiddleware } from '@veklom/sdk';
 
 // 1. Inbound zero-trust audit wrapper for Vercel AI SDK
 const { text } = await generateText({
-  model: openai('gpt-4o'),
+  model: openai('llama3.2:1b'),
   middleware: pglMiddleware({
     workspaceId: '0x7fca4b76a086',
     enforceSLA: true

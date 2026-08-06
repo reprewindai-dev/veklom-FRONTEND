@@ -22,6 +22,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Set COS (Capability Optimistic System) as the unified public frontend
+  if (url.pathname === '/' || url.pathname === '/workspace' || url.pathname === '/overview') {
+    return NextResponse.redirect(new URL('/os', request.url));
+  }
+
   // interlink-cAPI: Edge Interception for capabilities
   if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
     const identity = await getExecutionIdentity(request);

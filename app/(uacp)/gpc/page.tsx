@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Shell from '@/components/Shell';
 import { useGpc } from '@/lib/gpc/useGpc';
 import { GpcCanvas, GpcPropertyPanel } from '@/components/gpc/GpcCanvas';
@@ -64,6 +64,11 @@ export default function GpcPage() {
   );
   const [pipelineName, setPipelineName] = useState('Untitled Pipeline');
   const [deploymentStatus, setDeploymentStatus] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Compile pipeline
   const handleCompile = useCallback(async () => {
@@ -103,6 +108,10 @@ export default function GpcPage() {
     setShowTestModal(false);
     setDeploymentStatus('tested');
   }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <Shell>

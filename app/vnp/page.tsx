@@ -140,47 +140,77 @@ export default function VNPLandingPage() {
         </motion.div>
       </section>
 
-      {/* Why VNP Section */}
+      {/* Dimensions of Trust Section */}
       <section id="protocol" className="py-24 px-6 border-t border-white/5 bg-[#0B0B0D] relative scroll-mt-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 max-w-3xl mx-auto">
             <span className="inline-flex items-center gap-1 text-[#FFB800] text-xs font-bold uppercase tracking-widest bg-[#FFB800]/5 border border-[#FFB800]/10 px-3 py-1 rounded-full mb-4">
-              <Activity className="w-3 h-3" /> System Vulnerabilities
+              <Activity className="w-3 h-3" /> Observable Reality
             </span>
-            <h2 className="text-4xl font-extrabold tracking-tight mb-6">Why API Benchmarking is Critical Today</h2>
+            <h2 className="text-4xl font-extrabold tracking-tight mb-6">VNP does not measure claims. It measures observable reality.</h2>
             <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
-              We are transitioning from human-driven interfaces to autonomous agentic routing. In a world where AI orchestrates thousands of API calls per second, silent degradation is fatal.
+              A provider says "99.99% uptime." That's a claim. VNP measures multiple dimensions of trust from independent regions, delivering mathematical proof of network health, compliance, and settlement.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="card obsidian-glass p-8 flex flex-col justify-between hover:border-[#FFB800]/30 transition-all group duration-300">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
               <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <Cpu className="w-6 h-6 text-[#FFB800]" />
+                <Globe className="w-6 h-6 text-[#FFB800]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Agentic Web Routing</h3>
+              <h3 className="text-xl font-bold mb-3">Physical Trust</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                When an AI agent chooses an LLM or financial provider, it requires millisecond-accurate latency maps. VNP provides the oracle data required for intelligent fallback and automated failover.
+                Latency, regional consistency, and network health observed directly from the global mesh.
               </p>
             </div>
             
-            <div className="card obsidian-glass p-8 flex flex-col justify-between hover:border-[#FFB800]/30 transition-all group duration-300">
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
               <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+                <Cpu className="w-6 h-6 text-[#FFB800]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Zero-Trust Telemetry</h3>
+              <h3 className="text-xl font-bold mb-3">Execution Trust</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Do not trust provider-controlled status pages. VNP uses decentralized Edge Probes that execute 4-phase network timings (DNS, TCP, TLS, TTFB) and sign the results using Ed25519 cryptography.
+                Did the execution complete successfully? VNP tracks deterministic execution outcomes across runtimes.
               </p>
             </div>
 
-            <div className="card obsidian-glass p-8 flex flex-col justify-between hover:border-[#FFB800]/30 transition-all group duration-300">
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
+                <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Evidence Trust</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Is there valid Proof of Graph Ledger (PGL) evidence backing the claim? VNP anchors claims to cryptographic proof.
+              </p>
+            </div>
+
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
+                <Shield className="w-6 h-6 text-[#FFB800]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Governance Trust</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Did the execution satisfy organizational policy, jurisdiction mandates, and required standards?
+              </p>
+            </div>
+
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
               <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
                 <Lock className="w-6 h-6 text-[#FFB800]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">SLA Performance Bonds</h3>
+              <h3 className="text-xl font-bold mb-3">Economic Trust</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                VNP connects to real x402 USDC route payments and settlement evidence through the BYOS backend. Enforcement status is shown from backend-backed receipts and ledger events.
+                Was the x402 settlement completed correctly? VNP links SLA performance directly to verifiable payments.
+              </p>
+            </div>
+
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
+                <Activity className="w-6 h-6 text-[#FFB800]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Confidence Score</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                A unified metric representing how certain we are about the overall measurement, derived from the Trust Spine.
               </p>
             </div>
           </div>
