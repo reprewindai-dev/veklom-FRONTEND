@@ -107,6 +107,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     "Accept": "application/json",
     ...(opts.headers || {}),
   };
+  if (typeof window !== "undefined") {
+    const env = window.localStorage.getItem("veklom.environment") || "sandbox";
+    headers["X-Veklom-Environment"] = env;
+  }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (!opts.unauth) {
     let tok = getToken();
