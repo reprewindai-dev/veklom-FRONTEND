@@ -216,7 +216,7 @@ export default function SovereignOperatorRegistry() {
             Domain: <span className="text-white">veklomid.base.eth</span>
           </span>
           <button 
-            onClick={() => router.push("/onboarding/pgl")}
+            onClick={() => router.push("/os/onboarding")}
             className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded font-bold transition-colors"
           >
             PGL Identity Onboarding
@@ -277,7 +277,7 @@ export default function SovereignOperatorRegistry() {
             </div>
           </div>
           <button 
-            onClick={() => router.push("/onboarding/pgl")}
+            onClick={() => router.push("/os/onboarding")}
             className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded text-xs font-bold transition-colors"
           >
             Start PGL Onboarding

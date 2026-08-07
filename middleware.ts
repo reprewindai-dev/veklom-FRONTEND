@@ -22,6 +22,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Redirect old routes to COS (Capability Optimistic System)
+  if (url.pathname === '/workspace' || url.pathname === '/overview') {
+    return NextResponse.redirect(new URL('/os', request.url));
+  }
+
   // interlink-cAPI: Edge Interception for capabilities
   if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
     const identity = await getExecutionIdentity(request);

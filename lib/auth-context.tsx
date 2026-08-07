@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGithub = useCallback(() => {
     if (typeof window === "undefined") return;
     // Land back on the PGL onboarding route after the OAuth round-trip.
-    const next = `${BASE_PATH}/onboarding/pgl`;
+    const next = `${BASE_PATH}/os/onboarding`;
     window.location.href = apiUrl("/api/v1/auth/github/login", { next });
   }, []);
 

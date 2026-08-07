@@ -104,6 +104,11 @@ const nextConfig = {
       },
       // CANONICAL REDIRECTS: Legacy workspace → UACP v5 canonical routes
       {
+        source: "/onboarding/pgl",
+        destination: "/os/onboarding",
+        permanent: true,
+      },
+      {
         source: "/dashboard",
         destination: "/control-node",
         permanent: false,
@@ -148,11 +153,6 @@ const nextConfig = {
         // Serve the protocol manifest from the backend
         source: "/protocol.json",
         destination: `${BACKEND_URL}/protocol.json`,
-      },
-      {
-        // PGL calls
-        source: "/api/v1/pgl/:path*",
-        destination: `${process.env.PGL_URL || "https://pgl.veklom.com"}/api/v1/pgl/:path*`,
       },
       {
         // CAPPO calls
