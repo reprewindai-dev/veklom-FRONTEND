@@ -9,10 +9,10 @@ import { VeklomLogo } from "./VeklomLogo";
 import { ProofBadge } from "./ProofBadge";
 import { CommandPalette } from "./CommandPalette";
 import { TerminalConsole } from "./TerminalConsole";
+import { ProdSandboxToggle } from "./ProdSandboxToggle";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, loading } = useAuth();
-  const [sandbox, setSandbox] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [clock, setClock] = useState("");
@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="pointer-events-none absolute inset-x-0 bottom-[-1px] h-px bg-gradient-to-r from-transparent via-cos-accent/55 to-transparent" />
           <div className="flex items-center gap-5"><VeklomLogo /><span className="hidden border-l border-cos-border pl-5 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel md:inline">Capability Operating System</span><span className="hidden rounded border border-cos-accent/25 px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-cos-steel lg:inline">Machine-to-Machine Trust Infrastructure</span></div>
           <div className="flex items-center gap-2 text-xs">
-            <button onClick={() => setSandbox((value) => !value)} className="rounded-full border border-cos-border bg-cos-surface2/60 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-cos-steel transition hover:border-cos-accent/50"><span className={sandbox ? "text-cos-warn" : "text-cos-accent"}>{sandbox ? "SANDBOX" : "PROD MODE"}</span></button>
+            <ProdSandboxToggle />
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
             <button onClick={() => setPaletteOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>

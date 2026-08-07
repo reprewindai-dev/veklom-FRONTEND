@@ -64,7 +64,7 @@ export function EvidenceHarness() {
             Cryptographic proof of paid compute. Review execution identity tokens and HMAC hashes across the governed network.
           </p>
         </div>
-        <ProofBadge status={logs.length > 0 ? "Verified" : "Pending"} />
+        <ProofBadge status={logs.length > 0 ? "Verified" : "Needs proof"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

@@ -69,7 +69,7 @@ export function ExecuteHarness() {
             Run a mounted capability through the governed runtime and observe the replayable trace.
           </p>
         </div>
-        <ProofBadge status={trace ? "Verified" : "Pending"} />
+        <ProofBadge status={trace ? "Verified" : "Needs proof"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

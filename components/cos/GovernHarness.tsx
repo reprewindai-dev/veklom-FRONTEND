@@ -56,7 +56,7 @@ export function GovernHarness() {
             Zero-Trust Middleware policies, CAPPO boundaries, and active threat telemetry.
           </p>
         </div>
-        <ProofBadge status={stats ? "Verified" : "Pending"} />
+        <ProofBadge status={stats ? "Verified" : "Needs proof"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

@@ -56,7 +56,7 @@ export function MeasureHarness() {
             Live SLA parsing, Micro-Stakes, and budget constraints across the governed namespace.
           </p>
         </div>
-        <ProofBadge status={budget ? "Verified" : "Pending"} />
+        <ProofBadge status={budget ? "Verified" : "Needs proof"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
