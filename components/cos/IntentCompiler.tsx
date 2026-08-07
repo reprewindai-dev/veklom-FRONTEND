@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useMemo } from "react";
 import { Coins, Sliders, Check, ShieldCheck } from "lucide-react";
 

@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { WorkspaceScaffold } from "@/components/cos/WorkspaceScaffold";
 import IntentCompiler from "@/components/cos/IntentCompiler";
 import BlueprintCanvas from "@/components/cos/BlueprintCanvas";
 import { capabilities as capabilityRegistry } from "@/lib/cos/capabilities";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+
+export const metadata: Metadata = {
+  title: "Blueprint",
+  description: "Compile and govern capability blueprints with intent-to-execution traceability inside the Veklom Capability OS.",
+};
 
 // Build the company graph dynamically from the canonical capability registry
 // (lib/cos/capabilities.ts) — this is the source of truth, not mock data.
@@ -67,14 +74,43 @@ export default function BlueprintPage() {
   const capabilities = buildCapabilities();
 
   return (
-    <WorkspaceScaffold
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Veklom", href: "https://veklom.com" },
+          { name: "Capability OS", href: "https://veklom.com/os" },
+          { name: "Blueprint" },
+        ]}
+      />
+      <WorkspaceScaffold
       stage="Blueprint"
       title="Blueprint"
       description="Shape intent into a reviewable plan before a capability is governed."
     >
       <div className="flex flex-col space-y-12 pb-12">
         <section>
-          <IntentCompiler />
+          <IntentCompiler
+            productOfferings={[
+              {
+                id: "bundle-1",
+                name: "Compliance Baseline",
+                description: "Standard compliance auditing",
+                capabilities: ["audit-trail-commit"],
+                priceModel: "Per Transaction"
+              }
+            ]}
+            capabilities={capabilityRegistry.map(cap => ({
+              id: cap.id,
+              name: cap.name,
+              description: cap.description,
+              status: "active",
+              version: "v1.0",
+              pricingModel: {
+                priceFloor: 0.05,
+                billingUnit: "per execution"
+              }
+            }))}
+          />
         </section>
 
         <section>
@@ -86,5 +122,6 @@ export default function BlueprintPage() {
         </section>
       </div>
     </WorkspaceScaffold>
+    </>
   );
 }

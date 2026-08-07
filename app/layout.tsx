@@ -90,7 +90,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -107,7 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen bg-bg-900 text-ink-50 antialiased">
+      <body className="min-h-screen bg-bg-900 text-ink-50 antialiased" suppressHydrationWarning>
         <WebMCPProvider>
           <AuthProvider>
             {children}
