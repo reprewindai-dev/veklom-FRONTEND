@@ -4,39 +4,47 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, ArrowUp, ArrowDown, Zap, Lock, ChevronRight, X, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 
+// Shapes below mirror the live cappo-backend `/api/v1/benchmarks/*` responses.
 interface APIMetrics {
   id: string;
   name: string;
   provider: string;
-  latency_p50: number;
-  latency_p95: number;
-  latency_p99: number;
-  sla_success_percent: number;
-  drift_index: number;
-  trust_score: number;
-  sovereign_tier: string;
-  staked_amount: number;
   category: string;
+  p50: number;
+  p95: number;
+  p99: number;
+  sla: number; // percentage, e.g. 99.95
+  drift: number;
+  govScore: number; // 0-100
+  devScore: number; // 0-100
+  sovereignTier: number;
+  complianceLabels: string[];
+  throughput: number;
+  uptime24h: number;
+  totalStaked: number;
+  status: 'Excellent' | 'Nominal' | 'Degraded';
 }
 
 interface StakingPool {
   id: string;
-  api_id: string;
-  api_name: string;
-  yes_price: number; // cents
-  no_price: number;
-  yes_volume: number;
-  no_volume: number;
-  target_resolution_date: string;
-  status: 'open' | 'closed' | 'resolved';
+  title: string;
+  category: string;
+  yesPrice: number; // cents
+  noPrice: number;
+  volume: number;
+  poolYes: number;
+  poolNo: number;
+  resolutionDate: string;
+  targetApi: string;
+  resolved: boolean;
+  outcome: string | null;
 }
 
 interface OracleLog {
   id: string;
-  timestamp: string;
-  api_name: string;
-  latency_ms: number;
-  success: boolean;
+  timestamp: string; // already formatted HH:MM:SS by the backend
+  source: 'AGENT' | 'ENCLAVE';
+  type: 'info' | 'success' | 'warning';
   message: string;
 }
 
@@ -138,10 +146,10 @@ export default function BenchmarksPage() {
   const scoredAPIs = useMemo(() => {
     return apis
       .map((api) => {
-        const govScore = api.trust_score;
-        const devScore = api.sla_success_percent / 100;
-        const weighted =
-          (govScore * (govWeight / 100) + devScore * ((100 - govWeight) / 100)) * 100;
+        // govScore and devScore are already 0-100 integers from the backend.
+        const gov = api.govScore ?? 0;
+        const dev = api.devScore ?? 0;
+        const weighted = gov * (govWeight / 100) + dev * ((100 - govWeight) / 100);
         return { ...api, weighted_score: weighted };
       })
       .filter(
@@ -149,9 +157,9 @@ export default function BenchmarksPage() {
       )
       .sort((a, b) => {
         if (sortBy === 'score') return b.weighted_score - a.weighted_score;
-        if (sortBy === 'latency') return a.latency_p50 - b.latency_p50;
-        if (sortBy === 'drift') return a.drift_index - b.drift_index;
-        if (sortBy === 'staked') return b.staked_amount - a.staked_amount;
+        if (sortBy === 'latency') return (a.p50 ?? 0) - (b.p50 ?? 0);
+        if (sortBy === 'drift') return (a.drift ?? 0) - (b.drift ?? 0);
+        if (sortBy === 'staked') return (b.totalStaked ?? 0) - (a.totalStaked ?? 0);
         return 0;
       });
   }, [apis, govWeight, selectedCategory, sortBy]);
@@ -339,18 +347,18 @@ export default function BenchmarksPage() {
                       <div className="grid grid-cols-3 gap-3 text-sm">
                         <div className="bg-slate-700 p-2 rounded">
                           <p className="text-slate-400 text-xs">P50 Latency</p>
-                          <p className="text-white font-semibold">{api.latency_p50}ms</p>
+                          <p className="text-white font-semibold">{api.p50 ?? 0}ms</p>
                         </div>
                         <div className="bg-slate-700 p-2 rounded">
                           <p className="text-slate-400 text-xs">SLA Success</p>
                           <p className="text-white font-semibold">
-                            {api.sla_success_percent.toFixed(1)}%
+                            {(api.sla ?? 0).toFixed(1)}%
                           </p>
                         </div>
                         <div className="bg-slate-700 p-2 rounded">
                           <p className="text-slate-400 text-xs">Drift</p>
                           <p className="text-white font-semibold">
-                            {api.drift_index.toFixed(2)}
+                            {(api.drift ?? 0).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -358,11 +366,11 @@ export default function BenchmarksPage() {
                         <div className="mt-4 pt-4 border-t border-slate-600 space-y-3">
                           <div>
                             <p className="text-xs text-slate-400 mb-1">Tier</p>
-                            <p className="text-white">{api.sovereign_tier}</p>
+                            <p className="text-white">Tier {api.sovereignTier ?? '—'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-slate-400 mb-1">Staked Amount</p>
-                            <p className="text-white">${api.staked_amount.toFixed(2)}</p>
+                            <p className="text-white">${(api.totalStaked ?? 0).toFixed(2)}</p>
                           </div>
                           <button
                             onClick={(e) => {
@@ -428,24 +436,27 @@ export default function BenchmarksPage() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-white font-semibold text-sm">
-                        {log.api_name}
+                        {log.source}
                       </p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </p>
+                      <p className="text-xs text-slate-400">{log.timestamp}</p>
                     </div>
                     <div
                       className={`px-2 py-1 rounded text-xs font-semibold ${
-                        log.success
+                        log.type === 'success'
                           ? 'bg-emerald-900 text-emerald-300'
-                          : 'bg-red-900 text-red-300'
+                          : log.type === 'warning'
+                            ? 'bg-red-900 text-red-300'
+                            : 'bg-slate-700 text-slate-300'
                       }`}
                     >
-                      {log.success ? 'OK' : 'FAIL'}
+                      {log.type === 'success'
+                        ? 'OK'
+                        : log.type === 'warning'
+                          ? 'FAIL'
+                          : 'INFO'}
                     </div>
                   </div>
                   <p className="text-sm text-slate-400">{log.message}</p>
-                  <p className="text-xs text-slate-500 mt-1">Latency: {log.latency_ms}ms</p>
                 </div>
               ))}
             </div>
@@ -467,8 +478,10 @@ export default function BenchmarksPage() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-white font-semibold">{pool.api_name}</p>
-                      <p className="text-xs text-slate-400">{pool.status}</p>
+                      <p className="text-white font-semibold">{pool.title}</p>
+                      <p className="text-xs text-slate-400">
+                        {pool.resolved ? 'resolved' : 'open'}
+                      </p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-400" />
                   </div>
@@ -476,16 +489,16 @@ export default function BenchmarksPage() {
                     <div className="bg-emerald-900 bg-opacity-30 border border-emerald-700 p-2 rounded">
                       <p className="text-emerald-300 text-xs">YES</p>
                       <p className="text-emerald-300 font-semibold">
-                        ${(pool.yes_price / 100).toFixed(2)}
+                        ${((pool.yesPrice ?? 0) / 100).toFixed(2)}
                       </p>
-                      <p className="text-emerald-400 text-xs">${pool.yes_volume}</p>
+                      <p className="text-emerald-400 text-xs">${pool.poolYes ?? 0}</p>
                     </div>
                     <div className="bg-red-900 bg-opacity-30 border border-red-700 p-2 rounded">
                       <p className="text-red-300 text-xs">NO</p>
                       <p className="text-red-300 font-semibold">
-                        ${(pool.no_price / 100).toFixed(2)}
+                        ${((pool.noPrice ?? 0) / 100).toFixed(2)}
                       </p>
-                      <p className="text-red-400 text-xs">${pool.no_volume}</p>
+                      <p className="text-red-400 text-xs">${pool.poolNo ?? 0}</p>
                     </div>
                   </div>
 
