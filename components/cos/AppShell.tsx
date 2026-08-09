@@ -9,6 +9,7 @@ import { VeklomLogo } from "./VeklomLogo";
 import { ProofBadge } from "./ProofBadge";
 import { CommandPalette } from "./CommandPalette";
 import { TerminalConsole } from "./TerminalConsole";
+import { SandboxProvider } from "@/lib/cos/sandbox";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, loading } = useAuth();
@@ -29,6 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
   const identity = loading ? "Loading identity" : me?.email || me?.name || "Requester identity unavailable";
   return (
+    <SandboxProvider value={sandbox}>
     <div className="cos-shell relative flex min-h-screen overflow-hidden bg-cos-bg font-sans text-cos-text">
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_78%_0%,rgba(0,229,255,0.13),transparent_29%),radial-gradient(circle_at_16%_92%,rgba(0,229,255,0.055),transparent_27%),linear-gradient(180deg,#0A0E1A_0%,#080B14_100%)]" />
       <div className="pointer-events-none fixed inset-0 -z-0 bg-cos-grid bg-[size:56px_56px] opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent_78%)]" />
@@ -49,5 +51,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <TerminalConsole open={terminalOpen} onClose={() => setTerminalOpen(false)} />
     </div>
+    </SandboxProvider>
   );
 }
