@@ -75,12 +75,20 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
       setRecords((current) => ({ ...current, [key]: record }));
       return { record };
     }
+    if (endpoint.path.includes("{")) {
+      const record = initialRecord(endpoint, sandbox);
+      setRecords((current) => ({ ...current, [key]: record }));
+      return { record };
+    }
     const started = performance.now();
     setLoading((current) => ({ ...current, [key]: true }));
     try {
       const data = await api<T>(endpoint.path, {
         method: endpoint.method,
         body,
+        query: { mode: sandbox ? "sandbox" : "production" },
+        headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
+        baseUrl: sandbox ? process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL : undefined,
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
       const observation: ProofObservation = isSourceOfTruthPayload(data)
@@ -123,7 +131,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   useEffect(() => {
     if (!options.autoGet) return;
     for (const endpoint of stage.endpoints) {
-      if (endpoint.method === "GET") void call(endpoint);
+      if (endpoint.method === "GET" && !endpoint.path.includes("{")) void call(endpoint);
     }
   }, [call, options.autoGet, stage.endpoints]);
 
@@ -133,6 +141,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   );
 
   const stageProof = useMemo<ProofStatus>(() => {
+    if (recordsList.some((record) => record.observation.kind === "no-route")) return "Not started";
     if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
     if (recordsList.some((record) => record.proof === "Verified")) return "Verified";
     if (recordsList.some((record) => record.proof === "Present")) return "Present";

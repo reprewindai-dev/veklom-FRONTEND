@@ -52,7 +52,7 @@ export function LeftNav({ onTerminal }: { onTerminal: () => void }) {
       <nav className="space-y-1">{spineStages.map(renderItem)}</nav>
       <div className="my-5 border-t border-cos-border" />
       <div className="mb-2 px-3 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-steel">Cross-cutting</div>
-      <nav className="space-y-1">{crossCuttingStages.map(renderItem)}</nav>
+      <nav className="space-y-1">{crossCuttingStages.filter((stage) => stage.id !== "terminal").map(renderItem)}</nav>
       <button onClick={onTerminal} className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-cos-muted transition hover:bg-cos-surface2 hover:text-cos-text">
         <Command size={16} /><span>Terminal</span><kbd className="ml-auto font-mono text-[10px] text-cos-steel">⌃`</kbd>
       </button>

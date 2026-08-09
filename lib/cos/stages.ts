@@ -60,7 +60,6 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "POST", path: "/api/v1/gpc/compile", classification: "live", response: "plan graph and proof hash" },
       { method: "GET", path: "/api/v1/gpc/stats", classification: "live", response: "plan/run decision totals" },
-      { method: "POST", path: "/api/v1/abide/plan", classification: "proxy", response: "frontend proxy response" },
     ],
   },
   {
@@ -71,8 +70,8 @@ export const stages: StageDefinition[] = [
     owner: "CAPPO",
     endpoints: [
       { method: "POST", path: "/api/v1/execution/authorize", classification: "live", response: "decision and authorization hashes" },
-      { method: "POST", path: "/api/v1/governance/assess", classification: "live", response: "governance assessment" },
-      { method: "GET", path: "/api/v1/governance/quarantine", classification: "live", response: "quarantine queue" },
+      { method: "POST", path: "/v1/governance/v2/assess", classification: "live", response: "governance assessment" },
+      { method: "GET", path: "/v1/governance/v2/quarantine", classification: "live", response: "quarantine queue" },
     ],
   },
   {
@@ -95,6 +94,7 @@ export const stages: StageDefinition[] = [
       { method: "GET", path: "/v1/audit/ledger", classification: "live", response: "audit ledger entries" },
       { method: "GET", path: "/v1/audit/verify", classification: "live", response: "ledger verification result" },
       { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "live", response: "agent ledger entries" },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "live", response: "agent chain verification result" },
     ],
   },
   {
@@ -105,6 +105,9 @@ export const stages: StageDefinition[] = [
     owner: "VNP",
     endpoints: [
       { method: "GET", path: "/v1/vnp/metrics", classification: "live", response: "measurement payload" },
+      { method: "GET", path: "/v1/vnp/leaderboard", classification: "live", response: "VNP rankings" },
+      { method: "GET", path: "/v1/vnp/validators", classification: "live", response: "validator registry" },
+      { method: "GET", path: "/v1/vnp/incidents", classification: "live", response: "protocol incidents" },
       { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "live", response: "benchmark provider array" },
       { method: "GET", path: "/api/v1/platform/pulse", classification: "live", response: "platform pulse telemetry" },
     ],
@@ -117,7 +120,7 @@ export const stages: StageDefinition[] = [
     owner: "x402",
     endpoints: [
       { method: "GET", path: "/.well-known/x402", classification: "live", response: "payment discovery document" },
-      { method: "GET", path: "/v1/pricing", classification: "live", response: "pricing response" },
+      { method: "GET", path: "/api/v1/pricing", classification: "live", response: "pricing response" },
     ],
   },
   {
@@ -129,6 +132,9 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/api/v1/agents/{id}/certificate", classification: "live", response: "certificate metadata" },
       { method: "GET", path: "/api/v1/agents/{id}/lifecycle", classification: "live", response: "lifecycle state" },
+      { method: "GET", path: "/api/v1/agents", classification: "live", response: "public agent certificate summaries" },
+      { method: "GET", path: "/v1/runs", classification: "live", response: "run EI/EAT fields when returned" },
+      { method: "POST", path: "/v1/identities/{execution_id}/revoke", classification: "live", response: "revocation state" },
     ],
     crossCutting: true,
   },
@@ -138,7 +144,11 @@ export const stages: StageDefinition[] = [
     route: "/os/tracker",
     purpose: "Compare approved intent, runtime state, and evidence for drift.",
     owner: "composed",
-    endpoints: [],
+    endpoints: [
+      { method: "GET", path: "/v1/audit/ledger", classification: "live", response: "composed evidence ledger" },
+      { method: "GET", path: "/v1/runs", classification: "live", response: "composed execution runs" },
+      { method: "GET", path: "/api/v1/platform/pulse", classification: "live", response: "composed runtime pulse" },
+    ],
     crossCutting: true,
   },
   {

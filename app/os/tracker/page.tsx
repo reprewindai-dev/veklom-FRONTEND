@@ -1,2 +1,9 @@
-import { WorkspaceScaffold } from "@/components/cos/WorkspaceScaffold";
-export default function TrackerPage() { return <WorkspaceScaffold stage="Tracker" title="Tracker" description="Compare approved intent, artifacts, runtime behavior, and evidence for drift." />; }
+"use client";
+import { useEffect } from "react";
+import { getStage } from "@/lib/cos/stages";
+import { useStageData } from "@/lib/cos/useStageData";
+import { SectionShell } from "@/components/cos/SectionShell";
+import { Pillar } from "@/components/cos/SectionPillars";
+import { JsonPanel } from "@/components/cos/StageParts";
+import { UnknownLink } from "@/components/cos/StageCollection";
+export default function TrackerPage(){const stage=getStage("tracker"),data=useStageData("tracker");const sources=[{path:"/v1/audit/ledger",label:"Evidence"},{path:"/v1/runs",label:"Execution"},{path:"/api/v1/platform/pulse",label:"Runtime"}];useEffect(()=>{for(const e of stage.endpoints)if(e.method==="GET")void data.call(e)},[data.call,stage.endpoints]);return <SectionShell stage={stage} proof={data.stageProof} records={data.records}><div className="xl:col-span-2"><Pillar title="Work" proof="Needs proof" detail="A composed tracker refuses to call a link aligned without exact returned evidence."><div className="grid gap-3 sm:grid-cols-2">{["Blueprint ↔ Plan","Plan ↔ Authorization","Authorization ↔ Execution","Execution ↔ Evidence","Evidence ↔ Settlement"].map(label=><UnknownLink key={label} label={label}/>)}</div></Pillar></div><Pillar title="Telemetry" proof="Needs proof"><JsonPanel value={data.payloads["GET /api/v1/platform/pulse"]} empty="No pulse returned — GET /api/v1/platform/pulse"/></Pillar><Pillar title="Authority" proof="Needs proof"><UnknownLink label="Authorization ↔ Execution"/></Pillar><Pillar title="Evidence" proof="Needs proof"><JsonPanel value={data.payloads["GET /v1/audit/ledger"]} empty="No ledger returned — GET /v1/audit/ledger"/></Pillar><Pillar title="Drift" proof="Needs proof"><div className="space-y-3">{sources.map(s=><UnknownLink key={s.path} label={s.label}/>)}</div></Pillar></SectionShell>}

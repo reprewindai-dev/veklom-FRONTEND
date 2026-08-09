@@ -27,3 +27,7 @@ describe("Capability OS proof derivation", () => {
     expect(deriveProofStatus({ kind: "failed", status: 500 }, true)).toBe("Simulated");
   });
 });
+
+  it("keeps an absent route not started in sandbox mode", () => {
+    expect(deriveProofStatus({ kind: "no-route" }, true)).toBe("Not started");
+  });

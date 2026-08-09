@@ -49,6 +49,7 @@ export interface RequestOpts {
   unauth?: boolean;
   signal?: AbortSignal;
   headers?: Record<string, string>;
+  baseUrl?: string;
 }
 
 const PUBLIC_ROUTE_PREFIXES = [
@@ -80,9 +81,9 @@ export function apiBaseUrl(): string {
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
-function buildUrl(path: string, query?: RequestOpts["query"]): string {
+function buildUrl(path: string, query?: RequestOpts["query"], requestedBase?: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const base = apiBaseUrl() || origin;
+  const base = requestedBase || apiBaseUrl() || origin;
   // If we are calling our own Next.js server, we must include the basePath so the rewrite rules apply
   const isSameOrigin = base === origin && !path.startsWith("http");
   const fullPath = isSameOrigin ? `${BASE_PATH}${path}` : path;
@@ -127,7 +128,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     if (tok) headers["Authorization"] = `Bearer ${tok}`;
   }
 
-  const res = await fetch(buildUrl(path, opts.query), {
+  const res = await fetch(buildUrl(path, opts.query, opts.baseUrl), {
     method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
     headers,
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
