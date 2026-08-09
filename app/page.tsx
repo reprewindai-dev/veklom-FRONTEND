@@ -3,129 +3,266 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { 
-  ArrowRight, Shield, Globe, Zap, Server, Activity, Lock, Coins, 
-  FileSpreadsheet, Fingerprint, Check, Terminal, Code2, Database, 
-  Workflow, Cpu, Eye, Scale, FileText, Search, CreditCard, Radio 
+import {
+  ArrowRight, Shield, Database, Globe, Lock, Eye, Network,
+  BookOpen, ChevronRight, CheckCircle, AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const fadeUpVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const staggerContainer = {
+const stagger = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
 };
 
-export default function OverviewDashboard() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+const pillars = [
+  {
+    id: "01",
+    label: "Authority",
+    icon: Shield,
+    desc: "Who can act, what they can do, and how scope is granted — before execution begins.",
+    detail: "Policy-bound access control with scoped, revocable grants.",
+  },
+  {
+    id: "02",
+    label: "Policy",
+    icon: Lock,
+    desc: "Rules are evaluated before execution, not retroactively narrated after the fact.",
+    detail: "CAPPO enforces Zero-Trust middleware on every inbound request.",
+  },
+  {
+    id: "03",
+    label: "Evidence",
+    icon: Database,
+    desc: "Consequential actions leave a queryable, cryptographically anchored trail.",
+    detail: "GnomLedger (PGL) writes append-only Proof-of-Graph records signed by LockerPhycer.",
+  },
+  {
+    id: "04",
+    label: "Sovereignty",
+    icon: Globe,
+    desc: "BYOS, tenant isolation, data portability, and operator control without vendor lock-in.",
+    detail: "Your models, your servers, your data. Ollama-first. No mandatory cloud custody.",
+  },
+  {
+    id: "05",
+    label: "Federation",
+    icon: Network,
+    desc: "Independent nodes coordinate without surrendering their own authority boundaries.",
+    detail: "VNP mesh over WireGuard. Nodes attest to each other; no central trust anchor required.",
+  },
+  {
+    id: "06",
+    label: "Transparency",
+    icon: Eye,
+    desc: "Roadmap, build log, known limitations, and incident records — published without euphemisms.",
+    detail: "Trust is earned through repeated, verifiable behavior — not promises.",
+  },
+];
 
-  const pipelineSteps = [
-    { id: "01", name: "Messy Intent", icon: FileText, desc: "Raw ingestion of human goals & docs", status: "Live", color: "text-blue-400" },
-    { id: "02", name: "ABIDE Blueprint", icon: FileSpreadsheet, desc: "Compile to Sovereign Plan IR", status: "Live", color: "text-blue-400" },
-    { id: "03", name: "GPC Pipeline", icon: Workflow, desc: "Visual pipeline construction", status: "Stubbed", color: "text-amber-400" },
-    { id: "04", name: "RepoGate", icon: Search, desc: "AST Zero-Trust Inspection", status: "Live", color: "text-blue-400" },
-    { id: "05", name: "UACP / CAPPO", icon: Shield, desc: "Authorization & Tenant Isolation", status: "Blocked", color: "text-red-400", sub: "(Requires Auth)" },
-    { id: "06", name: "cAPI", icon: Cpu, desc: "Capability Execution Mesh", status: "Live", color: "text-green-400" },
-    { id: "07", name: "GnomLedger", icon: Database, desc: "Immutable PGL Evidence", status: "Connected", color: "text-blue-400" },
-    { id: "08", name: "x402 Settlement", icon: CreditCard, desc: "HTTP 402 Micro-payments", status: "Planned", color: "text-gray-500" },
-    { id: "09", name: "VNP Monitoring", icon: Radio, desc: "Passive Cyber Sonar", status: "Live", color: "text-blue-400" }
-  ];
+const systemStatus = [
+  { name: "api.veklom.com", status: "operational", label: "BYOS API" },
+  { name: "capi.veklom.com", status: "operational", label: "cAPI Mesh" },
+  { name: "abide.veklom.com", status: "operational", label: "ABIDE" },
+  { name: "pgl.veklom.com", status: "operational", label: "GnomLedger" },
+  { name: "control.veklom.com", status: "operational", label: "Control Plane" },
+  { name: "Ollama Node 5", status: "operational", label: "Inference (167.233.202.195)" },
+];
+
+export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white selection:bg-[#FFB800]/30 font-sans">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#050505]/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <main className="min-h-screen bg-[#060608] text-white font-sans selection:bg-blue-500/20">
+
+      {/* ── Navigation ─────────────────────────────────────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#060608]/90 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded flex items-center justify-center overflow-hidden">
-              <img src="/logo-square.png" alt="Veklom Logo" className="w-full h-full object-cover" />
+            <div className="w-7 h-7 rounded overflow-hidden">
+              <img src="/logo-square.png" alt="Veklom" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold tracking-wider text-lg">VEKLOM CONTROL PLANE</span>
+            <span className="font-semibold tracking-widest text-sm text-white/80 uppercase">VEKLOM</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <Link href="/" className="text-white transition-colors">Overview</Link>
+
+          <div className="hidden md:flex items-center gap-8 text-xs font-medium text-white/40 tracking-wide uppercase">
+            <Link href="/" className="text-white/90 hover:text-white transition-colors">Overview</Link>
             <Link href="/os" className="hover:text-white transition-colors">Capability OS</Link>
-            <Link href="/settings" className="hover:text-white transition-colors">Integrations & Settings</Link>
+            <Link href="/charter" className="hover:text-white transition-colors">Trust Charter</Link>
+            <Link href="/settings" className="hover:text-white transition-colors">Integrations</Link>
           </div>
-          <div className="flex items-center gap-4 text-sm font-medium">
-             <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded border border-red-500/30 font-mono text-xs">
-              UNAUTHENTICATED (SYSTEM DEFAULT)
-             </span>
-          </div>
+
+          <Link
+            href="/os"
+            className="flex items-center gap-2 text-xs font-semibold bg-white text-black px-4 py-1.5 rounded hover:bg-white/90 transition-colors tracking-wide"
+          >
+            Control Plane <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
       </nav>
 
-      {/* Main Dashboard */}
-      <section className="pt-32 pb-24 px-6 max-w-7xl mx-auto relative">
-        <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-          <motion.div variants={fadeUpVariants} className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tighter mb-4">M2M Execution Reality</h1>
-            <p className="text-xl text-gray-400 max-w-3xl leading-relaxed font-light">
-              The continuous pipeline transforming chaotic AI intent into strictly governed, mathematically verified digital execution.
-            </p>
+      {/* ── Hero ───────────────────────────────────────────────────── */}
+      <section className="pt-40 pb-28 px-6 max-w-6xl mx-auto">
+        <motion.div initial="hidden" animate={mounted ? "visible" : "hidden"} variants={stagger}>
+
+          <motion.div variants={fadeUp} className="mb-3">
+            <span className="text-[11px] font-mono font-semibold text-blue-400/80 tracking-[0.2em] uppercase">
+              Sovereign Runtime Infrastructure
+            </span>
           </motion.div>
 
-          {/* Pipeline Visualization */}
-          <motion.div variants={fadeUpVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {pipelineSteps.map((step, idx) => (
-              <div key={step.id} className="bg-[#111111] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-white/20 transition-all">
-                {/* Connector Line (Desktop) */}
-                {idx % 3 !== 2 && idx < pipelineSteps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 right-0 w-6 h-[1px] bg-white/10 translate-x-full z-0" />
-                )}
-                
-                <div className="flex justify-between items-start mb-6">
-                  <div className={`p-3 rounded-lg bg-white/5 border border-white/5 ${step.color}`}>
-                    <step.icon className="w-6 h-6" />
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs font-mono text-gray-500 font-bold">{step.id}</span>
-                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border 
-                      ${step.status === 'Live' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                        step.status === 'Connected' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                        step.status === 'Stubbed' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        step.status === 'Blocked' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                      }`}>
-                      {step.status}
-                    </span>
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-bold mb-2 text-gray-200 group-hover:text-white transition-colors">{step.name}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
-                {step.sub && <p className="text-xs text-red-400 mt-2 font-mono">{step.sub}</p>}
-              </div>
-            ))}
+          <motion.h1 variants={fadeUp} className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[0.95] mb-8 text-white">
+            Governed authority<br className="hidden md:block" />
+            <span className="text-white/30"> for autonomous systems.</span>
+          </motion.h1>
+
+          <motion.p variants={fadeUp} className="text-lg md:text-xl text-white/50 max-w-2xl leading-relaxed font-light mb-12">
+            VEKLOM is sovereign runtime infrastructure for deploying AI agents with policy-bound access,
+            tenant isolation, verifiable evidence, and human override.
+          </motion.p>
+
+          <motion.div variants={fadeUp} className="flex items-center gap-4">
+            <Link
+              href="/os"
+              className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-md font-semibold text-sm hover:bg-white/90 transition-colors"
+            >
+              Explore the control plane <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/charter"
+              className="flex items-center gap-2 border border-white/10 text-white/60 px-6 py-3 rounded-md font-semibold text-sm hover:border-white/30 hover:text-white transition-colors"
+            >
+              <BookOpen className="w-4 h-4" /> Read the Trust Charter
+            </Link>
           </motion.div>
 
-          {/* Quick Actions */}
-          <motion.div variants={fadeUpVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link href="/os" className="bg-[#111111] border border-white/10 rounded-xl p-8 hover:border-[#FFB800]/50 transition-colors flex items-center justify-between group">
-              <div>
-                <h4 className="text-xl font-bold mb-2">Launch Capability OS</h4>
-                <p className="text-sm text-gray-500">Dispatch governed intent & view telemetry</p>
-              </div>
-              <ArrowRight className="w-6 h-6 text-gray-600 group-hover:text-[#FFB800] transition-colors" />
-            </Link>
-            
-            <Link href="/settings" className="bg-[#111111] border border-white/10 rounded-xl p-8 hover:border-white/30 transition-colors flex items-center justify-between group">
-              <div>
-                <h4 className="text-xl font-bold mb-2">System Integrations</h4>
-                <p className="text-sm text-gray-500">Manage LLM keys & backend endpoints</p>
-              </div>
-              <ArrowRight className="w-6 h-6 text-gray-600 group-hover:text-white transition-colors" />
-            </Link>
-          </motion.div>
         </motion.div>
       </section>
+
+      {/* ── Doctrine ───────────────────────────────────────────────── */}
+      <section className="px-6 max-w-6xl mx-auto pb-24">
+        <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-10 md:p-14">
+          <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-6">The VEKLOM Doctrine</p>
+          <blockquote className="text-xl md:text-2xl text-white/80 leading-relaxed font-light max-w-4xl">
+            We build trust through evidence, not promises. We disclose limits, own failures,
+            preserve operator control, and design systems where authority must be{" "}
+            <span className="text-white font-medium">earned</span>,{" "}
+            <span className="text-white font-medium">scoped</span>, and{" "}
+            <span className="text-white font-medium">revocable</span>.
+          </blockquote>
+          <div className="mt-8 pt-8 border-t border-white/[0.06]">
+            <p className="text-sm text-white/40 leading-relaxed max-w-3xl">
+              We are not here to automate human responsibility away. We are here to give humans and agents
+              a credible framework for exercising it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6 Proof Pillars ────────────────────────────────────────── */}
+      <section className="px-6 max-w-6xl mx-auto pb-28">
+        <div className="mb-12">
+          <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-3">Architecture built on proof</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">Six pillars. All verifiable.</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden border border-white/[0.06]">
+          {pillars.map((p) => {
+            const Icon = p.icon;
+            return (
+              <div
+                key={p.id}
+                className="bg-[#060608] p-8 hover:bg-white/[0.02] transition-colors group"
+              >
+                <div className="flex items-start justify-between mb-6">
+                  <div className="p-2.5 border border-white/10 rounded-lg bg-white/[0.03] group-hover:border-white/20 transition-colors">
+                    <Icon className="w-5 h-5 text-white/60" />
+                  </div>
+                  <span className="font-mono text-[10px] text-white/20 font-bold">{p.id}</span>
+                </div>
+                <h3 className="text-lg font-bold mb-3 text-white tracking-tight">{p.label}</h3>
+                <p className="text-sm text-white/40 leading-relaxed mb-4">{p.desc}</p>
+                <p className="text-xs text-white/25 leading-relaxed font-mono border-t border-white/[0.06] pt-4">
+                  {p.detail}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── System Status ───────────────────────────────────────────── */}
+      <section className="px-6 max-w-6xl mx-auto pb-28">
+        <div className="mb-8">
+          <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-3">Current system state</p>
+          <h2 className="text-2xl font-bold tracking-tighter text-white">Live infrastructure</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {systemStatus.map((s) => (
+            <div
+              key={s.name}
+              className="flex items-center justify-between border border-white/[0.07] bg-white/[0.01] rounded-lg px-5 py-4"
+            >
+              <div>
+                <p className="text-sm font-semibold text-white/80">{s.label}</p>
+                <p className="text-[11px] font-mono text-white/30 mt-0.5">{s.name}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
+                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80">
+                  {s.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Trust Promise Strip ─────────────────────────────────────── */}
+      <section className="px-6 max-w-6xl mx-auto pb-28">
+        <div className="border border-white/[0.07] rounded-xl p-8 md:px-12 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
+          <div className="max-w-xl">
+            <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-2">Trust Charter</p>
+            <h3 className="text-xl font-bold text-white tracking-tight mb-2">
+              Every claim maps to a verifiable artifact.
+            </h3>
+            <p className="text-sm text-white/40 leading-relaxed">
+              Repository, endpoint, benchmark, incident record, or evidence trail — if we say it&apos;s live, we can prove it.
+            </p>
+          </div>
+          <Link
+            href="/charter"
+            className="flex items-center gap-2 shrink-0 border border-white/10 text-white/60 px-6 py-3 rounded-md font-semibold text-sm hover:border-white/30 hover:text-white transition-colors"
+          >
+            Read full charter <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ─────────────────────────────────────────────────── */}
+      <footer className="border-t border-white/[0.06] px-6 py-10 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded overflow-hidden opacity-60">
+              <img src="/logo-square.png" alt="Veklom" className="w-full h-full object-cover" />
+            </div>
+            <span className="text-xs text-white/30 font-mono tracking-wider">VEKLOM CONTROL PLANE</span>
+          </div>
+          <div className="flex items-center gap-6 text-xs text-white/25">
+            <Link href="/charter" className="hover:text-white/60 transition-colors">Trust Charter</Link>
+            <Link href="/os" className="hover:text-white/60 transition-colors">Capability OS</Link>
+            <Link href="/settings" className="hover:text-white/60 transition-colors">Integrations</Link>
+            <span className="font-mono">control.veklom.com</span>
+          </div>
+        </div>
+      </footer>
+
     </main>
   );
 }
