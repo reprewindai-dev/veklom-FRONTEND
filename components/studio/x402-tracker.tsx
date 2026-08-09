@@ -2,12 +2,12 @@
 import { Card, Table } from "@/components/ui";
 import { DollarSign } from "lucide-react";
 
+import useSWR from "swr";
+import { fetcher } from "@/lib/api";
+
 export function X402Tracker() {
-  const mockSpend = [
-    { run: "run_8x99", agent: "Agent-110", route: "/api/v1/openai/gpt-4o", cost: "$0.012", limit: "$0.050", status: "Active" },
-    { run: "run_7y88", agent: "Agent-109", route: "/api/v1/anthropic/claude-3-opus", cost: "$0.100", limit: "$0.100", status: "Halted (Cap Hit)" },
-    { run: "run_6z77", agent: "Agent-112", route: "/api/v1/rag/search", cost: "$0.001", limit: "$0.010", status: "Completed" },
-  ];
+  const { data, isLoading } = useSWR<any>("/api/v1/x402/spend", fetcher);
+  const rows = data?.runs || [];
 
   return (
     <Card className="flex flex-col h-full border-border">
@@ -18,9 +18,14 @@ export function X402Tracker() {
       <p className="text-sm text-ink-300 mb-4">Base Network USDC Ledger: Granular budgets enforcing hard runtime constraints on infinite loops.</p>
       
       <div className="flex-1">
-        <Table
-          rows={mockSpend}
-          rowKey={(r) => r.run}
+        {isLoading ? (
+          <div className="text-ink-400 text-sm">Loading ledger...</div>
+        ) : rows.length === 0 ? (
+          <div className="text-ink-400 text-sm">No active micropayments.</div>
+        ) : (
+          <Table
+            rows={rows}
+            rowKey={(r: any) => r.run}
           columns={[
             { key: "agent", header: "Agent", render: (r) => <span className="text-white font-medium">{r.agent}</span> },
             { key: "route", header: "Route", render: (r) => <span className="font-mono text-xs text-ink-400">{r.route}</span> },
@@ -32,6 +37,7 @@ export function X402Tracker() {
             ) },
           ]}
         />
+        )}
       </div>
     </Card>
   );
