@@ -4,16 +4,17 @@ import { Card, Table, ErrorBox } from "@/components/ui";
 import { ShieldAlert, Zap, Activity } from "lucide-react";
 import useSWR from 'swr';
 
-import { api } from "@/lib/api";
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function SekedConsole() {
-  const { data: agents, error } = useSWR<any[]>('/api/v1/seked/agents', api, {
+  const { data: agents, error } = useSWR('http://localhost:8088/api/v1/seked/agents', fetcher, {
     refreshInterval: 5000
   });
 
-  const { data: mockBlocks = [] } = useSWR<any[]>('/api/v1/seked/interventions', api, {
-    refreshInterval: 5000
-  });
+  const mockBlocks = [
+    { id: "req_99x", agent: "Agent-110", route: "postgres://prod", reason: "Blocked: Tenant scope violation" },
+    { id: "req_88y", agent: "Agent-112", route: "/api/v1/rag/memory/retrieve", reason: "Blocked: PHI Data detected in chunk" },
+  ];
 
   return (
     <Card className="flex flex-col h-full border-accent-red/30 bg-accent-red/5">

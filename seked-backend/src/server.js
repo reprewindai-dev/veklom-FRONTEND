@@ -146,12 +146,6 @@ function generateIdentitySignature(identity) {
     throw new Error('Missing SEKED_SIGNATURE_SECRET or JWT_SECRET environment variable in production');
   }
 
-  // Inject required VNP payload fields if they don't exist
-  identity.event_id = identity.event_id || uuidv4();
-  identity.timestamp = identity.timestamp || Date.now();
-  identity.nonce = identity.nonce || require('crypto').randomBytes(16).toString('hex');
-  identity.schema_version = identity.schema_version || 'v2';
-
   // Create a copy to avoid mutating the original
   const signablePayload = { ...identity };
 

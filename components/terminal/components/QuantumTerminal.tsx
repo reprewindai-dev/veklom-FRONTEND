@@ -269,20 +269,14 @@ export default function QuantumTerminal() {
           headers['Authorization'] = `Bearer ${token}`;
         }
         const [agentsRes, metricsRes, genRes, linRes] = await Promise.all([
-            fetch("/api/v1/workspace/overview/live", { headers }),
-            fetch("/api/v1/vnp/metrics", { headers }),
-            fetch("/api/v1/pgl/certificate", { headers }),
-            fetch("/api/v1/workspace/audit-export", { headers })
+            fetch("/api/agents/task-force", { headers }),
+            fetch("/api/uacp/hub/metrics", { headers }),
+            fetch("/api/pgl/genome", { headers }),
+            fetch("/api/pgl/ledger", { headers })
         ]);
         if (agentsRes.ok) {
           const data = await agentsRes.json();
-          // Map real runs to agent view
-          const mappedAgents = (data.recent_runs || []).map((run: any, i: number) => ({
-             id: run.id, role: `Agent-${run.model}`, status: run.policy === 'passed' ? 'active' : 'idle', progress: 100
-          }));
-          setAgentTaskForce(mappedAgents.length > 0 ? mappedAgents : Array.from({ length: 12 }).map((_, i) => ({
-             id: i + 1, role: `Agent-${i + 1}`, status: 'idle', progress: 0
-          })));
+          setAgentTaskForce(data);
         }
         if (metricsRes.ok) {
           const metricsData = await metricsRes.json();

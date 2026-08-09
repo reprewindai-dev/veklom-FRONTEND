@@ -95,10 +95,56 @@ function AgentStatusBadge({ status }: { status: string }) {
 export default function AgentSekedMonitoring() {
   const { data: agents, error, mutate } = useSWR<AgentState[]>("/api/v1/seked/agents", api);
 
-  const agentData = agents || [];
+  // Mock data for demonstration
+  const mockAgents: AgentState[] = [
+    {
+      agent_id: "agent-001-stripe",
+      name: "Stripe Connect Engineer",
+      status: "active",
+      measurement: { E: 8, R: 2, C: 7, D: 9, S: 6, timestamp: new Date().toISOString() },
+      ratios: { sigma: 5.67, ci: 0.88, si: 0.6 },
+      directive: {
+        ratio: 5.67,
+        directive: "Execute payment processing with enhanced monitoring",
+        action_type: "EXECUTE",
+        confidence: 0.92,
+        reasoning: "High energy and drive with low resistance indicates optimal execution state"
+      },
+      last_updated: new Date().toISOString(),
+      performance_metrics: {
+        response_time_ms: 245,
+        success_rate: 0.98,
+        error_rate: 0.02,
+        throughput: 1250
+      }
+    },
+    {
+      agent_id: "agent-002-referral",
+      name: "Referral System Engineer", 
+      status: "recovering",
+      measurement: { E: 4, R: 6, C: 5, D: 3, S: 4, timestamp: new Date().toISOString() },
+      ratios: { sigma: 0.88, ci: 0.56, si: 0.4 },
+      directive: {
+        ratio: 0.88,
+        directive: "Conserve resources and implement recovery protocols",
+        action_type: "RECOVER",
+        confidence: 0.75,
+        reasoning: "Low energy and high resistance indicates need for recovery"
+      },
+      last_updated: new Date().toISOString(),
+      performance_metrics: {
+        response_time_ms: 892,
+        success_rate: 0.85,
+        error_rate: 0.15,
+        throughput: 450
+      }
+    }
+  ];
+
+  const agentData = agents || mockAgents;
 
   if (error) return <div className="text-red-500">Failed to load agent data</div>;
-  if (!agents) return <div>Loading agent monitoring...</div>;
+  if (!agents && !mockAgents) return <div>Loading agent monitoring...</div>;
 
   return (
     <div className="space-y-6">

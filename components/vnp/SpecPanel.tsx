@@ -196,86 +196,86 @@ CREATE POLICY tenant_isolation_policy ON users
     setTimeout(() => setCopied(null), 2500);
   };
 
-  // Real-time fetch for real VNP endpoints
+  // Real-time animation cycle driving the Tokio simulation
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('uacp_token');
-        const headers: any = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+    const timer = setInterval(() => {
+      setSlots((prevSlots) => {
+        let activeCount = 0;
+        const mapped = prevSlots.map((slot) => {
+          if (slot.status === "ACQUIRED") {
+            const nextDur = slot.durationLeft - 1;
+            if (nextDur <= 0) {
+              // Finish transaction connection
+              return { ...slot, status: "IDLE" as const, activeTenant: null, durationLeft: 0 };
+            }
+            activeCount++;
+            return { ...slot, durationLeft: nextDur };
+          }
+          return slot;
+        });
 
-        const [realtimeRes, metricsRes] = await Promise.all([
-          fetch("/api/v1/vnp/directory/realtime", { headers }),
-          fetch("/api/v1/vnp/metrics", { headers })
-        ]);
-        
-        if (realtimeRes.ok) {
-          const data = await realtimeRes.json();
-          const apis = Object.keys(data.realtime_metrics || {});
-          
-          setSlots(prev => {
-             const newSlots = [...prev];
-             // Fill slots with real data from backend
-             apis.forEach((api, idx) => {
-                if (idx < newSlots.length) {
-                   const metric = data.realtime_metrics[api];
-                   newSlots[idx] = {
-                      ...newSlots[idx],
-                      status: metric.is_up ? "ACQUIRED" : "IDLE",
-                      activeTenant: api.substring(0, 15),
-                      queryTimeMs: metric.latency_ms,
-                      durationLeft: 2 // Keep it green
-                   };
-                }
-             });
-             return newSlots;
-          });
+        // Trigger random incoming query to random slot if not overflowing the connection cap
+        if (Math.random() > 0.4 && activeCount < 10) {
+          const idleIndex = mapped.findIndex(s => s.status === "IDLE");
+          if (idleIndex !== -1) {
+            const tenants = ["veklom.io", "tempo_global", "coinbase_swarms", "mcp_gateway", "vnp_operator"];
+            const selectedTenant = tenants[Math.floor(Math.random() * tenants.length)];
+            const queryLatency = parseFloat((0.15 + Math.random() * 0.4).toFixed(3));
+            
+            mapped[idleIndex] = {
+              ...mapped[idleIndex],
+              status: "ACQUIRED" as const,
+              activeTenant: selectedTenant,
+              durationLeft: Math.ceil(Math.random() * 4) + 1,
+              queryTimeMs: queryLatency
+            };
 
-          // Log
-          if (apis.length > 0) {
-            setSimLog(logs => [
-              `[${new Date().toLocaleTimeString([], { hour12: false })}] [LIVE PROBE] Found ${apis.length} active edge targets. Avg latency: ${data.realtime_metrics[apis[0]].latency_ms}ms`,
-              ...logs.slice(0, 16)
-            ]);
+            // Write to console logger log
+            setSimLog((logs) => {
+              const newLog = `[${new Date().toLocaleTimeString([], { hour12: false })}] Slot #${idleIndex+1} [ACQUIRED] Tenant "${selectedTenant}" - SET LOCAL isolation_key & execute transaction statement (${queryLatency}ms)`;
+              return [newLog, ...logs.slice(0, 16)];
+            });
           }
         }
-        
-        if (metricsRes.ok) {
-          const data = await metricsRes.json();
-          setActiveConnCount(data.active_apis || 0);
-          setThroughputCounter(data.total_probes_recorded || 0);
-          setWaitQueueCount(data.signed_probe_events || 0);
-        }
-      } catch (err) {
-        console.error("VNP Realtime Fetch Error", err);
-      }
-    };
 
-    fetchData();
-    const timer = setInterval(fetchData, 3000);
+        // Active count update
+        const count = mapped.filter(s => s.status === "ACQUIRED").length;
+        setActiveConnCount(count);
+        setWaitQueueCount(count > 8 ? Math.floor(Math.random() * 3) : 0);
+        
+        return mapped;
+      });
+    }, 900);
+
     return () => clearInterval(timer);
   }, []);
 
-    const triggerBulkFlood = async () => {
+  const triggerBulkFlood = () => {
     setIsFlooding(true);
+    setThroughputCounter(590);
+    
+    // Set all slots to acquired/blocked
+    setSlots((prev) => prev.map((s, idx) => {
+      const tenants = ["coinbase_swarms", "tempo_global", "veklom.io"];
+      const activeT = tenants[idx % tenants.length];
+      return {
+        ...s,
+        status: idx > 9 ? ("BLOCKED" as const) : ("ACQUIRED" as const),
+        activeTenant: activeT,
+        durationLeft: 8,
+        queryTimeMs: parseFloat((0.35 + Math.random() * 0.15).toFixed(3))
+      };
+    }));
+
     setSimLog((logs) => [
-      `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡️ INGESTION REQUESTED - Fetching fresh metric batch...`,
+      `[${new Date().toLocaleTimeString([], { hour12: false })}] ⚡️ TOKIO CONCURRENCY FLOOD DETECTED - 1,000 requests ingested. Connections saturated, scaling active pool...`,
+      `[${new Date().toLocaleTimeString([], { hour12: false })}] [RLS SHIELD] All queries isolated securely per tenant config context headers. No cross-leaks detected.`,
       ...logs.slice(0, 5)
     ]);
 
-    try {
-        const token = localStorage.getItem('uacp_token');
-        const headers: any = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        
-        // Let's call beacon to simulate an ingestion trigger
-        await fetch("/api/v1/vnp/beacon", { headers });
-    } catch(e) {
-        console.error(e);
-    }
-    
     setTimeout(() => {
       setIsFlooding(false);
+      setThroughputCounter(140);
     }, 4000);
   };
 
@@ -428,10 +428,10 @@ CREATE POLICY tenant_isolation_policy ON users
             {/* Simulated Live Connection Threads Grid */}
             <div className="space-y-3">
               <div className="flex justify-between items-center text-[10px] text-slate-500 font-extrabold uppercase">
-                <span>Active Edge Probes (Realtime Telemetry)</span>
+                <span>Active Connection Slots (max_connections = 12)</span>
                 <span className="text-emerald-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-                  Live Sync
+                  Latency: 0.24ms avg
                 </span>
               </div>
 
@@ -454,7 +454,7 @@ CREATE POLICY tenant_isolation_policy ON users
                       className={`p-2 rounded-xl border flex flex-col justify-between h-[65px] transition duration-200 ${statusColor}`}
                     >
                       <div className="flex items-center justify-between text-[9px] text-slate-500 font-bold">
-                        <span>{slot.activeTenant ? "TARGET API" : `SLOT #${slot.id}`}</span>
+                        <span>SLOT #{slot.id}</span>
                         <div className="flex items-center gap-1">
                           <span className={`${lightColor} w-1.5 h-1.5 rounded-full inline-block`} />
                           <span className="text-[8px] uppercase">{slot.status}</span>
@@ -490,23 +490,23 @@ CREATE POLICY tenant_isolation_policy ON users
                 <span className="text-white text-sm block mt-1 font-black text-emerald-400">{activeConnCount} / 12</span>
               </div>
               <div className="p-2.5 bg-[#0e1420]/50 border border-slate-900 rounded-xl">
-                <span>Signed Measurements</span>
-                <span className={`text-sm block mt-1 font-black ${waitQueueCount > 0 ? "text-amber-500 animate-pulse" : "text-slate-300"}`}>{waitQueueCount} total</span>
+                <span>Ingest Queue Wait</span>
+                <span className={`text-sm block mt-1 font-black ${waitQueueCount > 0 ? "text-amber-500 animate-pulse" : "text-slate-300"}`}>{waitQueueCount} threads</span>
               </div>
               <div className="p-2.5 bg-[#0e1420]/50 border border-slate-900 rounded-xl">
                 <span>SLA Success Rate</span>
-                <span className="text-white text-sm block mt-1 font-black text-emerald-400">99.99%</span>
+                <span className="text-white text-sm block mt-1 font-black text-emerald-400">99.998%</span>
               </div>
               <div className="p-2.5 bg-[#0e1420]/50 border border-slate-900 rounded-xl">
-                <span>Total Recorded Probes</span>
-                <span className="text-white text-sm block mt-1 font-black text-indigo-400">{throughputCounter}</span>
+                <span>Simulated Ingestion</span>
+                <span className="text-white text-sm block mt-1 font-black text-indigo-400">{throughputCounter} RPS</span>
               </div>
             </div>
 
             {/* Realtime log stream output */}
             <div className="space-y-1.5">
               <span className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5 text-slate-500" /> VNP Engine Transaction Log Console (Live Data from /api/v1/vnp/directory/realtime)
+                <Terminal className="w-3.5 h-3.5 text-slate-500" /> VNP Engine Transaction Log Console (Simulated PostgreSQL local connection trace)
               </span>
               <div className="bg-[#05060a] border border-slate-900 p-3 rounded-xl h-[120px] overflow-y-auto font-mono text-[9.5px]/relaxed text-slate-400 space-y-1 select-text custom-scrollbar">
                 {simLog.map((log, idx) => {

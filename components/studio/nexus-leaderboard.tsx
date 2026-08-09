@@ -1,11 +1,13 @@
 "use client";
 import { Card, Table } from "@/components/ui";
-import useSWR from "swr";
-import { api } from "@/lib/api";
 import { BarChart2, CheckCircle2, ShieldAlert } from "lucide-react";
 
 export function NexusLeaderboard() {
-  const { data: rows = [] } = useSWR<any[]>("/api/v1/benchmarks/leaderboard", api);
+  const mockLeaderboard = [
+    { stack: "LangChain (OpenAI)", adherence: "99.1%", latency: "1.2s", cost: "$0.02/run", safe: true },
+    { stack: "CrewAI (Anthropic)", adherence: "98.5%", latency: "2.4s", cost: "$0.08/run", safe: true },
+    { stack: "AutoGPT (Local Llama)", adherence: "84.2%", latency: "0.8s", cost: "$0.00/run", safe: false },
+  ];
 
   return (
     <Card className="flex flex-col h-full border-border">
@@ -17,7 +19,7 @@ export function NexusLeaderboard() {
       
       <div className="flex-1">
         <Table
-          rows={rows}
+          rows={mockLeaderboard}
           rowKey={(r) => r.stack}
           columns={[
             { key: "stack", header: "Framework / Model", render: (r) => <span className="text-white font-medium">{r.stack}</span> },

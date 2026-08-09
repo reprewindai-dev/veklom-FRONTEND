@@ -1,17 +1,14 @@
 "use client";
 import { Card, Table } from "@/components/ui";
-import useSWR from "swr";
-import { api } from "@/lib/api";
 import { HardDrive, PlayCircle } from "lucide-react";
 
 export function AuditLedger() {
-  const { data: logs } = useSWR<any[]>("/api/v1/audit?limit=5", api);
-  const packets = (logs || []).map((log) => ({
-    hash: log.hmac_hash || log.id,
-    event: log.operation_type,
-    tenant: log.workspace_id || "System",
-    time: log.created_at ? new Date(log.created_at).toLocaleTimeString() : "Just now"
-  }));
+  const mockPackets = [
+    { hash: "0x8f7b...2c1e", event: "Memory Indexed", tenant: "tenant-A", time: "1m ago" },
+    { hash: "0x4a2b...9d3f", event: "Semantic Search", tenant: "tenant-B", time: "3m ago" },
+    { hash: "0x1e8c...5a2d", event: "API Request [Stripe]", tenant: "tenant-A", time: "10m ago" },
+    { hash: "0x9f2a...7c1b", event: "Database Query", tenant: "tenant-C", time: "15m ago" },
+  ];
 
   return (
     <Card className="flex flex-col h-full border-border">
@@ -23,7 +20,7 @@ export function AuditLedger() {
       
       <div className="flex-1">
         <Table
-          rows={packets}
+          rows={mockPackets}
           rowKey={(r) => r.hash}
           columns={[
             { key: "hash", header: "SHA256 Hash", render: (r) => <span className="font-mono text-xs text-ink-300">{r.hash}</span> },

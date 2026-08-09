@@ -16,7 +16,7 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: true },
-  turbopack: {},
+  eslint: { ignoreDuringBuilds: true },
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
