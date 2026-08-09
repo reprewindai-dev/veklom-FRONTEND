@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
     const res = await api<{ access_token: string; refresh_token?: string; token?: string }>(
       "/api/v1/auth/login",
-      { unauth: true, body: { email, password } }
+      { unauth: true, body: { email, password, workspace_id: "default" } }
     );
     const access = res.access_token || res.token;
     if (!access) throw new Error("No access token returned");
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
     const res = await api<{ access_token?: string; token?: string; refresh_token?: string }>(
       "/api/v1/auth/signup",
-      { unauth: true, body: { email, password, full_name: name, name } }
+      { unauth: true, body: { email, password, full_name: name, name, workspace_id: "default" } }
     );
     const access = res.access_token || res.token;
     if (access) {
@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return;
     // Land back on the PGL onboarding route after the OAuth round-trip.
     const next = `${BASE_PATH}/os/onboarding`;
-    window.location.href = apiUrl("/api/v1/auth/github/login", { next });
+    window.location.href = apiUrl("/api/v1/auth/github/login", { next, workspace_id: "default" });
   }, []);
 
   const logout = useCallback(() => {

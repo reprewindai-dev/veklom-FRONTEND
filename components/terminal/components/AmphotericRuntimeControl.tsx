@@ -165,54 +165,6 @@ export const AmphotericRuntimeControl: React.FC = () => {
     try {
       const parsedArgs = JSON.parse(args);
 
-      if (isSimulated) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const generateLocalHash = (prefix: string) => {
-          const SECURE_ENTROPY = ['a','b','c','d','e','f','0','1','2','3','4','5','6','7','8','9'];
-          let hash = prefix + '_';
-          for (let i = 0; i < 24; i++) {
-            hash += SECURE_ENTROPY[Math.floor(Math.random() * SECURE_ENTROPY.length)];
-          }
-          return hash;
-        };
-
-        let mockResult: any = {
-          status: 'SUCCESS',
-          execution_time_ms: 45 + Math.floor(Math.random() * 80),
-          trace_id: `trace-${generateLocalHash('sim')}`,
-          pgl_hash: generateLocalHash('proof'),
-          details: {
-            capability: selectedCap.id,
-            arguments: parsedArgs,
-            message: `Secure simulated execution completed cleanly.`,
-            arbiters: ['local-enforcer-node-01', 'local-arbitration-engine']
-          }
-        };
-
-        if (selectedCap.id === 'file_reader') {
-          mockResult.details.scanned_files = 12;
-          mockResult.details.alignment_status = '100% COMPLIANT';
-          mockResult.details.remarks = 'No un-attested agent signatures found in active workspaces.';
-        } else if (selectedCap.id === 'vector_search') {
-          mockResult.details.matches = [
-            { id: 'chunk-99a', score: 0.985, text: `pgl_mapping: sub -> tenant_id_active` },
-            { id: 'chunk-12b', score: 0.891, text: `zero_trust_policy: bypass preflight OPTION requests` }
-          ];
-        } else if (selectedCap.id === 'auth_validator') {
-          mockResult.details.claims = { sub: 'auth-user-998', role: 'sovereign-operator', workspace_id: 'ws-cappo-01' };
-          mockResult.details.signature_verified = true;
-        } else if (selectedCap.id === 'vnp_bond_manager') {
-          mockResult.details.bond_status = 'LOCKED';
-          mockResult.details.slashed_yield_accrued = '0.00 VNP';
-          mockResult.details.margin_limit = '1000.00 VNP';
-        }
-
-        setResult(mockResult);
-        setLoading(false);
-        return;
-      }
-
       let url = `${API_BASE_URL}/api/amphoteric/call`;
       let body: any = { name: selectedCap.id, arguments: parsedArgs };
 

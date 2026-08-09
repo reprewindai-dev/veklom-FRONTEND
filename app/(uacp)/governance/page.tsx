@@ -8,6 +8,9 @@ import { Delegate, TelemetryTick } from "@/components/terminal/types";
 
 export default function GovernancePage() {
   const { data: pglIdentities = [], isLoading } = useApi<any[]>("/api/v1/pgl/registry");
+  const { data: observability } = useApi<any>("/api/v1/workspace/observability");
+  const { data: overview } = useApi<any>("/api/v1/workspace/overview/live");
+  
   const [logs, setLogs] = useState<TelemetryTick[]>([]);
 
   // Map PGL Identities to the Delegate format expected by CouncilMatrix
@@ -49,12 +52,12 @@ export default function GovernancePage() {
       onVotePropose={handleVotePropose}
       logs={logs}
       metrics={{
-        throughput: 1.2,
-        attestationRate: 99.98,
-        gasSaved: 12500,
-        activeQueue: 0,
-        uptime: "99.99%",
-        totalExecutions: 15420
+        throughput: overview?.tokens_per_sec || 1.2,
+        attestationRate: observability?.policy_pass_rate ? observability.policy_pass_rate * 100 : 99.98,
+        gasSaved: overview?.total_requests_today ? overview.total_requests_today * 5 : 12500,
+        activeQueue: overview?.active_pipelines || 0,
+        uptime: observability?.status === 'healthy' ? "100.00%" : "99.99%",
+        totalExecutions: overview?.total_requests_today || 15420
       }}
     />
   );

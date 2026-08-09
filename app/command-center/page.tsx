@@ -2,6 +2,7 @@ import React from 'react';
 import Shell from "@/components/Shell";
 import TierGate from "@/components/TierGate";
 import TriageTelemetry from "@/components/telemetry/TriageTelemetry";
+import { ForceFieldDashboard } from "@/components/security/ForceFieldDashboard";
 
 export const metadata = {
   title: "Command Center - Veklom Control Plane",
@@ -12,10 +13,13 @@ export default function CommandCenterPage() {
     <Shell>
       <TierGate required="enterprise" feature="Command Center">
         <div className="w-full h-[calc(100vh-4rem)] flex flex-col xl:flex-row overflow-hidden bg-[#030303]">
-          <div className="flex-grow h-full relative min-w-0">
+          <div className="flex-grow h-full relative min-w-0 flex flex-col">
+            <div className="p-4 shrink-0 bg-[#030303] border-b border-white/5">
+              <ForceFieldDashboard />
+            </div>
             <iframe 
               src="https://api.veklom.com/command-center/" 
-              className="w-full h-full border-none"
+              className="w-full flex-grow border-none"
               title="Veklom Platform Command Center"
             />
           </div>
