@@ -1,4 +1,4 @@
-import { deriveProofStatus } from "@/lib/cos/proof";
+import { classifyPayload, deriveProofStatus } from "@/lib/cos/proof";
 
 describe("Capability OS proof derivation", () => {
   it("keeps an uncalled route at Needs proof", () => {
@@ -29,5 +29,21 @@ describe("Capability OS proof derivation", () => {
 
   it("keeps an absent route not started in sandbox mode", () => {
     expect(deriveProofStatus({ kind: "no-route" }, true)).toBe("Not started");
+  });
+
+  it("respects a backend-declared degraded proof state", () => {
+    const classified = classifyPayload({
+      proofState: "degraded",
+      proofSignal: "VNP telemetry store unavailable",
+      apis: [],
+    });
+    expect(classified.observation.kind).toBe("failed");
+    expect(classified.reason).toBe("VNP telemetry store unavailable");
+    expect(deriveProofStatus(classified.observation)).toBe("Degraded");
+    expect(deriveProofStatus(classified.observation)).not.toBe("Verified");
+  });
+
+  it("does not let runtime metadata turn a health envelope into source truth", () => {
+    expect(classifyPayload({ status: "ok", _runtimeMeta: {} }).observation.kind).toBe("reachability-only");
   });
 });

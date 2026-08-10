@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
-import { deriveProofStatus } from "./proof";
+import { classifyPayload, deriveProofStatus } from "./proof";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
@@ -17,6 +17,7 @@ export interface StageCallRecord {
   proof: ProofStatus;
   observation: ProofObservation;
   error?: string;
+  paymentRequired?: boolean;
 }
 
 export interface StageCallResult<T = unknown> {
@@ -44,15 +45,6 @@ function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallReco
     proof: deriveProofStatus(observation, sandbox),
     observation,
   };
-}
-
-function isSourceOfTruthPayload(payload: unknown): boolean {
-  if (payload === null || payload === undefined) return false;
-  if (Array.isArray(payload)) return true;
-  if (typeof payload !== "object") return false;
-  const keys = Object.keys(payload);
-  if (keys.length === 0) return false;
-  return !keys.every((key) => ["status", "message", "version", "service", "timestamp"].includes(key));
 }
 
 export function useStageData(stageId: StageDefinition["id"], options: StageDataOptions = {}) {
@@ -89,22 +81,22 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         body,
         query: { mode: sandbox ? "sandbox" : "production" },
         headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
+        handlePaymentRequired: false,
         baseUrl: sandbox
           ? (process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL || endpoint.baseUrl)
           : endpoint.baseUrl,
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
-      const observation: ProofObservation = isSourceOfTruthPayload(data)
-        ? { kind: "source-of-truth", status: 200 }
-        : { kind: "reachability-only", status: 200 };
+      const classification = classifyPayload(data);
       const record: StageCallRecord = {
         method: endpoint.method,
         path: endpoint.path,
         classification: endpoint.classification,
         status: 200,
         latencyMs,
-        observation,
-        proof: deriveProofStatus(observation, sandbox),
+        observation: classification.observation,
+        proof: deriveProofStatus(classification.observation, sandbox),
+        error: classification.reason,
       };
       setRecords((current) => ({ ...current, [key]: record }));
       setAdditionalRecords((current) => {
@@ -119,6 +111,22 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
       const status = error instanceof ApiError ? error.status : undefined;
       const message = error instanceof Error ? error.message : "Request failed";
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
+      if (status === 402 && error instanceof ApiError) {
+        const observation: ProofObservation = { kind: "reachability-only", status: 402 };
+        const record: StageCallRecord = {
+          method: endpoint.method,
+          path: endpoint.path,
+          classification: endpoint.classification,
+          status,
+          latencyMs,
+          observation,
+          proof: deriveProofStatus(observation, sandbox),
+          paymentRequired: true,
+        };
+        setRecords((current) => ({ ...current, [key]: record }));
+        setPayloads((current) => ({ ...current, [key]: error.body }));
+        return { data: error.body as T, record };
+      }
       const observation: ProofObservation = { kind: "failed", status };
       const record: StageCallRecord = {
         method: endpoint.method,

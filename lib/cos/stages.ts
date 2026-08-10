@@ -103,8 +103,8 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/v1/audit/ledger", classification: "live", response: "audit ledger entries" },
       { method: "GET", path: "/v1/audit/verify", classification: "live", response: "ledger verification result" },
-      { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "live", response: "agent ledger entries" },
-      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "live", response: "agent chain verification result" },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "live", response: "agent ledger entries", baseUrl: canonicalBackends().find((backend) => backend.id === "genome")?.baseUrl },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "live", response: "agent chain verification result", baseUrl: canonicalBackends().find((backend) => backend.id === "genome")?.baseUrl },
     ],
   },
   {
@@ -131,6 +131,8 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/.well-known/x402", classification: "live", response: "payment discovery document" },
       { method: "GET", path: "/api/v1/pricing", classification: "live", response: "pricing response" },
+      { method: "POST", path: "/api/v1/x402/verify", classification: "live", response: "x402 payment verification result" },
+      { method: "GET", path: "/api/v1/x402/{receipt_id}/proof", classification: "live", response: "x402 receipt proof" },
     ],
   },
   {

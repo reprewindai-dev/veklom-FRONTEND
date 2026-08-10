@@ -50,6 +50,8 @@ export interface RequestOpts {
   signal?: AbortSignal;
   headers?: Record<string, string>;
   baseUrl?: string;
+  /** When false, return 402 to the caller without opening the payment modal. */
+  handlePaymentRequired?: boolean;
 }
 
 const PUBLIC_ROUTE_PREFIXES = [
@@ -184,7 +186,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       
     if (typeof window !== "undefined") {
       const isPublicPage = isPublicRoute(window.location.pathname);
-      if (res.status === 402) {
+      if (res.status === 402 && opts.handlePaymentRequired !== false) {
         if (!isPublicPage) {
           const paymentRequiredHeader = res.headers.get("payment-required");
           const facilitatorUrl = res.headers.get("x-402-facilitator-url");

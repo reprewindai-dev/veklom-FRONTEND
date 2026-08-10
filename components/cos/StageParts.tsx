@@ -28,6 +28,29 @@ export function FailureNotice({ detail }: { detail: string }) {
   return <div className="flex items-start gap-3 rounded-xl border border-cos-warn/30 bg-cos-warn/5 p-4"><ShieldAlert size={17} className="mt-0.5 shrink-0 text-cos-warn" /><p className="text-xs leading-5 text-cos-muted">{detail}</p></div>;
 }
 
+export function PaymentChallenge({ value }: { value: unknown }) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const payload = value as Record<string, unknown>;
+  return (
+    <div className="rounded-xl border border-cos-accent/30 bg-cos-accent/5 p-4">
+      <div className="text-sm text-cos-text">Payment required to continue</div>
+      <p className="mt-1 text-xs leading-5 text-cos-muted">
+        This is a legitimate x402 protocol challenge. No payment was initiated.
+      </p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <Field label="Amount" value={payload.amount_usdc ?? payload.amount} />
+        <Field label="Currency" value={payload.currency} />
+        <Field label="Network" value={payload.network} />
+        <Field label="Chain" value={payload.chain_id} />
+        <Field label="Challenge" value={payload.challenge_id} />
+        <Field label="Nonce" value={payload.nonce} />
+        <Field label="Pay to" value={payload.pay_to} />
+        <Field label="x402 version" value={payload.x402_version} />
+      </div>
+    </div>
+  );
+}
+
 export function CopyValue({ value }: { value?: string }) {
   if (!value) return <span className="font-mono text-xs text-cos-steel">Not returned</span>;
   return <button type="button" title={value} onClick={() => void navigator.clipboard?.writeText(value)} className="group flex max-w-full items-center gap-2 font-mono text-xs tabular-nums text-cos-text"><span className="truncate">{value}</span><Copy size={12} className="shrink-0 text-cos-steel group-hover:text-cos-accent" /></button>;
