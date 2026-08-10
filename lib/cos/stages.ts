@@ -1,3 +1,5 @@
+import { canonicalBackends } from "@/lib/canonical-backends";
+
 export type StageEndpointClass = "live" | "proxy" | "absent";
 export type StageId =
   | "capabilities"
@@ -17,6 +19,7 @@ export interface StageEndpoint {
   path: string;
   classification: StageEndpointClass;
   response: string;
+  baseUrl?: string;
 }
 
 export interface StageDefinition {
@@ -39,6 +42,9 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/api/v1/agents", classification: "live", response: "agent registry payload" },
       { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "live", response: "benchmark provider array" },
+      { method: "GET", path: "/v1/capability/beacons", classification: "live", response: "signed capability beacon set", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "POST", path: "/v1/capability/beacons/verify", classification: "live", response: "beacon signature verification result", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "GET", path: "/.well-known/capability-beacon-keys", classification: "live", response: "published beacon issuer keys", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
     ],
   },
   {
@@ -48,7 +54,11 @@ export const stages: StageDefinition[] = [
     purpose: "Bind a capability package to a scoped, expiring execution boundary.",
     owner: "CAPPO capability-mount",
     endpoints: [
-      { method: "POST", path: "/api/v1/capability/mount", classification: "absent", response: "no registered route" },
+      { method: "GET", path: "/v1/capability/packages", classification: "live", response: "capability package catalog", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "POST", path: "/v1/capability/mounts", classification: "live", response: "mount decision, scope, and token descriptor", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "live", response: "persisted mount lifecycle status", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "live", response: "action allow or deny decision", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "live", response: "mount termination decision", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
     ],
   },
   {

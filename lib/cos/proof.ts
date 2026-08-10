@@ -12,12 +12,11 @@ export function deriveProofStatus(
   sandbox = false,
 ): ProofStatus {
   if (observation.kind === "no-route") return "Not started";
+  if (observation.kind === "failed") return "Degraded";
   if (sandbox && observation.kind !== "not-called") return "Simulated";
   switch (observation.kind) {
     case "not-called":
       return "Needs proof";
-    case "failed":
-      return "Degraded";
     case "reachability-only":
       return "Present";
     case "source-of-truth":

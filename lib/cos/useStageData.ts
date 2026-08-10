@@ -63,6 +63,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     Object.fromEntries(stage.endpoints.map((endpoint) => [keyFor(endpoint), initialRecord(endpoint, sandbox)]))
   ));
   const [payloads, setPayloads] = useState<Record<string, unknown>>({});
+  const [additionalRecords, setAdditionalRecords] = useState<Record<string, StageCallRecord>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
 
   const call = useCallback(async <T,>(
@@ -77,7 +78,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     }
     if (endpoint.path.includes("{")) {
       const record = initialRecord(endpoint, sandbox);
-      setRecords((current) => ({ ...current, [key]: record }));
+      setAdditionalRecords((current) => ({ ...current, [key]: record }));
       return { record };
     }
     const started = performance.now();
@@ -88,7 +89,9 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         body,
         query: { mode: sandbox ? "sandbox" : "production" },
         headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
-        baseUrl: sandbox ? process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL : undefined,
+        baseUrl: sandbox
+          ? (process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL || endpoint.baseUrl)
+          : endpoint.baseUrl,
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
       const observation: ProofObservation = isSourceOfTruthPayload(data)
@@ -104,6 +107,12 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         proof: deriveProofStatus(observation, sandbox),
       };
       setRecords((current) => ({ ...current, [key]: record }));
+      setAdditionalRecords((current) => {
+        if (!(key in current)) return current;
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
       setPayloads((current) => ({ ...current, [key]: data }));
       return { data, record };
     } catch (error) {
@@ -122,6 +131,12 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         error: message,
       };
       setRecords((current) => ({ ...current, [key]: record }));
+      setAdditionalRecords((current) => {
+        if (!(key in current)) return current;
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
       return { record };
     } finally {
       setLoading((current) => ({ ...current, [key]: false }));
@@ -136,8 +151,11 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   }, [call, options.autoGet, stage.endpoints]);
 
   const recordsList = useMemo(
-    () => stage.endpoints.map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
-    [records, sandbox, stage.endpoints],
+    () => [
+      ...stage.endpoints.map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
+      ...Object.values(additionalRecords),
+    ],
+    [additionalRecords, records, sandbox, stage.endpoints],
   );
 
   const stageProof = useMemo<ProofStatus>(() => {

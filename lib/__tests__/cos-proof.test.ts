@@ -22,12 +22,12 @@ describe("Capability OS proof derivation", () => {
     expect(deriveProofStatus({ kind: "source-of-truth", status: 200, signed: true })).toBe("Verified");
   });
 
-  it("forces sandbox observations to Simulated", () => {
+  it("marks sandbox source observations as Simulated but preserves failures", () => {
     expect(deriveProofStatus({ kind: "source-of-truth", status: 200 }, true)).toBe("Simulated");
-    expect(deriveProofStatus({ kind: "failed", status: 500 }, true)).toBe("Simulated");
+    expect(deriveProofStatus({ kind: "failed", status: 500 }, true)).toBe("Degraded");
   });
-});
 
   it("keeps an absent route not started in sandbox mode", () => {
     expect(deriveProofStatus({ kind: "no-route" }, true)).toBe("Not started");
   });
+});
