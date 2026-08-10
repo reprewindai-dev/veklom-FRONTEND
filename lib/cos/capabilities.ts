@@ -7,20 +7,50 @@ export type ProofStatus =
   | "Manual step"
   | "Simulated";
 
-export type Capability = {
+export type AuthRequirement = "jwt" | "api-key" | "none";
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+
+export type CapabilityContract = {
+  // Identity
   id: string;
   name: string;
   description: string;
   icon: string;
   lifecycleStage: string;
   kind: string;
-  backendRoute: string;
+
+  // Mechanical API Binding
+  route: string;
+  method: HttpMethod;
+  auth: AuthRequirement;
+
+  // Authority & Governance
+  authority: {
+    mount: string;
+    execute: string;
+    settle: string;
+  };
   trustRequirement: string;
+
+  // Evidence & Proof
+  evidence: {
+    proofState: ProofStatus;
+    pglRequired: boolean;
+  };
+
+  // Mechanical I/O
+  inputs: Record<string, string>;
+  outputs: Record<string, string>;
+
+  // Runtime State
   mountState: "Mounted" | "Available";
-  proofStatus: ProofStatus;
+  workspace: string;
 };
 
-export const capabilities: Capability[] = [
+// Aliasing for backward compatibility while we refactor UI components
+export type Capability = CapabilityContract;
+
+export const capabilities: CapabilityContract[] = [
   {
     id: "repogate-scan",
     name: "RepoGate Scan",
@@ -28,10 +58,16 @@ export const capabilities: Capability[] = [
     icon: "ScanSearch",
     lifecycleStage: "Mount",
     kind: "Verification",
-    backendRoute: "/api/v1/repogate",
+    route: "/api/v1/repogate",
+    method: "POST",
+    auth: "jwt",
+    authority: { mount: "Repository access", execute: "Repository access", settle: "None" },
     trustRequirement: "Repository access",
+    evidence: { proofState: "Not started", pglRequired: true },
+    inputs: { repository: "string", commit: "string" },
+    outputs: { scanId: "string", status: "string", issues: "array" },
     mountState: "Available",
-    proofStatus: "Not started",
+    workspace: "/os/mount",
   },
   {
     id: "build-blueprint",
@@ -40,10 +76,16 @@ export const capabilities: Capability[] = [
     icon: "Workflow",
     lifecycleStage: "Blueprint",
     kind: "Compiler",
-    backendRoute: "/api/v1/gpc",
+    route: "/api/v1/gpc",
+    method: "POST",
+    auth: "jwt",
+    authority: { mount: "Workspace identity", execute: "Workspace identity", settle: "None" },
     trustRequirement: "Workspace identity",
+    evidence: { proofState: "Not started", pglRequired: true },
+    inputs: { intent: "string", requirements: "object" },
+    outputs: { blueprintId: "string", plan: "object" },
     mountState: "Available",
-    proofStatus: "Not started",
+    workspace: "/os/blueprint",
   },
   {
     id: "security-audit",
@@ -52,10 +94,16 @@ export const capabilities: Capability[] = [
     icon: "ShieldCheck",
     lifecycleStage: "Govern",
     kind: "Governance",
-    backendRoute: "/api/v1/security/events",
+    route: "/api/v1/security/events",
+    method: "GET",
+    auth: "jwt",
+    authority: { mount: "Governance authority", execute: "Governance authority", settle: "None" },
     trustRequirement: "Governance authority",
+    evidence: { proofState: "Not started", pglRequired: true },
+    inputs: { timeframe: "string", severity: "string" },
+    outputs: { events: "array", summary: "object" },
     mountState: "Available",
-    proofStatus: "Not started",
+    workspace: "/os/govern",
   },
   {
     id: "api-discovery",
@@ -64,10 +112,16 @@ export const capabilities: Capability[] = [
     icon: "Radar",
     lifecycleStage: "Mount",
     kind: "Discovery",
-    backendRoute: "/api/v1/capabilities",
+    route: "/api/v1/capabilities",
+    method: "GET",
+    auth: "jwt",
+    authority: { mount: "Read access", execute: "Read access", settle: "None" },
     trustRequirement: "Read access",
+    evidence: { proofState: "Not started", pglRequired: false },
+    inputs: { query: "string" },
+    outputs: { capabilities: "array" },
     mountState: "Available",
-    proofStatus: "Not started",
+    workspace: "/os/mount",
   },
   {
     id: "mcp-publish",
@@ -76,10 +130,16 @@ export const capabilities: Capability[] = [
     icon: "Send",
     lifecycleStage: "Mount",
     kind: "Registry",
-    backendRoute: "/api/v1/plugins",
+    route: "/api/v1/plugins",
+    method: "POST",
+    auth: "jwt",
+    authority: { mount: "Publisher authority", execute: "Publisher authority", settle: "None" },
     trustRequirement: "Publisher authority",
+    evidence: { proofState: "Not started", pglRequired: true },
+    inputs: { pluginManifest: "object" },
+    outputs: { pluginId: "string", status: "string" },
     mountState: "Available",
-    proofStatus: "Not started",
+    workspace: "/os/mount",
   },
   {
     id: "capability-mount",
@@ -88,10 +148,16 @@ export const capabilities: Capability[] = [
     icon: "PlugZap",
     lifecycleStage: "Mount",
     kind: "Runtime",
-    backendRoute: "/api/v1/agents",
+    route: "/api/v1/agents",
+    method: "POST",
+    auth: "jwt",
+    authority: { mount: "Mount authority", execute: "Mount authority", settle: "None" },
     trustRequirement: "Mount authority",
+    evidence: { proofState: "Not started", pglRequired: true },
+    inputs: { capabilityId: "string", configuration: "object" },
+    outputs: { mountId: "string", status: "string" },
     mountState: "Available",
-    proofStatus: "Not started",
+    workspace: "/os/mount",
   },
   {
     id: "blueprint",
@@ -100,10 +166,16 @@ export const capabilities: Capability[] = [
     icon: "FileCode2",
     lifecycleStage: "Blueprint",
     kind: "Workspace",
-    backendRoute: "/os/blueprint",
+    route: "/os/blueprint",
+    method: "GET",
+    auth: "none",
+    authority: { mount: "Workspace identity", execute: "Workspace identity", settle: "None" },
     trustRequirement: "Workspace identity",
+    evidence: { proofState: "Present", pglRequired: false },
+    inputs: {},
+    outputs: {},
     mountState: "Mounted",
-    proofStatus: "Present",
+    workspace: "/os/blueprint",
   },
   {
     id: "harness",
@@ -112,10 +184,16 @@ export const capabilities: Capability[] = [
     icon: "Cable",
     lifecycleStage: "Mount",
     kind: "Workspace",
-    backendRoute: "/os/mount",
+    route: "/os/mount",
+    method: "GET",
+    auth: "none",
+    authority: { mount: "Mount authority", execute: "Mount authority", settle: "None" },
     trustRequirement: "Mount authority",
+    evidence: { proofState: "Present", pglRequired: false },
+    inputs: {},
+    outputs: {},
     mountState: "Mounted",
-    proofStatus: "Present",
+    workspace: "/os/mount",
   },
   {
     id: "evidence",
@@ -124,10 +202,16 @@ export const capabilities: Capability[] = [
     icon: "FileCheck2",
     lifecycleStage: "Evidence",
     kind: "Workspace",
-    backendRoute: "/api/v1/ledger/events",
+    route: "/api/v1/ledger/events",
+    method: "GET",
+    auth: "jwt",
+    authority: { mount: "Evidence access", execute: "Evidence access", settle: "Evidence access" },
     trustRequirement: "Evidence access",
+    evidence: { proofState: "Present", pglRequired: true },
+    inputs: { filter: "object" },
+    outputs: { events: "array" },
     mountState: "Mounted",
-    proofStatus: "Present",
+    workspace: "/os/evidence",
   },
   {
     id: "settlement",
@@ -136,10 +220,16 @@ export const capabilities: Capability[] = [
     icon: "ReceiptText",
     lifecycleStage: "Settle",
     kind: "Workspace",
-    backendRoute: "/api/v1/x402/payment-required",
+    route: "/api/v1/x402/payment-required",
+    method: "GET",
+    auth: "jwt",
+    authority: { mount: "Settlement authority", execute: "Settlement authority", settle: "Settlement authority" },
     trustRequirement: "Settlement authority",
+    evidence: { proofState: "Present", pglRequired: true },
+    inputs: {},
+    outputs: { required: "boolean", options: "array" },
     mountState: "Mounted",
-    proofStatus: "Present",
+    workspace: "/os/settle",
   },
   {
     id: "tracker",
@@ -148,9 +238,15 @@ export const capabilities: Capability[] = [
     icon: "Route",
     lifecycleStage: "Tracker",
     kind: "Workspace",
-    backendRoute: "/os/tracker",
+    route: "/os/tracker",
+    method: "GET",
+    auth: "jwt",
+    authority: { mount: "Audit access", execute: "Audit access", settle: "None" },
     trustRequirement: "Audit access",
+    evidence: { proofState: "Present", pglRequired: true },
+    inputs: {},
+    outputs: { driftReport: "object" },
     mountState: "Mounted",
-    proofStatus: "Present",
+    workspace: "/os/tracker",
   },
 ];

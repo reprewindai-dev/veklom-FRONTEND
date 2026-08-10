@@ -4,17 +4,15 @@ import { Card, Table, ErrorBox } from "@/components/ui";
 import { ShieldAlert, Zap, Activity } from "lucide-react";
 import useSWR from 'swr';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+import { fetcher } from '@/lib/api';
 
 export function SekedConsole() {
-  const { data: agents, error } = useSWR('http://localhost:8088/api/v1/seked/agents', fetcher, {
+  const { data: agents, error } = useSWR('/api/v1/seked/agents', fetcher, {
     refreshInterval: 5000
   });
 
-  const mockBlocks = [
-    { id: "req_99x", agent: "Agent-110", route: "postgres://prod", reason: "Blocked: Tenant scope violation" },
-    { id: "req_88y", agent: "Agent-112", route: "/api/v1/rag/memory/retrieve", reason: "Blocked: PHI Data detected in chunk" },
-  ];
+  const agentsArray = Array.isArray(agents) ? agents : [];
+  const mockBlocks: any[] = [];
 
   return (
     <Card className="flex flex-col h-full border-accent-red/30 bg-accent-red/5">
@@ -33,11 +31,11 @@ export function SekedConsole() {
       <div className="flex-1 space-y-4">
         {/* Real Backend Data Segment */}
         {error && <ErrorBox message={error.message || "Failed to load SEKED Metrics"} />}
-        {agents && agents.length > 0 && (
+        {agentsArray.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-xs font-semibold text-ink-300 uppercase tracking-wider mb-2">Live Execution Confidence</h3>
             <div className="grid grid-cols-2 gap-2">
-              {agents.slice(0, 4).map((agent: any) => (
+              {agentsArray.slice(0, 4).map((agent: any) => (
                 <div key={agent.agent_id} className="p-2 bg-bg-900 border border-ink-800 rounded flex flex-col gap-1">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-medium text-white truncate max-w-[120px]" title={agent.name}>{agent.name}</span>

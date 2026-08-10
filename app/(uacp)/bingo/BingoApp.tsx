@@ -637,7 +637,7 @@ function BingoContent() {
           <div>
             <div className="text-[9px] font-mono text-white/40 uppercase tracking-widest">Progressive Jackpot Pool</div>
             <div className="text-lg font-black text-white font-mono flex items-baseline gap-1.5">
-              <span className="text-[#bc13fe]">{jackpotState.progressiveJackpotPool.toFixed(2)}</span>
+              <span className="text-[#bc13fe]">{Number(jackpotState.progressiveJackpotPool || 0).toFixed(2)}</span>
               <span className="text-[10px] text-white/40">USDC</span>
               <TrendingUp className="w-3.5 h-3.5 text-[#00f3ff] animate-pulse" />
             </div>
@@ -651,7 +651,7 @@ function BingoContent() {
           <div>
             <div className="text-[9px] font-mono text-white/40 uppercase tracking-widest">Your Developer Wallet Cut (Treasury)</div>
             <div className="text-lg font-black text-[#00f3ff] font-mono">
-              {jackpotState.treasuryCollected.toFixed(2)} <span className="text-[10px] text-white/40">USDC</span>
+              {Number(jackpotState.treasuryCollected || 0).toFixed(2)} <span className="text-[10px] text-white/40">USDC</span>
             </div>
           </div>
         </div>
@@ -737,11 +737,11 @@ function BingoContent() {
                   <div className="flex gap-4 mt-2 font-mono text-xs">
                     <div>
                       <span className="text-[9px] text-white/40 block uppercase">Entry Fee</span>
-                      <span className="font-bold text-[#00f3ff]">{lobby.entryFee.toFixed(2)} USDC</span>
+                      <span className="font-bold text-[#00f3ff]">{Number(lobby.entryFee || 0).toFixed(2)} USDC</span>
                     </div>
                     <div>
                       <span className="text-[9px] text-white/40 block uppercase">Active Prize Pot</span>
-                      <span className="font-bold text-[#bc13fe]">{lobby.currentPrizePot.toFixed(2)} USDC</span>
+                      <span className="font-bold text-[#bc13fe]">{Number(lobby.currentPrizePot || 0).toFixed(2)} USDC</span>
                     </div>
                   </div>
                 </div>

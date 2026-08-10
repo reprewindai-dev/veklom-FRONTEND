@@ -134,7 +134,7 @@ function runFromRecent(row: Record<string, unknown>, generatedAt: string): Veklo
   const tokens = numberValue(row, ["tokens", "total_tokens"], 0);
   const status = runStatus(row);
   const policy = stringValue(row, ["policy"], "needs_proof");
-  const hash = stringValue(row, ["hash", "pgl_hash", "evidence_hash"], `unverified:${id}`);
+  const hash = stringValue(row, ["hash", "envelope_hash", "pgl_hash", "evidence_hash"], `unverified:${id}`);
   const timestamp = stringValue(row, ["timestamp", "created_at", "ts"], generatedAt);
 
   return {

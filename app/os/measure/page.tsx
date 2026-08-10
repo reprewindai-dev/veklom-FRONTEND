@@ -1,10 +1,41 @@
 "use client";
-import { useEffect } from "react";
-import { Activity } from "lucide-react";
+
+import { MetricCard } from "@/components/cos/MetricCard";
+import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
+import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
-import { SectionShell } from "@/components/cos/SectionShell";
-import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
-import { JsonPanel } from "@/components/cos/StageParts";
-import { MetricGrid } from "@/components/cos/StageCollection";
-export default function MeasurePage(){const stage=getStage("measure"),data=useStageData("measure");useEffect(()=>{for(const e of stage.endpoints)if(e.method==="GET")void data.call(e)},[data.call,stage.endpoints]);const metrics=data.payloads[`GET ${stage.endpoints[0].path}`];return <SectionShell stage={stage} proof={data.stageProof} records={data.records}><div className="xl:col-span-2"><Pillar title="Work" proof={metrics?data.records[0]?.proof??"Needs proof":"Needs proof"} detail="Metrics are observations, not authorization or execution proof."><div className="flex items-center gap-3"><Activity className="text-cos-accent" size={18}/><span className="text-sm text-cos-text">Independent measurement surface</span></div><div className="mt-4"><MetricGrid value={metrics}/></div></Pillar></div>{stage.endpoints.slice(1).map((e,i)=><Pillar key={e.path} title={i%2===0?"Telemetry":"Evidence"} proof={data.records[i+1]?.proof??"Needs proof"}><JsonPanel value={data.payloads[`GET ${e.path}`]} empty={`${e.method} ${e.path} has not returned a measurement payload.`}/></Pillar>)}<Pillar title="Authority" proof="Needs proof"><HonestEmpty title="Measurement is not authority" route="GET /v1/vnp/metrics" detail="No authority grant or execution identity is inferred from metric values."/></Pillar><Pillar title="Drift" proof="Needs proof"><HonestEmpty title="No measurement drift baseline" route="GET /api/v1/platform/pulse" detail="Freshness and provenance are displayed only when returned by each source; no baseline was supplied."/></Pillar></SectionShell>}
+
+function numericField(payloads: Record<string, unknown>, field: string): number | string | undefined {
+  for (const payload of Object.values(payloads)) {
+    if (payload && typeof payload === "object" && field in payload) {
+      const value = (payload as Record<string, unknown>)[field];
+      if (typeof value === "number" || typeof value === "string") return value;
+    }
+  }
+  return undefined;
+}
+
+export default function MeasurePage() {
+  const stage = getStage("measure");
+  const data = useStageData("measure", { autoGet: true });
+  const latency = numericField(data.payloads, "latency");
+  const throughput = numericField(data.payloads, "throughput");
+
+  return (
+    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
+      <div className="space-y-4">
+        <Pillar title="Work" proof={data.stageProof}>{latency !== undefined || throughput !== undefined ? <div className="grid gap-3 sm:grid-cols-2">
+          {latency !== undefined && <MetricCard title="Latency" value={latency} unit="ms" trend="neutral" trendValue="Observed response" />}
+          {throughput !== undefined && <MetricCard title="Throughput" value={throughput} trend="neutral" trendValue="Observed response" />}
+        </div> : <HonestEmpty title="No measurement values returned" route="GET /v1/vnp/metrics" detail="Metric cards appear only for fields returned by the backend." />}</Pillar>
+        <Pillar title="Telemetry" proof={data.stageProof}><HonestEmpty title="Telemetry remains route-backed" route="GET /v1/vnp/metrics" detail="The route ledger records status and latency for each observation." /></Pillar>
+        <Pillar title="Authority" proof={data.stageProof}><HonestEmpty title="Measurement authority not returned" route="GET /v1/vnp/validators" detail="No validator authority payload was observed." /></Pillar>
+      </div>
+      <div className="space-y-4">
+        <Pillar title="Evidence" proof={data.stageProof}><HonestEmpty title="Measurement evidence not returned" route="GET /v1/vnp/incidents" detail="No incident evidence was observed." /></Pillar>
+        <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Drift comparison not returned" route="GET /api/v1/platform/pulse" detail="No comparison value is available." /></Pillar>
+      </div>
+    </SectionShell>
+  );
+}

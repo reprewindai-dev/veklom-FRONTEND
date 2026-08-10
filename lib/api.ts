@@ -108,6 +108,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     "Accept": "application/json",
     ...(opts.headers || {}),
   };
+  if (typeof window !== "undefined") {
+    const env = window.localStorage.getItem("veklom.environment") || "sandbox";
+    headers["X-Veklom-Environment"] = env;
+  }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (!opts.unauth) {
     let tok = getToken();
@@ -138,6 +142,40 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
 
   const text = await res.text();
   const json = text ? safeJson(text) : undefined;
+  
+  // Expose Runtime Authority metadata from headers
+  const runtimeMeta = {
+    execution: {
+      executionId: res.headers.get("x-execution-id"),
+      requestId: res.headers.get("x-request-id") || res.headers.get("x-veklom-request-id"),
+      authorityId: res.headers.get("x-authority-id"),
+    },
+    evidence: {
+      evidenceHash: res.headers.get("x-evidence-hash"),
+      ledgerRef: res.headers.get("x-ledger-reference"),
+      signatureIds: res.headers.get("x-signature-ids"),
+    },
+    settlement: {
+      receiptId: res.headers.get("x-veklom-receipt-id"),
+      paymentState: res.headers.get("x-payment-state"),
+    },
+    vnp: {
+      stake: res.headers.get("x-vnp-stake"),
+      stakeResult: res.headers.get("x-vnp-stake-result"),
+      yieldInfo: res.headers.get("x-vnp-yield"),
+      slashInfo: res.headers.get("x-vnp-slash"),
+    }
+  };
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("VeklomRuntimeMetadata", { detail: runtimeMeta }));
+  }
+
+  // Attach metadata to JSON response if it's an object (non-destructive extension)
+  if (json && typeof json === "object" && !Array.isArray(json)) {
+    (json as any)._runtimeMeta = runtimeMeta;
+  }
+
   if (!res.ok) {
     const msg =
       (json && (json.detail || json.message || json.error)) ||

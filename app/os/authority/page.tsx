@@ -1,9 +1,53 @@
 "use client";
-import { useEffect } from "react";
-import { LockKeyhole } from "lucide-react";
+
+import { AlertList } from "@/components/cos/AlertList";
+import { KeyAuthorityCard } from "@/components/cos/KeyAuthorityCard";
+import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
+import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
-import { SectionShell } from "@/components/cos/SectionShell";
-import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
-import { JsonPanel, Field } from "@/components/cos/StageParts";
-export default function AuthorityPage(){const stage=getStage("authority"),data=useStageData("authority");useEffect(()=>{for(const e of stage.endpoints)if(e.method==="GET"&&!e.path.includes("{"))void data.call(e)},[data.call,stage.endpoints]);const agents=data.payloads[`GET ${stage.endpoints[2].path}`],runs=data.payloads[`GET ${stage.endpoints[3].path}`];return <SectionShell stage={stage} proof={data.stageProof} records={data.records}><div className="xl:col-span-2"><Pillar title="Work" proof={agents?data.records[2]?.proof??"Needs proof":"Needs proof"} detail="Public certificate and lifecycle data only; no persistent COS identity is created here."><div className="flex items-start gap-3"><LockKeyhole className="text-cos-accent" size={19}/><p className="text-xs leading-5 text-cos-muted">The authority surface exposes public agent records and run-bound EI/EAT fields when returned. Key material is never rendered.</p></div><div className="mt-4"><JsonPanel value={agents} empty="No public agent certificate summaries returned — GET /api/v1/agents"/></div></Pillar></div><Pillar title="Telemetry" proof={runs?data.records[3]?.proof??"Needs proof":"Needs proof"}><JsonPanel value={runs} empty="No runs returned — GET /v1/runs"/></Pillar><Pillar title="Authority" proof="Needs proof"><div className="grid gap-3 sm:grid-cols-2">{["subject","tenant_id","run_id","capabilities","authority_bundle_hash","policy_hash","pgl_certificate_id","delegation","budget","execution_mode","ttl_seconds","audience","nonce","revocation"].map(k=><Field key={k} label={k} value={undefined}/>)}</div><p className="mt-4 text-xs leading-5 text-cos-muted">These fields remain named empty states until a public response returns them. The signed EI body and independently mutable revocation state are distinct.</p></Pillar><Pillar title="Evidence" proof="Needs proof"><HonestEmpty title="No public EI/EAT verifier route" route="GET /v1/runs" detail="The runs route may return execution_identity and eat objects; no signatures or key material are displayed."/></Pillar><Pillar title="Drift" proof="Needs proof"><HonestEmpty title="No revocation state selected" route="POST /v1/identities/{execution_id}/revoke" detail="Revocation is an independent gateway state and requires a returned execution identifier."/></Pillar></SectionShell>}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+export default function AuthorityPage() {
+  const stage = getStage("authority");
+  const data = useStageData("authority", { autoGet: true });
+  const firstPayload = asRecord(Object.values(data.payloads)[0]);
+  const keyId = firstPayload?.key_id ?? firstPayload?.keyId;
+  const role = firstPayload?.role;
+
+  return (
+    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
+      <div className="space-y-4">
+        <Pillar title="Work" proof={data.stageProof}>
+          {keyId ? (
+            <KeyAuthorityCard
+              title="Observed authority"
+              keyId={String(keyId)}
+              role={role ? String(role) : "Role not returned"}
+              status={data.stageProof}
+            />
+          ) : (
+            <HonestEmpty title="No authority identity returned" route="GET /api/v1/agents/{id}/certificate" detail="The route has not returned a key identifier for this workspace." />
+          )}
+        </Pillar>
+        <Pillar title="Telemetry" proof={data.stageProof}><AlertList alerts={[]} /></Pillar>
+        <Pillar title="Authority" proof={data.stageProof}>
+          <HonestEmpty title="Authority details unavailable" route="GET /api/v1/agents" detail="No additional authority fields were observed." />
+        </Pillar>
+      </div>
+      <div className="space-y-4">
+        <Pillar title="Evidence" proof={data.stageProof}>
+          <HonestEmpty title="Revocation evidence not observed" route="POST /v1/identities/{execution_id}/revoke" detail="A parameterized revocation route requires an execution identity." />
+        </Pillar>
+        <Pillar title="Drift" proof={data.stageProof}>
+          <HonestEmpty title="Drift not measured" route="GET /v1/runs" detail="No authority drift signal was returned." />
+        </Pillar>
+      </div>
+    </SectionShell>
+  );
+}

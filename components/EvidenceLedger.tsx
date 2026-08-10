@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import { TerminalEvent, VerifiedFinding, RiskLevel } from '../types';

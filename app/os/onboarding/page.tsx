@@ -189,8 +189,8 @@ export default function PGLOnboardingPage() {
 
   if (status.isLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="animate-pulse text-brand-500 font-mono tracking-widest text-sm">
+      <div className="min-h-screen bg-cos-bg flex items-center justify-center">
+        <div className="animate-pulse text-cos-accent font-mono text-[10px] uppercase tracking-[0.22em]">
           INITIALIZING PGL PROTOCOL...
         </div>
       </div>
@@ -199,16 +199,16 @@ export default function PGLOnboardingPage() {
 
   if (onboardingCompleted) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans overflow-y-auto">
+      <div className="min-h-screen bg-cos-bg text-cos-text flex flex-col font-sans overflow-y-auto">
         {/* PREMIUM VNP TELEMETRY HEADER */}
-        <header className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+        <header className="border-b border-cos-border bg-cos-surface2/55/80 backdrop-blur-md px-8 py-4 flex items-center justify-between sticky top-0 z-50">
           <div className="flex items-center gap-4">
             <div className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </div>
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-white">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-cos-text">
                 Sovereign Node VNP-702 Online
               </h2>
               <p className="text-[10px] font-mono text-emerald-400/80 uppercase">
@@ -218,13 +218,13 @@ export default function PGLOnboardingPage() {
           </div>
 
           {/* TAB SELECTOR */}
-          <div className="flex bg-black/40 border border-white/5 p-1 rounded-xl">
+          <div className="flex bg-black/40 border border-cos-border p-1 rounded-xl">
             <button
               onClick={() => setActiveTab("pgl")}
               className={`px-4 py-1.5 rounded-lg text-xs font-mono transition-all ${
                 activeTab === "pgl"
-                  ? "bg-brand-500/20 text-brand-400 border border-brand-500/30"
-                  : "text-ink-400 hover:text-ink-200"
+                  ? "bg-cos-accent/20 text-cos-accent border border-cos-accent/30"
+                  : "text-cos-muted hover:text-ink-200"
               }`}
             >
               1. LEDGER VALIDATION (PGL)
@@ -233,8 +233,8 @@ export default function PGLOnboardingPage() {
               onClick={() => setActiveTab("x402")}
               className={`px-4 py-1.5 rounded-lg text-xs font-mono transition-all ${
                 activeTab === "x402"
-                  ? "bg-brand-500/20 text-brand-400 border border-brand-500/30"
-                  : "text-ink-400 hover:text-ink-200"
+                  ? "bg-cos-accent/20 text-cos-accent border border-cos-accent/30"
+                  : "text-cos-muted hover:text-ink-200"
               }`}
             >
               2. SLA STAKING MARKETS (x402)
@@ -243,7 +243,7 @@ export default function PGLOnboardingPage() {
 
           <button
             onClick={() => router.replace("/control-node")}
-            className="bg-brand-500 hover:bg-brand-400 text-bg-900 font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all text-xs font-mono"
+            className="bg-cos-accent text-black hover:bg-cos-accent/80 text-black font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-cos-glow hover:shadow-cos-glow transition-all text-xs font-mono"
           >
             Enter Sovereign Workspace <ChevronRight className="w-4 h-4" />
           </button>
@@ -252,49 +252,49 @@ export default function PGLOnboardingPage() {
         {/* METRICS & TELEMETRY SUB-GRID */}
         <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8 space-y-8">
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-transparent" />
+            <div className="bg-cos-surface2/55 border border-cos-border p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cos-accent to-transparent" />
               <div>
                 <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest font-mono block mb-1">
                   Operator Identity
                 </span>
                 <h3 className="text-xl font-medium mb-1">{operator.name || "Jane Doe"}</h3>
-                <p className="text-xs text-ink-400 font-mono">{operator.email}</p>
+                <p className="text-xs text-cos-muted font-mono">{operator.email}</p>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
-                <span className="text-ink-400">Jurisdiction</span>
-                <span className="font-mono text-white">{agent.jurisdiction}</span>
+              <div className="mt-4 pt-4 border-t border-cos-border flex justify-between items-center text-xs">
+                <span className="text-cos-muted">Jurisdiction</span>
+                <span className="font-mono text-cos-text">{agent.jurisdiction}</span>
               </div>
             </div>
 
-            <div className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+            <div className="bg-cos-surface2/55 border border-cos-border p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-transparent" />
               <div>
                 <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-widest font-mono block mb-1">
                   Workspace Authority
                 </span>
                 <h3 className="text-xl font-medium mb-1">{workspace.name || "Alpha Core"}</h3>
-                <p className="text-xs text-ink-400 font-mono capitalize">Level: {workspace.authority_level}</p>
+                <p className="text-xs text-cos-muted font-mono capitalize">Level: {workspace.authority_level}</p>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
-                <span className="text-ink-400">Frameworks</span>
-                <span className="font-mono text-white">
+              <div className="mt-4 pt-4 border-t border-cos-border flex justify-between items-center text-xs">
+                <span className="text-cos-muted">Frameworks</span>
+                <span className="font-mono text-cos-text">
                   {workspace.compliance_frameworks.join(", ") || "None"}
                 </span>
               </div>
             </div>
 
-            <div className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-transparent" />
+            <div className="bg-cos-surface2/55 border border-cos-border p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cos-accent to-transparent" />
               <div>
-                <span className="text-[10px] font-semibold text-brand-400 uppercase tracking-widest font-mono block mb-1">
+                <span className="text-[10px] font-semibold text-cos-accent uppercase tracking-widest font-mono block mb-1">
                   Agent Certificate
                 </span>
                 <h3 className="text-xl font-medium mb-1 truncate">{agent.name || "Nexus-1"}</h3>
-                <p className="text-xs text-ink-400 font-mono truncate">ID: {certificateId || "Pending"}</p>
+                <p className="text-xs text-cos-muted font-mono truncate">ID: {certificateId || "Pending"}</p>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
-                <span className="text-ink-400">SLA Status</span>
+              <div className="mt-4 pt-4 border-t border-cos-border flex justify-between items-center text-xs">
+                <span className="text-cos-muted">SLA Status</span>
                 <span className="font-mono text-emerald-400">Secured via VNP</span>
               </div>
             </div>
@@ -310,15 +310,15 @@ export default function PGLOnboardingPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-6 animate-fade-in"
               >
-                <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
-                  <div className="p-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
+                <div className="border border-cos-border rounded-2xl overflow-hidden bg-cos-surface2/55 shadow-cos-card">
+                  <div className="p-4 border-b border-cos-border bg-white/[0.01] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Fingerprint className="text-brand-400 w-4 h-4" />
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-ink-300">
+                      <Fingerprint className="text-cos-accent w-4 h-4" />
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-cos-text">
                         Gnomledger (PGL) — Identity & Attestation Verification Swarm
                       </span>
                     </div>
-                    <div className="text-[10px] font-mono text-brand-400/80 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded-full">
+                    <div className="text-[10px] font-mono text-cos-accent/80 bg-cos-accent/10 border border-cos-accent/20 px-2 py-0.5 rounded-full">
                       Ledger State: Active
                     </div>
                   </div>
@@ -336,11 +336,11 @@ export default function PGLOnboardingPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-6 animate-fade-in"
               >
-                <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
-                  <div className="p-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
+                <div className="border border-cos-border rounded-2xl overflow-hidden bg-cos-surface2/55 shadow-cos-card">
+                  <div className="p-4 border-b border-cos-border bg-white/[0.01] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Zap className="text-brand-400 w-4 h-4" />
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-ink-300">
+                      <Zap className="text-cos-accent w-4 h-4" />
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-cos-text">
                         x402 SLA Staking Protocol & Performance Ledger
                       </span>
                     </div>
@@ -366,23 +366,23 @@ export default function PGLOnboardingPage() {
   const Icon = activeStep.icon;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row overflow-hidden font-sans">
+    <div className="min-h-screen bg-cos-bg text-cos-text flex flex-col md:flex-row overflow-hidden font-sans">
       {/* LEFT PANEL: Data Visualization & Status */}
       <motion.div
-        className="w-full md:w-1/2 lg:w-5/12 bg-[#0a0a0a] border-r border-white/5 p-8 lg:p-12 flex flex-col relative overflow-hidden"
+        className="w-full md:w-1/2 lg:w-5/12 bg-cos-surface2/55 border-r border-cos-border p-8 lg:p-12 flex flex-col relative overflow-hidden"
         initial={{ x: -50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {/* Subtle background glow */}
-        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-cos-accent/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="z-10 flex-1 flex flex-col">
           <div className="mb-12">
             <h1 className="text-3xl lg:text-4xl font-light tracking-tight mb-2">
-              <span className="font-semibold text-brand-400">Gnomledger</span>
+              <span className="font-semibold text-cos-accent">Gnomledger</span>
             </h1>
-            <p className="text-ink-400 text-sm max-w-sm leading-relaxed">
+            <p className="text-cos-muted text-sm max-w-sm leading-relaxed">
               Provisioning Sovereign Authority node. Establishing secure telemetry
               and immutable operational chains.
             </p>
@@ -410,15 +410,15 @@ export default function PGLOnboardingPage() {
           </div>
 
           <div className="mt-12 flex items-center gap-4">
-            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="flex-1 h-1 bg-cos-border rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-brand-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                className="h-full bg-cos-accent text-black shadow-cos-glow"
                 initial={{ width: 0 }}
                 animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
               />
             </div>
-            <div className="text-xs font-mono text-ink-500 font-semibold tracking-widest">
+            <div className="text-xs font-mono text-cos-steel font-semibold tracking-widest">
               0{step + 1} / 0{STEPS.length}
             </div>
           </div>
@@ -444,7 +444,7 @@ export default function PGLOnboardingPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mb-8"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cos-accent/10 border border-cos-accent/20 text-cos-accent text-xs font-medium mb-6">
               <Icon className="w-3.5 h-3.5" />
               {activeStep.label}
             </div>
@@ -457,7 +457,7 @@ export default function PGLOnboardingPage() {
               {step === 5 && "Bind Payment"}
               {step === 6 && "Finalize Proof"}
             </h2>
-            <p className="text-ink-400 text-sm">
+            <p className="text-cos-muted text-sm">
               {step === 0 && "Who operates this sovereign node?"}
               {step === 1 && "Configure compliance frameworks and operational scope."}
               {step === 2 && "Define the baseline attributes of your first agent."}
@@ -469,7 +469,7 @@ export default function PGLOnboardingPage() {
           </motion.div>
 
           {/* Form Container with Glassmorphism */}
-          <div className="bg-bg-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6 lg:p-8 shadow-2xl">
+          <div className="bg-bg-800/40 backdrop-blur-xl border border-cos-border rounded-2xl p-6 lg:p-8 shadow-cos-card">
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -480,9 +480,9 @@ export default function PGLOnboardingPage() {
               >
                 {step === 0 && (
                   <div className="space-y-5">
-                    <div className="mb-6 p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
-                      <h4 className="text-sm font-semibold text-brand-400 mb-1">Why this matters</h4>
-                      <p className="text-xs text-brand-400/80 leading-relaxed">
+                    <div className="mb-6 p-4 rounded-xl bg-cos-accent/10 border border-cos-accent/20">
+                      <h4 className="text-sm font-semibold text-cos-accent mb-1">Why this matters</h4>
+                      <p className="text-xs text-cos-accent/80 leading-relaxed">
                         Establishing a cryptographically bound Operator Identity ensures that all autonomous actions trace back to an authorized human. This prevents unauthorized usage and guarantees compliance with enterprise security models.
                       </p>
                     </div>
@@ -503,9 +503,9 @@ export default function PGLOnboardingPage() {
 
                 {step === 1 && (
                   <div className="space-y-6">
-                    <div className="mb-4 p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
-                      <h4 className="text-sm font-semibold text-brand-400 mb-1">Architectural Isolation</h4>
-                      <p className="text-xs text-brand-400/80 leading-relaxed">
+                    <div className="mb-4 p-4 rounded-xl bg-cos-accent/10 border border-cos-accent/20">
+                      <h4 className="text-sm font-semibold text-cos-accent mb-1">Architectural Isolation</h4>
+                      <p className="text-xs text-cos-accent/80 leading-relaxed">
                         Authority levels dictate row-level security (RLS) deep within the database. By strictly defining compliance frameworks and authority here, you guarantee that even if an agent goes rogue, it is mathematically isolated from your core infrastructure.
                       </p>
                     </div>
@@ -527,7 +527,7 @@ export default function PGLOnboardingPage() {
                       ]}
                     />
                     <div>
-                      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-3">
+                      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-3">
                         Compliance Frameworks
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -553,9 +553,9 @@ export default function PGLOnboardingPage() {
 
                 {step === 2 && (
                   <div className="space-y-5">
-                    <div className="mb-4 p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
-                      <h4 className="text-sm font-semibold text-brand-400 mb-1">Unforgeable AI Identity</h4>
-                      <p className="text-xs text-brand-400/80 leading-relaxed">
+                    <div className="mb-4 p-4 rounded-xl bg-cos-accent/10 border border-cos-accent/20">
+                      <h4 className="text-sm font-semibold text-cos-accent mb-1">Unforgeable AI Identity</h4>
+                      <p className="text-xs text-cos-accent/80 leading-relaxed">
                         Unlike traditional API keys, this certificate is cryptographically fused to the agent's behavior pattern. If an unknown entity attempts to execute under this name, the runtime enforcement network will instantly terminate the connection.
                       </p>
                     </div>
@@ -599,14 +599,14 @@ export default function PGLOnboardingPage() {
 
                 {step === 3 && (
                   <div className="space-y-8">
-                    <div className="mb-2 p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
-                      <h4 className="text-sm font-semibold text-brand-400 mb-1">The Laws of Physics for Your Agent</h4>
-                      <p className="text-xs text-brand-400/80 leading-relaxed">
+                    <div className="mb-2 p-4 rounded-xl bg-cos-accent/10 border border-cos-accent/20">
+                      <h4 className="text-sm font-semibold text-cos-accent mb-1">The Laws of Physics for Your Agent</h4>
+                      <p className="text-xs text-cos-accent/80 leading-relaxed">
                         These are not soft prompts. The Genome defines the absolute capabilities and hard constraints enforced at the network proxy layer. If an agent tries to use an unapproved tool, the packet is dropped before it reaches the target.
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-3">
+                      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-3">
                         Tool Access
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -626,7 +626,7 @@ export default function PGLOnboardingPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-3">
+                      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-3">
                         System Permissions
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -648,7 +648,7 @@ export default function PGLOnboardingPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-3 text-red-400">
+                      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-3 text-red-400">
                         Hard Rails
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -675,24 +675,24 @@ export default function PGLOnboardingPage() {
 
                 {step === 4 && (
                   <div className="space-y-4">
-                    <div className="mb-2 p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
-                      <h4 className="text-sm font-semibold text-brand-400 mb-1">Your Mathematical Truth</h4>
-                      <p className="text-xs text-brand-400/80 leading-relaxed">
+                    <div className="mb-2 p-4 rounded-xl bg-cos-accent/10 border border-cos-accent/20">
+                      <h4 className="text-sm font-semibold text-cos-accent mb-1">Your Mathematical Truth</h4>
+                      <p className="text-xs text-cos-accent/80 leading-relaxed">
                         The ledger root forms the unalterable foundation of your evidence chain. 
                         Every subsequent action, proof, and execution by this agent will be cryptographically hashed to this block. You now have mathematical proof of what your agents do, eliminating liability and enabling trust.
                       </p>
                     </div>
-                    <div className="p-6 rounded-xl bg-[#0a0a0a] border border-white/5 relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-brand-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="p-6 rounded-xl bg-cos-surface2/55 border border-cos-border relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-cos-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center">
-                          <Lock className="w-5 h-5 text-brand-400" />
+                        <div className="w-10 h-10 rounded-full bg-cos-accent/20 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-cos-accent" />
                         </div>
                         <div>
-                          <div className="text-xs uppercase tracking-widest text-ink-500 mb-1 font-semibold">
+                          <div className="text-xs uppercase tracking-widest text-cos-steel mb-1 font-semibold">
                             Genesis Block
                           </div>
-                          <div className="font-mono text-sm text-white/90">
+                          <div className="font-mono text-sm text-cos-text/90">
                             ledger://{workspace.name.toLowerCase().replace(/\s+/g, "-") || "workspace"}/root
                           </div>
                         </div>
@@ -710,7 +710,7 @@ export default function PGLOnboardingPage() {
                       placeholder="0x..."
                     />
                     <div>
-                      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-3">
+                      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-3">
                         Allowed Methods
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -740,12 +740,12 @@ export default function PGLOnboardingPage() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", bounce: 0.5 }}
-                      className="w-20 h-20 mx-auto rounded-full bg-brand-500/20 flex items-center justify-center mb-6"
+                      className="w-20 h-20 mx-auto rounded-full bg-cos-accent/20 flex items-center justify-center mb-6"
                     >
-                      <CheckCircle2 className="w-10 h-10 text-brand-400" />
+                      <CheckCircle2 className="w-10 h-10 text-cos-accent" />
                     </motion.div>
                     <h3 className="text-xl font-medium">All Systems Go</h3>
-                    <p className="text-ink-400 text-sm max-w-sm mx-auto">
+                    <p className="text-cos-muted text-sm max-w-sm mx-auto">
                       Your sovereign architecture is prepared. Initiating the first cryptographic proof to unlock the control plane.
                     </p>
                   </div>
@@ -760,7 +760,7 @@ export default function PGLOnboardingPage() {
               variant="ghost"
               onClick={() => setStep((s) => Math.max(0, s - 1))}
               disabled={step === 0 || loading}
-              className="hover:bg-white/5 text-ink-300"
+              className="hover:bg-cos-border text-cos-text"
             >
               Go Back
             </Button>
@@ -772,7 +772,7 @@ export default function PGLOnboardingPage() {
                 (step === 1 && !workspace.name) ||
                 (step === 2 && !agent.name)
               }
-              className="bg-brand-500 hover:bg-brand-400 text-bg-900 font-semibold px-8 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all"
+              className="bg-cos-accent text-black hover:bg-cos-accent/80 text-black font-semibold px-8 shadow-cos-glow hover:shadow-cos-glow transition-all"
             >
               {loading ? (
                 <span className="animate-pulse">Processing Sequence...</span>
@@ -792,7 +792,7 @@ export default function PGLOnboardingPage() {
             <div className="mt-12 text-center">
               <Link
                 href="/control-node"
-                className="text-xs text-ink-500 hover:text-ink-300 border-b border-dashed border-ink-600 pb-0.5 transition-colors"
+                className="text-xs text-cos-steel hover:text-cos-text border-b border-dashed border-ink-600 pb-0.5 transition-colors"
               >
                 Skip initialization (Replay Mode)
               </Link>
@@ -812,21 +812,21 @@ function OperatorVisualizer({ operator }: { operator: { name: string; email: str
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 border border-dashed border-brand-500/20 rounded-full"
+        className="absolute inset-0 border border-dashed border-cos-accent/20 rounded-full"
       />
       <motion.div
         animate={{ rotate: -360 }}
         transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-8 border border-white/5 rounded-full"
+        className="absolute inset-8 border border-cos-border rounded-full"
       />
-      <div className="z-10 bg-bg-900/80 backdrop-blur p-6 rounded-2xl border border-white/10 text-center shadow-2xl">
-        <div className="w-16 h-16 mx-auto bg-brand-500/10 rounded-full flex items-center justify-center mb-4">
-          <Fingerprint className="w-8 h-8 text-brand-400" />
+      <div className="z-10 bg-bg-900/80 backdrop-blur p-6 rounded-2xl border border-cos-border text-center shadow-cos-card">
+        <div className="w-16 h-16 mx-auto bg-cos-accent/10 rounded-full flex items-center justify-center mb-4">
+          <Fingerprint className="w-8 h-8 text-cos-accent" />
         </div>
-        <div className="text-xl font-medium text-white mb-1">
+        <div className="text-xl font-medium text-cos-text mb-1">
           {operator.name || "Awaiting Operator"}
         </div>
-        <div className="text-sm text-ink-500 font-mono">
+        <div className="text-sm text-cos-steel font-mono">
           {operator.email || "Identify yourself..."}
         </div>
       </div>
@@ -841,14 +841,14 @@ function WorkspaceVisualizer({
 }) {
   return (
     <div className="w-full">
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+      <div className="bg-cos-surface2/55 border border-cos-border rounded-2xl p-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-500/50 to-transparent" />
         <div className="flex items-center gap-4 mb-8">
-          <div className="p-3 bg-white/5 rounded-xl">
-            <Globe className="w-6 h-6 text-brand-400" />
+          <div className="p-3 bg-cos-border rounded-xl">
+            <Globe className="w-6 h-6 text-cos-accent" />
           </div>
           <div>
-            <div className="text-xs uppercase tracking-widest text-ink-500 font-semibold mb-1">
+            <div className="text-xs uppercase tracking-widest text-cos-steel font-semibold mb-1">
               Active Zone
             </div>
             <div className="text-lg font-medium">
@@ -859,14 +859,14 @@ function WorkspaceVisualizer({
         <div className="space-y-4">
           <div>
             <div className="flex justify-between text-xs mb-2">
-              <span className="text-ink-400">Authority Clearance</span>
-              <span className="text-brand-400 uppercase font-mono">
+              <span className="text-cos-muted">Authority Clearance</span>
+              <span className="text-cos-accent uppercase font-mono">
                 {workspace.authority_level}
               </span>
             </div>
             <div className="h-2 w-full bg-bg-800 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-brand-500"
+                className="h-full bg-cos-accent text-black"
                 initial={{ width: 0 }}
                 animate={{
                   width:
@@ -882,8 +882,8 @@ function WorkspaceVisualizer({
             </div>
           </div>
           {workspace.compliance_frameworks.length > 0 && (
-            <div className="pt-4 border-t border-white/5">
-              <div className="text-xs text-ink-500 mb-3 uppercase tracking-wider font-semibold">
+            <div className="pt-4 border-t border-cos-border">
+              <div className="text-xs text-cos-steel mb-3 uppercase tracking-wider font-semibold">
                 Active Frameworks
               </div>
               <div className="flex flex-wrap gap-2">
@@ -894,7 +894,7 @@ function WorkspaceVisualizer({
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="px-2 py-1 text-xs font-mono bg-white/5 border border-white/10 rounded text-ink-300"
+                      className="px-2 py-1 text-xs font-mono bg-cos-border border border-cos-border rounded text-cos-text"
                     >
                       {f}
                     </motion.div>
@@ -922,10 +922,10 @@ function AgentVisualizer({ agent }: { agent: any }) {
   return (
     <div className="w-full h-80 flex flex-col items-center">
       <div className="text-center mb-2">
-        <h3 className="font-mono text-brand-400 text-lg uppercase tracking-widest">
+        <h3 className="font-mono text-cos-accent text-lg uppercase tracking-widest">
           {agent.name || "NEXUS-?"}
         </h3>
-        <p className="text-xs text-ink-500 uppercase">{agent.jurisdiction} Node</p>
+        <p className="text-xs text-cos-steel uppercase">{agent.jurisdiction} Node</p>
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
@@ -960,14 +960,14 @@ function GenomeVisualizer({ genome }: { genome: any }) {
 
   return (
     <div className="w-full font-mono text-sm">
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-        <div className="bg-white/5 border-b border-white/5 px-4 py-2 flex items-center gap-2">
+      <div className="bg-cos-surface2/55 border border-cos-border rounded-xl overflow-hidden shadow-cos-card">
+        <div className="bg-cos-border border-b border-cos-border px-4 py-2 flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-red-500/50" />
           <div className="w-2 h-2 rounded-full bg-amber-500/50" />
-          <div className="w-2 h-2 rounded-full bg-brand-500/50" />
-          <span className="ml-2 text-xs text-ink-500">genome.json</span>
+          <div className="w-2 h-2 rounded-full bg-cos-accent/50" />
+          <span className="ml-2 text-xs text-cos-steel">genome.json</span>
         </div>
-        <div className="p-4 overflow-x-auto text-brand-400/80">
+        <div className="p-4 overflow-x-auto text-cos-accent/80">
           <pre>
             <motion.code
               initial={{ opacity: 0 }}
@@ -1004,21 +1004,21 @@ function LedgerVisualizer({ workspace }: { workspace: any }) {
           transition={{ delay: i * 0.2 }}
           className={`w-64 p-4 rounded-xl border flex items-center justify-between ${
             i === 1
-              ? "bg-brand-500/10 border-brand-500/30"
-              : "bg-[#0a0a0a] border-white/5 opacity-50"
+              ? "bg-cos-accent/10 border-cos-accent/30"
+              : "bg-cos-surface2/55 border-cos-border opacity-50"
           }`}
         >
           <div>
-            <div className="text-xs text-ink-500 uppercase tracking-widest mb-1">
+            <div className="text-xs text-cos-steel uppercase tracking-widest mb-1">
               {i === 1 ? "Genesis Block" : `Block #${i - 1}`}
             </div>
-            <div className="font-mono text-xs text-white/80">
+            <div className="font-mono text-xs text-cos-text/80">
               {i === 1
                 ? getDeterministicHash(workspace?.name)
                 : "pending..."}
             </div>
           </div>
-          <Database className={`w-4 h-4 ${i === 1 ? "text-brand-400" : "text-ink-600"}`} />
+          <Database className={`w-4 h-4 ${i === 1 ? "text-cos-accent" : "text-cos-steel"}`} />
         </motion.div>
       ))}
     </div>
@@ -1028,18 +1028,18 @@ function LedgerVisualizer({ workspace }: { workspace: any }) {
 function WalletVisualizer({ wallet }: { wallet: any }) {
   return (
     <div className="w-full max-w-sm mx-auto">
-      <div className="aspect-[1.6] rounded-2xl bg-gradient-to-br from-bg-800 to-bg-900 border border-white/10 p-6 flex flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl" />
+      <div className="aspect-[1.6] rounded-2xl bg-gradient-to-br from-bg-800 to-bg-900 border border-cos-border p-6 flex flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-cos-accent/10 rounded-full blur-3xl" />
         <div className="flex justify-between items-start">
-          <Activity className="w-6 h-6 text-ink-400" />
+          <Activity className="w-6 h-6 text-cos-muted" />
           <div className="flex gap-1">
             {wallet.payment_methods.map((m: string) => (
-              <div key={m} className="w-6 h-4 bg-white/10 rounded-sm" />
+              <div key={m} className="w-6 h-4 bg-cos-border/50 rounded-sm" />
             ))}
           </div>
         </div>
         <div>
-          <div className="text-xs text-ink-500 uppercase tracking-widest mb-2 font-mono">
+          <div className="text-xs text-cos-steel uppercase tracking-widest mb-2 font-mono">
             Bound Address
           </div>
           <div className="font-mono text-sm truncate">
@@ -1057,9 +1057,9 @@ function ProofVisualizer() {
       <motion.div
         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.8, 0.3] }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="absolute inset-0 bg-brand-500/20 rounded-full blur-xl"
+        className="absolute inset-0 bg-cos-accent/20 rounded-full blur-xl"
       />
-      <Shield className="w-20 h-20 text-brand-400 relative z-10" />
+      <Shield className="w-20 h-20 text-cos-accent relative z-10" />
     </div>
   );
 }
@@ -1079,14 +1079,14 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-2">
+      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-2">
         {label}
       </label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-ink-600 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+        className="w-full bg-black/20 border border-cos-border rounded-xl px-4 py-3 text-sm text-cos-text placeholder-ink-600 outline-none focus:border-cos-accent focus:ring-1 focus:ring-cos-accent transition-all"
       />
     </div>
   );
@@ -1105,16 +1105,16 @@ function Select({
 }) {
   return (
     <div>
-      <label className="text-xs font-semibold text-ink-400 uppercase tracking-wider block mb-2">
+      <label className="text-xs font-semibold text-cos-muted uppercase tracking-wider block mb-2">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all appearance-none cursor-pointer"
+        className="w-full bg-black/20 border border-cos-border rounded-xl px-4 py-3 text-sm text-cos-text outline-none focus:border-cos-accent focus:ring-1 focus:ring-cos-accent transition-all appearance-none cursor-pointer"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value} className="bg-bg-900 text-white">
+          <option key={o.value} value={o.value} className="bg-bg-900 text-cos-text">
             {o.label}
           </option>
         ))}
@@ -1141,8 +1141,8 @@ function ToggleButton({
         active
           ? danger
             ? "bg-red-500/20 text-red-400 border border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
-            : "bg-brand-500/20 text-brand-400 border border-brand-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-          : "bg-white/5 text-ink-400 border border-white/5 hover:bg-white/10 hover:text-ink-300"
+            : "bg-cos-accent/20 text-cos-accent border border-cos-accent/50 shadow-cos-glow"
+          : "bg-cos-border text-cos-muted border border-cos-border hover:bg-cos-border/50 hover:text-cos-text"
       }`}
     >
       {label}

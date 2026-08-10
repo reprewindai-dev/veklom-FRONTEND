@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **VEKLOM BIBLE — READ FIRST:** [`00_VEKLOM_BIBLE.md`](./00_VEKLOM_BIBLE.md)
+> It supersedes older cross-repo architecture, deployment, topology, port, and agent-alignment claims wherever they conflict.
+
 # Veklom Control Plane
 
 Production frontend for the Veklom sovereign AI control plane and Veklom Nexus Protocol surfaces.

@@ -1,9 +1,34 @@
 "use client";
-import { FormEvent, useState } from "react";
-import { GitBranch, Send } from "lucide-react";
+
+import { PhaseTrace } from "@/components/cos/PhaseTrace";
+import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
+import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
-import { SectionShell } from "@/components/cos/SectionShell";
-import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
-import { Field, JsonPanel } from "@/components/cos/StageParts";
-export default function BlueprintPage(){const stage=getStage("blueprint"),data=useStageData("blueprint");const [intent,setIntent]=useState("");const [plan,setPlan]=useState<Record<string,unknown>|null>(null);const compile=stage.endpoints[0],stats=stage.endpoints[1];async function submit(e:FormEvent){e.preventDefault();if(!intent.trim())return;const r=await data.call<Record<string,unknown>>(compile,{intent:intent.trim(),compliance:[],provider:"configured",model:"configured"});if(r.data)setPlan(r.data)}return <SectionShell stage={stage} proof={data.stageProof} records={data.records} primaryAction={<button form="blueprint-form" type="submit" disabled={data.loading||!intent.trim()} className="inline-flex items-center gap-2 rounded-xl bg-cos-accent px-4 py-3 text-xs font-semibold uppercase tracking-[.12em] text-cos-bg disabled:opacity-40"><Send size={14}/>Compile plan</button>}><div className="xl:col-span-2"><Pillar title="Work" proof={plan?data.records[0]?.proof??"Needs proof":"Needs proof"} detail="Only nodes returned by the compiler are rendered."><form id="blueprint-form" onSubmit={submit}><label><span className="cos-label">Intent</span><textarea required rows={3} value={intent} onChange={e=>setIntent(e.target.value)} placeholder="Describe the governed capability intent" className="cos-input"/></label></form>{plan?<div className="mt-5 grid gap-3 sm:grid-cols-3"><Field label="Plan ID" value={plan.id}/><Field label="Status" value={plan.status}/><Field label="Proof hash" value={plan.proof_hash}/></div>:<HonestEmpty title="No compiled plan" route={`${compile.method} ${compile.path}`} detail="Submit intent to receive the backend plan graph and proof hash."/>}</Pillar></div><Pillar title="Telemetry" proof={data.records[1]?.proof??"Needs proof"}><JsonPanel value={data.payloads[`GET ${stats.path}`]} empty={`${stats.method} ${stats.path} has not returned statistics.`}/></Pillar><Pillar title="Authority" proof="Needs proof"><HonestEmpty title="No plan authority binding" route="POST /api/v1/gpc/compile" detail="Policy and authority hashes are not returned by this compiler response."/></Pillar><Pillar title="Evidence" proof={plan?.proof_hash?data.records[0]?.proof??"Needs proof":"Needs proof"}>{plan?<><div className="flex items-center gap-3"><GitBranch size={17} className="text-cos-accent"/><span className="text-sm text-cos-text">Returned plan graph</span></div><div className="mt-3"><JsonPanel value={plan.graph}/></div></>:<HonestEmpty title="No plan evidence" route={`${compile.method} ${compile.path}`} detail="The proof hash and graph will appear only after compilation returns."/>}</Pillar><Pillar title="Drift" proof="Needs proof"><HonestEmpty title="No intent/plan comparison" route={`${compile.method} ${compile.path}`} detail="Drift remains unknown until both the submitted intent and returned plan are joined with execution evidence."/></Pillar></SectionShell>}
+
+export default function BlueprintPage() {
+  const stage = getStage("blueprint");
+  const data = useStageData("blueprint", { autoGet: true });
+  const plan = Object.values(data.payloads).find((value) => value && typeof value === "object");
+  const phaseStatus = data.loading ? "current" : plan ? "complete" : "pending";
+
+  return (
+    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
+      <div className="space-y-4">
+        <Pillar title="Work" proof={data.stageProof}>
+          <PhaseTrace phases={[
+            { id: "intent", name: "Intent", status: phaseStatus },
+            { id: "compile", name: "Compile", status: phaseStatus },
+            { id: "review", name: "Review", status: plan ? "current" : "pending" },
+          ]} />
+        </Pillar>
+        <Pillar title="Telemetry" proof={data.stageProof}><HonestEmpty title="Compile telemetry follows the route" route="POST /api/v1/gpc/compile" detail="No timing or plan claim is rendered until the endpoint is called." /></Pillar>
+        <Pillar title="Authority" proof={data.stageProof}><HonestEmpty title="Blueprint authority not returned" route="GET /api/v1/gpc/stats" detail="The registry has not returned an authority binding." /></Pillar>
+      </div>
+      <div className="space-y-4">
+        <Pillar title="Evidence" proof={data.stageProof}><HonestEmpty title="No compiled plan evidence" route="POST /api/v1/gpc/compile" detail="A plan must be returned before it can be inspected." /></Pillar>
+        <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Blueprint drift not measured" route="GET /api/v1/gpc/stats" detail="No drift signal was returned by the blueprint routes." /></Pillar>
+      </div>
+    </SectionShell>
+  );
+}

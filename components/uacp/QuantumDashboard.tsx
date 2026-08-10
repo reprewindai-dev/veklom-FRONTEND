@@ -1,6 +1,9 @@
 // @ts-nocheck
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { KalmanFilter } from '@/lib/substrate/engines/KalmanFilter';
+import { CurveEngine, SystemState } from '@/lib/substrate/engines/CurveEngine';
+import { HRMRouter } from '@/lib/substrate/adapters/HRMRouter';
 
 export function QuantumDashboard() {
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -11,6 +14,12 @@ export function QuantumDashboard() {
   const [infra, setInfra] = useState<any>(null);
   const [nodes, setNodes] = useState<{x: number, y: number, r: number, glow: boolean}[]>([]);
   const [edges, setEdges] = useState<{n1: number, n2: number}[]>([]);
+  const [resonance, setResonance] = useState<number>(0);
+  const [routingState, setRoutingState] = useState<any>(null);
+
+  const filterRef = useRef(new KalmanFilter(0.5));
+  const engineRef = useRef(new CurveEngine());
+  const routerRef = useRef(new HRMRouter());
 
   const [protocol, setProtocol] = useState<any>(null);
 
@@ -55,13 +64,35 @@ export function QuantumDashboard() {
         fetch('/api/uacp/infrastructure'),
         fetch('/protocol.json')
       ]);
-      if (telRes.ok) setTelemetry(await telRes.json());
-      if (statusRes.ok) setStatusState(await statusRes.json());
-      if (healthRes.ok) setHealth(await healthRes.json());
+      
+      let newTelemetry = null;
+      let newStatus = null;
+      let newHealth = null;
+
+      if (telRes.ok) { newTelemetry = await telRes.json(); setTelemetry(newTelemetry); }
+      if (statusRes.ok) { newStatus = await statusRes.json(); setStatusState(newStatus); }
+      if (healthRes.ok) { newHealth = await healthRes.json(); setHealth(newHealth); }
       if (secRes.ok) setSecurityData(await secRes.json());
       if (layersRes.ok) setLayers(await layersRes.json());
       if (infraRes.ok) setInfra(await infraRes.json());
       if (protocolRes.ok) setProtocol(await protocolRes.json());
+
+      // Adaptive Resonance Integration (Substrate)
+      const fidelity = newTelemetry?.fidelity ? parseFloat(newTelemetry.fidelity) : 90;
+      const leakage = newTelemetry?.leakage_rate ? parseFloat(newTelemetry.leakage_rate) : 5;
+      const healthScore = newHealth?.score ? parseFloat(newHealth.score) : 80;
+      
+      const sysState: SystemState = {
+        fidelity: fidelity / 100,
+        leakageRate: leakage / 100,
+        threatLevel: newStatus?.status === "healthy" ? 0.1 : 0.8,
+        uptimeSeconds: newStatus?.uptime_seconds || 1000
+      };
+
+      const decision = routerRef.current.routeCognitiveLoad(sysState, 450, 15000); // Distance to EU node, sample payload volume
+      setResonance(decision.truePhase);
+      setRoutingState(decision);
+      
     } catch (e) {
       console.error("Failed to fetch dashboard data", e);
     }
@@ -161,12 +192,35 @@ export function QuantumDashboard() {
                </div>
             </div>
 
+            {/* FEDERATION ROUTING (Substrate) */}
+            <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded-xl p-4 relative backdrop-blur-sm">
+               <div className="text-[10px] tracking-widest text-white/90 font-sans mb-4 flex items-center justify-between">
+                  FEDERATION ROUTING <span className="text-cyan-500/40 tracking-[0.2em] font-mono">...</span>
+               </div>
+               <div className="space-y-3">
+                  <div className="flex justify-between items-center bg-cyan-950/20 border border-cyan-900/40 p-2 rounded">
+                     <span className="text-[10px] text-cyan-100/80 uppercase">HRM Tier</span>
+                     <span className="text-[10px] text-cyan-400 font-bold">{routingState?.tier || 1}</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-cyan-950/20 border border-cyan-900/40 p-2 rounded">
+                     <span className="text-[10px] text-cyan-100/80 uppercase">Topology Mode</span>
+                     <span className="text-[10px] text-cyan-300 font-bold text-right ml-2 leading-tight">{routingState?.mode || 'HEURISTIC (Expansion)'}</span>
+                  </div>
+                  {routingState?.chunks && (
+                     <div className="flex justify-between items-center bg-cyan-950/20 border border-cyan-900/40 p-2 rounded">
+                        <span className="text-[10px] text-cyan-100/80 uppercase">Dispatch Chunks</span>
+                        <span className="text-[10px] text-cyan-400 font-bold">{routingState.chunks} ({(routingState.latency || 0).toFixed(1)}ms lag)</span>
+                     </div>
+                  )}
+               </div>
+            </div>
+
             {/* CONTROL MODULES */}
             <div className="bg-[#0b1219]/60 border border-cyan-900/40 rounded-xl p-4 relative backdrop-blur-sm">
                <div className="text-[10px] tracking-widest text-white/90 font-sans mb-4 flex items-center justify-between">
                   INFRASTRUCTURE MESH <span className="text-cyan-500/40 tracking-[0.2em] font-mono">...</span>
                </div>
-               <div className="space-y-2 mb-4 h-[120px] overflow-y-auto pr-2 scrollbar-hide">
+               <div className="space-y-2 mb-4 h-[90px] overflow-y-auto pr-2 scrollbar-hide">
                   {infra?.nodes ? infra.nodes.map((n: any, i: number) => (
                      <div key={i} className="bg-cyan-950/20 border border-cyan-900/40 p-2 rounded">
                         <div className="flex justify-between items-center mb-1">
@@ -260,7 +314,7 @@ export function QuantumDashboard() {
                   <div className="absolute top-[-8px] bg-[#0b1219] px-2 text-[8px] text-cyan-400 tracking-widest mr-2 uppercase border border-cyan-800/40 rounded">ENTANGLEMENT {engineState}</div>
                </div>
 
-               <div className="grid grid-cols-5 gap-2 text-center items-end pb-2">
+               <div className="grid grid-cols-6 gap-2 text-center items-end pb-2">
                   <div className="flex flex-col border-r border-cyan-900/30 pr-2 overflow-hidden text-ellipsis whitespace-nowrap">
                      <span className="text-[8px] text-cyan-500/50 uppercase tracking-widest mb-1 truncate">SYSTEM STATUS</span>
                      <span className="text-cyan-300 tracking-wider truncate">{systemOperational ? 'OPERATIONAL' : 'DEGRADED'}</span>
@@ -276,6 +330,10 @@ export function QuantumDashboard() {
                   <div className="flex flex-col border-r border-cyan-900/30 px-2 overflow-hidden text-ellipsis whitespace-nowrap">
                      <span className="text-[8px] text-cyan-500/50 uppercase tracking-widest mb-1 truncate">COHERENCE</span>
                      <span className="text-cyan-300 text-[12px] truncate">{coherence.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex flex-col border-r border-cyan-900/30 px-2 overflow-hidden text-ellipsis whitespace-nowrap">
+                     <span className="text-[8px] text-cyan-500/50 uppercase tracking-widest mb-1 truncate">RESONANCE</span>
+                     <span className="text-cyan-300 text-[12px] truncate">{(resonance * 100).toFixed(1)}%</span>
                   </div>
                   <div className="flex flex-col pl-2 overflow-hidden text-ellipsis whitespace-nowrap">
                      <span className="text-[8px] text-cyan-500/50 uppercase tracking-widest mb-1 truncate">SYS SCORE</span>

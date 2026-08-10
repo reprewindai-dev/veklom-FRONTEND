@@ -276,7 +276,7 @@ export async function executeCAPIInvocation(req: CAPIInvocationRequest): Promise
             'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: req.customModel || 'gpt-4o',
+            model: req.customModel || 'llama3.2:1b',
             messages: [
               { role: 'system', content: 'You are a cAPI worker. Process the invocation.' },
               { role: 'user', content: rawPromptTranslation }
@@ -288,7 +288,7 @@ export async function executeCAPIInvocation(req: CAPIInvocationRequest): Promise
           const jsonResponse = await response.json() as any;
           outputResult = {
             executionType: `REAL_OPENAI_COMPATIBLE_API`,
-            modelUsed: req.customModel || 'gpt-4o',
+            modelUsed: req.customModel || 'llama3.2:1b',
             textOutput: jsonResponse.choices[0].message.content || 'OpenAI processing completed.',
             parametersProcessed: req.parameters
           };

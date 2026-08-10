@@ -206,8 +206,8 @@ function mapAgent(record: Record<string, unknown>, index: number, generatedAt: s
     currentTask: stringValue(record, ["current_task", "currentTask"], ""),
     lastAction: stringValue(record, ["last_action", "lastAction"], ""),
     provider: stringValue(record, ["provider", "route", "model_provider"], ""),
-    pgl_hash: stringValue(record, ["pgl_hash", "pglHash", "evidence_hash"], ""),
-    pgl_status: stringValue(record, ["pgl_status", "pglStatus"], "") === "revoked" ? "revoked" : stringValue(record, ["pgl_hash", "pglHash", "evidence_hash"], "") ? "verified" : "unverified",
+    pgl_hash: stringValue(record, ["envelope_hash", "pgl_hash", "pglHash", "evidence_hash"], ""),
+    pgl_status: stringValue(record, ["pgl_status", "pglStatus"], "") === "revoked" ? "revoked" : stringValue(record, ["envelope_hash", "pgl_hash", "pglHash", "evidence_hash"], "") ? "verified" : "unverified",
     warnings,
     toolScopes: scopes,
     metrics: {

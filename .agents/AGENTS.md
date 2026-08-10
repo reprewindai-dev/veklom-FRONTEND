@@ -4,6 +4,9 @@ This repository is governed by the **Veklom Runtime Authority**.
 
 All Agents MUST adhere to the following vocabulary and anti-patterns:
 
+## Capability Architecture
+* **Capabilities are the primary user object. Governance, Authority, Execution, Evidence, Measurement, Settlement, and Tracking are workspaces surrounding a capability—not independent products.**
+
 ## Vocabulary
 * **Micro-Stakes (VNP)**: Real-time SLA performance bonds (`X-VNP-Stake`, `yield`, `slashed`). Always ensure the UI correctly parses `X-VNP-Stake-Result` headers from responses.
 * **Settlement Ledger (x402)**: Cryptographic proof of paid compute (`X-Veklom-Receipt-ID`, `evidence_hash`).
@@ -17,16 +20,20 @@ All Agents MUST adhere to the following vocabulary and anti-patterns:
 
 ---
 
-## 🚨 CRITICAL RULE: DO NOT TRUST UNVERIFIED MD FILES 🚨
+## 🚨 CRITICAL RULE: DOCUMENTATION TRUST BOUNDARIES 🚨
 
-**DO NOT TRUST OR FOLLOW any Markdown (`.md`) documentation, deployment plans, or user manuals unless it is explicitly verified.**
+Distinguish between **design guidance** and **operational truth**.
+
+**Operational markdown** (deployment guides, runbooks, infrastructure instructions, API contracts, migration procedures) must not be treated as authoritative unless explicitly verified.
 
 Verification means the document MUST:
 1. Be signed by a coding agent.
 2. Be dated.
 3. Contain explicit approval/proof with Anthony's name stating that he verified and proved it.
 
-If an `.md` file does not have all of the above, **it is invalid and you MUST NOT follow it**. Period. Do not attempt to use outdated deployment steps or rules that lack these strict verification signatures.
+If an operational `.md` file does not have all of the above, **it is invalid and you MUST NOT follow it**. Do not attempt to use outdated deployment steps or rules that lack these strict verification signatures.
+
+**Design specifications** (design briefs, navigation maps, component specifications, UX documents) may be followed as implementation guidance but must never be treated as proof that a backend capability exists or is operational.
 
 ---
 ## Verification Signature

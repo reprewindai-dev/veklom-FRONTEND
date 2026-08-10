@@ -1,9 +1,32 @@
 "use client";
-import { useEffect } from "react";
-import { CheckCircle2, ShieldAlert } from "lucide-react";
+
+import { PhaseTrace } from "@/components/cos/PhaseTrace";
+import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
+import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
-import { SectionShell } from "@/components/cos/SectionShell";
-import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
-import { JsonPanel } from "@/components/cos/StageParts";
-export default function EvidencePage(){const stage=getStage("evidence"),data=useStageData("evidence");const ledger=stage.endpoints[0],verify=stage.endpoints[1];useEffect(()=>{void data.call(ledger);},[data.call,ledger]);async function check(){await data.call(verify)}const result=data.payloads[`GET ${verify.path}`] as Record<string,unknown>|undefined;return <SectionShell stage={stage} proof={data.stageProof} records={data.records} primaryAction={<button onClick={check} disabled={data.loading} className="inline-flex items-center gap-2 rounded-xl bg-cos-accent px-4 py-3 text-xs font-semibold uppercase tracking-[.12em] text-cos-bg disabled:opacity-40"><CheckCircle2 size={14}/>Verify chain</button>}><div className="xl:col-span-2"><Pillar title="Work" proof={result?data.records[1]?.proof??"Needs proof":"Needs proof"} detail="The verifier response is authoritative; integrity is never recomputed in the browser.">{result?<div className={`rounded-xl border p-5 ${result.valid===false?"border-cos-danger/40 bg-cos-danger/5":"border-cos-verified/30 bg-cos-verified/5"}`}><div className="flex items-center gap-3">{result.valid===false?<ShieldAlert className="text-cos-danger"/>:<CheckCircle2 className="text-cos-verified"/>}<span className="font-mono text-sm text-cos-text">{String(result.valid===false?"FAILED":"VERIFIED")}</span></div><p className="mt-3 text-xs leading-5 text-cos-muted">{String(result.reason??"Not returned")}</p></div>:<HonestEmpty title="Chain not verified" route={`${verify.method} ${verify.path}`} detail="Run the verifier to receive the exact returned integrity state."/>}</Pillar></div><Pillar title="Telemetry" proof={data.records[0]?.proof??"Needs proof"}><JsonPanel value={data.payloads[`GET ${ledger.path}`]} empty={`${ledger.method} ${ledger.path} has not returned ledger records.`}/></Pillar><Pillar title="Authority" proof="Needs proof"><HonestEmpty title="No public execution authority record" route="GET /api/v1/ledger/agents/{id}" detail="An agent identifier is required before the agent ledger route can be requested."/></Pillar><Pillar title="Evidence" proof={result?data.records[1]?.proof??"Needs proof":"Needs proof"}><JsonPanel value={result} empty={`${verify.method} ${verify.path} has not returned a verifier payload.`}/></Pillar><Pillar title="Drift" proof="Needs proof"><HonestEmpty title="No evidence/runtime comparison" route={`${ledger.method} ${ledger.path}`} detail="The ledger is available independently, but no exact joined execution comparison was returned."/></Pillar></SectionShell>}
+
+export default function EvidencePage() {
+  const stage = getStage("evidence");
+  const data = useStageData("evidence", { autoGet: true });
+  const hasEvidence = Object.keys(data.payloads).length > 0;
+  const phaseStatus = data.loading ? "current" : hasEvidence ? "complete" : "pending";
+
+  return (
+    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
+      <div className="space-y-4">
+        <Pillar title="Work" proof={data.stageProof}><PhaseTrace phases={[
+          { id: "ledger", name: "Ledger", status: phaseStatus },
+          { id: "verify", name: "Verify", status: hasEvidence ? "current" : "pending" },
+          { id: "replay", name: "Replay", status: "pending" },
+        ]} /></Pillar>
+        <Pillar title="Telemetry" proof={data.stageProof}><HonestEmpty title="Evidence telemetry is route-backed" route="GET /v1/audit/ledger" detail="Latency and status remain in the route ledger below." /></Pillar>
+        <Pillar title="Authority" proof={data.stageProof}><HonestEmpty title="Evidence authority not returned" route="GET /api/v1/ledger/agents/{id}" detail="An execution identity is required for the parameterized ledger view." /></Pillar>
+      </div>
+      <div className="space-y-4">
+        <Pillar title="Evidence" proof={data.stageProof}><HonestEmpty title={hasEvidence ? "Evidence payload observed" : "No evidence payload observed"} route="GET /v1/audit/verify" detail={hasEvidence ? "The response is available to the route-backed data layer." : "No verifier result has been returned."} /></Pillar>
+        <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Evidence drift not measured" route="GET /v1/audit/verify" detail="No comparison result was returned." /></Pillar>
+      </div>
+    </SectionShell>
+  );
+}

@@ -33,7 +33,7 @@ export default function SignupPage() {
       const { autoSignedIn } = await signup(email, pw, name || undefined);
       if (autoSignedIn) {
         setOk("Account created. Taking you to your workspace onboarding…");
-        router.replace("/onboarding/pgl");
+        router.replace("/os/onboarding");
       } else {
         setOk("Account created. Please sign in to continue.");
         setTimeout(() => router.replace("/login"), 1400);

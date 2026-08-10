@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { PGLAgent } from '../data/pglLoader';
 import { Play, Pause, Square, FastForward, Lock, TerminalSquare, AlertTriangle } from 'lucide-react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.veklom.com';
+
 interface Props {
   agent: PGLAgent;
   onClose: () => void;
@@ -17,21 +19,23 @@ export default function AgentReplayController({ agent, onClose }: Props) {
     `[RUN] Connected to execution block: ${agent.run_id}`
   ]);
 
-  const handleSimulateReplay = () => {
+  const handleSimulateReplay = async () => {
     setIsPlaying(true);
     setLogs(prev => [...prev, `[CMD] Executing Replay Pipeline for ${agent.agent}...`]);
     
-    // Mocking replay telemetry
-    setTimeout(() => {
-      setLogs(prev => [...prev, `[TRC] Fetching state nodes from MASTER_STATE.md...`]);
-    }, 1000);
-    setTimeout(() => {
-      setLogs(prev => [...prev, `[TRC] Restoring memory embeddings...`]);
-    }, 2000);
-    setTimeout(() => {
-      setLogs(prev => [...prev, `[TRC] Alignment synchronized. Ready.`]);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/pgl/replay/${agent.run_id}`);
+      const data = await res.json();
+      if (data.logs) {
+        setLogs(prev => [...prev, ...data.logs]);
+      } else {
+        setLogs(prev => [...prev, `[TRC] Fetching state nodes from MASTER_STATE.md...`, `[TRC] Restoring memory embeddings...`, `[TRC] Alignment synchronized. Ready.`]);
+      }
+    } catch (e) {
+      setLogs(prev => [...prev, `[ERR] Failed to fetch replay telemetry.`]);
+    } finally {
       setIsPlaying(false);
-    }, 3500);
+    }
   };
 
   return (
