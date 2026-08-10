@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
@@ -8,7 +8,10 @@ import GoogleAnalyticsUserSync from "@/components/GoogleAnalyticsUserSync";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import CookieBanner from "@/components/CookieBanner";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
+const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+
 const BASE = "";
 const TITLE = "Veklom Control Plane";
 const DESC = "Veklom — the Sovereign AI Hub. Test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.";
@@ -107,7 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen bg-bg-900 text-ink-50 antialiased" suppressHydrationWarning>
+      <body className={`min-h-screen bg-bg-900 text-ink-50 antialiased ${inter.variable} ${fraunces.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
         <WebMCPProvider>
           <AuthProvider>
             {children}

@@ -1,268 +1,241 @@
-// @ts-nocheck
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight, Shield, Database, Globe, Lock, Eye, Network,
-  BookOpen, ChevronRight, CheckCircle, AlertCircle
-} from "lucide-react";
+import { ArrowRight, Terminal } from "lucide-react";
 import { motion } from "framer-motion";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
-};
+export default function M2MLandingPage() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [resonance, setResonance] = useState(0); // 0 = chaos, 1 = absolute resonance
 
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-};
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-const pillars = [
-  {
-    id: "01",
-    label: "Authority",
-    icon: Shield,
-    desc: "Who can act, what they can do, and how scope is granted — before execution begins.",
-    detail: "Policy-bound access control with scoped, revocable grants.",
-  },
-  {
-    id: "02",
-    label: "Policy",
-    icon: Lock,
-    desc: "Rules are evaluated before execution, not retroactively narrated after the fact.",
-    detail: "CAPPO enforces Zero-Trust middleware on every inbound request.",
-  },
-  {
-    id: "03",
-    label: "Evidence",
-    icon: Database,
-    desc: "Consequential actions leave a queryable, cryptographically anchored trail.",
-    detail: "GnomLedger (PGL) writes append-only Proof-of-Graph records signed by LockerPhycer.",
-  },
-  {
-    id: "04",
-    label: "Sovereignty",
-    icon: Globe,
-    desc: "BYOS, tenant isolation, data portability, and operator control without vendor lock-in.",
-    detail: "Your models, your servers, your data. Ollama-first. No mandatory cloud custody.",
-  },
-  {
-    id: "05",
-    label: "Federation",
-    icon: Network,
-    desc: "Independent nodes coordinate without surrendering their own authority boundaries.",
-    detail: "VNP mesh over WireGuard. Nodes attest to each other; no central trust anchor required.",
-  },
-  {
-    id: "06",
-    label: "Transparency",
-    icon: Eye,
-    desc: "Roadmap, build log, known limitations, and incident records — published without euphemisms.",
-    detail: "Trust is earned through repeated, verifiable behavior — not promises.",
-  },
-];
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
-const systemStatus = [
-  { name: "api.veklom.com", status: "operational", label: "BYOS API" },
-  { name: "capi.veklom.com", status: "operational", label: "cAPI Mesh" },
-  { name: "abide.veklom.com", status: "operational", label: "ABIDE" },
-  { name: "pgl.veklom.com", status: "operational", label: "GnomLedger" },
-  { name: "control.veklom.com", status: "operational", label: "Control Plane" },
-  { name: "Ollama Node 5", status: "operational", label: "Inference (167.233.202.195)" },
-];
+    // Chaos Substrate Parameters (Lorenz Attractor)
+    let x = 0.01;
+    let y = 0;
+    let z = 0;
+    const a = 10;
+    const b = 28;
+    const c = 8.0 / 3.0;
 
-export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+    let points: { x: number; y: number; z: number }[] = [];
+    const maxPoints = 2500;
+    let dt = 0.005; // Base speed
+
+    let currentResonance = 0; // Local tweening variable
+
+    // Colors
+    // Chaos: #FF5E7E (signal), #E8965A (ember)
+    // Resonance: #4CF2D6 (cyan), #1E8B79 (cyan-dim)
+
+    function hexToRgb(hex: string) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    }
+
+    const c1 = hexToRgb("#FF5E7E");
+    const c2 = hexToRgb("#E8965A");
+    const r1 = hexToRgb("#4CF2D6");
+    const r2 = hexToRgb("#1E8B79");
+
+    const lerpColor = (c_chaos: any, c_res: any, t: number) => {
+      return {
+        r: Math.round(c_chaos.r + (c_res.r - c_chaos.r) * t),
+        g: Math.round(c_chaos.g + (c_res.g - c_chaos.g) * t),
+        b: Math.round(c_chaos.b + (c_res.b - c_chaos.b) * t),
+      };
+    };
+
+    let animationFrameId: number;
+    let time = 0;
+
+    const render = () => {
+      // The system "learns" and achieves resonance over time (~10 seconds to full resonance)
+      if (currentResonance < 1) {
+        currentResonance += 0.0015;
+        if (currentResonance > 1) currentResonance = 1;
+        setResonance(currentResonance);
+      }
+
+      // Clear with trailing effect (alpha depends on resonance - clearer path at higher resonance)
+      ctx.fillStyle = `rgba(13, 17, 20, ${0.1 + (currentResonance * 0.05)})`;
+      ctx.fillRect(0, 0, width, height);
+
+      // Adaptive speed (slows down and stabilizes as it reaches resonance)
+      const dynamicDt = dt * (1 - currentResonance * 0.4);
+
+      // Calculate next point
+      const dx = a * (y - x) * dynamicDt;
+      const dy = (x * (b - z) - y) * dynamicDt;
+      const dz = (x * y - c * z) * dynamicDt;
+
+      x += dx;
+      y += dy;
+      z += dz;
+
+      points.push({ x, y, z });
+      if (points.length > maxPoints) {
+        points.shift();
+      }
+
+      // Draw Substrate
+      ctx.save();
+      // Center and scale
+      ctx.translate(width / 2, height / 2);
+      const scale = Math.min(width, height) / 70;
+      ctx.scale(scale, scale);
+
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        // Rotate for pseudo-3D feel
+        const angle = time * 0.1;
+        const rx = p.x * Math.cos(angle) - p.y * Math.sin(angle);
+        const ry = p.x * Math.sin(angle) + p.y * Math.cos(angle);
+        
+        const px = rx;
+        const py = p.z - 25; // Offset Z to center
+
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+
+      // Interpolate colors based on learning state (resonance)
+      const curColor1 = lerpColor(c1, r1, currentResonance);
+      const curColor2 = lerpColor(c2, r2, currentResonance);
+
+      const gradient = ctx.createLinearGradient(-30, -30, 30, 30);
+      gradient.addColorStop(0, `rgb(${curColor1.r}, ${curColor1.g}, ${curColor1.b})`);
+      gradient.addColorStop(1, `rgb(${curColor2.r}, ${curColor2.g}, ${curColor2.b})`);
+
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 0.5 + (currentResonance * 0.5); // Thicker, more stable line at resonance
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+
+      ctx.restore();
+
+      time += 0.01;
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[#060608] text-white font-sans selection:bg-blue-500/20">
+    <main className="relative min-h-screen bg-[#0D1114] text-[#CFEFE9] font-sans overflow-hidden">
+      {/* Substrate Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40" />
 
-      {/* ── Navigation ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#060608]/90 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded overflow-hidden">
-              <img src="/logo-square.png" alt="Veklom" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-semibold tracking-widest text-sm text-white/80 uppercase">VEKLOM</span>
+      {/* Grid overlay */}
+      <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+      <div className="absolute inset-0 z-0" style={{ backgroundImage: 'radial-gradient(rgba(76,242,214,0.1) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.3 }}></div>
+
+      {/* Navigation */}
+      <nav className="relative z-10 flex items-center justify-between p-6 border-b border-[#4CF2D6]/20 bg-[#0D1114]/80 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 flex items-center justify-center border border-[#4CF2D6]/30 bg-[#07090B]">
+            <span className="font-serif text-[#4CF2D6] font-bold">V</span>
           </div>
-
-          <div className="hidden md:flex items-center gap-8 text-xs font-medium text-white/40 tracking-wide uppercase">
-            <Link href="/" className="text-white/90 hover:text-white transition-colors">Overview</Link>
-            <Link href="/os" className="hover:text-white transition-colors">Capability OS</Link>
-            <Link href="/charter" className="hover:text-white transition-colors">Trust Charter</Link>
-            <Link href="/settings" className="hover:text-white transition-colors">Integrations</Link>
-          </div>
-
-          <Link
-            href="/os"
-            className="flex items-center gap-2 text-xs font-semibold bg-white text-black px-4 py-1.5 rounded hover:bg-white/90 transition-colors tracking-wide"
-          >
-            Control Plane <ArrowRight className="w-3 h-3" />
-          </Link>
+          <span className="font-mono text-xs tracking-widest uppercase text-[#4CF2D6]/80">VEKLOM</span>
+        </div>
+        <div className="flex items-center gap-6">
+          <Link href="/dev" className="text-xs font-mono uppercase text-[#CFEFE9]/60 hover:text-[#4CF2D6] transition-colors">Marketing (.dev)</Link>
+          <Link href="/os" className="text-xs font-mono uppercase text-[#CFEFE9]/60 hover:text-[#4CF2D6] transition-colors">Capability OS</Link>
+          <Link href="/vnp" className="text-xs font-mono uppercase text-[#CFEFE9]/60 hover:text-[#4CF2D6] transition-colors">VNP Mesh</Link>
         </div>
       </nav>
 
-      {/* ── Hero ───────────────────────────────────────────────────── */}
-      <section className="pt-40 pb-28 px-6 max-w-6xl mx-auto">
-        <motion.div initial="hidden" animate={mounted ? "visible" : "hidden"} variants={stagger}>
-
-          <motion.div variants={fadeUp} className="mb-3">
-            <span className="text-[11px] font-mono font-semibold text-blue-400/80 tracking-[0.2em] uppercase">
-              Sovereign Runtime Infrastructure
-            </span>
-          </motion.div>
-
-          <motion.h1 variants={fadeUp} className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[0.95] mb-8 text-white">
-            Governed authority<br className="hidden md:block" />
-            <span className="text-white/30"> for autonomous systems.</span>
-          </motion.h1>
-
-          <motion.p variants={fadeUp} className="text-lg md:text-xl text-white/50 max-w-2xl leading-relaxed font-light mb-12">
-            VEKLOM is sovereign runtime infrastructure for deploying AI agents with policy-bound access,
-            tenant isolation, verifiable evidence, and human override.
-          </motion.p>
-
-          <motion.div variants={fadeUp} className="flex items-center gap-4">
-            <Link
-              href="/os"
-              className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-md font-semibold text-sm hover:bg-white/90 transition-colors"
-            >
-              Explore the control plane <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/charter"
-              className="flex items-center gap-2 border border-white/10 text-white/60 px-6 py-3 rounded-md font-semibold text-sm hover:border-white/30 hover:text-white transition-colors"
-            >
-              <BookOpen className="w-4 h-4" /> Read the Trust Charter
-            </Link>
-          </motion.div>
-
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 text-center">
+        
+        {/* Resonance Status Pill */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="mb-8 px-4 py-1.5 border rounded-full flex items-center gap-3"
+          style={{
+            borderColor: `rgba(76, 242, 214, ${0.2 + resonance * 0.4})`,
+            backgroundColor: `rgba(7, 9, 11, 0.8)`
+          }}
+        >
+          <div className="flex gap-1 items-center">
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: resonance > 0.9 ? '#4CF2D6' : '#FF5E7E' }}></span>
+          </div>
+          <span className="font-mono text-[10px] tracking-widest uppercase" style={{ color: resonance > 0.9 ? '#4CF2D6' : '#E8965A' }}>
+            {resonance > 0.9 ? 'Adaptive Resonance Achieved' : 'Synthesizing Chaos Substrate...'}
+          </span>
+          <span className="font-mono text-[10px] text-[#4CF2D6]/50">{(resonance * 100).toFixed(1)}%</span>
         </motion.div>
-      </section>
 
-      {/* ── Doctrine ───────────────────────────────────────────────── */}
-      <section className="px-6 max-w-6xl mx-auto pb-24">
-        <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-10 md:p-14">
-          <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-6">The VEKLOM Doctrine</p>
-          <blockquote className="text-xl md:text-2xl text-white/80 leading-relaxed font-light max-w-4xl">
-            We build trust through evidence, not promises. We disclose limits, own failures,
-            preserve operator control, and design systems where authority must be{" "}
-            <span className="text-white font-medium">earned</span>,{" "}
-            <span className="text-white font-medium">scoped</span>, and{" "}
-            <span className="text-white font-medium">revocable</span>.
-          </blockquote>
-          <div className="mt-8 pt-8 border-t border-white/[0.06]">
-            <p className="text-sm text-white/40 leading-relaxed max-w-3xl">
-              We are not here to automate human responsibility away. We are here to give humans and agents
-              a credible framework for exercising it.
-            </p>
-          </div>
-        </div>
-      </section>
+        <motion.h1 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="text-5xl md:text-7xl lg:text-8xl font-serif font-medium tracking-tight mb-6 max-w-4xl leading-[1.1]"
+          style={{
+            color: '#CFEFE9',
+            textShadow: resonance > 0.9 ? '0 0 40px rgba(76,242,214,0.3)' : 'none'
+          }}
+        >
+          The Threshold of <br className="hidden md:block"/>
+          <span className="italic opacity-90" style={{ color: resonance > 0.9 ? '#4CF2D6' : '#CFEFE9' }}>M2M Trust</span>
+        </motion.h1>
 
-      {/* ── 6 Proof Pillars ────────────────────────────────────────── */}
-      <section className="px-6 max-w-6xl mx-auto pb-28">
-        <div className="mb-12">
-          <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-3">Architecture built on proof</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">Six pillars. All verifiable.</h2>
-        </div>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.5 }}
+          className="text-lg md:text-xl text-[#CFEFE9]/60 max-w-2xl font-light leading-relaxed mb-12"
+        >
+          When internal capacity to change matches the speed and shape of the change happening around you. Friction drops to zero. You know exactly how to move.
+        </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden border border-white/[0.06]">
-          {pillars.map((p) => {
-            const Icon = p.icon;
-            return (
-              <div
-                key={p.id}
-                className="bg-[#060608] p-8 hover:bg-white/[0.02] transition-colors group"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="p-2.5 border border-white/10 rounded-lg bg-white/[0.03] group-hover:border-white/20 transition-colors">
-                    <Icon className="w-5 h-5 text-white/60" />
-                  </div>
-                  <span className="font-mono text-[10px] text-white/20 font-bold">{p.id}</span>
-                </div>
-                <h3 className="text-lg font-bold mb-3 text-white tracking-tight">{p.label}</h3>
-                <p className="text-sm text-white/40 leading-relaxed mb-4">{p.desc}</p>
-                <p className="text-xs text-white/25 leading-relaxed font-mono border-t border-white/[0.06] pt-4">
-                  {p.detail}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── System Status ───────────────────────────────────────────── */}
-      <section className="px-6 max-w-6xl mx-auto pb-28">
-        <div className="mb-8">
-          <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-3">Current system state</p>
-          <h2 className="text-2xl font-bold tracking-tighter text-white">Live infrastructure</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {systemStatus.map((s) => (
-            <div
-              key={s.name}
-              className="flex items-center justify-between border border-white/[0.07] bg-white/[0.01] rounded-lg px-5 py-4"
-            >
-              <div>
-                <p className="text-sm font-semibold text-white/80">{s.label}</p>
-                <p className="text-[11px] font-mono text-white/30 mt-0.5">{s.name}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
-                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80">
-                  {s.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Trust Promise Strip ─────────────────────────────────────── */}
-      <section className="px-6 max-w-6xl mx-auto pb-28">
-        <div className="border border-white/[0.07] rounded-xl p-8 md:px-12 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
-          <div className="max-w-xl">
-            <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-2">Trust Charter</p>
-            <h3 className="text-xl font-bold text-white tracking-tight mb-2">
-              Every claim maps to a verifiable artifact.
-            </h3>
-            <p className="text-sm text-white/40 leading-relaxed">
-              Repository, endpoint, benchmark, incident record, or evidence trail — if we say it&apos;s live, we can prove it.
-            </p>
-          </div>
-          <Link
-            href="/charter"
-            className="flex items-center gap-2 shrink-0 border border-white/10 text-white/60 px-6 py-3 rounded-md font-semibold text-sm hover:border-white/30 hover:text-white transition-colors"
-          >
-            Read full charter <ChevronRight className="w-4 h-4" />
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.8 }}
+          className="flex flex-col md:flex-row items-center gap-4"
+        >
+          <Link href="/os" className="group relative flex items-center gap-3 px-8 py-4 bg-[#4CF2D6] text-[#07090B] font-mono text-sm font-bold uppercase tracking-widest overflow-hidden">
+            <span className="relative z-10">Enter Capability OS</span>
+            <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
           </Link>
-        </div>
-      </section>
+          <Link href="/vnp" className="flex items-center gap-3 px-8 py-4 border border-[#4CF2D6]/30 text-[#4CF2D6] font-mono text-sm font-bold uppercase tracking-widest hover:bg-[#4CF2D6]/10 transition-colors">
+            <Terminal className="w-4 h-4" /> Initialize Mesh
+          </Link>
+        </motion.div>
 
-      {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.06] px-6 py-10 max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded overflow-hidden opacity-60">
-              <img src="/logo-square.png" alt="Veklom" className="w-full h-full object-cover" />
-            </div>
-            <span className="text-xs text-white/30 font-mono tracking-wider">VEKLOM CONTROL PLANE</span>
-          </div>
-          <div className="flex items-center gap-6 text-xs text-white/25">
-            <Link href="/charter" className="hover:text-white/60 transition-colors">Trust Charter</Link>
-            <Link href="/os" className="hover:text-white/60 transition-colors">Capability OS</Link>
-            <Link href="/settings" className="hover:text-white/60 transition-colors">Integrations</Link>
-            <span className="font-mono">control.veklom.com</span>
-          </div>
-        </div>
-      </footer>
-
+      </div>
     </main>
   );
 }

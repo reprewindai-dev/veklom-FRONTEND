@@ -16,12 +16,12 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
   staticPageGenerationTimeout: 1000,
   compress: true,
+  turbopack: {},
   async headers() {
     return [
       {
