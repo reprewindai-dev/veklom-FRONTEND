@@ -7,6 +7,7 @@ import { capabilities, type Capability } from "@/lib/cos/capabilities";
 import { CapabilityCard } from "@/components/cos/CapabilityCard";
 import { CapabilitySearch } from "@/components/cos/CapabilitySearch";
 import { ProofBadge } from "@/components/cos/ProofBadge";
+import { BeaconDiscovery } from "@/components/cos/BeaconDiscovery";
 
 export default function CapabilityHome() {
   const reduceMotion = useReducedMotion();
@@ -38,6 +39,7 @@ export default function CapabilityHome() {
         <div className="flex items-center gap-2 text-xs text-cos-steel"><ProofBadge status="Present" /> <span>Catalog metadata</span></div>
       </motion.div>
       <CapabilitySearch value={query} onChange={setQuery} />
+      <BeaconDiscovery />
       <div className="mt-10 rounded-2xl border border-cos-border bg-cos-surface2/55 p-6 shadow-cos-card lg:p-8">
         <div className="mb-8 flex items-center justify-between">
           <div>

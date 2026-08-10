@@ -1,0 +1,49 @@
+import { classifyPayload, deriveProofStatus } from "@/lib/cos/proof";
+
+describe("Capability OS proof derivation", () => {
+  it("keeps an uncalled route at Needs proof", () => {
+    expect(deriveProofStatus({ kind: "not-called" })).toBe("Needs proof");
+  });
+
+  it("keeps a missing route at Not started", () => {
+    expect(deriveProofStatus({ kind: "no-route" })).toBe("Not started");
+  });
+
+  it("marks failed calls Degraded", () => {
+    expect(deriveProofStatus({ kind: "failed", status: 401 })).toBe("Degraded");
+  });
+
+  it("does not treat reachability as verification", () => {
+    expect(deriveProofStatus({ kind: "reachability-only", status: 200 })).toBe("Present");
+  });
+
+  it("requires source truth or a signed handshake for Verified", () => {
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200 })).toBe("Verified");
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200, signed: true })).toBe("Verified");
+  });
+
+  it("marks sandbox source observations as Simulated but preserves failures", () => {
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200 }, true)).toBe("Simulated");
+    expect(deriveProofStatus({ kind: "failed", status: 500 }, true)).toBe("Degraded");
+  });
+
+  it("keeps an absent route not started in sandbox mode", () => {
+    expect(deriveProofStatus({ kind: "no-route" }, true)).toBe("Not started");
+  });
+
+  it("respects a backend-declared degraded proof state", () => {
+    const classified = classifyPayload({
+      proofState: "degraded",
+      proofSignal: "VNP telemetry store unavailable",
+      apis: [],
+    });
+    expect(classified.observation.kind).toBe("failed");
+    expect(classified.reason).toBe("VNP telemetry store unavailable");
+    expect(deriveProofStatus(classified.observation)).toBe("Degraded");
+    expect(deriveProofStatus(classified.observation)).not.toBe("Verified");
+  });
+
+  it("does not let runtime metadata turn a health envelope into source truth", () => {
+    expect(classifyPayload({ status: "ok", _runtimeMeta: {} }).observation.kind).toBe("reachability-only");
+  });
+});

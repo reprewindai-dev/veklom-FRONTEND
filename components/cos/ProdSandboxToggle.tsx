@@ -1,22 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-export function ProdSandboxToggle() {
-  const [sandbox, setSandbox] = useState(true);
-
-  useEffect(() => {
-    const env = window.localStorage.getItem("veklom.environment");
-    if (env === "production") {
-      setSandbox(false);
-    } else {
-      window.localStorage.setItem("veklom.environment", "sandbox");
-    }
-  }, []);
-
+export function ProdSandboxToggle({
+  sandbox,
+  onChange,
+}: {
+  sandbox: boolean;
+  onChange: (sandbox: boolean) => void;
+}) {
   const toggleSandbox = () => {
     const nextState = !sandbox;
-    setSandbox(nextState);
+    onChange(nextState);
     window.localStorage.setItem("veklom.environment", nextState ? "sandbox" : "production");
     window.dispatchEvent(new Event("veklom.environment.changed"));
   };

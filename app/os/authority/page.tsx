@@ -1,22 +1,53 @@
-import { WorkspaceScaffold } from "@/components/cos/WorkspaceScaffold";
-import { KeyAuthorityCard } from "@/components/cos/KeyAuthorityCard";
-import { AlertList } from "@/components/cos/AlertList";
+"use client";
 
-export default function AuthorityPage() { 
+import { AlertList } from "@/components/cos/AlertList";
+import { KeyAuthorityCard } from "@/components/cos/KeyAuthorityCard";
+import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
+import { SectionShell } from "@/components/cos/SectionShell";
+import { getStage } from "@/lib/cos/stages";
+import { useStageData } from "@/lib/cos/useStageData";
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+export default function AuthorityPage() {
+  const stage = getStage("authority");
+  const data = useStageData("authority", { autoGet: true });
+  const firstPayload = asRecord(Object.values(data.payloads)[0]);
+  const keyId = firstPayload?.key_id ?? firstPayload?.keyId;
+  const role = firstPayload?.role;
+
   return (
-    <WorkspaceScaffold stage="Authority" title="Authority" description="Inspect key identifiers, permissions, caps, leases, and revocation state without exposing private keys.">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="space-y-4">
-          <KeyAuthorityCard title="Primary Governance Key" keyId="veklom_pub_..." role="UACP Admin" status="Not started" />
-          <KeyAuthorityCard title="Execution Lease Key" keyId="veklom_exe_..." role="Ephemeral Worker" status="Not started" />
-        </div>
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium text-cos-text">Active Security Advisories</h3>
-          <AlertList alerts={[
-            { id: "1", type: "info", message: "Key provisioning simulated. Real identities require hardware vault.", time: "System Notice" }
-          ]} />
-        </div>
+    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
+      <div className="space-y-4">
+        <Pillar title="Work" proof={data.stageProof}>
+          {keyId ? (
+            <KeyAuthorityCard
+              title="Observed authority"
+              keyId={String(keyId)}
+              role={role ? String(role) : "Role not returned"}
+              status={data.stageProof}
+            />
+          ) : (
+            <HonestEmpty title="No authority identity returned" route="GET /api/v1/agents/{id}/certificate" detail="The route has not returned a key identifier for this workspace." />
+          )}
+        </Pillar>
+        <Pillar title="Telemetry" proof={data.stageProof}><AlertList alerts={[]} /></Pillar>
+        <Pillar title="Authority" proof={data.stageProof}>
+          <HonestEmpty title="Authority details unavailable" route="GET /api/v1/agents" detail="No additional authority fields were observed." />
+        </Pillar>
       </div>
-    </WorkspaceScaffold>
-  ); 
+      <div className="space-y-4">
+        <Pillar title="Evidence" proof={data.stageProof}>
+          <HonestEmpty title="Revocation evidence not observed" route="POST /v1/identities/{execution_id}/revoke" detail="A parameterized revocation route requires an execution identity." />
+        </Pillar>
+        <Pillar title="Drift" proof={data.stageProof}>
+          <HonestEmpty title="Drift not measured" route="GET /v1/runs" detail="No authority drift signal was returned." />
+        </Pillar>
+      </div>
+    </SectionShell>
+  );
 }

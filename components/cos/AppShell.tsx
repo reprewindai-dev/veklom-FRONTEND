@@ -9,10 +9,12 @@ import { VeklomLogo } from "./VeklomLogo";
 import { ProofBadge } from "./ProofBadge";
 import { CommandPalette } from "./CommandPalette";
 import { TerminalConsole } from "./TerminalConsole";
+import { SandboxProvider } from "@/lib/cos/sandbox";
 import { ProdSandboxToggle } from "./ProdSandboxToggle";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, loading } = useAuth();
+  const [sandbox, setSandbox] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [clock, setClock] = useState("");
@@ -29,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
   const identity = loading ? "Loading identity" : me?.email || me?.name || "Requester identity unavailable";
   return (
+    <SandboxProvider value={sandbox}>
     <div className="cos-shell relative flex min-h-screen overflow-hidden bg-cos-bg font-sans text-cos-text">
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_78%_0%,rgba(0,229,255,0.13),transparent_29%),radial-gradient(circle_at_16%_92%,rgba(0,229,255,0.055),transparent_27%),linear-gradient(180deg,#0A0E1A_0%,#080B14_100%)]" />
       <div className="pointer-events-none fixed inset-0 -z-0 bg-cos-grid bg-[size:56px_56px] opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent_78%)]" />
@@ -37,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="pointer-events-none absolute inset-x-0 bottom-[-1px] h-px bg-gradient-to-r from-transparent via-cos-accent/55 to-transparent" />
           <div className="flex items-center gap-5"><VeklomLogo /><span className="hidden border-l border-cos-border pl-5 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel md:inline">Capability Operating System</span><span className="hidden rounded border border-cos-accent/25 px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-cos-steel lg:inline">Machine-to-Machine Trust Infrastructure</span></div>
           <div className="flex items-center gap-2 text-xs">
-            <ProdSandboxToggle />
+            <ProdSandboxToggle sandbox={sandbox} onChange={setSandbox} />
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
             <button onClick={() => setPaletteOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>
@@ -49,5 +52,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <TerminalConsole open={terminalOpen} onClose={() => setTerminalOpen(false)} />
     </div>
+    </SandboxProvider>
   );
 }
