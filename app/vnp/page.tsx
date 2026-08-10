@@ -84,7 +84,7 @@ export default function VNPLandingPage() {
             <div className="w-8 h-8 bg-[#FFB800] rounded flex items-center justify-center brand-glow">
               <span className="font-bold text-black leading-none">V</span>
             </div>
-            <span className="font-bold tracking-wider text-lg font-mono">VEKLOM<span className="text-gray-500">_VNP</span></span>
+            <span className="font-bold tracking-wider text-lg font-mono">VEKLOM<span className="text-gray-500"> — The Threshold</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
             <a href="#protocol" className="hover:text-white transition-colors">The Protocol</a>

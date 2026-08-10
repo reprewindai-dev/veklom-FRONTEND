@@ -17,7 +17,8 @@ function numericField(payloads: Record<string, unknown>, field: string): number 
 }
 
 export default function MeasurePage() {
-  const stage = getStage("measure");
+  const baseStage = getStage("measure");
+  const stage = { ...baseStage, label: "Measure — Veklom The Threshold" };
   const data = useStageData("measure", { autoGet: true });
   const latency = numericField(data.payloads, "latency");
   const throughput = numericField(data.payloads, "throughput");
