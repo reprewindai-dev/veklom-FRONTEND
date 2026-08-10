@@ -10,9 +10,11 @@ export function PglLineageTracker() {
     refreshInterval: 10000
   });
 
+  const registryArray = Array.isArray(registry) ? registry : [];
+
   // Merge real backend registry into table if available
-  const displayData = registry && registry.length > 0 
-    ? registry.map((r: any) => ({
+  const displayData = registryArray.length > 0 
+    ? registryArray.map((r: any) => ({
         id: "pgl_id_" + r.id.substring(0, 8),
         agent: "Identity",
         workspace: r.tenant_id,

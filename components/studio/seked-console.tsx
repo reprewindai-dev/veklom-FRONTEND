@@ -11,6 +11,7 @@ export function SekedConsole() {
     refreshInterval: 5000
   });
 
+  const agentsArray = Array.isArray(agents) ? agents : [];
   const mockBlocks: any[] = [];
 
   return (
@@ -30,11 +31,11 @@ export function SekedConsole() {
       <div className="flex-1 space-y-4">
         {/* Real Backend Data Segment */}
         {error && <ErrorBox message={error.message || "Failed to load SEKED Metrics"} />}
-        {agents && agents.length > 0 && (
+        {agentsArray.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-xs font-semibold text-ink-300 uppercase tracking-wider mb-2">Live Execution Confidence</h3>
             <div className="grid grid-cols-2 gap-2">
-              {agents.slice(0, 4).map((agent: any) => (
+              {agentsArray.slice(0, 4).map((agent: any) => (
                 <div key={agent.agent_id} className="p-2 bg-bg-900 border border-ink-800 rounded flex flex-col gap-1">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-medium text-white truncate max-w-[120px]" title={agent.name}>{agent.name}</span>
