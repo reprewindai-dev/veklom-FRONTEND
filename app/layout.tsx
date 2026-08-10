@@ -13,15 +13,15 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 const BASE = "";
-const TITLE = "Veklom Control Plane";
-const DESC = "Veklom — the Sovereign AI Hub. Test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.";
+const TITLE = "Veklom — The Threshold";
+const DESC = "Two machines just agreed to trust each other. No one was watching. Identity → Authority → Policy → Execution → Proof.";
 // Official Veklom brand package (raster) served at the site root + /static/branding.
 // These are the exact assets the main veklom.com site uses for social cards.
 const OG_IMAGE = "/og/og-home.jpg";
 const TWITTER_IMAGE = "/og/og-home.jpg";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://control.veklom.com"),
+  metadataBase: new URL("https://veklom.com"),
   applicationName: "Veklom",
   title: {
     default: TITLE,
@@ -47,11 +47,11 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
-    siteName: "Veklom · Sovereign AI Hub",
+    siteName: "Veklom · The Threshold",
     title: TITLE,
     description: DESC,
     url: "/",
-    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — Sovereign AI Hub" }],
+    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — The Threshold" }],
   },
   twitter: {
     card: "summary_large_image",

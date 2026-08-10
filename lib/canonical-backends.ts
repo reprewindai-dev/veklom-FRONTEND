@@ -35,7 +35,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
   const cappoUrl = process.env.CAPPO_URL || "https://cappo.veklom.com";
   const ledgerUrl = process.env.LEDGER_URL || "https://ledger.veklom.com";
   const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
-  const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
+  const pglUrl = process.env.PGL_URL || `${byosUrl}/api/v1/pgl/proxy`;
   const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
   const apexUrl = process.env.APEX_URL || "https://apex.veklom.com";
   const abideUrl = process.env.ABIDE_URL || "https://abide.veklom.com";
