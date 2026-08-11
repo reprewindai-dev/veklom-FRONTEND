@@ -1,0 +1,37 @@
+# Cooperative crawling baseline for Veklom.
+#
+# This is a COOPERATIVE SIGNAL, not a security boundary.
+# Actual enforcement lives in:
+#   - Cloudflare AI Crawl Control (available on all plans)
+#   - Cloudflare WAF custom rules using cf.client.bot
+#   - Edge Admission Worker (admission-worker.ts)
+#
+# Intent: search machines get only the surfaces intentionally given to them.
+# Default posture is DENY, with explicit allow for intended public surfaces.
+
+User-agent: *
+Disallow: /
+
+# Explicitly permitted public search surface
+Allow: /$
+Allow: /about$
+Allow: /about/
+Allow: /pricing$
+Allow: /pricing/
+Allow: /docs/
+Allow: /blog/
+Allow: /changelog/
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /.well-known/
+Allow: /llms.txt
+
+# Machine-readable capability surface (discovery, not execution)
+Allow: /veklom-discovery.json
+Allow: /.well-known/agent.json
+Allow: /.well-known/mcp.json
+
+# AI training crawlers: blocked by Cloudflare AI Crawl Control.
+# If a training crawler ignores this file, WAF rules block at the edge.
+
+Sitemap: https://veklom.com/sitemap.xml

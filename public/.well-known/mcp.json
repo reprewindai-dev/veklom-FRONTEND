@@ -1,0 +1,37 @@
+{
+  "_note": "This is a Veklom convenience document, NOT an MCP standard discovery URI.",
+  "mcpEndpoint": "https://cappo.veklom.com/mcp",
+  "protocolVersion": "2026-07-28",
+  "paths": {
+    "server/discover": "https://cappo.veklom.com/mcp",
+    "tools/list": "https://cappo.veklom.com/mcp"
+  },
+  "auth": {
+    "protectedResourceMetadata": "https://veklom.com/.well-known/oauth-authorization-server"
+  },
+  "payment": {
+    "pricingEndpoint": "https://cappo.veklom.com/api/v1/x402/config"
+  },
+  "extensions": {
+    "pgl": "https://pgl.veklom.com/a2a/v1"
+  },
+  "exampleDiscoverResponse": {
+    "supportedVersions": ["2026-07-28"],
+    "capabilities": {
+      "tools": {},
+      "resources": {},
+      "extensions": {
+        "com.veklom/covenant-governance": {},
+        "com.veklom/x402-payments": {},
+        "io.modelcontextprotocol/tasks": {}
+      }
+    },
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "Veklom Nexus",
+        "version": "2.4.1",
+        "description": "Sovereign AI hub with governed agent execution and multi-backend runtime."
+      }
+    }
+  }
+}

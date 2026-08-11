@@ -1,14 +1,36 @@
-# Veklom Control Plane
+# Veklom AI Platform
 
-Veklom is the Sovereign AI Hub. It allows you to test, plan, govern, deploy, and prove private AI from one tenant-scoped workspace.
+Veklom is a sovereign AI execution platform that provides governed orchestration for machine-to-machine workflows. It ensures all agent workloads are auditable, verifiable, and run on isolated execution boundaries.
+
+## CAPPO (Governed Execution)
+The CAPPO (cAPI Engine) component enforces nine-phase governance on every consequential action. It intercepts model outputs, applies policy boundaries, and issues Project Genome Ledger (PGL) evidence for every execution.
+
+## MCP Tool Catalog
+Veklom exposes its capabilities through a Model Context Protocol (MCP) server located at `https://cappo.veklom.com/mcp`.
+- **execute**: Run governed agent tasks. Price: $0.50 USDC
+- **govern**: Execute nine-phase governance over actions. Price: $0.05 USDC
+- **assess**: Assess agent workloads. Price: $0.005 USDC
+- **verify_receipt**: Verify x402 payment receipts. Price: $0.001 USDC
+- **evidence.retrieve**: Retrieve PGL execution evidence. Price: $0.005 USDC
+
+## Discovery Flow
+1. Fetch the Agent Card: `GET https://veklom.com/.well-known/agent-card.json`
+2. Discover tools: `POST https://cappo.veklom.com/mcp` with header `Mcp-Method: server/discover`
+3. Call a tool: `POST https://cappo.veklom.com/mcp` with header `Mcp-Method: tools/call`
+
+## Authentication
+Veklom requires OAuth2 authentication for governed endpoints. The token endpoint metadata can be found at `https://veklom.com/.well-known/oauth-authorization-server`. Send the token in the `Authorization: Bearer <token>` header.
+
+## Payment
+Veklom uses x402 V2 for micro-settlements. 
+- Payment is settled via USDC on Base.
+- Clients must include the `Payment-Signature` header in their requests to the MCP endpoint.
+- Servers may respond with a `402 Payment Required` HTTP status, including a `Payment-Required` header indicating the required amount and settlement terms.
+
+## PGL Evidence
+Every execution on Veklom is anchored in the Project Genome Ledger (PGL), providing a non-repudiable cryptographic audit trail. PGL evidence can be retrieved and verified to ensure that the execution receipt matches the on-chain or ledgered state.
 
 ## Documentation
-- API Docs: https://veklom.com/docs
-- OpenAPI Spec: https://veklom.com/openapi.json
-
-## Features
-- Agentic Governance
-- API Benchmarking
-- Runtime Authority
-- Physics-based SLAs
-- Nexus Protocol & x402
+- Main Site: https://veklom.com
+- Pricing: https://cappo.veklom.com/api/v1/x402/config
+- PGL Specification: https://pgl.veklom.com/spec/v0.1

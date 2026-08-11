@@ -1,0 +1,29 @@
+{
+  "name": "Veklom Nexus",
+  "description": "Sovereign AI hub with governed agent execution and multi-backend runtime. Nine-phase governance on every consequential action. x402 native monetization. PGL evidence on every execution.",
+  "url": "https://veklom.com",
+  "version": "2.4.1",
+  "supportedInterfaces": ["mcp"],
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json"],
+  "securitySchemes": {
+    "oauth2": {
+      "type": "oauth2",
+      "authorizationUrl": "https://veklom.com/.well-known/oauth-authorization-server"
+    }
+  },
+  "securityRequirements": [{"oauth2": []}],
+  "extensions": {
+    "pgl": {
+      "uri": "https://pgl.veklom.com/a2a/v1",
+      "required": false
+    }
+  },
+  "skills": [
+    {"name": "execute", "description": "Execute governed agent tasks"},
+    {"name": "govern", "description": "Nine-phase governance on actions"},
+    {"name": "assess", "description": "Assess agent workloads"},
+    {"name": "verify_receipt", "description": "Verify x402 payment receipt"},
+    {"name": "evidence.retrieve", "description": "Retrieve PGL evidence"}
+  ]
+}
