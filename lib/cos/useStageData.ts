@@ -34,6 +34,22 @@ function keyFor(endpoint: StageEndpoint) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
+/**
+ * Keep the UI/evidence ledger on canonical backend paths while sending the
+ * browser through an explicit same-origin service boundary.
+ *
+ * Mount is owned by CAPPO. The operator sees /v1/capability/* because that is
+ * the real CAPPO contract; transport goes through /api/cappo/* so the new OS
+ * never falls back to the legacy BYOS /v1 rewrite or a cross-origin browser
+ * call.
+ */
+function transportPath(stageId: StageDefinition["id"], path: string): string {
+  if (stageId === "mount" && path.startsWith("/v1/capability/")) {
+    return `/api/cappo${path}`;
+  }
+  return path;
+}
+
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
   const observation: ProofObservation = endpoint.classification === "absent"
     ? { kind: "no-route" }
@@ -76,7 +92,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     const started = performance.now();
     setLoading((current) => ({ ...current, [key]: true }));
     try {
-      const data = await api<T>(endpoint.path, {
+      const data = await api<T>(transportPath(stageId, endpoint.path), {
         method: endpoint.method,
         body,
         query: { mode: sandbox ? "sandbox" : "production" },
@@ -149,7 +165,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     } finally {
       setLoading((current) => ({ ...current, [key]: false }));
     }
-  }, [sandbox]);
+  }, [sandbox, stageId]);
 
   useEffect(() => {
     if (!options.autoGet) return;
@@ -171,13 +187,9 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     if (recordsList.every((record) => record.proof === "Not started")) return "Not started";
     if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
     if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
-    
-    // Check if any explicitly required record is still needing proof
-    // But since endpoints might be optional, we just check if ANY called record is Verified
-    // Wait, the user said: "Stage proof = summary / overview only... Never: one successful GET ↓ whole page VERIFIED."
-    // So to be Verified, ALL called records must be Verified, and at least one must be called.
+
     const called = recordsList.filter((r) => r.observation.kind !== "not-called" && r.classification !== "absent");
-    
+
     if (called.length > 0) {
       if (called.some((record) => record.proof === "Needs proof")) return "Needs proof";
       if (called.every((record) => record.proof === "Verified")) return "Verified";
