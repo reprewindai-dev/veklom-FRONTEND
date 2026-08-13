@@ -13,9 +13,21 @@ export default function CapabilityHome() {
   const reduceMotion = useReducedMotion();
   const [query, setQuery] = useState("");
   const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [pulse, setPulse] = useState<any>(null);
+
   useEffect(() => {
     try { setRecentIds(JSON.parse(localStorage.getItem("veklom.cos.recent-capabilities") || "[]")); } catch { setRecentIds([]); }
   }, []);
+
+  useEffect(() => {
+    import("@/lib/api").then(({ api }) => {
+      const fetchPulse = () => api.get("/v1/platform/pulse").then(setPulse).catch(() => setPulse(null));
+      fetchPulse();
+      const pTimer = setInterval(fetchPulse, 15000);
+      return () => clearInterval(pTimer);
+    });
+  }, []);
+
   const openCapability = (capability: Capability) => {
     const next = [capability.id, ...recentIds.filter((id) => id !== capability.id)].slice(0, 6);
     setRecentIds(next);
@@ -40,6 +52,24 @@ export default function CapabilityHome() {
       </motion.div>
       <CapabilitySearch value={query} onChange={setQuery} />
       <BeaconDiscovery />
+      
+      {pulse && (
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-cos-border bg-cos-surface2/55 p-5 flex flex-col justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel mb-2 flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-[#00FF41] shadow-[0_0_10px_rgba(0,255,65,0.7)]" />Global Latency</span>
+            <span className="text-3xl text-cos-text font-semibold">{pulse.latency_ms || pulse.latency || 0} <span className="text-sm text-cos-muted">ms</span></span>
+          </div>
+          <div className="rounded-xl border border-cos-border bg-cos-surface2/55 p-5 flex flex-col justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel mb-2">Throughput</span>
+            <span className="text-3xl text-cos-text font-semibold">{pulse.throughput_req_sec || pulse.throughput || 0} <span className="text-sm text-cos-muted">req/s</span></span>
+          </div>
+          <div className="rounded-xl border border-cos-border bg-cos-surface2/55 p-5 flex flex-col justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel mb-2">Error Rate</span>
+            <span className="text-3xl text-cos-text font-semibold">{pulse.error_rate_pct || pulse.error_rate || 0} <span className="text-sm text-cos-muted">%</span></span>
+          </div>
+        </div>
+      )}
+
       <div className="mt-10 rounded-2xl border border-cos-border bg-cos-surface2/55 p-6 shadow-cos-card lg:p-8">
         <div className="mb-8 flex items-center justify-between">
           <div>

@@ -18,10 +18,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [clock, setClock] = useState("");
+  const [health, setHealth] = useState<any>(null);
+  const [balance, setBalance] = useState<any>(null);
+
   useEffect(() => {
     const tick = () => setClock(new Date().toISOString().slice(11, 19) + " UTC");
     tick(); const timer = setInterval(tick, 1000); return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    import("@/lib/api").then(({ api }) => {
+      const fetchHealth = () => api.get("/v1/health").then(setHealth).catch(() => setHealth(null));
+      const fetchBalance = () => api.get("/v1/wallet/balance").then(setBalance).catch(() => setBalance(null));
+      fetchHealth();
+      fetchBalance();
+      const hTimer = setInterval(fetchHealth, 30000);
+      const bTimer = setInterval(fetchBalance, 60000);
+      return () => { clearInterval(hTimer); clearInterval(bTimer); };
+    });
+  }, []);
+
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setPaletteOpen(true); }
@@ -41,8 +57,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-5"><VeklomLogo /><span className="hidden border-l border-cos-border pl-5 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel md:inline">Capability Operating System</span><span className="hidden rounded border border-cos-accent/25 px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-cos-steel lg:inline">Machine-to-Machine Trust Infrastructure</span></div>
           <div className="flex items-center gap-2 text-xs">
             <ProdSandboxToggle sandbox={sandbox} onChange={setSandbox} />
-            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>
+            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className={health ? "text-green-500" : "text-cos-steel"} />Runtime <ProofBadge status={health ? "Verified" : "Needs proof"} /></div>
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
+            {balance && <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 font-mono text-[10px] text-cos-accent xl:flex">{(balance.balance ?? balance.tokens ?? 0).toLocaleString()} TKNS</div>}
             <button onClick={() => setPaletteOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>
             <span className="hidden items-center gap-1 rounded-full border border-cos-border px-3 py-2 font-mono text-[10px] text-cos-steel xl:flex"><Clock3 size={13} />{clock}</span>
           </div>
