@@ -44,6 +44,19 @@ export function resolveStageTransportPath(
   return path;
 }
 
+export function resolveStageBaseUrl(
+  stageId: StageDefinition["id"],
+  sandbox: boolean,
+  endpointBaseUrl?: string,
+  sandboxBaseUrl?: string,
+): string | undefined {
+  // Mount must always traverse the same-origin /api/cappo boundary. That route
+  // validates the caller against BYOS and injects the server-held CAPPO
+  // credential/workspace scope. An external base URL would bypass that boundary.
+  if (stageId === "mount") return undefined;
+  return sandbox ? (sandboxBaseUrl || endpointBaseUrl) : endpointBaseUrl;
+}
+
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
   const observation: ProofObservation = endpoint.classification === "absent"
     ? { kind: "no-route" }
@@ -92,9 +105,12 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         query: { mode: sandbox ? "sandbox" : "production" },
         headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
         handlePaymentRequired: false,
-        baseUrl: sandbox
-          ? (process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL || endpoint.baseUrl)
-          : endpoint.baseUrl,
+        baseUrl: resolveStageBaseUrl(
+          stageId,
+          sandbox,
+          endpoint.baseUrl,
+          process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL,
+        ),
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
       const classification = classifyPayload(data);
@@ -182,7 +198,9 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
     if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
 
-    const called = recordsList.filter((r) => r.observation.kind !== "not-called" && r.classification !== "absent");
+    const called = recordsList.filter(
+      (record) => record.observation.kind !== "not-called" && record.classification !== "absent",
+    );
 
     if (called.length > 0) {
       if (called.some((record) => record.proof === "Needs proof")) return "Needs proof";
