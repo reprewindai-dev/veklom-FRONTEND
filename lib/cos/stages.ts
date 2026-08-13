@@ -54,11 +54,11 @@ export const stages: StageDefinition[] = [
     purpose: "Bind a capability package to a scoped, expiring execution boundary.",
     owner: "CAPPO capability-mount",
     endpoints: [
-      { method: "GET", path: "/api/cappo/v1/capability/packages", classification: "live", response: "capability package catalog" },
-      { method: "POST", path: "/api/cappo/v1/capability/mounts", classification: "live", response: "mount decision, scope, and token descriptor" },
-      { method: "GET", path: "/api/cappo/v1/capability/mounts/{mount_id}", classification: "live", response: "persisted mount lifecycle status" },
-      { method: "POST", path: "/api/cappo/v1/capability/mounts/{mount_id}/actions", classification: "live", response: "action allow or deny decision" },
-      { method: "POST", path: "/api/cappo/v1/capability/mounts/{mount_id}/terminate", classification: "live", response: "mount termination decision" },
+      { method: "GET", path: "/v1/capability/packages", classification: "live", response: "capability package catalog" },
+      { method: "POST", path: "/v1/capability/mounts", classification: "live", response: "mount decision, scope, and token descriptor" },
+      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "live", response: "persisted mount lifecycle status" },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "live", response: "action allow or deny decision" },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "live", response: "mount termination decision" },
     ],
   },
   {
