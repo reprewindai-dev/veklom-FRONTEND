@@ -7,6 +7,7 @@ import AmbientIntervention from "@/components/ambient/AmbientIntervention";
 import GoogleAnalyticsUserSync from "@/components/GoogleAnalyticsUserSync";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import CookieBanner from "@/components/CookieBanner";
+import DegradedBanner from "@/components/DegradedBanner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -113,6 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`min-h-screen bg-bg-900 text-ink-50 antialiased ${inter.variable} ${fraunces.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
         <WebMCPProvider>
           <AuthProvider>
+            <DegradedBanner />
             {children}
             <AmbientIntervention />
             <GoogleAnalyticsUserSync />

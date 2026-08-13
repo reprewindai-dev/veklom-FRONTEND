@@ -168,11 +168,22 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
 
   const stageProof = useMemo<ProofStatus>(() => {
     if (recordsList.some((record) => record.observation.kind === "no-route")) return "Not started";
-    if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
-    if (recordsList.some((record) => record.proof === "Verified")) return "Verified";
-    if (recordsList.some((record) => record.proof === "Present")) return "Present";
-    if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
     if (recordsList.every((record) => record.proof === "Not started")) return "Not started";
+    if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
+    if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
+    
+    // Check if any explicitly required record is still needing proof
+    // But since endpoints might be optional, we just check if ANY called record is Verified
+    // Wait, the user said: "Stage proof = summary / overview only... Never: one successful GET ↓ whole page VERIFIED."
+    // So to be Verified, ALL called records must be Verified, and at least one must be called.
+    const called = recordsList.filter((r) => r.observation.kind !== "not-called" && r.classification !== "absent");
+    
+    if (called.length > 0) {
+      if (called.some((record) => record.proof === "Needs proof")) return "Needs proof";
+      if (called.every((record) => record.proof === "Verified")) return "Verified";
+      if (called.every((record) => record.proof === "Verified" || record.proof === "Present")) return "Present";
+    }
+
     return "Needs proof";
   }, [recordsList]);
 

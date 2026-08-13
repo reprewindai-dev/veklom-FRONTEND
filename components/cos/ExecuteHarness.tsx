@@ -29,11 +29,11 @@ export function ExecuteHarness() {
     setTrace(null);
 
     try {
-      const res = await fetch('https://api.veklom.com/v1/exec', {
+      const res = await fetch('/v1/exec', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey || 'byos_test_key', // fallback if they don't provide one
+          'X-API-Key': apiKey,
         },
         body: JSON.stringify({
           prompt,
@@ -48,6 +48,9 @@ export function ExecuteHarness() {
 
       const data = await res.json();
       setTrace(data);
+      if (data.log_id) {
+        sessionStorage.setItem('veklom_execution_id', data.log_id);
+      }
     } catch (err: any) {
       setError(err.message || 'Execution failed');
     } finally {

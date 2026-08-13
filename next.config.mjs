@@ -194,6 +194,11 @@ const nextConfig = {
         source: "/api/:path*",
         destination: `${BACKEND_URL}/api/:path*`,
       },
+      {
+        // Core execution and audit routes from the capability node (e.g. /v1/exec, /v1/audit/...)
+        source: "/v1/:path*",
+        destination: `${BACKEND_URL}/v1/:path*`,
+      },
     ];
   },
 };

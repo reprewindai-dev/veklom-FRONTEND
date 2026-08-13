@@ -178,6 +178,17 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     (json as any)._runtimeMeta = runtimeMeta;
   }
 
+  if (typeof window !== "undefined") {
+    if (res.status === 503 || (json && ((json as any).status === "degraded" || (json as any)._stale === true))) {
+      window.dispatchEvent(new CustomEvent("VeklomDegradedState", { 
+        detail: { 
+          isDegraded: true, 
+          message: (json as any)?.error || "Veklom Core Services are currently experiencing instability. Control Plane is in Read-Only Mode." 
+        } 
+      }));
+    }
+  }
+
   if (!res.ok) {
     const msg =
       (json && (json.detail || json.message || json.error)) ||
