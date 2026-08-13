@@ -10,77 +10,96 @@ const LOCKERPHYCER_SECRET = process.env.SECRET_KEY || process.env.LOCKERPHYCER_S
 
 async function proxyRequest(req: NextRequest) {
   const url = new URL(req.url);
-  const path = url.pathname; // includes /api/...
+  const path = url.pathname;
 
-  let headers = new Headers(req.headers);
-  headers.delete("host"); // Let the native fetch set the host
+  const headers = new Headers(req.headers);
+  headers.delete("host");
   headers.delete("connection");
-  headers.delete("x-api-key"); // Never allow clients to select an upstream credential
+  headers.delete("content-length");
+  headers.delete("transfer-encoding");
+  headers.delete("x-api-key");
 
   let targetBase = "";
   let forwardPath = path;
+  let preserveRequesterIdentity = false;
 
-  // Explicit Upstream Route Table
   if (path.startsWith("/api/cappo/v1/capability/")) {
     if (!CAPPO_BACKEND_URL) {
-      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 500 });
+      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 503 });
     }
     targetBase = CAPPO_BACKEND_URL;
-    forwardPath = path.replace(/^\/api\/cappo/, ""); // Forward as /v1/capability/...
+    forwardPath = path.replace(/^\/api\/cappo/, "");
+    preserveRequesterIdentity = true;
   } else if (path === "/api/cappo/v1/exec" || path.startsWith("/api/cappo/v1/exec/")) {
     if (!CAPPO_BACKEND_URL) {
-      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 500 });
+      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 503 });
     }
     targetBase = CAPPO_BACKEND_URL;
     forwardPath = path.replace(/^\/api\/cappo/, "");
   } else if (path.startsWith("/api/capi/")) {
     targetBase = CAPI_RUNTIME_URL;
-    forwardPath = path.replace(/^\/api\/capi/, "/api/v1/capi"); // Forward to cAPI
+    forwardPath = path.replace(/^\/api\/capi/, "/api/v1/capi");
   } else if (path.startsWith("/api/ledger/")) {
     targetBase = PGL_URL;
-    forwardPath = path.replace(/^\/api\/ledger/, "/api/v1/ledger"); // Forward to PGL
+    forwardPath = path.replace(/^\/api\/ledger/, "/api/v1/ledger");
   } else if (path.startsWith("/api/v1/locker")) {
     targetBase = LOCKERPHYCER_URL;
   } else if (path.startsWith("/api/v1/webmcp") || path.startsWith("/webmcp") || path.startsWith("/mcp")) {
     if (!CAPPO_BACKEND_URL) {
-      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 500 });
+      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 503 });
     }
-    targetBase = CAPPO_BACKEND_URL; // Forward WebMCP to the core runtime
-  } else if (path.startsWith("/api/v1/agents") || path.startsWith("/api/v1/benchmarks") || path.startsWith("/api/v1/gpc") || path.startsWith("/api/v1/execution") || path.startsWith("/v1/governance") || path.startsWith("/api/v1/pricing") || path.startsWith("/api/v1/x402") || path.startsWith("/api/v1/platform")) {
-     // Legacy allowlist for VBB_BACKEND_URL / other known paths
-     // Wait, the instructions say "No unknown edge route receives a default origin."
-     // So we must explicitly map these.
-     targetBase = VBB_BACKEND_URL;
+    targetBase = CAPPO_BACKEND_URL;
+  } else if (
+    path.startsWith("/api/v1/agents") ||
+    path.startsWith("/api/v1/benchmarks") ||
+    path.startsWith("/api/v1/gpc") ||
+    path.startsWith("/api/v1/execution") ||
+    path.startsWith("/v1/governance") ||
+    path.startsWith("/api/v1/pricing") ||
+    path.startsWith("/api/v1/x402") ||
+    path.startsWith("/api/v1/platform")
+  ) {
+    targetBase = VBB_BACKEND_URL;
   } else {
-    // Fail closed
     return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });
   }
 
-  // Inject Server Credentials
-  if (targetBase === CAPPO_BACKEND_URL && CAPPO_ADMIN_KEY && CAPPO_ADMIN_KEY !== "dev-admin-key-do-not-use-in-prod") {
+  const hasBearerIdentity = (headers.get("authorization") || "")
+    .toLowerCase()
+    .startsWith("bearer ");
+
+  if (
+    targetBase === CAPPO_BACKEND_URL &&
+    !preserveRequesterIdentity &&
+    !hasBearerIdentity &&
+    CAPPO_ADMIN_KEY &&
+    CAPPO_ADMIN_KEY !== "dev-admin-key-do-not-use-in-prod"
+  ) {
     headers.set("x-api-key", CAPPO_ADMIN_KEY);
   } else if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET) {
     headers.set("Authorization", `Bearer ${LOCKERPHYCER_SECRET}`);
-  } else if (targetBase === CAPI_RUNTIME_URL && CAPI_ADMIN_KEY) {
+  } else if (targetBase === CAPI_RUNTIME_URL && !hasBearerIdentity && CAPI_ADMIN_KEY) {
     headers.set("x-api-key", CAPI_ADMIN_KEY);
   }
 
   const targetUrl = `${targetBase.replace(/\/+$/, "")}${forwardPath}${url.search}`;
 
   try {
-    const init: RequestInit = {
+    const response = await fetch(targetUrl, {
       method: req.method,
       headers,
-      // For Next 13+ fetch with body, we need to pass req body directly if it exists and is not GET/HEAD
       body: req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
-      // @ts-ignore - duplex is needed for passing ReadableStream as body in Node 18+
-      duplex: "half", 
-    };
-
-    const response = await fetch(targetUrl, init);
+      // @ts-expect-error Node fetch requires duplex for streamed request bodies.
+      duplex: "half",
+      redirect: "manual",
+      cache: "no-store",
+    });
 
     const responseHeaders = new Headers(response.headers);
-    responseHeaders.delete("content-encoding"); // Let Next.js handle encoding
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("content-length");
+    responseHeaders.delete("transfer-encoding");
+    responseHeaders.delete("connection");
 
     return new NextResponse(response.body, {
       status: response.status,
