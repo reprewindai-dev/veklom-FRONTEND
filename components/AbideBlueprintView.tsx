@@ -12,12 +12,8 @@ export const AbideBlueprintView: React.FC = () => {
   const handleCompileIntent = async () => {
     setIsCompiling(true);
     try {
-      const response = await fetch('/api/v1/abide/plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawIntent })
-      });
-      const data: AbideBlueprint = await response.json();
+      const { api } = await import('../lib/api.js');
+      const data = await api.post<AbideBlueprint>('/v1/abide/plan', { rawIntent });
       setBlueprint(data);
     } catch (err) {
       console.error('Abide error:', err);

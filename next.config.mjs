@@ -160,6 +160,11 @@ const nextConfig = {
         destination: `${process.env.CAPPO_URL || "https://cappo.veklom.com"}/api/v1/cappo/:path*`,
       },
       {
+        // cAPI calls
+        source: "/api/v1/capi/:path*",
+        destination: `${process.env.CAPI_URL || "https://capi.veklom.com"}/api/v1/capi/:path*`,
+      },
+      {
         // VNP calls
         source: "/api/v1/vnp/:path*",
         destination: `${process.env.VNP_URL || "https://vnp.veklom.com"}/api/v1/vnp/:path*`,
