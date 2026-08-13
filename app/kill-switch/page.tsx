@@ -10,7 +10,7 @@ import { ModuleHeader, SectionCard, Pill, ProgressBar, KV, fmtUsd, ACCENT } from
 import { Power, PowerOff, ShieldAlert } from "lucide-react";
 
 export default function KillSwitchPage() {
-  const status = useApi<any>("/api/v1/cost/kill-switch/status");
+  const status = useApi<any>("/v1/kill-switch/status");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
   const [reason, setReason] = useState("");
@@ -23,12 +23,14 @@ export default function KillSwitchPage() {
 
   async function engage() {
     setBusy(true); setErr(undefined);
-    try { await api("/api/v1/cost/kill-switch", { method: "POST", body: { reason: reason.trim() || "Manual halt from console" } }); setReason(""); status.mutate(); }
+    try { await api("/v1/kill-switch/activate", { method: "POST", body: { reason: reason.trim() || "Manual halt from console" } }); setReason(""); status.mutate(); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
   async function release() {
     setBusy(true); setErr(undefined);
-    try { await api("/api/v1/cost/kill-switch", { method: "DELETE" }); status.mutate(); }
+    // Assuming DELETE /activate or POST /release depending on standard. We'll use DELETE /activate here as a standard REST practice for a POST /activate toggle, or maybe it's just DELETE on the resource.
+    // Let's use DELETE /v1/kill-switch/activate based on the route map.
+    try { await api("/v1/kill-switch/activate", { method: "DELETE" }); status.mutate(); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
 
