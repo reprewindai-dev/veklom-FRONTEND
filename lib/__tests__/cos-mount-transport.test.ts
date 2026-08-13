@@ -1,5 +1,5 @@
 import { getStage } from "@/lib/cos/stages";
-import { resolveStageTransportPath } from "@/lib/cos/useStageData";
+import { resolveStageBaseUrl, resolveStageTransportPath } from "@/lib/cos/useStageData";
 
 describe("Capability OS Mount transport", () => {
   it("keeps the visible Mount contract on CAPPO canonical /v1 paths", () => {
@@ -20,6 +20,31 @@ describe("Capability OS Mount transport", () => {
       .toBe("/api/cappo/v1/capability/mounts");
     expect(resolveStageTransportPath("mount", "/v1/capability/mounts/mnt_123/actions"))
       .toBe("/api/cappo/v1/capability/mounts/mnt_123/actions");
+  });
+
+  it("never assigns an external base URL to Mount", () => {
+    expect(resolveStageBaseUrl("mount", false, "https://cappo.example")).toBeUndefined();
+    expect(
+      resolveStageBaseUrl(
+        "mount",
+        true,
+        "https://cappo.example",
+        "https://sandbox.example",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("preserves sandbox base behavior for unrelated stages", () => {
+    expect(
+      resolveStageBaseUrl(
+        "execute",
+        true,
+        "https://execute.example",
+        "https://sandbox.example",
+      ),
+    ).toBe("https://sandbox.example");
+    expect(resolveStageBaseUrl("execute", false, "https://execute.example"))
+      .toBe("https://execute.example");
   });
 
   it("does not rewrite unrelated stage routes", () => {
