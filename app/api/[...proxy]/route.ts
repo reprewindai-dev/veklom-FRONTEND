@@ -8,6 +8,39 @@ const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
 const LOCKERPHYCER_URL = process.env.LOCKERPHYCER_URL || "http://lockerphycer-api:8000";
 const LOCKERPHYCER_SECRET = process.env.SECRET_KEY || process.env.LOCKERPHYCER_SECRET_KEY || "";
 
+type RequesterIdentity = {
+  id?: string;
+  workspace_id?: string;
+  role?: string;
+};
+
+async function resolveRequesterIdentity(req: NextRequest): Promise<RequesterIdentity | null> {
+  const authHeaders = new Headers();
+  const authorization = req.headers.get("authorization");
+  const cookie = req.headers.get("cookie");
+  if (authorization) authHeaders.set("authorization", authorization);
+  if (cookie) authHeaders.set("cookie", cookie);
+  authHeaders.set("accept", "application/json");
+
+  try {
+    const response = await fetch(
+      `${VBB_BACKEND_URL.replace(/\/+$/, "")}/api/v1/auth/me`,
+      {
+        method: "GET",
+        headers: authHeaders,
+        redirect: "manual",
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) return null;
+    const body = (await response.json()) as RequesterIdentity;
+    if (!body.workspace_id || !body.id) return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
 async function proxyRequest(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
@@ -21,15 +54,37 @@ async function proxyRequest(req: NextRequest) {
 
   let targetBase = "";
   let forwardPath = path;
-  let preserveRequesterIdentity = false;
+  let cappoCapabilityRequest = false;
 
   if (path.startsWith("/api/cappo/v1/capability/")) {
-    if (!CAPPO_BACKEND_URL) {
-      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 503 });
+    if (!CAPPO_BACKEND_URL || !CAPPO_ADMIN_KEY) {
+      return NextResponse.json(
+        { error: "CAPPO capability proxy is not configured" },
+        { status: 503 },
+      );
     }
+
+    // The browser's BYOS/Firebase bearer is not automatically a CAPPO token.
+    // Validate it against the canonical BYOS identity endpoint first, then use
+    // the server-held CAPPO credential with the validated workspace scope.
+    const requester = await resolveRequesterIdentity(req);
+    if (!requester) {
+      return NextResponse.json(
+        { error: "AUTHENTICATION_REQUIRED" },
+        { status: 401 },
+      );
+    }
+
     targetBase = CAPPO_BACKEND_URL;
     forwardPath = path.replace(/^\/api\/cappo/, "");
-    preserveRequesterIdentity = true;
+    cappoCapabilityRequest = true;
+
+    headers.delete("authorization");
+    headers.delete("cookie");
+    headers.delete("x-workspace-id");
+    headers.set("x-api-key", CAPPO_ADMIN_KEY);
+    headers.set("x-workspace-id", requester.workspace_id!);
+    headers.set("x-veklom-requester-id", requester.id!);
   } else if (path === "/api/cappo/v1/exec" || path.startsWith("/api/cappo/v1/exec/")) {
     if (!CAPPO_BACKEND_URL) {
       return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 503 });
@@ -70,7 +125,7 @@ async function proxyRequest(req: NextRequest) {
 
   if (
     targetBase === CAPPO_BACKEND_URL &&
-    !preserveRequesterIdentity &&
+    !cappoCapabilityRequest &&
     !hasBearerIdentity &&
     CAPPO_ADMIN_KEY &&
     CAPPO_ADMIN_KEY !== "dev-admin-key-do-not-use-in-prod"
