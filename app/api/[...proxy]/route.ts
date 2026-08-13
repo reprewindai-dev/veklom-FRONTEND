@@ -8,6 +8,29 @@ const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
 const LOCKERPHYCER_URL = process.env.LOCKERPHYCER_URL || "http://lockerphycer-api:8000";
 const LOCKERPHYCER_SECRET = process.env.SECRET_KEY || process.env.LOCKERPHYCER_SECRET_KEY || "";
 
+const HOP_BY_HOP_HEADERS = [
+  "connection",
+  "content-length",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailer",
+  "transfer-encoding",
+  "upgrade",
+];
+
+function stripHopByHopHeaders(headers: Headers) {
+  const nominated = (headers.get("connection") || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  for (const header of [...HOP_BY_HOP_HEADERS, ...nominated]) {
+    headers.delete(header);
+  }
+}
+
 type RequesterIdentity = {
   id?: string;
   workspace_id?: string;
@@ -47,10 +70,8 @@ async function proxyRequest(req: NextRequest) {
 
   const headers = new Headers(req.headers);
   headers.delete("host");
-  headers.delete("connection");
-  headers.delete("content-length");
-  headers.delete("transfer-encoding");
   headers.delete("x-api-key");
+  stripHopByHopHeaders(headers);
 
   let targetBase = "";
   let forwardPath = path;
@@ -151,19 +172,18 @@ async function proxyRequest(req: NextRequest) {
     });
 
     const responseHeaders = new Headers(response.headers);
+    stripHopByHopHeaders(responseHeaders);
     responseHeaders.delete("content-encoding");
-    responseHeaders.delete("content-length");
-    responseHeaders.delete("transfer-encoding");
-    responseHeaders.delete("connection");
 
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
     });
-  } catch (err: any) {
-    console.error("Proxy error:", err.message);
-    return NextResponse.json({ error: "Gateway Proxy Error", details: err.message }, { status: 502 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown upstream error";
+    console.error("Proxy error:", message);
+    return NextResponse.json({ error: "Gateway Proxy Error", details: message }, { status: 502 });
   }
 }
 
