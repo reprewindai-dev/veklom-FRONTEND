@@ -138,68 +138,72 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      {
-        // Serve unauthenticated health status from the backend VPS via local proxy
-        source: "/health/",
-        destination: `${BACKEND_URL}/health/`,
-      },
-      {
-        // Serve unauthenticated API status page from the backend VPS via local proxy
-        source: "/status/",
-        destination: `${BACKEND_URL}/status/`,
-      },
-      {
-        // Serve the protocol manifest from the backend
-        source: "/protocol.json",
-        destination: `${BACKEND_URL}/protocol.json`,
-      },
-      {
-        // CAPPO calls
-        source: "/api/v1/cappo/:path*",
-        destination: `${process.env.CAPPO_URL || "https://cappo.veklom.com"}/api/v1/cappo/:path*`,
-      },
-      {
-        // VNP calls
-        source: "/api/v1/vnp/:path*",
-        destination: `${process.env.VNP_URL || "https://vnp.veklom.com"}/api/v1/vnp/:path*`,
-      },
-      {
-        // APEX calls
-        source: "/api/v1/apex/:path*",
-        destination: `${process.env.APEX_URL || "https://apex.veklom.com"}/api/v1/apex/:path*`,
-      },
-      {
-        // ABIDE calls
-        source: "/api/v1/abide/:path*",
-        destination: `${process.env.ABIDE_URL || "https://abide.veklom.com"}/api/v1/abide/:path*`,
-      },
-      {
-        // PGL ledger calls go to the dedicated ledger service
-        source: "/api/v1/ledger/:path*",
-        destination: `${process.env.PGL_URL || "https://pgl.veklom.com"}/api/v1/ledger/:path*`,
-      },
-      {
-        // Proxy GPC canvas to backend static mount
-        source: "/gpc",
-        destination: `${BACKEND_URL}/gpc/`,
-      },
-      {
-        source: "/gpc/:path*",
-        destination: `${BACKEND_URL}/gpc/:path*`,
-      },
-      {
-        // All /api/* calls from the browser are proxied to the backend.
-        // This avoids CORS entirely — the browser always talks to its own origin.
-        source: "/api/:path*",
-        destination: `${BACKEND_URL}/api/:path*`,
-      },
-      {
-        // Core execution and audit routes from the capability node (e.g. /v1/exec, /v1/audit/...)
-        source: "/v1/:path*",
-        destination: `${BACKEND_URL}/v1/:path*`,
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          // Serve unauthenticated health status from the backend VPS via local proxy
+          source: "/health/",
+          destination: `${BACKEND_URL}/health/`,
+        },
+        {
+          // Serve unauthenticated API status page from the backend VPS via local proxy
+          source: "/status/",
+          destination: `${BACKEND_URL}/status/`,
+        },
+        {
+          // Serve the protocol manifest from the backend
+          source: "/protocol.json",
+          destination: `${BACKEND_URL}/protocol.json`,
+        },
+        {
+          // CAPPO calls
+          source: "/api/v1/cappo/:path*",
+          destination: `${process.env.CAPPO_URL || "https://cappo.veklom.com"}/api/v1/cappo/:path*`,
+        },
+        {
+          // VNP calls
+          source: "/api/v1/vnp/:path*",
+          destination: `${process.env.VNP_URL || "https://vnp.veklom.com"}/api/v1/vnp/:path*`,
+        },
+        {
+          // APEX calls
+          source: "/api/v1/apex/:path*",
+          destination: `${process.env.APEX_URL || "https://apex.veklom.com"}/api/v1/apex/:path*`,
+        },
+        {
+          // ABIDE calls
+          source: "/api/v1/abide/:path*",
+          destination: `${process.env.ABIDE_URL || "https://abide.veklom.com"}/api/v1/abide/:path*`,
+        },
+        {
+          // PGL ledger calls go to the dedicated ledger service
+          source: "/api/v1/ledger/:path*",
+          destination: `${process.env.PGL_URL || "https://pgl.veklom.com"}/api/v1/ledger/:path*`,
+        },
+        {
+          // Proxy GPC canvas to backend static mount
+          source: "/gpc",
+          destination: `${BACKEND_URL}/gpc/`,
+        },
+        {
+          source: "/gpc/:path*",
+          destination: `${BACKEND_URL}/gpc/:path*`,
+        }
+      ],
+      fallback: [
+        {
+          // All /api/* calls from the browser are proxied to the backend.
+          // This avoids CORS entirely — the browser always talks to its own origin.
+          source: "/api/:path*",
+          destination: `${BACKEND_URL}/api/:path*`,
+        },
+        {
+          // Core execution and audit routes from the capability node (e.g. /v1/exec, /v1/audit/...)
+          source: "/v1/:path*",
+          destination: `${BACKEND_URL}/v1/:path*`,
+        }
+      ]
+    };
   },
 };
 export default nextConfig;
