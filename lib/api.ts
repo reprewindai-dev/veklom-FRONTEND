@@ -197,7 +197,20 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       
     if (typeof window !== "undefined") {
       const isPublicPage = isPublicRoute(window.location.pathname);
-      if (res.status === 402 && opts.handlePaymentRequired !== false) {
+      
+      if (res.status === 412) {
+        const event = new CustomEvent("VeklomStateBoundAuthorityViolation", {
+          detail: { type: "PRECONDITION_FAILED", message: msg }
+        });
+        window.dispatchEvent(event);
+        throw new ApiError(res.status, "State-Bound Authority Violation: " + String(msg), json);
+      } else if (res.status === 428) {
+        const event = new CustomEvent("VeklomFencingTokenRequired", {
+          detail: { type: "PRECONDITION_REQUIRED", message: msg }
+        });
+        window.dispatchEvent(event);
+        throw new ApiError(res.status, "Fencing Token Required: " + String(msg), json);
+      } else if (res.status === 402 && opts.handlePaymentRequired !== false) {
         if (!isPublicPage) {
           const paymentRequiredHeader = res.headers.get("payment-required");
           const facilitatorUrl = res.headers.get("x-402-facilitator-url");
