@@ -39,6 +39,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
   const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
   const apexUrl = process.env.APEX_URL || "https://apex.veklom.com";
   const abideUrl = process.env.ABIDE_URL || "https://abide.veklom.com";
+  const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
 
   return [
     {
@@ -85,9 +86,9 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     },
     {
       id: "gpc",
-      label: "Veklom GPC",
-      repo: "veklom-gpc",
-      role: "policy-oracle",
+      label: "Veklom GPC / UACP V3",
+      repo: "uacpv3",
+      role: "sovereign-control-plane",
       baseUrl: trimTrailingSlash(gpcUrl),
       healthPath: "/health",
       overviewPath: undefined,
@@ -126,7 +127,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     {
       id: "abide",
       label: "Abide Sovereign Agentic Control Plane",
-      repo: "abide",
+      repo: "ABIDE",
       role: "sovereign-control-plane",
       baseUrl: trimTrailingSlash(abideUrl),
       healthPath: "/health",
@@ -138,7 +139,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       label: "Lockerphycer Security Core",
       repo: "lockerphycer",
       role: "execution-engine",
-      baseUrl: trimTrailingSlash(process.env.LOCKERPHYCER_URL || "http://lockerphycer-api:8000"),
+      baseUrl: trimTrailingSlash(lockerphycerUrl),
       healthPath: "/health",
       overviewPath: undefined,
       authMode: "server-api-key",
