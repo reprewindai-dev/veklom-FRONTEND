@@ -1,24 +1,36 @@
-# Domain → Container → Port Map
+# Domain → Runtime Contract Map
 
-This document defines the current deployment target infrastructure. 
+This document records the **reported runtime contract** for Veklom foundation services. It is not proof of a live deployment.
 
-**CRITICAL: If runtime verification disagrees with this map, runtime verification wins. Update this document rather than hardcoding exceptions in the code.**
+**Verification rule:** a runtime becomes `VERIFIED` only when deployed SHA, HTTP/protocol identity, container listener, and Traefik routing all agree. Until then, reported ports remain `NOT_VERIFIED`.
 
-| Domain | Known runtime mapping | Internal port | Public app port allowed? |
+## reported_runtime_state
+
+| Service | Public surface | Reported internal port | State |
 |---|---|---:|---|
-| `api.veklom.com` | `n13gp1nhrcdp0hvazvbnlxru-213557155694` (BYOS/API container) | 8088 | no |
-| `bingo.veklom.com` | `bingo-backend` | 3000 | no |
-| `duel.veklom.com` | `agent-duel-backend` | 3000 | no |
-| `governance.veklom.com` | `tvxcsezs2ypd8tjuj6ic9gih-230135676493` (Control Plane) | 3002 | no |
-| `control.veklom.com` | `tvxcsezs2ypd8tjuj6ic9gih-230135676493` (Control Plane) | 3002 | no |
-| `interlink.veklom.com` | `ox6sadqw5cqrkz7tbhwb12qx-142016658979` | 3000 | no |
-| `pgl.veklom.com` | `xlkby54o7jdlib3rz2p510cs-180811986986` (GnomLedger/PGL) | 8095 | no |
-| `capi.veklom.com` | `VERIFIED_LIVE`: distinct cAPI/Covenant service; exact Coolify container and internal port are `UNVERIFIED` | — | no |
-| `cappo.veklom.com` | `cappo-backend-node` (CAPPO backend node) | 8093 | no |
-| `lockerphycer.veklom.com` | `lockerphycer-node` (LockerPhycer) | 8092 | no |
-| `vnp.veklom.com` | `veklom-vnp-standalone-node` (VNP) | 8089 | no |
+| BYOS | `api.veklom.com` | 8088 | `NOT_VERIFIED` |
+| Control Plane | `governance.veklom.com`, `control.veklom.com` | 3002 | `NOT_VERIFIED` |
+| cAPI / Interlink | `capi.veklom.com`, `interlink.veklom.com` | 3003 | `NOT_VERIFIED` |
+| GPC / UACP V3 | `gpc.veklom.com`, `veklom.com/gpc` | 3010 | `NOT_VERIFIED` |
+| Gnomledger | `pgl.veklom.com` | 8001 | `NOT_VERIFIED` |
+| CAPPO | `cappo.veklom.com` | 8002 | `NOT_VERIFIED` |
+| Lockerphycer | `lockerphycer.veklom.com` | 8092 | `NOT_VERIFIED` |
+| Terminal | canonical Terminal public domain not established in this document | 80 | `NOT_VERIFIED` |
 
-Expected public exposure: 80/443 and restricted SSH only.
+## verified_runtime_state
 
-## UI Implications
-The operator UI (Capability OS) must never expose or hardcode internal ports. The UI must always use standard HTTPS domains (e.g., `api.veklom.com`, `control.veklom.com`, `vnp.veklom.com`). The port mapping stays exclusively within infrastructure documentation and deployment tooling.
+None established by this document.
+
+Do not promote HTTP reachability, a successful probe, repository source, a commit message, or a configured port to `VERIFIED` by itself.
+
+## unverified_claims and legacy surfaces
+
+Legacy or out-of-contract surfaces such as `bingo.veklom.com`, `duel.veklom.com`, and `vnp.veklom.com` must not be assigned a canonical internal port here unless the foundation runtime contract is explicitly updated and independently verified. Their prior mappings are treated as `UNVERIFIED` rather than current source of truth.
+
+Ports `3000` and `8000` are forbidden as canonical application/runtime defaults in the foundation contract.
+
+Expected public exposure is 80/443 and restricted SSH only.
+
+## UI implications
+
+The operator UI (Capability OS) must never expose or hardcode internal ports. It must use standard HTTPS public surfaces and present runtime verification separately from reachability or health observations.
