@@ -11,4 +11,7 @@ tsconfig.tsbuildinfo
 openapi.json
 route_catalog.txt
 
+# Generated local/render artifacts
+tmp/pdfs/
+
 .vercel

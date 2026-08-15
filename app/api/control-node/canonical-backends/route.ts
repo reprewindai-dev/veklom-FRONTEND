@@ -31,6 +31,8 @@ interface BackendSourceState {
   source_of_truth?: ProbeResult;
   proof_signal: string;
   state: ProbeState;
+  state_basis: "HTTP_PROBE_ONLY";
+  verification_state: "NOT_VERIFIED";
 }
 
 function sanitizeError(error: unknown): string {
@@ -139,16 +141,16 @@ function sourceState(
     : "needs_proof";
 
   const proof_signal = sourceOfTruth?.ok
-    ? "source-of-truth snapshot verified"
+    ? "source-of-truth endpoint observed; runtime NOT_VERIFIED"
     : overview.ok && sourceOfTruth
-      ? `workspace overview verified; source-of-truth ${sourceOfTruth.status ? `HTTP ${sourceOfTruth.status}` : "needs proof"}`
+      ? `workspace overview observed; source-of-truth ${sourceOfTruth.status ? `HTTP ${sourceOfTruth.status}` : "not observed"}; runtime NOT_VERIFIED`
     : overview.ok
-      ? "workspace overview verified"
+      ? "workspace overview observed; runtime NOT_VERIFIED"
       : health.ok
         ? requiresOverview
-          ? "health only; operational proof unavailable"
-          : "health verified"
-        : "Needs proof";
+          ? "health endpoint observed; operational evidence unavailable; runtime NOT_VERIFIED"
+          : "health endpoint observed; runtime NOT_VERIFIED"
+        : "NOT_VERIFIED";
 
   return {
     id: backend.id,
@@ -162,6 +164,8 @@ function sourceState(
     source_of_truth: sourceOfTruth,
     proof_signal,
     state,
+    state_basis: "HTTP_PROBE_ONLY",
+    verification_state: "NOT_VERIFIED",
   };
 }
 
@@ -225,6 +229,8 @@ export async function GET(req: NextRequest) {
           : healthySources.length > 0
             ? "degraded"
             : "needs_proof",
+      state_basis: "HTTP_PROBE_ONLY",
+      verification_state: "NOT_VERIFIED",
       usage: aggregateUsage(sources),
       sources,
     },

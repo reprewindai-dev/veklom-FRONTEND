@@ -5,8 +5,8 @@ const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const CAPPO_ADMIN_KEY = cappoAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
-const LOCKERPHYCER_URL = process.env.LOCKERPHYCER_URL || "http://lockerphycer-api:8000";
-const LOCKERPHYCER_SECRET = process.env.SECRET_KEY || process.env.LOCKERPHYCER_SECRET_KEY || "";
+const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, "");
+const LOCKERPHYCER_SECRET = process.env.LOCKERPHYCER_SECRET_KEY || "";
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -119,6 +119,12 @@ async function proxyRequest(req: NextRequest) {
     targetBase = PGL_URL;
     forwardPath = path.replace(/^\/api\/ledger/, "/api/v1/ledger");
   } else if (path.startsWith("/api/v1/locker")) {
+    if (!LOCKERPHYCER_URL) {
+      return NextResponse.json(
+        { error: "Lockerphycer backend is not configured" },
+        { status: 503 },
+      );
+    }
     targetBase = LOCKERPHYCER_URL;
   } else if (path.startsWith("/api/v1/webmcp") || path.startsWith("/webmcp") || path.startsWith("/mcp")) {
     if (!CAPPO_BACKEND_URL) {
@@ -183,7 +189,7 @@ async function proxyRequest(req: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown upstream error";
     console.error("Proxy error:", message);
-    return NextResponse.json({ error: "Gateway Proxy Error", details: message }, { status: 502 });
+    return NextResponse.json({ error: "Gateway Proxy Error" }, { status: 502 });
   }
 }
 
