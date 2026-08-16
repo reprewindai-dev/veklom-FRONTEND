@@ -11,7 +11,12 @@ export const metadata: Metadata = {
     "Veklom Capability OS — the trust layer machines pass through. Prove identity, capability, governance, execution, evidence, and settlement.",
 };
 
-export default function CapabilityOsLayout({ children }: { children: React.ReactNode }) {
+import { cookies } from "next/headers";
+
+export default async function CapabilityOsLayout({ children }: { children: React.ReactNode }) {
+  // Opt out of static prerendering so the auth guards correctly process the request on every load
+  await cookies();
+
   return (
     <>
       <BreadcrumbJsonLd
