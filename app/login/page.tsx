@@ -7,6 +7,20 @@ import { useAuth } from "@/lib/auth-context";
 import { Button, ErrorBox, GithubButton } from "@/components/ui";
 import { AuthLayout } from "@/components/AuthLayout";
 
+/**
+ * Only relative in-app paths are honoured, so a crafted `returnTo` cannot send an
+ * operator to another origin after they authenticate. Read at submit time from
+ * `window.location` rather than `useSearchParams`, which would opt this page out of
+ * prerendering.
+ */
+function safeReturnTo(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = new URL(window.location.href).searchParams.get("returnTo");
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
 export default function LoginPage() {
   const { login, loginWithGithub } = useAuth();
   const router = useRouter();
@@ -20,7 +34,7 @@ export default function LoginPage() {
     setBusy(true); setErr(undefined);
     try {
       await login(email, pw);
-      router.replace("/os/onboarding");
+      router.replace(safeReturnTo() ?? "/os/onboarding");
     } catch (e) {
       setErr((e as Error).message);
       setBusy(false);

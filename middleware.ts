@@ -23,6 +23,16 @@ import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-c
  * This middleware handles soft gates: is an auth token present? Are required
  * capabilities declared? If not, redirect or reject early before reaching
  * the expensive backend round-trip.
+ *
+ * Navigations and API calls prove session presence differently, because the
+ * browser cannot attach an Authorization header to a top-level navigation:
+ *
+ *   navigation (document request) -> `veklom.session` cookie -> redirect to /login
+ *   API / fetch call              -> Authorization: Bearer   -> 401 JSON
+ *
+ * Requiring a Bearer header on navigation is unsatisfiable: it locks every
+ * operator out of the surface while appearing to protect it. Neither check is
+ * authorization — both are presence checks, and the backend still decides.
  */
 
 // ── Resource Security Map ────────────────────────────────────────────────────
@@ -46,6 +56,18 @@ const AUTH_REQUIRED_PREFIXES = [
 
 const MCP_PREFIXES = ['/mcp'];
 
+const SESSION_COOKIE = 'veklom.session';
+
+/**
+ * A top-level document request, as opposed to a fetch/XHR from page code.
+ * `sec-fetch-mode: navigate` is set by the browser and cannot be forged by
+ * page script, so it is a safe discriminator here.
+ */
+function isNavigation(request: NextRequest): boolean {
+  if (request.headers.get('sec-fetch-mode') === 'navigate') return true;
+  return (request.headers.get('accept') || '').includes('text/html');
+}
+
 function requiresAuth(pathname: string): boolean {
   return AUTH_REQUIRED_PREFIXES.some(
     p => pathname === p || pathname.startsWith(p + '/')
@@ -61,18 +83,26 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
 
   // ── Auth-required surfaces ────────────────────────────────────────────────
-  // We only check that a Bearer token is PRESENT here.
+  // We only check that a session is PRESENT here.
   // Validation and authorization are CAPPO's responsibility.
   if (requiresAuth(url.pathname)) {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'authentication_required', path: url.pathname },
-        {
-          status: 401,
-          headers: { 'WWW-Authenticate': 'Bearer' },
-        }
-      );
+    if (isNavigation(request)) {
+      if (!request.cookies.get(SESSION_COOKIE)) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('returnTo', url.pathname + url.search);
+        return NextResponse.redirect(loginUrl);
+      }
+    } else {
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return NextResponse.json(
+          { error: 'authentication_required', path: url.pathname },
+          {
+            status: 401,
+            headers: { 'WWW-Authenticate': 'Bearer' },
+          }
+        );
+      }
     }
   }
 

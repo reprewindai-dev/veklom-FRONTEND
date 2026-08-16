@@ -15,6 +15,32 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const TOKEN_KEYS = ["veklom.access_token", "veklom_token"];
 const REFRESH_KEYS = ["veklom.refresh_token", "veklom_refresh_token"];
 
+// Session presence marker for edge middleware.
+//
+// Tokens live in localStorage, which middleware cannot read, and a browser cannot
+// attach an Authorization header to a top-level navigation. This cookie carries no
+// token material and grants nothing — it only tells middleware that a session
+// exists so navigation can be routed to /login instead of rejected. Authorization
+// is still decided by the backend on every API call.
+const SESSION_COOKIE = "veklom.session";
+
+function writeSessionMarker(present: boolean) {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = present
+    ? `${SESSION_COOKIE}=present; Path=/; SameSite=Lax; Max-Age=86400${secure}`
+    : `${SESSION_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0${secure}`;
+}
+
+/**
+ * Reconciles the middleware marker with the stored token, so a session that predates
+ * the marker is not treated as signed out on the next navigation.
+ */
+export function syncSessionMarker() {
+  if (typeof window === "undefined") return;
+  writeSessionMarker(Boolean(getToken()));
+}
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   for (const k of TOKEN_KEYS) {
@@ -27,12 +53,14 @@ export function setTokens(access: string, refresh?: string | null) {
   if (typeof window === "undefined") return;
   for (const k of TOKEN_KEYS) window.localStorage.setItem(k, access);
   if (refresh) for (const k of REFRESH_KEYS) window.localStorage.setItem(k, refresh);
+  writeSessionMarker(true);
 }
 export function clearTokens() {
   if (typeof window === "undefined") return;
   for (const k of [...TOKEN_KEYS, ...REFRESH_KEYS, "veklom_user"]) {
     window.localStorage.removeItem(k);
   }
+  writeSessionMarker(false);
 }
 
 export class ApiError extends Error {

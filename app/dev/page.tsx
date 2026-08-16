@@ -8,6 +8,7 @@ import {
   BookOpen, ChevronRight, CheckCircle, AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
+import type { DependencyState } from "@/lib/dependency-status";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -64,18 +65,58 @@ const pillars = [
   },
 ];
 
-const systemStatus = [
-  { name: "api.veklom.com", status: "operational", label: "BYOS API" },
-  { name: "capi.veklom.com", status: "operational", label: "cAPI Mesh" },
-  { name: "abide.veklom.com", status: "operational", label: "ABIDE" },
-  { name: "pgl.veklom.com", status: "operational", label: "GnomLedger" },
-  { name: "control.veklom.com", status: "operational", label: "Control Plane" },
-  { name: "Ollama Node 5", status: "operational", label: "Inference (167.233.202.195)" },
-];
+const DEPENDENCY_LABELS: Record<string, { label: string; host: string }> = {
+  byos: { label: "BYOS API", host: "api.veklom.com" },
+  capi: { label: "cAPI Mesh", host: "capi.veklom.com" },
+  gnomledger: { label: "GnomLedger", host: "pgl.veklom.com" },
+  lockerphycer: { label: "LockerPhycer", host: "internal" },
+  abide: { label: "ABIDE", host: "abide.veklom.com" },
+};
+
+type DependencyReading = {
+  name: string;
+  status: DependencyState;
+  http_status?: number;
+};
+
+type DependencyProof = {
+  status: string;
+  dependencies: DependencyReading[];
+  checked_at: string;
+};
+
+const STATE_PRESENTATION: Record<DependencyState, { text: string; dot: string; label: string }> = {
+  healthy: {
+    text: "text-emerald-400/80",
+    dot: "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]",
+    label: "reachable",
+  },
+  unhealthy: { text: "text-amber-400/80", dot: "bg-amber-400", label: "degraded" },
+  unreachable: { text: "text-red-400/80", dot: "bg-red-400", label: "unreachable" },
+  unconfigured: { text: "text-white/40", dot: "bg-white/30", label: "unconfigured" },
+};
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  const [proof, setProof] = useState<DependencyProof | null>(null);
+  const [proofError, setProofError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/health/dependencies", { cache: "no-store" })
+      .then(async (response) => {
+        const body = (await response.json()) as DependencyProof;
+        if (active) setProof(body);
+      })
+      .catch(() => {
+        if (active) setProofError("Dependency proof unreachable from this browser.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#060608] text-white font-sans selection:bg-blue-500/20">
@@ -201,27 +242,57 @@ export default function HomePage() {
         <div className="mb-8">
           <p className="text-[11px] font-mono text-white/30 uppercase tracking-[0.2em] mb-3">Current system state</p>
           <h2 className="text-2xl font-bold tracking-tighter text-white">Live infrastructure</h2>
+          <p className="text-sm text-white/40 leading-relaxed mt-3 max-w-2xl">
+            Reachability only. A green marker means the service answered its health endpoint
+            when this page loaded — it is not a claim about correctness, capacity, or uptime
+            history.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {systemStatus.map((s) => (
-            <div
-              key={s.name}
-              className="flex items-center justify-between border border-white/[0.07] bg-white/[0.01] rounded-lg px-5 py-4"
-            >
-              <div>
-                <p className="text-sm font-semibold text-white/80">{s.label}</p>
-                <p className="text-[11px] font-mono text-white/30 mt-0.5">{s.name}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
-                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400/80">
-                  {s.status}
-                </span>
-              </div>
+        {proofError ? (
+          <p className="text-sm font-mono text-red-400/80">{proofError}</p>
+        ) : !proof ? (
+          <p className="text-sm font-mono text-white/30">Probing dependencies…</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {proof.dependencies.map((dependency) => {
+                const meta = DEPENDENCY_LABELS[dependency.name] ?? {
+                  label: dependency.name,
+                  host: dependency.name,
+                };
+                const presentation = STATE_PRESENTATION[dependency.status];
+                return (
+                  <div
+                    key={dependency.name}
+                    className="flex items-center justify-between border border-white/[0.07] bg-white/[0.01] rounded-lg px-5 py-4"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-white/80">{meta.label}</p>
+                      <p className="text-[11px] font-mono text-white/30 mt-0.5">{meta.host}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${presentation.dot}`} />
+                      <span
+                        className={`text-[10px] uppercase font-bold tracking-widest ${presentation.text}`}
+                      >
+                        {presentation.label}
+                      </span>
+                      {dependency.http_status ? (
+                        <span className="text-[10px] font-mono text-white/25">
+                          {dependency.http_status}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+            <p className="text-[11px] font-mono text-white/25 mt-4">
+              Probed at {proof.checked_at} · aggregate {proof.status}
+            </p>
+          </>
+        )}
       </section>
 
       {/* ── Trust Promise Strip ─────────────────────────────────────── */}
