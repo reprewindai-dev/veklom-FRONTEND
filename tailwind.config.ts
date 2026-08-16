@@ -71,6 +71,14 @@ const config: Config = {
           danger: "#FF4D4D",
           info: "#00E5FF",
           unknown: "#6B7280",
+          // Covenant Trace Rail. Colour carries meaning here, never decoration:
+          // cyan = verified/evidence, amber = pending/policy/cost, red = denied/revoked,
+          // violet = identity and cryptographic binding (PGL).
+          obsidian: "#030303",
+          panel: "#090B0F",
+          ledger: "#F4F7FA",
+          identity: "#7C5CFF",
+          deny: "#FF003C",
         },
       },
       fontFamily: {

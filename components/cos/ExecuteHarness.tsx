@@ -3,22 +3,44 @@
 import React, { useState } from 'react';
 import { Play, Database, Activity, Terminal as TerminalIcon, Shield, Clock } from 'lucide-react';
 import { ProofBadge } from './ProofBadge';
+import {
+  EXECUTION_LABEL,
+  INTEGRITY_LABEL,
+  headline,
+  transportLabel,
+  type CallOutcome,
+} from '@/lib/cos/outcome';
 
 interface ExecutionTrace {
-  response: string;
-  provider: string;
-  model: string;
-  log_id: string;
-  total_tokens: number;
-  latency_ms: number;
+  response?: string;
+  provider?: string;
+  model?: string;
+  log_id?: string;
+  execution_id?: string;
+  tokens?: number;
+  total_tokens?: number;
+  latency_ms?: number;
 }
 
-export function ExecuteHarness() {
+interface ExecuteHarnessProps {
+  onExecute: (body: unknown, apiKey?: string) => Promise<{ data?: unknown }>;
+  outcome: CallOutcome;
+  result?: unknown;
+  loading: boolean;
+  proof: "Verified" | "Needs proof" | "Present" | "Degraded" | "Not started" | "Manual step" | "Simulated";
+}
+
+function asTrace(value: unknown): ExecutionTrace | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as ExecutionTrace
+    : null;
+}
+
+export function ExecuteHarness({ onExecute, outcome, result, loading, proof }: ExecuteHarnessProps) {
   const [apiKey, setApiKey] = useState('');
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('qwen2.5:3b');
   const [isExecuting, setIsExecuting] = useState(false);
-  const [trace, setTrace] = useState<ExecutionTrace | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleExecute = async () => {
@@ -26,30 +48,16 @@ export function ExecuteHarness() {
     
     setIsExecuting(true);
     setError(null);
-    setTrace(null);
 
     try {
-      const res = await fetch('/v1/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-        },
-        body: JSON.stringify({
-          prompt,
-          model,
-          use_memory: false
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error(`API Error: ${res.status} ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      setTrace(data);
-      if (data.log_id) {
-        sessionStorage.setItem('veklom_execution_id', data.log_id);
+      const { data } = await onExecute({
+        prompt,
+        model,
+        use_memory: false,
+      }, apiKey);
+      const trace = asTrace(data);
+      if (trace?.log_id || trace?.execution_id) {
+        sessionStorage.setItem('veklom_execution_id', trace.log_id || trace.execution_id || "");
       }
     } catch (err: any) {
       setError(err.message || 'Execution failed');
@@ -72,7 +80,7 @@ export function ExecuteHarness() {
             Run a mounted capability through the governed runtime and observe the replayable trace.
           </p>
         </div>
-        <ProofBadge status={trace ? "Verified" : "Needs proof"} />
+        <ProofBadge status={proof} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -126,7 +134,7 @@ export function ExecuteHarness() {
               </div>
               <button 
                 onClick={handleExecute}
-                disabled={isExecuting || !prompt}
+                disabled={isExecuting || loading || !prompt}
                 className="w-full flex items-center justify-center gap-2 bg-cos-accent text-black font-semibold uppercase tracking-wider text-[11px] py-2.5 rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isExecuting ? <Activity size={14} className="animate-spin" /> : <Play size={14} />}
@@ -144,13 +152,13 @@ export function ExecuteHarness() {
                 <TerminalIcon size={14} className="text-[#666]" />
                 <span className="font-mono text-[10px] uppercase tracking-widest text-[#666]">Runtime Trace</span>
               </div>
-              {trace && (
+              {asTrace(result) && (
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#00FF41]">
-                    <Clock size={12} /> {trace.latency_ms}ms
+                    <Clock size={12} /> {asTrace(result)?.latency_ms ?? "—"}ms
                   </span>
                   <span className="flex items-center gap-1.5 font-mono text-[10px] text-cos-accent">
-                    <Activity size={12} /> {trace.total_tokens} tkns
+                    <Activity size={12} /> {asTrace(result)?.tokens ?? asTrace(result)?.total_tokens ?? "—"} tkns
                   </span>
                 </div>
               )}
@@ -164,7 +172,7 @@ export function ExecuteHarness() {
                 </div>
               )}
 
-              {!trace && !error && !isExecuting && (
+              {!result && !error && !isExecuting && outcome.transport.kind === "not-called" && (
                 <div className="text-[#555] italic flex items-center gap-2">
                   <span className="w-2 h-4 bg-[#00FF41] animate-ping" style={{ animationDuration: '1s' }}></span>
                   Waiting for execution trigger...
@@ -178,21 +186,32 @@ export function ExecuteHarness() {
                 </div>
               )}
 
-              {trace && (
+              {(asTrace(result) || outcome.transport.kind !== "not-called") && !isExecuting && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                  <div className="text-[#00FF41] mb-2">{'>'} Execution Complete.</div>
+                  <div className="space-y-1 mb-2">
+                    <div className="text-cos-accent">{'>'} {headline(outcome).pipeline}</div>
+                    <div className={outcome.execution === "runtime-error" ? "text-red-400" : "text-[#00FF41]"}>
+                      {'>'} {headline(outcome).result}
+                    </div>
+                    <div className="text-cos-muted text-[11px]">{transportLabel(outcome.transport)}</div>
+                  </div>
                   <div className="bg-[#111] border border-[#222] rounded p-4 text-gray-200">
-                    {trace.response}
+                    {asTrace(result)?.response || "Execution response did not report output."}
                   </div>
                   <div className="mt-6 border-t border-[#222] pt-4 grid grid-cols-2 gap-4 text-[10px] uppercase tracking-widest">
                     <div>
                       <div className="text-[#555] mb-1">Provider Route</div>
-                      <div className="text-white">{trace.provider} ({trace.model})</div>
+                      <div className="text-white">{asTrace(result)?.provider || "Not reported"} ({asTrace(result)?.model || "Not reported"})</div>
                     </div>
                     <div>
                       <div className="text-[#555] mb-1">Audit Hash (PGL)</div>
-                      <div className="text-cos-accent font-bold truncate" title={trace.log_id}>{trace.log_id}</div>
+                      <div className="text-cos-accent font-bold truncate" title={asTrace(result)?.log_id}>{asTrace(result)?.log_id || "Not reported"}</div>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 border-t border-[#222] pt-4 sm:grid-cols-3">
+                    <OutcomeCell label="Transport" value={transportLabel(outcome.transport)} />
+                    <OutcomeCell label="Execution" value={EXECUTION_LABEL[outcome.execution]} />
+                    <OutcomeCell label="Integrity" value={INTEGRITY_LABEL[outcome.integrity]} />
                   </div>
                 </div>
               )}
@@ -201,5 +220,14 @@ export function ExecuteHarness() {
         </div>
       </div>
     </section>
+  );
+}
+
+function OutcomeCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-[#222] bg-[#0b0b0b] p-3">
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-[#555]">{label}</div>
+      <div className="break-words font-mono text-[11px] uppercase text-cos-text">{value}</div>
+    </div>
   );
 }

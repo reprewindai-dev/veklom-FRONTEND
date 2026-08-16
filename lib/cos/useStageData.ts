@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, type RequestOpts } from "@/lib/api";
 import { classifyPayload, deriveProofStatus } from "./proof";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
@@ -84,6 +84,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   const call = useCallback(async <T,>(
     endpoint: StageEndpoint,
     body?: unknown,
+    requestOptions: Pick<RequestOpts, "headers"> = {},
   ): Promise<StageCallResult<T>> => {
     const key = keyFor(endpoint);
     if (endpoint.classification === "absent") {
@@ -103,7 +104,10 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         method: endpoint.method,
         body,
         query: { mode: sandbox ? "sandbox" : "production" },
-        headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
+        headers: {
+          "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production",
+          ...(requestOptions.headers || {}),
+        },
         handlePaymentRequired: false,
         baseUrl: resolveStageBaseUrl(
           stageId,
