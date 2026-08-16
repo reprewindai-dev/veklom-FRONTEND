@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, apiUrl, clearTokens, getToken, setTokens } from "./api";
+import { api, apiUrl, clearTokens, getToken, setTokens, syncSessionMarker } from "./api";
 import { normalizeTier, Tier } from "./tiers";
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         url.searchParams.delete("veklom_refresh_token");
         window.history.replaceState({}, document.title, url.toString());
       }
+      syncSessionMarker();
     }
     loadProfile();
   }, [loadProfile]);
