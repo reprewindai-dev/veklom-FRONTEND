@@ -80,87 +80,25 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
     }
   }, [isOpen]);
 
-  // Execute Infrastructure Health Scan
+  // Infrastructure health has no governed local data source.
   const runInfraHealthScan = async () => {
     setExecutingActionId('infra-scan');
     setActionProgress([
-      'Pinging Hetzner US-East-1a control plane...',
-      'Probing Coolify container runtime metrics...',
-      'Measuring VNP network packet roundtrip & TTFT latency...',
-      'Verifying PGL cryptographic Merkle ledger signatures...',
-      'Checking Ollama local daemon status on 127.0.0.1:11434...'
+      'Infrastructure node health: Needs proof',
+      'Status: Not started',
+      'Next step: Manual step'
     ]);
-
-    try {
-      const response = await fetch('/api/v1/scan/infra', { method: 'POST' });
-      if (response.ok) {
-        const data = await response.json();
-        setScanReport({
-          type: 'INFRASTRUCTURE_HEALTH',
-          title: 'Hetzner / Coolify Deep Infrastructure Scan Report',
-          data
-        });
-      } else {
-        throw new Error('Server health scan endpoint returned error status');
+    setScanReport({
+      type: 'UNAVAILABLE',
+      title: 'Infrastructure Health Scan',
+      data: {
+        proofState: 'Needs proof',
+        status: 'Not started',
+        nextStep: 'Manual step',
+        message: 'No governed infrastructure scan endpoint is wired to this control plane.'
       }
-    } catch (e: any) {
-      // Fallback synthetic high-accuracy report if endpoint offline
-      setScanReport({
-        type: 'INFRASTRUCTURE_HEALTH',
-        title: 'Hetzner / Coolify Deep Infrastructure Scan Report',
-        data: {
-          scanId: `scan_infra_${Date.now().toString(36)}`,
-          timestamp: new Date().toISOString(),
-          durationMs: 42,
-          overallStatus: 'OPTIMAL_HEALTHY',
-          integrityScore: 100,
-          nodesScanned: [
-            {
-              nodeId: 'node_hz_01',
-              name: 'Hetzner US-East-1a (Control Plane)',
-              latencyMs: 4.2,
-              containerHealth: 'HEALTHY',
-              cpuLoad: '14.2%',
-              memoryLoad: '482MB / 4096MB',
-              status: 'PASS'
-            },
-            {
-              nodeId: 'node_hz_02',
-              name: 'Hetzner EU-Central-1 (PGL Ledger)',
-              latencyMs: 12.8,
-              containerHealth: 'HEALTHY',
-              cpuLoad: '22.8%',
-              memoryLoad: '890MB / 8192MB',
-              status: 'PASS'
-            },
-            {
-              nodeId: 'node_hz_03',
-              name: 'Local Ollama Native Node',
-              latencyMs: 2.1,
-              containerHealth: 'HEALTHY',
-              cpuLoad: '8.5%',
-              memoryLoad: '3.2GB / 16GB',
-              status: 'PASS'
-            }
-          ],
-          vnpProtocol: {
-            throughputTps: 4820,
-            averageTtftMs: 112,
-            nonRepudiationRate: '100%',
-            pglMerkleRootVerified: true,
-            blockHeight: 1482095
-          },
-          repoGateShield: {
-            status: 'ACTIVE_ARMED',
-            astRulesEnforced: 18,
-            activeThreatsDetected: 0
-          },
-          auditLogSignature: 'pgl_cert_scan_0x8F91A2B0'
-        }
-      });
-    } finally {
-      setExecutingActionId(null);
-    }
+    });
+    setExecutingActionId(null);
   };
 
   // Execute Capability Registry Refresh
@@ -174,7 +112,7 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
     ]);
 
     try {
-      const response = await fetch('/api/v1/registry/refresh', { method: 'POST' });
+      const response = await fetch('/api/local/registry/refresh', { method: 'POST' });
       if (response.ok) {
         const data = await response.json();
         if (data.skillsRegistry && onSkillsRefreshed) {
@@ -193,17 +131,10 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
         type: 'REGISTRY_REFRESH',
         title: 'Capability Registry Re-indexing & Audit Report',
         data: {
-          success: true,
-          refreshedAt: new Date().toISOString(),
-          executionDurationMs: 18,
-          totalCapabilitiesCount: 6,
-          verifiedCapabilitiesCount: 6,
-          eccAdaptersActive: 142,
-          scanAuditSummary: [
-            { skillId: 'skill-abide-planner', name: 'Abide Goal Compiler', passed: true, threatLevel: 'NONE' },
-            { skillId: 'skill-repogate-ast', name: 'RepoGate Security Scanner', passed: true, threatLevel: 'NONE' },
-            { skillId: 'skill-gnomledger-pgl', name: 'PGL Cryptographic Ledger', passed: true, threatLevel: 'NONE' }
-          ]
+          proofState: 'Needs proof',
+          status: 'Not started',
+          nextStep: 'Manual step',
+          message: 'Registry refresh did not return a governed result.'
         }
       });
     } finally {
@@ -222,7 +153,7 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
     ]);
 
     try {
-      const response = await fetch('/api/v1/capi/invoke', {
+      const response = await fetch('/api/local/capi/invoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -287,10 +218,10 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
     {
       id: 'infra-scan',
       title: 'Trigger Infrastructure Health Scan',
-      description: 'Run real-time multi-node diagnostic across Hetzner, Coolify, and VNP network',
+      description: 'Infrastructure node health is unavailable until a governed source is wired',
       category: 'infrastructure',
-      shortcut: '⚡ Scan Infra',
-      badge: 'LIVE DIAGNOSTIC',
+      shortcut: '⚡ Infra Status',
+      badge: 'NOT WIRED',
       icon: Activity,
       execute: runInfraHealthScan
     },
@@ -582,65 +513,10 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
                 </div>
               </div>
 
-              {/* Render Infrastructure Health Scan Breakdown */}
-              {scanReport.type === 'INFRASTRUCTURE_HEALTH' && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-2xs">
-                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                      <span className="text-slate-500 block">STATUS</span>
-                      <span className="text-emerald-400 font-bold">{scanReport.data.overallStatus}</span>
-                    </div>
-                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                      <span className="text-slate-500 block">LATENCY PROBE</span>
-                      <span className="text-cyan-400 font-bold">{scanReport.data.durationMs}ms</span>
-                    </div>
-                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                      <span className="text-slate-500 block">INTEGRITY</span>
-                      <span className="text-indigo-400 font-bold">{scanReport.data.integrityScore}%</span>
-                    </div>
-                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                      <span className="text-slate-500 block">VNP BLOCK</span>
-                      <span className="text-amber-400 font-bold">#{scanReport.data.vnpProtocol.blockHeight}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-slate-400 block">
-                      Node Health Status Breakdown:
-                    </span>
-                    <div className="space-y-1.5">
-                      {scanReport.data.nodesScanned.map((node: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="bg-slate-900 p-2.5 rounded border border-slate-800 flex items-center justify-between text-2xs font-mono"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span className="font-semibold text-slate-200">{node.name}</span>
-                          </div>
-                          <div className="flex items-center gap-4 text-slate-400">
-                            <span>Latency: <strong className="text-cyan-300">{node.latencyMs}ms</strong></span>
-                            <span>CPU: <strong className="text-slate-300">{node.cpuLoad}</strong></span>
-                            <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/30">
-                              {node.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 bg-slate-900/80 rounded border border-slate-800 text-3xs font-mono text-slate-400 flex justify-between items-center">
-                    <span>Audit Log Signature: {scanReport.data.auditLogSignature}</span>
-                    <span className="text-emerald-400 font-bold">PGL MERKLE VERIFIED</span>
-                  </div>
-                </div>
-              )}
-
               {/* Render Registry Refresh Breakdown */}
-              {scanReport.type === 'REGISTRY_REFRESH' && (
+              {scanReport.type === 'REGISTRY_REFRESH' && scanReport.data.skillsRegistry && (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2 font-mono text-2xs">
+                  <div className="grid grid-cols-2 gap-2 font-mono text-2xs">
                     <div className="bg-slate-900 p-2 rounded border border-slate-800">
                       <span className="text-slate-500 block">ACTIVE SKILLS</span>
                       <span className="text-cyan-400 font-bold">{scanReport.data.totalCapabilitiesCount}</span>
@@ -648,10 +524,6 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
                     <div className="bg-slate-900 p-2 rounded border border-slate-800">
                       <span className="text-slate-500 block">VERIFIED AST</span>
                       <span className="text-emerald-400 font-bold">{scanReport.data.verifiedCapabilitiesCount} / {scanReport.data.totalCapabilitiesCount}</span>
-                    </div>
-                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
-                      <span className="text-slate-500 block">ECC ADAPTERS</span>
-                      <span className="text-indigo-400 font-bold">{scanReport.data.eccAdaptersActive}</span>
                     </div>
                   </div>
 
@@ -667,8 +539,8 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
                 </div>
               )}
 
-              {/* Render Generic Payload if other type */}
-              {!['INFRASTRUCTURE_HEALTH', 'REGISTRY_REFRESH'].includes(scanReport.type) && (
+              {/* Render unavailable or other payloads without inventing a status. */}
+              {(scanReport.type !== 'REGISTRY_REFRESH' || !scanReport.data.skillsRegistry) && (
                 <pre className="bg-slate-900 p-3 rounded border border-slate-800 font-mono text-2xs text-cyan-300 overflow-x-auto max-h-60">
                   {JSON.stringify(scanReport.data, null, 2)}
                 </pre>

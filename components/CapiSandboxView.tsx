@@ -50,7 +50,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
     setErrorMsg(null);
     try {
       // 1. Get Offer
-      const offerRes = await fetch('/api/v1/x402/offer', {
+      const offerRes = await fetch('/api/local/x402/offer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skillId: selectedSkillId })
@@ -94,7 +94,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
         throw new Error('Invalid JSON format in parameters input.');
       }
 
-      const response = await fetch('/api/v1/capi/invoke', {
+      const response = await fetch('/api/local/capi/invoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

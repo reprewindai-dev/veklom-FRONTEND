@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   const checkOllama = async () => {
     try {
-      const response = await fetch('/api/v1/ollama/status');
+      const response = await fetch('/api/local/ollama/status');
       if (response.ok) {
         const data: OllamaStatus = await response.json();
         setOllamaStatus(data);
@@ -33,16 +33,16 @@ export default function DashboardPage() {
       setOllamaStatus({
         connected: false,
         endpoint: 'http://localhost:11434',
-        availableModels: ['llama3.2:latest', 'deepseek-r1:8b', 'codellama:latest'],
+        availableModels: [],
         latencyMs: 0,
-        error: 'Daemon unreachable'
+        error: 'Daemon status unavailable'
       });
     }
   };
 
   const fetchSkills = async () => {
     try {
-      const response = await fetch('/api/v1/skills');
+      const response = await fetch('/api/local/skills');
       if (response.ok) {
         const data: SkillSpec[] = await response.json();
         setSkills(data);

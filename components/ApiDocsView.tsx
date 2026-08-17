@@ -9,11 +9,11 @@ export const ApiDocsView: React.FC = () => {
     {
       id: 'capi-invoke',
       method: 'POST',
-      path: '/api/v1/capi/invoke',
+      path: '/api/local/capi/invoke',
       title: 'cAPI Universal Capability Invocation',
       desc: 'Routes a skill invocation payload through specified harness adapters (Ollama Local, Gemini, Claude, Codex, Cursor, OpenCode), returning Execution Identity tokens and PGL certificates.',
       snippets: {
-        curl: `curl -X POST "https://your-domain.com/api/v1/capi/invoke" \\
+        curl: `curl -X POST "https://your-domain.com/api/local/capi/invoke" \\
   -H "Content-Type: application/json" \\
   -d '{
     "skillId": "skill-ecc-refactor-ts",
@@ -40,7 +40,7 @@ const response = await capi.invoke({
 console.log('PGL Cert:', response.pglCertificate.certId);`,
         python: `import requests
 
-url = "https://your-domain.com/api/v1/capi/invoke"
+url = "https://your-domain.com/api/local/capi/invoke"
 payload = {
     "skillId": "skill-ecc-refactor-ts",
     "harness": "ollama",
@@ -68,7 +68,7 @@ func main() {
 		"mode": "production",
 	}
 	jsonVal, _ := json.Marshal(payload)
-	resp, _ := http.Post("https://your-domain.com/api/v1/capi/invoke", "application/json", bytes.NewBuffer(jsonVal))
+	resp, _ := http.Post("https://your-domain.com/api/local/capi/invoke", "application/json", bytes.NewBuffer(jsonVal))
 	fmt.Println("Status:", resp.Status)
 }`
       }
@@ -76,19 +76,19 @@ func main() {
     {
       id: 'abide-plan',
       method: 'POST',
-      path: '/api/v1/abide/plan',
+      path: '/api/local/abide/plan',
       title: 'Abide Hierarchical Abstract Plan Compiler',
       desc: 'Compiles raw user or machine intent into gold-standard hierarchical execution blueprints backed by the Einstein trend probability model, SSRN academic validator, and X402 settlement tokens.',
       snippets: {
-        curl: `curl -X POST "https://your-domain.com/api/v1/abide/plan" \\
+        curl: `curl -X POST "https://your-domain.com/api/local/abide/plan" \\
   -H "Content-Type: application/json" \\
   -d '{ "rawIntent": "Refactor TypeScript code and run RepoGate security scan" }'`,
-        ts: `const plan = await fetch('/api/v1/abide/plan', {
+        ts: `const plan = await fetch('/api/local/abide/plan', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ rawIntent: 'Refactor TypeScript code and run RepoGate security scan' })
 }).then(res => res.json());`,
-        python: `res = requests.post("https://your-domain.com/api/v1/abide/plan", json={"rawIntent": "Refactor code"})`,
+        python: `res = requests.post("https://your-domain.com/api/local/abide/plan", json={"rawIntent": "Refactor code"})`,
         go: `// Abide Plan Go Request Snippet`
       }
     }

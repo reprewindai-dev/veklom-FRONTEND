@@ -158,6 +158,10 @@ async function proxyRequest(req: NextRequest) {
     path.startsWith("/api/v1/platform")
   ) {
     targetBase = VBB_BACKEND_URL;
+  } else if (path.startsWith("/api/v1/")) {
+    // BYOS owns the remaining /api/v1 namespace. Keep this fallback broad so
+    // new BYOS routes are not shadowed by this frontend proxy table.
+    targetBase = VBB_BACKEND_URL;
   } else {
     return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });
   }

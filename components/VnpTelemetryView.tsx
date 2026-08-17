@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Server, Cpu, HardDrive, CheckCircle2, ShieldCheck, RefreshCw, Zap, AlertTriangle, DollarSign, Clock, Trash2, ShieldAlert } from 'lucide-react';
-import { ContainerNodeHealth, EvaporatingCapabilityLease } from '../types.js';
+import { Activity, RefreshCw, DollarSign, Clock, Trash2 } from 'lucide-react';
+import { EvaporatingCapabilityLease } from '../types.js';
 
 export const VnpTelemetryView: React.FC = () => {
-  const [nodes, setNodes] = useState<ContainerNodeHealth[]>([]);
   const [leases, setLeases] = useState<EvaporatingCapabilityLease[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchNodeHealth = async () => {
+  const refreshTelemetry = async () => {
     setIsLoading(true);
     try {
-      const [nodeRes, leaseRes] = await Promise.all([
-        fetch('/api/v1/nodes/health'),
-        fetch('/api/v1/x402/leases')
-      ]);
-      const nodeData = await nodeRes.json();
+      const leaseRes = await fetch('/api/local/x402/leases');
       const leaseData = await leaseRes.json();
-      setNodes(nodeData);
       setLeases(leaseData);
     } catch (err) {
-      console.error('Failed to fetch node health or leases:', err);
+      console.error('Failed to fetch local lease state:', err);
     } finally {
       setIsLoading(false);
     }
@@ -27,20 +21,20 @@ export const VnpTelemetryView: React.FC = () => {
 
   const handleEvictLease = async (leaseId: string) => {
     try {
-      await fetch('/api/v1/x402/evict', {
+      await fetch('/api/local/x402/evict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leaseId })
       });
-      fetchNodeHealth();
+      refreshTelemetry();
     } catch (err) {
       console.error('Failed to evict lease:', err);
     }
   };
 
   useEffect(() => {
-    fetchNodeHealth();
-    const interval = setInterval(fetchNodeHealth, 4000);
+    refreshTelemetry();
+    const interval = setInterval(refreshTelemetry, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -52,73 +46,35 @@ export const VnpTelemetryView: React.FC = () => {
           <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-medium mb-1">
             <Activity className="w-4 h-4" /> VEKLOM NEXUS PROTOCOL (VNP) TELEMETRY
           </div>
-          <h2 className="text-2xl font-bold text-white">Hetzner / Coolify Container Infrastructure & X402 Microtransactions</h2>
+          <h2 className="text-2xl font-bold text-white">VNP Telemetry & X402 Microtransactions</h2>
           <p className="text-xs text-slate-400 font-mono">
-            Real-time container health, CPU/RAM utilization, microsecond latency metrics, and X402 evaporating capability lease decays.
+            Lease state is locally computed; infrastructure node health is not wired to a governed runtime source.
           </p>
         </div>
 
         <button
-          onClick={fetchNodeHealth}
+          onClick={refreshTelemetry}
           className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 font-mono text-xs hover:text-white flex items-center gap-2 cursor-pointer"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} /> Refresh Telemetry
         </button>
       </div>
 
-      {/* Nodes Health Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
-        {nodes.map((node) => (
-          <div key={node.nodeId} className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-bold text-sm text-white">{node.serviceName}</h3>
-                <div className="text-3xs text-slate-400">{node.nodeName}</div>
-              </div>
-              <span className="px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-3xs flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> {node.status}
-              </span>
-            </div>
-
-            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-2xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">IP / Region:</span>
-                <span className="text-slate-200">{node.ipAddress} ({node.region})</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Container ID:</span>
-                <span className="text-cyan-400 truncate max-w-[150px]">{node.containerId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Uptime:</span>
-                <span className="text-emerald-400">{Math.floor(node.uptimeSec / 3600)}h {Math.floor((node.uptimeSec % 3600) / 60)}m</span>
-              </div>
-            </div>
-
-            {/* Gauge Metrics */}
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-2xs">
-                  <span className="text-slate-400">CPU Load</span>
-                  <span className="text-cyan-400 font-bold">{node.cpuPercent}%</span>
-                </div>
-                <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                  <div className="bg-cyan-500 h-full rounded-full" style={{ width: `${node.cpuPercent}%` }}></div>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-2xs">
-                  <span className="text-slate-400">RAM Usage</span>
-                  <span className="text-emerald-400 font-bold">{node.memoryUsedMb} MB / {node.memoryLimitMb} MB</span>
-                </div>
-                <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                  <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${(node.memoryUsedMb / node.memoryLimitMb) * 100}%` }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Node Health Availability */}
+      <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 font-mono text-xs">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-sm text-white">Infrastructure Node Health</h3>
+          <span className="px-2.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-3xs">
+            Needs proof
+          </span>
+        </div>
+        <p className="text-slate-400">
+          No governed node-health source is wired to this surface. Runtime infrastructure state is not reported.
+        </p>
+        <div className="flex flex-wrap gap-3 text-3xs uppercase tracking-wider">
+          <span className="text-slate-400">Status: <strong className="text-amber-400">Not started</strong></span>
+          <span className="text-slate-400">Next step: <strong className="text-cyan-400">Manual step</strong></span>
+        </div>
       </div>
 
       {/* X402 Active Evaporating Capability Leases Monitor */}
@@ -209,4 +165,3 @@ export const VnpTelemetryView: React.FC = () => {
     </div>
   );
 };
-
