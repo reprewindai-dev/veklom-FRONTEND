@@ -35,7 +35,7 @@ export const SkillRegistryView: React.FC<SkillRegistryViewProps> = ({ skills, on
     setImportError(null);
 
     try {
-      const response = await fetch('/api/v1/skills/intake', {
+      const response = await fetch('/api/local/skills/intake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
