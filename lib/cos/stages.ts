@@ -1,4 +1,5 @@
 import { canonicalBackends } from "@/lib/canonical-backends";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 
 export type StageEndpointClass = "live" | "proxy" | "absent";
 export type StageId =
@@ -42,9 +43,9 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/api/v1/agents", classification: "live", response: "agent registry payload", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
       { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "live", response: "benchmark provider array", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
-      { method: "GET", path: "/api/cappo/v1/capability/beacons", classification: "live", response: "signed capability beacon set" },
-      { method: "POST", path: "/api/cappo/v1/capability/beacons/verify", classification: "live", response: "beacon signature verification result" },
-      { method: "GET", path: "/api/cappo/.well-known/capability-beacon-keys", classification: "live", response: "published beacon issuer keys" },
+      { method: "GET", path: "/v1/capability/beacons", classification: "live", response: "signed capability beacon set" },
+      { method: "POST", path: "/v1/capability/beacons/verify", classification: "live", response: "beacon signature verification result" },
+      { method: "GET", path: "/.well-known/capability-beacon-keys", classification: "live", response: "published beacon issuer keys" },
     ],
   },
   {
@@ -103,8 +104,8 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/v1/audit/ledger", classification: "live", response: "audit ledger entries", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
       { method: "GET", path: "/v1/audit/verify", classification: "live", response: "ledger verification result", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
-      { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "live", response: "agent ledger entries", baseUrl: canonicalBackends().find((backend) => backend.id === "genome")?.baseUrl },
-      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "live", response: "agent chain verification result", baseUrl: canonicalBackends().find((backend) => backend.id === "genome")?.baseUrl },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "live", response: "agent ledger entries", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "live", response: "agent chain verification result", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
     ],
   },
   {
