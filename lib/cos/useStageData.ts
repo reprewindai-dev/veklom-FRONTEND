@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { classifyPayload, deriveProofStatus } from "./proof";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
@@ -35,10 +36,10 @@ function keyFor(endpoint: StageEndpoint) {
 }
 
 export function resolveStageTransportPath(
-  stageId: StageDefinition["id"],
+  _stageId: StageDefinition["id"],
   path: string,
 ): string {
-  if (stageId === "mount" && path.startsWith("/v1/capability/")) {
+  if (isCappoProxyPath(path)) {
     return `/api/cappo${path}`;
   }
   return path;
@@ -49,11 +50,14 @@ export function resolveStageBaseUrl(
   sandbox: boolean,
   endpointBaseUrl?: string,
   sandboxBaseUrl?: string,
+  endpointPath?: string,
 ): string | undefined {
-  // Mount must always traverse the same-origin /api/cappo boundary. That route
-  // validates the caller against BYOS and injects the server-held CAPPO
+  // CAPPO calls must always traverse the same-origin /api/cappo boundary. That
+  // route validates the caller against BYOS and injects the server-held CAPPO
   // credential/workspace scope. An external base URL would bypass that boundary.
-  if (stageId === "mount") return undefined;
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
+    return undefined;
+  }
   return sandbox ? (sandboxBaseUrl || endpointBaseUrl) : endpointBaseUrl;
 }
 
@@ -110,6 +114,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
           sandbox,
           endpoint.baseUrl,
           process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL,
+          endpoint.path,
         ),
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;

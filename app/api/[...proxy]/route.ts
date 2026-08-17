@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue, cappoAuthHeaderValue } from "@/lib/capi-runtime";
+import {
+  isCappoExecPath,
+  isCappoIdentityPath,
+  isCappoProxyPath,
+} from "@/lib/cappo-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const CAPPO_ADMIN_KEY = cappoAuthHeaderValue();
@@ -75,43 +80,54 @@ async function proxyRequest(req: NextRequest) {
 
   let targetBase = "";
   let forwardPath = path;
-  let cappoCapabilityRequest = false;
+  let cappoRequest = false;
 
-  if (path.startsWith("/api/cappo/v1/capability/")) {
-    if (!CAPPO_BACKEND_URL || !CAPPO_ADMIN_KEY) {
+  if (path.startsWith("/api/cappo/")) {
+    if (!CAPPO_BACKEND_URL) {
       return NextResponse.json(
         { error: "CAPPO capability proxy is not configured" },
         { status: 503 },
       );
     }
 
-    // The browser's BYOS/Firebase bearer is not automatically a CAPPO token.
-    // Validate it against the canonical BYOS identity endpoint first, then use
-    // the server-held CAPPO credential with the validated workspace scope.
-    const requester = await resolveRequesterIdentity(req);
-    if (!requester) {
-      return NextResponse.json(
-        { error: "AUTHENTICATION_REQUIRED" },
-        { status: 401 },
-      );
+    forwardPath = path.replace(/^\/api\/cappo/, "");
+    if (!isCappoProxyPath(forwardPath)) {
+      return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });
     }
 
     targetBase = CAPPO_BACKEND_URL;
-    forwardPath = path.replace(/^\/api\/cappo/, "");
-    cappoCapabilityRequest = true;
-
-    headers.delete("authorization");
-    headers.delete("cookie");
-    headers.delete("x-workspace-id");
-    headers.set("x-api-key", CAPPO_ADMIN_KEY);
-    headers.set("x-workspace-id", requester.workspace_id!);
-    headers.set("x-veklom-requester-id", requester.id!);
-  } else if (path === "/api/cappo/v1/exec" || path.startsWith("/api/cappo/v1/exec/")) {
-    if (!CAPPO_BACKEND_URL) {
-      return NextResponse.json({ error: "CAPPO backend is not configured" }, { status: 503 });
+    cappoRequest = true;
+    if (isCappoExecPath(forwardPath)) {
+      // Execution admission remains with CAPPO's x402 layer. Never attach
+      // the internal operator key or replace the browser's own authority.
+    } else {
+      if (!CAPPO_ADMIN_KEY) {
+        return NextResponse.json(
+          { error: "CAPPO capability proxy is not configured" },
+          { status: 503 },
+        );
+      }
+      headers.delete("authorization");
+      headers.delete("cookie");
+      headers.delete("x-workspace-id");
+      headers.delete("x-veklom-requester-id");
+      headers.set("x-api-key", CAPPO_ADMIN_KEY);
     }
-    targetBase = CAPPO_BACKEND_URL;
-    forwardPath = path.replace(/^\/api\/cappo/, "");
+
+    if (isCappoIdentityPath(forwardPath)) {
+      // The browser's BYOS/Firebase bearer is not a CAPPO token.
+      // Validate it against the canonical BYOS identity endpoint first, then
+      // use the server-held CAPPO credential with the validated workspace scope.
+      const requester = await resolveRequesterIdentity(req);
+      if (!requester) {
+        return NextResponse.json(
+          { error: "AUTHENTICATION_REQUIRED" },
+          { status: 401 },
+        );
+      }
+      headers.set("x-workspace-id", requester.workspace_id!);
+      headers.set("x-veklom-requester-id", requester.id!);
+    }
   } else if (path.startsWith("/api/capi/")) {
     targetBase = CAPI_RUNTIME_URL;
     forwardPath = path.replace(/^\/api\/capi/, "/api/v1/capi");
@@ -150,13 +166,7 @@ async function proxyRequest(req: NextRequest) {
     .toLowerCase()
     .startsWith("bearer ");
 
-  if (
-    targetBase === CAPPO_BACKEND_URL &&
-    !cappoCapabilityRequest &&
-    !hasBearerIdentity &&
-    CAPPO_ADMIN_KEY &&
-    CAPPO_ADMIN_KEY !== "dev-admin-key-do-not-use-in-prod"
-  ) {
+  if (targetBase === CAPPO_BACKEND_URL && !cappoRequest && !hasBearerIdentity && CAPPO_ADMIN_KEY && CAPPO_ADMIN_KEY !== "dev-admin-key-do-not-use-in-prod") {
     headers.set("x-api-key", CAPPO_ADMIN_KEY);
   } else if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET) {
     headers.set("Authorization", `Bearer ${LOCKERPHYCER_SECRET}`);
