@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { classifyPayload, deriveProofStatus } from "./proof";
-import { getStage, isCappoStagePath, type StageDefinition, type StageEndpoint } from "./stages";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
+import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
 import { useSandboxMode } from "./sandbox";
@@ -38,7 +39,7 @@ export function resolveStageTransportPath(
   _stageId: StageDefinition["id"],
   path: string,
 ): string {
-  if (isCappoStagePath(path)) {
+  if (isCappoProxyPath(path)) {
     return `/api/cappo${path}`;
   }
   return path;
@@ -54,7 +55,7 @@ export function resolveStageBaseUrl(
   // CAPPO calls must always traverse the same-origin /api/cappo boundary. That
   // route validates the caller against BYOS and injects the server-held CAPPO
   // credential/workspace scope. An external base URL would bypass that boundary.
-  if (stageId === "mount" || (endpointPath && isCappoStagePath(endpointPath))) {
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
     return undefined;
   }
   return sandbox ? (sandboxBaseUrl || endpointBaseUrl) : endpointBaseUrl;

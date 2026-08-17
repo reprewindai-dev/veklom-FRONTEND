@@ -1,4 +1,5 @@
-import { getStage, isCappoStagePath, stages } from "@/lib/cos/stages";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
+import { getStage, stages } from "@/lib/cos/stages";
 import { resolveStageBaseUrl, resolveStageTransportPath } from "@/lib/cos/useStageData";
 
 describe("Capability OS stage transport", () => {
@@ -37,7 +38,7 @@ describe("Capability OS stage transport", () => {
   it("rewrites every declared CAPPO endpoint across all stages", () => {
     for (const stage of stages) {
       for (const endpoint of stage.endpoints) {
-        if (!isCappoStagePath(endpoint.path)) continue;
+        if (!isCappoProxyPath(endpoint.path)) continue;
         expect(resolveStageTransportPath(stage.id, endpoint.path))
           .toBe(`/api/cappo${endpoint.path}`);
         expect(

@@ -63,4 +63,64 @@ describe("CAPPO proxy boundary", () => {
     }));
     fetchSpy.mockRestore();
   });
+
+  it("proxies execution without attaching the internal CAPPO key", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ status: "payment-required" }), {
+        status: 402,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const request = new NextRequest("https://control.veklom.com/api/cappo/v1/exec", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer byos-session-token",
+        "x-api-key": "browser-key-must-not-forward",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ capability: "demo" }),
+    });
+
+    const response = await proxyModule.POST(request);
+
+    expect(response.status).toBe(402);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/exec");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(upstreamHeaders.get("x-api-key")).toBeNull();
+    expect(upstreamHeaders.get("authorization")).toBe("Bearer byos-session-token");
+    fetchSpy.mockRestore();
+  });
+
+  it("proxies the authenticated agents collection through CAPPO", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "user-1", workspace_id: "workspace-1" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ agents: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    const request = new NextRequest("https://control.veklom.com/api/cappo/api/v1/agents", {
+      method: "GET",
+      headers: { authorization: "Bearer byos-session-token" },
+    });
+
+    const response = await proxyModule.GET(request);
+
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/api/v1/agents");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
+    expect(upstreamHeaders.get("x-api-key")).toBe("server-cappo-key");
+    expect(upstreamHeaders.get("x-workspace-id")).toBe("workspace-1");
+    expect(upstreamHeaders.get("x-veklom-requester-id")).toBe("user-1");
+    expect(upstreamHeaders.get("authorization")).toBeNull();
+    fetchSpy.mockRestore();
+  });
 });

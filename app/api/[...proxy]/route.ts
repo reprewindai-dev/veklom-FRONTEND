@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue, cappoAuthHeaderValue } from "@/lib/capi-runtime";
+import {
+  isCappoExecPath,
+  isCappoIdentityPath,
+  isCappoProxyPath,
+} from "@/lib/cappo-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const CAPPO_ADMIN_KEY = cappoAuthHeaderValue();
@@ -36,76 +41,6 @@ type RequesterIdentity = {
   workspace_id?: string;
   role?: string;
 };
-
-const CAPPO_PUBLIC_PATHS = [
-  "/.well-known/x402",
-  "/.well-known/capability-beacon-keys",
-  "/api/v1/pricing",
-  "/v1/vnp/metrics",
-] as const;
-
-function pathMatches(path: string, candidate: string) {
-  return path === candidate || path.startsWith(`${candidate}/`);
-}
-
-function matchesAgentRoute(path: string, suffix: string) {
-  const prefix = `/api/v1/agents/`;
-  if (!path.startsWith(prefix)) return false;
-  if (suffix && !path.endsWith(suffix)) return false;
-  const end = suffix ? -suffix.length : undefined;
-  const agentId = path.slice(prefix.length, end).replace(/\/+$/, "");
-  return Boolean(agentId) && !agentId.includes("/");
-}
-
-function matchesLedgerRoute(path: string, suffix: string) {
-  const prefix = "/api/v1/ledger/agents/";
-  if (!path.startsWith(prefix)) return false;
-  if (suffix && !path.endsWith(suffix)) return false;
-  const end = suffix ? -suffix.length : undefined;
-  const agentId = path.slice(prefix.length, end).replace(/\/+$/, "");
-  return Boolean(agentId) && !agentId.includes("/");
-}
-
-export function isCappoPublicPath(path: string) {
-  return CAPPO_PUBLIC_PATHS.some((candidate) => path === candidate);
-}
-
-export function isCappoIdentityPath(path: string) {
-  if (pathMatches(path, "/v1/capability")) return true;
-  if ([
-    "/v1/audit/ledger",
-    "/v1/audit/verify",
-    "/v1/audit-logs",
-    "/v1/runs",
-    "/v1/governance/v2/assess",
-    "/v1/governance/v2/quarantine",
-    "/v1/vnp/leaderboard",
-    "/v1/vnp/validators",
-    "/v1/vnp/incidents",
-    "/v1/vnp/methodology",
-    "/v1/vnp/apis",
-    "/api/v1/platform/pulse",
-    "/api/v1/benchmarks/leaderboard",
-    "/api/v1/execution/authorize",
-    "/v1/exec",
-  ].some((candidate) => path === candidate)) {
-    return true;
-  }
-  if (/^\/v1\/governance\/v2\/quarantine\/[^/]+\/(?:approve|deny)$/.test(path)) {
-    return true;
-  }
-  if (path.startsWith("/v1/governance/v2/risk/")) return true;
-  if (/^\/v1\/identities\/[^/]+\/revoke$/.test(path)) return true;
-  if (matchesAgentRoute(path, "")) return true;
-  if (matchesAgentRoute(path, "/certificate")) return true;
-  if (matchesAgentRoute(path, "/lifecycle")) return true;
-  if (matchesLedgerRoute(path, "")) return true;
-  return matchesLedgerRoute(path, "/verify");
-}
-
-export function isCappoProxyPath(path: string) {
-  return isCappoPublicPath(path) || isCappoIdentityPath(path);
-}
 
 async function resolveRequesterIdentity(req: NextRequest): Promise<RequesterIdentity | null> {
   const authHeaders = new Headers();
@@ -148,7 +83,7 @@ async function proxyRequest(req: NextRequest) {
   let cappoRequest = false;
 
   if (path.startsWith("/api/cappo/")) {
-    if (!CAPPO_BACKEND_URL || !CAPPO_ADMIN_KEY) {
+    if (!CAPPO_BACKEND_URL) {
       return NextResponse.json(
         { error: "CAPPO capability proxy is not configured" },
         { status: 503 },
@@ -162,11 +97,22 @@ async function proxyRequest(req: NextRequest) {
 
     targetBase = CAPPO_BACKEND_URL;
     cappoRequest = true;
-    headers.delete("authorization");
-    headers.delete("cookie");
-    headers.delete("x-workspace-id");
-    headers.delete("x-veklom-requester-id");
-    headers.set("x-api-key", CAPPO_ADMIN_KEY);
+    if (isCappoExecPath(forwardPath)) {
+      // Execution admission remains with CAPPO's x402 layer. Never attach
+      // the internal operator key or replace the browser's own authority.
+    } else {
+      if (!CAPPO_ADMIN_KEY) {
+        return NextResponse.json(
+          { error: "CAPPO capability proxy is not configured" },
+          { status: 503 },
+        );
+      }
+      headers.delete("authorization");
+      headers.delete("cookie");
+      headers.delete("x-workspace-id");
+      headers.delete("x-veklom-requester-id");
+      headers.set("x-api-key", CAPPO_ADMIN_KEY);
+    }
 
     if (isCappoIdentityPath(forwardPath)) {
       // The browser's BYOS/Firebase bearer is not a CAPPO token.

@@ -1,4 +1,5 @@
 import { canonicalBackends } from "@/lib/canonical-backends";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 
 export type StageEndpointClass = "live" | "proxy" | "absent";
 export type StageId =
@@ -178,40 +179,6 @@ export const stages: StageDefinition[] = [
 
 export const spineStages = stages.filter((stage) => !stage.crossCutting);
 export const crossCuttingStages = stages.filter((stage) => stage.crossCutting);
-
-const CAPPO_EXACT_PATHS = [
-  "/.well-known/x402",
-  "/.well-known/capability-beacon-keys",
-  "/api/v1/pricing",
-  "/api/v1/agents",
-  "/api/v1/benchmarks/leaderboard",
-  "/api/v1/platform/pulse",
-  "/api/v1/execution/authorize",
-  "/v1/audit/ledger",
-  "/v1/audit/verify",
-  "/v1/audit-logs",
-  "/v1/runs",
-  "/v1/governance/v2/assess",
-  "/v1/governance/v2/quarantine",
-  "/v1/vnp/metrics",
-  "/v1/vnp/leaderboard",
-  "/v1/vnp/validators",
-  "/v1/vnp/incidents",
-  "/v1/vnp/methodology",
-  "/v1/vnp/apis",
-  "/v1/exec",
-] as const;
-
-export function isCappoStagePath(path: string) {
-  if (CAPPO_EXACT_PATHS.some((candidate) => candidate === path)) return true;
-  return (
-    path.startsWith("/v1/capability/") ||
-    path.startsWith("/v1/governance/v2/risk/") ||
-    /^\/v1\/identities\/[^/]+\/revoke$/.test(path) ||
-    /^\/api\/v1\/agents\/[^/]+(?:\/certificate|\/lifecycle)?$/.test(path) ||
-    /^\/api\/v1\/ledger\/agents\/[^/]+(?:\/verify)?$/.test(path)
-  );
-}
 
 export function getStage(id: StageId): StageDefinition {
   const stage = stages.find((candidate) => candidate.id === id);
