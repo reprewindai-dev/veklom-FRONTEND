@@ -1,7 +1,7 @@
-import { getStage } from "@/lib/cos/stages";
+import { getStage, isCappoStagePath, stages } from "@/lib/cos/stages";
 import { resolveStageBaseUrl, resolveStageTransportPath } from "@/lib/cos/useStageData";
 
-describe("Capability OS Mount transport", () => {
+describe("Capability OS stage transport", () => {
   it("keeps the visible Mount contract on CAPPO canonical /v1 paths", () => {
     const mount = getStage("mount");
     expect(mount.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual([
@@ -13,13 +13,60 @@ describe("Capability OS Mount transport", () => {
     ]);
   });
 
-  it("sends Mount calls through the same-origin CAPPO proxy", () => {
-    expect(resolveStageTransportPath("mount", "/v1/capability/packages"))
-      .toBe("/api/cappo/v1/capability/packages");
-    expect(resolveStageTransportPath("mount", "/v1/capability/mounts"))
-      .toBe("/api/cappo/v1/capability/mounts");
-    expect(resolveStageTransportPath("mount", "/v1/capability/mounts/mnt_123/actions"))
-      .toBe("/api/cappo/v1/capability/mounts/mnt_123/actions");
+  it("sends every CAPPO stage call through the same-origin proxy", () => {
+    const cappoPaths = [
+      "/v1/capability/packages",
+      "/v1/capability/mounts",
+      "/v1/capability/mounts/mnt_123/actions",
+      "/v1/exec",
+      "/v1/governance/v2/assess",
+      "/v1/vnp/metrics",
+      "/api/v1/agents",
+      "/api/v1/platform/pulse",
+      "/.well-known/x402",
+    ];
+
+    for (const path of cappoPaths) {
+      expect(resolveStageTransportPath("mount", path)).toBe(`/api/cappo${path}`);
+    }
+
+    expect(resolveStageTransportPath("measure", "/v1/vnp/metrics"))
+      .toBe("/api/cappo/v1/vnp/metrics");
+  });
+
+  it("rewrites every declared CAPPO endpoint across all stages", () => {
+    for (const stage of stages) {
+      for (const endpoint of stage.endpoints) {
+        if (!isCappoStagePath(endpoint.path)) continue;
+        expect(resolveStageTransportPath(stage.id, endpoint.path))
+          .toBe(`/api/cappo${endpoint.path}`);
+        expect(
+          resolveStageBaseUrl(
+            stage.id,
+            false,
+            endpoint.baseUrl,
+            undefined,
+            endpoint.path,
+          ),
+        ).toBeUndefined();
+      }
+    }
+  });
+
+  it("keeps the visible capability contracts on canonical CAPPO paths", () => {
+    const capabilities = getStage("capabilities");
+    expect(capabilities.endpoints.map((endpoint) => endpoint.path)).toEqual([
+      "/api/v1/agents",
+      "/api/v1/benchmarks/leaderboard",
+      "/v1/capability/beacons",
+      "/v1/capability/beacons/verify",
+      "/.well-known/capability-beacon-keys",
+    ]);
+  });
+
+  it("leaves non-CAPPO GPC calls on their existing same-origin path", () => {
+    expect(resolveStageTransportPath("blueprint", "/api/v1/gpc/stats"))
+      .toBe("/api/v1/gpc/stats");
   });
 
   it("never assigns an external base URL to Mount", () => {
@@ -47,8 +94,15 @@ describe("Capability OS Mount transport", () => {
       .toBe("https://execute.example");
   });
 
-  it("does not rewrite unrelated stage routes", () => {
-    expect(resolveStageTransportPath("execute", "/v1/exec")).toBe("/v1/exec");
-    expect(resolveStageTransportPath("measure", "/v1/vnp/metrics")).toBe("/v1/vnp/metrics");
+  it("never assigns an external base URL to a CAPPO endpoint", () => {
+    expect(
+      resolveStageBaseUrl(
+        "measure",
+        false,
+        "https://cappo.example",
+        undefined,
+        "/v1/vnp/metrics",
+      ),
+    ).toBeUndefined();
   });
 });
