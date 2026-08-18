@@ -4,7 +4,7 @@ import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
-import SpineApp from "@/app/spine/page";
+
 
 export default function ComputelessPage() {
   const stage = getStage("computeless");
@@ -14,9 +14,7 @@ export default function ComputelessPage() {
     <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
       <div className="xl:col-span-2 space-y-4">
         <Pillar title="Work" proof={data.stageProof}>
-          <div className="rounded-xl border border-cos-border overflow-hidden bg-cos-surface2/55">
-             <SpineApp />
-          </div>
+           <HonestEmpty title="Compute-less execution pending" route="POST /api/v1/computeless/execute" detail="No compute-less operation has been initiated yet." />
         </Pillar>
       </div>
       <div className="space-y-4">
