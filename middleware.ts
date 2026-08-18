@@ -125,7 +125,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── Hostname-based routing ─────────────────────────────────────────────────
+  // 🔹 Hostname-based routing 🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹
   if (hostname === 'veklom.dev' || hostname === 'www.veklom.dev') {
     if (url.pathname === '/') {
       url.pathname = '/dev';
@@ -136,6 +136,13 @@ export async function middleware(request: NextRequest) {
   if (hostname === 'gpc.veklom.com') {
     if (url.pathname === '/') {
       url.pathname = '/gpc';
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  if (hostname === 'app.veklom.com') {
+    if (url.pathname === '/') {
+      url.pathname = '/os';
       return NextResponse.rewrite(url);
     }
   }
