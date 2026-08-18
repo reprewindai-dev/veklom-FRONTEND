@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamicImport from "next/dynamic";
 import { Activity, Globe, Server, Shield, Zap, ArrowRight, Check, Search, Code, Cpu, ShieldCheck, Lock, AlertTriangle } from 'lucide-react';
 import { motion } from "framer-motion";
-import VNPFooter from "@/components/vnp/VNPFooter";
+import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 
 type VerificationStackItem = {
   section: string;
@@ -75,36 +75,11 @@ export default function VNPLandingPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden selection:bg-[#FFB800]/30 relative z-10 font-sans">
-      
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0A0A0A]/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#FFB800] rounded flex items-center justify-center brand-glow">
-              <span className="font-bold text-black leading-none">V</span>
-            </div>
-            <span className="font-bold tracking-wider text-lg font-mono">VEKLOM<span className="text-gray-500"> — The Threshold</span></span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <a href="#protocol" className="hover:text-white transition-colors">The Protocol</a>
-            <a href="#methodology" className="hover:text-white transition-colors">Methodology</a>
-            <a href="#network" className="hover:text-white transition-colors">Global Mesh</a>
-            <Link href="/vnp/docs" className="hover:text-white transition-colors">Documentation</Link>
-          </div>
-          <div className="flex items-center gap-6 text-sm font-medium">
-            <Link href="/workspace" className="text-gray-400 hover:text-white transition-colors">Access Workspace</Link>
-            <Link href="/signup" className="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
-              Deploy Agent
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <MarketingLayout isMachine={false}>
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-[10%] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] bg-[#FFB800]/15 blur-[120px] rounded-full opacity-50 mix-blend-screen" />
+          <div className="absolute top-[10%] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] bg-cos-accent/15 blur-[120px] rounded-full opacity-50 mix-blend-screen" />
         </div>
         
         <motion.div
@@ -113,27 +88,27 @@ export default function VNPLandingPage() {
           variants={staggerContainer}
           className="max-w-4xl mx-auto text-center relative z-10"
         >
-          <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-xs font-semibold uppercase tracking-wider mb-8">
+          <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cos-accent/10 border border-cos-accent/20 text-cos-accent text-xs font-semibold uppercase tracking-wider mb-8">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             VNP Methodology v1.0
           </motion.div>
           
-          <motion.h1 variants={fadeUpVariants} className="max-w-4xl mx-auto text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight text-balance">
+          <motion.h1 variants={fadeUpVariants} className="max-w-4xl mx-auto text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight text-balance text-cos-text">
             Cryptographic <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FFE6A8] to-[#FFB800]">
+            <span className="text-cos-accent">
               API telemetry for the M2M Economy.
             </span>
           </motion.h1>
           
-          <motion.p variants={fadeUpVariants} className="text-xl text-gray-400 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <motion.p variants={fadeUpVariants} className="text-xl text-cos-text/70 mb-10 max-w-3xl mx-auto leading-relaxed">
             Autonomous AI agents require absolute deterministic reliability. Standard status pages are marketing tools. The Veklom Nexus Protocol provides mathematical proof of API uptime, latency, and compliance across a decentralized global mesh.
           </motion.p>
           
           <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/vnp/docs" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
+            <Link href="/vnp/docs" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-cos-surface text-paper font-bold text-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
               Open Docs Hub <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="/vnp/methodology" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-lg hover:bg-white/10 transition-colors flex items-center justify-center">
+            <Link href="/vnp/methodology" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-cos-text/5 border border-cos-text/10 text-cos-text font-bold text-lg hover:bg-cos-text/10 transition-colors flex items-center justify-center">
               Read the Methodology
             </Link>
           </motion.div>
@@ -141,75 +116,75 @@ export default function VNPLandingPage() {
       </section>
 
       {/* Dimensions of Trust Section */}
-      <section id="protocol" className="py-24 px-6 border-t border-white/5 bg-[#0B0B0D] relative scroll-mt-16">
+      <section id="protocol" className="py-24 px-6 border-t border-rule bg-cos-bg-dim relative scroll-mt-16 text-cos-text">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 max-w-3xl mx-auto">
-            <span className="inline-flex items-center gap-1 text-[#FFB800] text-xs font-bold uppercase tracking-widest bg-[#FFB800]/5 border border-[#FFB800]/10 px-3 py-1 rounded-full mb-4">
+            <span className="inline-flex items-center gap-1 text-cos-accent text-xs font-bold uppercase tracking-widest bg-cos-accent/5 border border-cos-accent/10 px-3 py-1 rounded-full mb-4">
               <Activity className="w-3 h-3" /> Observable Reality
             </span>
             <h2 className="text-4xl font-extrabold tracking-tight mb-6">VNP does not measure claims. It measures observable reality.</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
+            <p className="text-cos-text/70 max-w-2xl mx-auto text-lg leading-relaxed">
               A provider says "99.99% uptime." That's a claim. VNP measures multiple dimensions of trust from independent regions, delivering mathematical proof of network health, compliance, and settlement.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <Globe className="w-6 h-6 text-[#FFB800]" />
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
+                <Globe className="w-6 h-6 text-cos-accent" />
               </div>
               <h3 className="text-xl font-bold mb-3">Physical Trust</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-cos-text/70 text-sm leading-relaxed">
                 Latency, regional consistency, and network health observed directly from the global mesh.
               </p>
             </div>
             
-            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <Cpu className="w-6 h-6 text-[#FFB800]" />
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
+                <Cpu className="w-6 h-6 text-cos-accent" />
               </div>
               <h3 className="text-xl font-bold mb-3">Execution Trust</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-cos-text/70 text-sm leading-relaxed">
                 Did the execution complete successfully? VNP tracks deterministic execution outcomes across runtimes.
               </p>
             </div>
 
-            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
+                <ShieldCheck className="w-6 h-6 text-cos-accent" />
               </div>
               <h3 className="text-xl font-bold mb-3">Evidence Trust</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-cos-text/70 text-sm leading-relaxed">
                 Is there valid Proof of Graph Ledger (PGL) evidence backing the claim? VNP anchors claims to cryptographic proof.
               </p>
             </div>
 
-            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <Shield className="w-6 h-6 text-[#FFB800]" />
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
+                <Shield className="w-6 h-6 text-cos-accent" />
               </div>
               <h3 className="text-xl font-bold mb-3">Governance Trust</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-cos-text/70 text-sm leading-relaxed">
                 Did the execution satisfy organizational policy, jurisdiction mandates, and required standards?
               </p>
             </div>
 
-            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <Lock className="w-6 h-6 text-[#FFB800]" />
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
+                <Lock className="w-6 h-6 text-cos-accent" />
               </div>
               <h3 className="text-xl font-bold mb-3">Economic Trust</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-cos-text/70 text-sm leading-relaxed">
                 Was the x402 settlement completed correctly? VNP links SLA performance directly to verifiable payments.
               </p>
             </div>
 
-            <div className="card obsidian-glass p-8 flex flex-col hover:border-[#FFB800]/30 transition-all group duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 mb-6 group-hover:bg-[#FFB800]/20 group-hover:border-[#FFB800]/40 transition-colors duration-300">
-                <Activity className="w-6 h-6 text-[#FFB800]" />
+            <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
+              <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
+                <Activity className="w-6 h-6 text-cos-accent" />
               </div>
               <h3 className="text-xl font-bold mb-3">Confidence Score</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-cos-text/70 text-sm leading-relaxed">
                 A unified metric representing how certain we are about the overall measurement, derived from the Trust Spine.
               </p>
             </div>
@@ -218,38 +193,38 @@ export default function VNPLandingPage() {
       </section>
 
       {/* Methodology Section */}
-      <section id="methodology" className="py-24 px-6 border-t border-white/5 bg-[#0A0A0C] relative scroll-mt-16">
+      <section id="methodology" className="py-24 px-6 border-t border-rule bg-cos-bg relative scroll-mt-16 text-cos-text">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-sm font-medium font-mono">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cos-accent/10 border border-cos-accent/20 text-cos-accent text-sm font-medium font-mono">
                 VNP Methodology v1.0 - UPDATED JULY 7
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
                 VNP v1.0 Verification Stack
               </h2>
-              <p className="text-gray-400 text-lg leading-relaxed">
+              <p className="text-cos-text/70 text-lg leading-relaxed">
                 To prevent manipulation, VNP evaluates APIs through a published benchmark-card doctrine: benchmark details, purpose, data provenance, methodology, limitations, targeted risks, validation, interpretation, and resources are documented for every scored endpoint.
               </p>
               
               <div className="space-y-4">
                 {verificationStack.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#FFB800]/30 transition-colors">
-                    <span className="font-medium text-gray-300">{item.section}</span>
-                    <span className="font-mono text-[#FFB800] font-bold">{item.status}</span>
+                  <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-cos-text/5 border border-cos-text/10 hover:border-cos-accent/30 transition-colors">
+                    <span className="font-medium text-cos-text/90">{item.section}</span>
+                    <span className="font-mono text-cos-accent font-bold">{item.status}</span>
                   </div>
                 ))}
               </div>
             </div>
             
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-[#FFB800]/10 to-transparent blur-2xl opacity-50 rounded-3xl -z-10" />
-              <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0A0A0A] shadow-2xl">
-                <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-2">
+              <div className="absolute -inset-4 bg-gradient-to-r from-cos-accent/10 to-transparent blur-2xl opacity-50 rounded-3xl -z-10" />
+              <div className="border border-rule rounded-2xl overflow-hidden bg-cos-bg-dim shadow-2xl">
+                <div className="p-4 border-b border-rule bg-cos-text/5 flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-mono text-gray-400">BACKEND VIEW: VNP_TOPOLOGY_MESH</span>
+                  <span className="text-xs font-mono text-cos-text/50">BACKEND VIEW: VNP_TOPOLOGY_MESH</span>
                 </div>
-                <div className="h-[500px] overflow-hidden p-6 relative bg-[#060608]">
+                <div className="h-[500px] overflow-hidden p-6 relative bg-cos-bg">
                   <div className="transform scale-[0.85] origin-top-left w-[117%] h-[117%] pointer-events-none">
                     <NetworkTopologyPanel />
                   </div>
@@ -261,28 +236,28 @@ export default function VNPLandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 border-t border-white/5 relative overflow-hidden bg-[#0A0A0A]">
-        <div className="absolute inset-0 bg-[#FFB800]/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#FFB800]/10 blur-[100px] rounded-full pointer-events-none" />
+      <section className="py-32 border-t border-rule relative overflow-hidden bg-cos-bg text-cos-text">
+        <div className="absolute inset-0 bg-cos-accent/5" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cos-accent/10 blur-[100px] rounded-full pointer-events-none" />
         
         <div className="max-w-4xl mx-auto text-center relative z-10 px-6">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-6">Standardize Your Infrastructure</h2>
-          <p className="text-xl text-gray-400 mb-6">
-            Not all APIs belong on VNP. We exclusively measure mission-critical endpoints for the <strong className="text-white">Machine-to-Machine (M2M) Economy</strong>.
+          <p className="text-xl text-cos-text/70 mb-6">
+            Not all APIs belong on VNP. We exclusively measure mission-critical endpoints for the <strong className="text-cos-text">Machine-to-Machine (M2M) Economy</strong>.
           </p>
           
           <div className="grid md:grid-cols-2 gap-6 text-left mb-12 max-w-3xl mx-auto">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-              <h3 className="text-[#FFB800] font-bold mb-3 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#FFB800]" /> VNP Worthy (Tier 1)</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>• <strong className="text-gray-300">AI Infrastructure:</strong> LLMs, Vector DBs, Tools</li>
-                <li>• <strong className="text-gray-300">Financial & Web3:</strong> Payments, Blockchain RPCs</li>
-                <li>• <strong className="text-gray-300">Core Telecom:</strong> SMS, Email, Routing Oracles</li>
+            <div className="bg-cos-text/5 border border-cos-text/10 rounded-xl p-6">
+              <h3 className="text-cos-accent font-bold mb-3 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cos-accent" /> VNP Worthy (Tier 1)</h3>
+              <ul className="space-y-2 text-sm text-cos-text/70">
+                <li>• <strong className="text-cos-text/90">AI Infrastructure:</strong> LLMs, Vector DBs, Tools</li>
+                <li>• <strong className="text-cos-text/90">Financial & Web3:</strong> Payments, Blockchain RPCs</li>
+                <li>• <strong className="text-cos-text/90">Core Telecom:</strong> SMS, Email, Routing Oracles</li>
               </ul>
             </div>
             <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-6">
               <h3 className="text-red-400 font-bold mb-3 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-400" /> Not Supported</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <ul className="space-y-2 text-sm text-cos-text/70">
                 <li>• Standard blogs or content feeds</li>
                 <li>• Hobbyist or non-commercial APIs</li>
                 <li>• Internal private endpoints with no public SLA</li>
@@ -290,14 +265,11 @@ export default function VNPLandingPage() {
             </div>
           </div>
 
-          <Link href="/vnp/claim" className="inline-flex px-10 py-5 rounded-lg bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors items-center gap-2 shadow-lg shadow-white/5">
+          <Link href="/vnp/claim" className="inline-flex px-10 py-5 rounded-lg bg-cos-text text-paper font-bold text-lg hover:opacity-90 transition-colors items-center gap-2 shadow-lg shadow-white/5">
             Submit API for VNP Evaluation <Zap className="w-5 h-5" />
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <VNPFooter />
-    </main>
+    </MarketingLayout>
   );
 }

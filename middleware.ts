@@ -140,7 +140,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (hostname === 'app.veklom.com') {
+  if (hostname === 'app.veklom.com' || hostname === 'control.veklom.com') {
     if (url.pathname === '/') {
       url.pathname = '/os';
       return NextResponse.rewrite(url);

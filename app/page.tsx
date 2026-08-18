@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Terminal } from "lucide-react";
-import { motion } from "framer-motion";
+import { ShieldCheck, Zap, Lock, Database, Activity, GitCommit, FileText, XCircle } from "lucide-react";
+import { useUIStore } from "@/lib/store/ui-store";
+import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 
 export default function M2MLandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [resonance, setResonance] = useState(0); // 0 = chaos, 1 = absolute resonance
-  const isMachine = true;
-  const [isRawOpen, setIsRawOpen] = useState(false);
+  const { isMachine, isRawOpen, setIsRawOpen } = useUIStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -140,270 +140,212 @@ export default function M2MLandingPage() {
       if (e.key === "Escape") setIsRawOpen(false);
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setIsRawOpen]);
 
   return (
-    <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 ${isMachine ? 'bg-[#0D1114] text-[#CFEFE9]' : 'bg-[#E8E5E1] text-[#1C1917]'}`}>
-      <style jsx global>{`
-        :root {
-          --void: #0D1114;
-          --void-panel: #07090B;
-          --paper: #E8E5E1;
-          --paper-dim: #D9D5CF;
-          --ink: #1C1917;
-          --machine-ink: #CFEFE9;
-          --brass: #B5772E;
-          --brass-deep: #8B5820;
-          --wire: rgba(76,242,214,0.15);
-          --rule: rgba(28,25,23,0.1);
-          --cyan: #4CF2D6;
-          --cyan-dim: #1E8B79;
-        }
-
-        .m2m-container {
-          font-family: 'Inter', sans-serif;
-        }
-
-        .m2m-container.machine {
-          font-family: 'JetBrains Mono', monospace;
-        }
-
-        @keyframes typeIn {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .feed-line {
-          opacity: 0;
-          animation: typeIn 400ms ease forwards;
-        }
-        .feed-line:nth-child(1) { animation-delay: .1s; }
-        .feed-line:nth-child(2) { animation-delay: .35s; }
-        .feed-line:nth-child(3) { animation-delay: .6s; }
-        .feed-line:nth-child(4) { animation-delay: .85s; color: var(--cyan); }
-
-        .live-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          display: inline-block; margin-right: 6px;
-          animation: pulse 1.6s ease-in-out infinite;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-
-        .bg-cos-bg { background-color: var(--paper); }
-        .bg-cos-bg-dim { background-color: var(--paper-dim); }
-        .bg-void { background-color: var(--void); }
-        .bg-void-panel { background-color: var(--void-panel); }
-        .text-cos-text { color: var(--ink); }
-        .text-machine-ink { color: var(--machine-ink); }
-        .text-cos-accent { color: var(--cyan); }
-        .text-cos-accent-dim { color: var(--cyan-dim); }
-        .text-brass { color: var(--brass); }
-        .text-brass-deep { color: var(--brass-deep); }
-        .border-rule { border-color: var(--rule); }
-        .border-wire { border-color: var(--wire); }
-      `}</style>
-
+    <MarketingLayout>
       {/* Canvas Substrate */}
       <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isMachine ? 'opacity-40' : 'opacity-[0.05] mix-blend-multiply'}`}>
         <canvas ref={canvasRef} className="w-full h-full" />
       </div>
 
-      <div className={`relative z-10 m2m-container ${isMachine ? 'machine' : ''}`}>
+      {/* Hero */}
+      <section className="flex flex-col items-center text-center px-6 pt-32 pb-20 max-w-4xl mx-auto relative z-10">
+        <div className="font-mono text-xs tracking-widest uppercase mb-8 text-cos-accent-dim" data-machine={isMachine}>
+          {isMachine ? '// global deterministic policy-anchored substrate' : 'The missing layer in the AI ecosystem'}
+        </div>
         
-        {/* Nav */}
-        <nav className="flex justify-between items-center p-6 lg:px-12 border-b transition-colors duration-500 border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
-          <div className="flex items-center gap-6">
-            <img src="/veklom-wordmark.svg" alt="Veklom Wordmark" className="h-8 w-auto" />
-            <div className="hidden md:flex gap-6 text-sm font-medium text-cos-text/80 text-cos-text/80 transition-colors" data-machine={isMachine}>
-              <Link href="https://vnp.veklom.com" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>VNP</Link>
-              <Link href="#" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>EEE</Link>
-              <Link href="#" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>VCGB</Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <button onClick={() => setIsRawOpen(true)} className="hover:opacity-70 transition-opacity hidden sm:block">
-              <span className="opacity-50">&lt;/&gt;</span> View as an agent would fetch it
-            </button>
-            
-          </div>
-        </nav>
+        <h1 className="text-5xl md:text-7xl font-sans font-medium tracking-tight mb-8 leading-[1.1] text-cos-text">
+          VIO Intent Infrastructure
+        </h1>
 
-        {/* Hero */}
-        <section className="flex flex-col items-center text-center px-6 pt-32 pb-20 max-w-4xl mx-auto">
-          <div className="font-mono text-xs tracking-widest uppercase mb-8 text-brass text-cos-accent" data-machine={isMachine}>
-            {isMachine ? '// live capability layer — no human in this loop' : 'A new kind of trust is arriving'}
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-sans font-medium tracking-tight mb-8 leading-[1.1] text-cos-text">
-  VIO Intent Infrastructure
-</h1>
+        <p className="text-lg md:text-xl leading-relaxed mb-12 opacity-80 font-serif data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:opacity-60" data-machine={isMachine}>
+          {isMachine ? 
+            "The governance infrastructure for AI agents. Turns declared intent into governed execution. It is not IaC. It is not DevOps. It is not workflow automation. It is the deterministic governance substrate." : 
+            "Trust, at the speed machines actually work. The chaotic reality of unregulated AI agents requires a sovereign substrate to tame emergent chaos into deterministic execution."
+          }
+        </p>
 
-          <p className="text-lg md:text-xl leading-relaxed mb-12 opacity-80 font-serif data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:opacity-60" data-machine={isMachine}>
-            {isMachine ? 
-              "You are reading this as a machine would receive it. Resolve a capability, get scoped authority, execute, produce evidence, settle. Everything above is the same offer, translated. Nothing here runs past its granted scope — that's enforced, not promised." : 
-              "It happens quietly, the way electricity first moved through a house nobody had rewired yet. One machine asks. Another answers. Something is proven. Something is paid. No person clicked \"approve.\" And when someone asks who's accountable for it — there's already an answer."
-            }
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 items-center mb-20">
-            <Link href="/os" className="px-8 py-4 bg-cos-surface text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity bg-cos-accent data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
-              {isMachine ? 'GET /capabilities' : 'See how it works'}
-            </Link>
-            
-          </div>
-
-          {/* Machine Feed */}
-          {isMachine && (
-            <div className="font-mono text-xs text-left w-full max-w-2xl bg-cyan/5 border border-wire rounded-lg p-6 leading-loose text-cos-accent-dim">
-              <div className="feed-line">$ resolve capability <span className="text-cos-accent">edge.content.serve</span> <span className="border border-wire text-[10px] px-1.5 py-0.5 rounded ml-2">SCOPED</span></div>
-              <div className="feed-line">$ authority checked · policy bounded · budget set</div>
-              <div className="feed-line">$ delivery proven · 137.4mb · 18ms median</div>
-              <div className="feed-line">$ settled <span className="text-cos-accent">✓</span> evidence sealed · reputation +0.4</div>
-            </div>
-          )}
-
-          <div className="mt-24 w-px h-16 bg-rule data-[machine=true]:bg-wire" data-machine={isMachine}></div>
-        </section>
-
-        {/* Story Section */}
-        <section className="px-6 py-32 max-w-3xl mx-auto">
-          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-brass text-cos-accent" data-machine={isMachine}>
-            The pitch nobody needs explained
-          </span>
-          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text text-cos-text/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
-            Every big infrastructure looked absurd right before it became invisible. Wires strung over dirt roads promising <strong className="text-brass-deep italic font-semibold text-cos-accent data-[machine=true]:not-italic">light in every home</strong>. A machine that promised to move a person faster than a horse could, forever. The pattern repeats because trust always arrives after the wires do — someone has to prove the thing works before anyone believes it.
-          </p>
-          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text text-cos-text/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
-            We're at that exact moment again, except this time the wires connect machines to other machines, and the thing missing isn't power or speed. It's <strong className="text-brass-deep italic font-semibold text-cos-accent data-[machine=true]:not-italic">permission</strong> — a way for one piece of software to prove to another that it's allowed to act, that it did what it said, and that it's owed something for the trouble.
-          </p>
-          <hr className="my-16 border-t border-rule data-[machine=true]:border-wire" data-machine={isMachine} />
-          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text text-cos-text/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
-            Veklom is the handshake. Small enough to happen a million times a second. Solid enough that neither side needs a person standing over its shoulder.
-          </p>
-        </section>
-
-        {/* Enterprise Block */}
-        <section className="px-6 py-24 bg-cos-bg-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500" data-machine={isMachine}>
-          <div className="max-w-5xl mx-auto">
-            <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-brass text-cos-accent" data-machine={isMachine}>
-              What every enterprise has been asking for
-            </span>
-            <h2 className="font-serif text-3xl md:text-5xl font-semibold max-w-[20ch] leading-[1.2] mb-16 text-cos-text text-cos-text" data-machine={isMachine}>
-              Not more dashboards. A <em className="italic font-normal text-brass text-cos-accent" data-machine={isMachine}>receipt</em> that holds up when someone asks what happened.
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[2px] bg-rule data-[machine=true]:bg-wire border border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
-              {[
-                { ask: "Prove a human was in control.", desc: "Regulators aren't asking companies to promise oversight anymore — they're asking for proof of it, on record, per action. That requirement is already active in parts of the world, and it's spreading. Veklom's evidence isn't a policy document. It's a signed record of exactly what was authorized, by whom, and what happened next." },
-                { ask: "Tell me who's liable.", desc: "When a machine acts on your behalf, \"the AI did it\" isn't an answer anyone accepts — not a regulator, not a customer, not your own board. Every action through Veklom carries an identity, a scope, and a signature, so accountability doesn't have to be reconstructed after the fact." },
-                { ask: "Don't let it do more than I said.", desc: "Every capability is bounded before it runs — what it's allowed to touch, spend, or reach — not audited afterward and hoped for. The permission is the control, not a report about a permission that didn't hold." },
-                { ask: "Give me something I can show an auditor.", desc: "Not logs scattered across six systems. One evidence trail, per transaction, that a person outside the company could pick up cold and verify without calling you first." }
-              ].map((item, i) => (
-                <div key={i} className="p-8 md:p-10 bg-cos-bg-dim data-[machine=true]:bg-void-panel transition-colors" data-machine={isMachine}>
-                  <div className="font-mono text-[11px] tracking-wider uppercase opacity-50 mb-3">{isMachine ? 'The constraint' : 'The demand'}</div>
-                  <h4 className="font-serif text-xl font-semibold mb-3 data-[machine=true]:font-sans data-[machine=true]:text-lg">{item.ask}</h4>
-                  <p className="text-[15px] leading-relaxed opacity-70 data-[machine=true]:opacity-60">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <div className="flex justify-center max-w-5xl mx-auto mt-24 px-6">
-          <img 
-            src="/images/veklom-visor-concept.jpg" 
-            alt="Veklom Cybernetic Vision" 
-            className="w-full max-w-sm rounded-xl border border-rule data-[machine=true]:border-wire/40 shadow-2xl opacity-90 data-[machine=true]:opacity-75 transition-all duration-500 filter data-[machine=true]:grayscale" 
-            data-machine={isMachine} 
-          />
+        <div className="flex flex-col sm:flex-row gap-4 items-center mb-20">
+          <Link href="/os" className="px-8 py-4 bg-cos-text text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity data-[machine=true]:bg-cos-accent data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
+            {isMachine ? 'GET /capabilities' : 'See how it works'}
+          </Link>
         </div>
 
-        {/* Eras */}
-        <section className="max-w-5xl mx-auto my-24 grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-rule data-[machine=true]:bg-wire border-y border-rule data-[machine=true]:border-wire transition-colors" data-machine={isMachine}>
-          {[
-            { year: "THEN", title: "A wire in every wall", desc: "Power stopped being a rumor once you could see a bulb turn on. Nobody needed to understand the grid to trust the switch." },
-            { year: "MORE RECENTLY", title: "A number in every pocket", desc: "Money learned to move at the speed of a phone call. You didn't need to trust a bank teller anymore — you trusted the receipt." },
-            { year: "NOW", title: "A handshake in every request", desc: "Software is about to do the same thing — prove it, on its own, every single time, without a person there to vouch for it." }
-          ].map((era, i) => (
-            <div key={i} className="bg-cos-bg data-[machine=true]:bg-void p-10 transition-colors" data-machine={isMachine}>
-              <div className="font-mono text-xs tracking-widest mb-4 text-brass-deep text-cos-accent-dim" data-machine={isMachine}>{era.year}</div>
-              <h3 className="font-serif text-xl font-semibold mb-3 data-[machine=true]:font-mono data-[machine=true]:text-base data-[machine=true]:font-medium">{era.title}</h3>
-              <p className="text-[15px] leading-relaxed opacity-70 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:opacity-65">{era.desc}</p>
-            </div>
-          ))}
-        </section>
-
-        {/* Promise Band */}
-        <section className="py-24 px-6 text-center border-t border-rule data-[machine=true]:border-wire transition-colors" data-machine={isMachine}>
-          <div className="font-serif italic text-3xl md:text-5xl leading-[1.3] data-[machine=true]:font-mono data-[machine=true]:not-italic data-[machine=true]:font-normal data-[machine=true]:text-2xl md:data-[machine=true]:text-3xl" data-machine={isMachine}>
-            Trust, <b className="font-black not-italic text-brass text-cos-accent data-[machine=true]:font-bold" data-machine={isMachine}>at the speed machines actually work.</b>
+        {/* Machine Feed */}
+        {isMachine && (
+          <div className="font-mono text-xs text-left w-full max-w-2xl bg-cos-accent/5 border border-wire rounded-lg p-6 leading-loose text-cos-accent-dim shadow-2xl">
+            <div className="feed-line">$ verify intent <span className="text-cos-accent">req.39481</span> <span className="border border-wire text-[10px] px-1.5 py-0.5 rounded ml-2">POLICY OK</span></div>
+            <div className="feed-line">$ authority checked · policy bounded · identity wrapped</div>
+            <div className="feed-line">$ resolution capability <span className="text-cos-accent">edge.compute</span> · residency scored</div>
+            <div className="feed-line">$ anchored <span className="text-cos-accent">✓</span> evidence sealed · execution granted</div>
           </div>
-        </section>
+        )}
+      </section>
 
-        {/* Footer */}
-        <footer className="mt-24 border-t border-rule data-[machine=true]:border-wire p-12 lg:px-24 text-sm transition-colors duration-500 text-cos-text/60 data-[machine=true]:text-cos-text/50 font-mono" data-machine={isMachine}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16 max-w-6xl mx-auto">
-            <div className="col-span-2 md:col-span-1">
-              <img src="/veklom-wordmark.svg" alt="Veklom Wordmark" className="h-6 w-auto mb-6 opacity-70" />
-              <div className="text-xs mb-1 italic">&quot;Anything is possible, if you&apos;re willing to build the wire first.&quot;</div>
+      {/* The Core Concept */}
+      <section className="px-6 py-32 max-w-4xl mx-auto relative z-10">
+        <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-cos-accent-dim" data-machine={isMachine}>
+          {isMachine ? 'PROTOCOL GUARANTEES' : 'A Category, Not a Feature'}
+        </span>
+        
+        {!isMachine ? (
+          <>
+            <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text">
+              VIO (Intent Infrastructure) isn't about orchestrating agents. It's about governing the intent <strong className="text-cos-accent-dim italic font-semibold">before the agent even exists</strong>.
+            </p>
+            <p className="text-xl font-serif leading-[1.6] mb-8 transition-colors text-cos-text/80">
+              When a machine acts on your behalf, "the AI did it" isn't an answer anyone accepts — not a regulator, not a customer, not your own board. We don't just route workloads; we wrap execution in identity, policy, and cryptographic proof.
+            </p>
+          </>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-mono text-sm">
+            <div className="border border-wire p-6 rounded-md bg-void-panel">
+              <span className="text-cos-accent mb-2 block">01. Intent</span>
+              <div className="text-cos-accent-dim">Intent is verified, not assumed.</div>
             </div>
-            
-            <div className="flex flex-col gap-3">
-              <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Platform</h4>
-              <Link href="https://vnp.veklom.com" className="hover:text-cos-accent transition-colors">Veklom Nexus Protocol (VNP)</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Capability OS</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Identity & Evidence (PGL)</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Settlement (x402)</Link>
+            <div className="border border-wire p-6 rounded-md bg-void-panel">
+              <span className="text-cos-accent mb-2 block">02. Identity</span>
+              <div className="text-cos-accent-dim">Identity is bound, not inferred.</div>
             </div>
-
-            <div className="flex flex-col gap-3">
-              <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Resources</h4>
-              <Link href="/docs" className="hover:text-cos-accent transition-colors">Documentation</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Enterprise Exchange (EEE)</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Governed Boundaries (VCGB)</Link>
+            <div className="border border-wire p-6 rounded-md bg-void-panel">
+              <span className="text-cos-accent mb-2 block">03. Policy</span>
+              <div className="text-cos-accent-dim">Policy is enforced, not suggested.</div>
             </div>
-
-            <div className="flex flex-col gap-3">
-              <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Company</h4>
-              <Link href="#" className="hover:text-cos-accent transition-colors">About</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Trust Model</Link>
-              <Link href="#" className="hover:text-cos-accent transition-colors">Contact</Link>
+            <div className="border border-wire p-6 rounded-md bg-void-panel">
+              <span className="text-cos-accent mb-2 block">04. Trust</span>
+              <div className="text-cos-accent-dim">Trust is scored, not hand-waived.</div>
             </div>
-          </div>
-          
-          <div className="border-t border-rule data-[machine=true]:border-wire pt-8 flex flex-col md:flex-row justify-between items-center gap-4 max-w-6xl mx-auto text-xs">
-            <div>&copy; {new Date().getFullYear()} VEKLOM — the era is early.</div>
-            <div className="flex gap-6">
-              <Link href="#" className="hover:text-cos-text">Privacy</Link>
-              <Link href="#" className="hover:text-cos-text">Terms</Link>
+            <div className="border border-wire p-6 rounded-md bg-void-panel">
+              <span className="text-cos-accent mb-2 block">05. Execution</span>
+              <div className="text-cos-accent-dim">Execution is deterministic, not emergent.</div>
+            </div>
+            <div className="border border-wire p-6 rounded-md bg-void-panel">
+              <span className="text-cos-accent mb-2 block">06. Evidence</span>
+              <div className="text-cos-accent-dim">Evidence is anchored, not implied.</div>
             </div>
           </div>
-        </footer>
+        )}
+      </section>
 
-      </div>
+      {/* The 8 Layers of VIO */}
+      <section className="px-6 py-24 bg-cos-bg-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500 relative z-10" data-machine={isMachine}>
+        <div className="max-w-6xl mx-auto">
+          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-cos-accent-dim" data-machine={isMachine}>
+            The Foundation
+          </span>
+          <h2 className="font-serif text-3xl md:text-5xl font-semibold max-w-[20ch] leading-[1.2] mb-16 text-cos-text data-[machine=true]:font-mono data-[machine=true]:text-3xl" data-machine={isMachine}>
+            {isMachine ? 'THE 8 LAYERS OF VIO' : <>The highest standard for <em className="italic font-normal text-cos-accent-dim" data-machine={isMachine}>AI Agent Governance</em>.</>}
+          </h2>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[2px] bg-rule data-[machine=true]:bg-wire border border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
+            {[
+              {
+                title: "Intent Verification",
+                h_desc: "Ensuring the intent is legitimate, authorized, contextual, and safe. No agent can act until intent is proven.",
+                m_desc: "Extracts intent, binds identity, checks policy content, checks trust content, validates capability scope.",
+                icon: ShieldCheck
+              },
+              {
+                title: "Governed Completion",
+                h_desc: "Intent becomes a governed plan, not a freeform workflow. Completion is where governance truly begins.",
+                m_desc: "Builds deterministic plan graphs, applies policy/trust/identity/safety constraints.",
+                icon: GitCommit
+              },
+              {
+                title: "Resolution",
+                h_desc: "Determining which capability is allowed to fulfill the verified intent. This is where sovereignty is enforced.",
+                m_desc: "Selects capabilities, enforces vendor neutrality, enforces residency, scores trust, tracks identity lineage.",
+                icon: Database
+              },
+              {
+                title: "Bound Execution",
+                h_desc: "Execution isn't free—it's governed. Actions are wrapped securely so they can't breach their defined scope.",
+                m_desc: "Execution is wrapped in identity, policy, trust, safety, and residency envelopes.",
+                icon: Lock
+              },
+              {
+                title: "Authority",
+                h_desc: "Authority is granted only when all envelopes are satisfied. It is temporary and instantly revocable.",
+                m_desc: "Issues short-lived authority tokens, nonce bound approval, budget solvency, residency/safety compliance.",
+                icon: Zap
+              },
+              {
+                title: "Deterministic Runtime",
+                h_desc: "Actions execute inside a deterministic harness. Execution becomes predictable, auditable, and controlled.",
+                m_desc: "Vendor-neutral runtime, sovereign execution, safety enforcement, trust enforcement.",
+                icon: Terminal
+              },
+              {
+                title: "Proof Anchoring",
+                h_desc: "Every single action anchors cryptographic evidence. Proof is the ultimate accountability layer.",
+                m_desc: "Identity proof, policy proof, trust proof, capability proof, execution proof, refusal proof, settlement proof.",
+                icon: FileText
+              },
+              {
+                title: "Revocation & Refusal",
+                h_desc: "Unsafe or unauthorized actions are refused instantly. Refusal is the absolute core of governance.",
+                m_desc: "Trust evolution, policy change, attestation failures, residency violations, safety violations.",
+                icon: XCircle
+              }
+            ].map((layer, i) => {
+              const Icon = layer.icon;
+              return (
+                <div key={i} className="p-8 bg-cos-bg-dim data-[machine=true]:bg-void-panel transition-colors flex flex-col h-full" data-machine={isMachine}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <Icon className="w-5 h-5 text-cos-accent-dim" />
+                    <div className="font-mono text-[11px] tracking-wider uppercase opacity-50">Layer 0{i + 1}</div>
+                  </div>
+                  <h4 className="font-serif text-xl font-semibold mb-3 data-[machine=true]:font-sans data-[machine=true]:text-base data-[machine=true]:text-cos-accent" data-machine={isMachine}>{layer.title}</h4>
+                  <p className="text-[14px] leading-relaxed opacity-70 data-[machine=true]:font-mono data-[machine=true]:text-[13px] data-[machine=true]:opacity-60 flex-grow">
+                    {isMachine ? layer.m_desc : layer.h_desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Competitive Moat: VNP, EEE, VCGB */}
+      <section className="px-6 py-32 max-w-5xl mx-auto relative z-10 text-center">
+        <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-cos-accent-dim" data-machine={isMachine}>
+          {isMachine ? 'ACTIVE NETWORK METROLOGY' : 'Beyond Simple Benchmarks'}
+        </span>
+        <h2 className="text-3xl md:text-5xl font-serif leading-[1.2] mb-12 transition-colors text-cos-text data-[machine=true]:font-mono data-[machine=true]:text-3xl" data-machine={isMachine}>
+          {isMachine ? 'VNP / EEE / VCGB' : 'We don\'t just measure benchmarks. We measure truth.'}
+        </h2>
+        <p className="text-lg md:text-xl font-serif leading-[1.6] max-w-3xl mx-auto transition-colors text-cos-text/80 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:text-left data-[machine=true]:border data-[machine=true]:border-wire data-[machine=true]:p-8 data-[machine=true]:rounded-md data-[machine=true]:bg-void-panel" data-machine={isMachine}>
+          {isMachine ? 
+            "The Veklom Nexus Protocol (VNP) abandons easily manipulated metrics. We measure what matters to the M2M economy using cryptographically secure Active Network Metrology. P99 Latency is geographically normalized. Uptime is mathematically proven. x402 settlement instantly slashes providers who fail to meet constraints." : 
+            "Every big infrastructure looked absurd right before it became invisible. We're building the deterministic policy substrate that governments, regulated industries, and major enterprises require before they let autonomous agents run their critical workflows. This is the highest standard for AI agent governance."
+          }
+        </p>
+      </section>
+
+      {/* Raw WebMCP View Overlay */}
       {isRawOpen && (
         <div className="fixed inset-0 z-50 bg-[#0D1114] text-[#CFEFE9] font-mono flex flex-col">
           <div className="flex justify-between items-center p-4 border-b border-[#1E8B79]/30 text-[11px] shrink-0 text-[#1E8B79]">
-            <div><span className="text-[#4CF2D6]">veklom.com/ai</span> — served to agents, no styling applied</div>
+            <div><span className="text-[#4CF2D6]">veklom.com</span> — served to agents, no styling applied</div>
             <button onClick={() => setIsRawOpen(false)} className="border border-[#1E8B79]/30 px-3 py-1.5 rounded hover:border-[#4CF2D6] hover:text-[#4CF2D6] transition-colors">ESC — back to page</button>
           </div>
           <div className="flex-1 overflow-y-auto p-6 md:p-10 max-w-4xl mx-auto w-full text-sm leading-[1.85]">
-            <h2 className="text-base tracking-wider uppercase mb-2">VEKLOM</h2>
-            <div className="opacity-85 mb-10">Trust layer for machine-to-machine action. Identity → Authority → Governance → Execution → Evidence → Settlement.</div>
+            <h2 className="text-base tracking-wider uppercase mb-2">VIO Intent Infrastructure</h2>
+            <div className="opacity-85 mb-10">Global, deterministic policy-anchored substrate. Transforms declared intent into governed execution.</div>
 
             <h2 className="text-base tracking-wider uppercase mb-2 mt-8">Capabilities (WebMCP tools registered on this origin)</h2>
             <div className="opacity-55 text-xs mb-6">Discovered via navigator.modelContext — declared by this page, not guessed from screenshots.</div>
 
             {[
-              { name: "resolveCapability(query, region?)", desc: "Find a capability another machine has published — an API, a dataset, a piece of bandwidth, a model endpoint — and what it costs to use.", guards: ["read-only", "no auth required", "rate limited"] },
-              { name: "requestAuthority(capabilityId, scope, ttl)", desc: "Ask for scoped permission to use a capability — bounded to a specific action, a budget ceiling, and an expiry.", guards: ["requires signed agent identity", "TTL max 300s", "policy-checked"], locked: true },
-              { name: "execute(grantId, input)", desc: "Run the bounded action. Cannot exceed the scope issued in requestAuthority — the runtime rejects it, it doesn't just log it.", guards: ["requires active grant", "sandboxed", "human-approval hook available"], locked: true },
-              { name: "getEvidence(transactionId)", desc: "Return the signed record of what happened — identity, authority, inputs, outputs, timestamps — independently verifiable, not just self-reported.", guards: ["read-only", "publicly verifiable"] }
+              { name: "verifyIntent(payload)", desc: "Extracts intent, binds identity, checks policy/trust content, validates capability scope. Required before any agent execution.", guards: ["read-only", "signature required"] },
+              { name: "buildGovernedPlan(intentId)", desc: "Builds deterministic plan graphs and applies policy constraints. Returns a DAG of execution envelopes.", guards: ["requires verified intent"] },
+              { name: "requestAuthority(capabilityId, scope, ttl)", desc: "Issues short-lived authority tokens. Performs nonce bound approval and budget solvency checks.", guards: ["requires identity envelope", "TTL max 300s"], locked: true },
+              { name: "execute(grantId, input)", desc: "Run the action inside the vendor-neutral deterministic runtime. Cannot exceed scope.", guards: ["requires active grant", "sandboxed", "residency checked"], locked: true },
+              { name: "getEvidence(transactionId)", desc: "Pulls the signed cryptographic receipt for a transaction. Proof of identity, policy, execution, and settlement.", guards: ["read-only", "publicly verifiable"] }
             ].map((tool, i) => (
               <div key={i} className="border border-[#1E8B79]/30 rounded-md p-4 bg-[#4CF2D6]/5 mb-4">
                 <div className="text-[#4CF2D6] font-bold">{tool.name}</div>
@@ -416,14 +358,8 @@ export default function M2MLandingPage() {
               </div>
             ))}
 
-            <h2 className="text-base tracking-wider uppercase mb-2 mt-12">Human-facing pages, for reference</h2>
-            <div className="text-[#4CF2D6] underline underline-offset-2 cursor-pointer">[How it works] <span className="no-underline text-[#CFEFE9]/70">— /how-it-works</span></div>
-            <div className="text-[#4CF2D6] underline underline-offset-2 cursor-pointer">[Pricing] <span className="no-underline text-[#CFEFE9]/70">— /pricing</span></div>
-            <div className="text-[#4CF2D6] underline underline-offset-2 cursor-pointer">[Docs] <span className="no-underline text-[#CFEFE9]/70">— /docs</span></div>
-            <div className="text-[#4CF2D6] underline underline-offset-2 cursor-pointer">[Trust &amp; evidence model] <span className="no-underline text-[#CFEFE9]/70">— /trust</span></div>
-
             <div className="mt-12 p-4 border border-dashed border-[#1E8B79]/30 rounded-md text-[13px] opacity-55 leading-relaxed">
-              This view is a mock-up of what an agent fetching veklom.com would see under WebMCP — the tools above, their guardrails, and nothing decorative. The real implementation gates every tool behind a Permissions Policy, signed capability grants, and scope enforcement at the runtime — not just at the page. Nothing here executes anything; it's a blueprint for the shape of that page.
+              This view represents what an agent fetching veklom.com would see under WebMCP. The real implementation gates every tool behind a Permissions Policy and scope enforcement at the runtime. Nothing here executes anything; it is a blueprint for governed capability discovery.
             </div>
           </div>
           <div className="mt-auto border-t border-[#1E8B79]/30 bg-[#07090B] p-6 shrink-0">
@@ -433,6 +369,6 @@ export default function M2MLandingPage() {
           </div>
         </div>
       )}
-    </div>
+    </MarketingLayout>
   );
 }
