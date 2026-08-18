@@ -57,9 +57,9 @@ export default function LoginPage() {
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="text-xs text-ink-400">Email</label>
+          <label className="text-xs text-ink-400">Username or Email</label>
           <input
-            type="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)}
+            type="text" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
             className="input mt-1.5"
           />

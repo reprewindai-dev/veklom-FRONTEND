@@ -217,7 +217,7 @@ export default function M2MLandingPage() {
         {/* Nav */}
         <nav className="flex justify-between items-center p-6 lg:px-12 border-b transition-colors duration-500 border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
           <div className="flex items-center gap-6">
-            <img src="/images/veklom-logo-m2m.jpg" alt="Veklom Logo" className="h-10 w-auto rounded-md shadow-cos-glow border border-cos-border" />
+            <img src="/veklom-wordmark.svg" alt="Veklom Wordmark" className="h-8 w-auto" />
             <div className="hidden md:flex gap-6 text-sm font-medium text-cos-text/80 text-cos-text/80 transition-colors" data-machine={isMachine}>
               <Link href="https://vnp.veklom.com" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>VNP</Link>
               <Link href="#" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>EEE</Link>
@@ -345,9 +345,43 @@ export default function M2MLandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="mt-12 border-t border-rule data-[machine=true]:border-wire p-6 lg:px-12 text-sm flex flex-col md:flex-row justify-between items-center transition-colors duration-500 text-cos-text/60 text-cos-text/60 gap-4" data-machine={isMachine}>
-          <div><div className="font-mono text-xs mb-1">"Anything is possible, if you're willing to build the wire first."</div></div>
-          <div>&copy; VEKLOM — the era is early.</div>
+        <footer className="mt-24 border-t border-rule data-[machine=true]:border-wire p-12 lg:px-24 text-sm transition-colors duration-500 text-cos-text/60 data-[machine=true]:text-cos-text/50 font-mono" data-machine={isMachine}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16 max-w-6xl mx-auto">
+            <div className="col-span-2 md:col-span-1">
+              <img src="/veklom-wordmark.svg" alt="Veklom Wordmark" className="h-6 w-auto mb-6 opacity-70" />
+              <div className="text-xs mb-1 italic">&quot;Anything is possible, if you&apos;re willing to build the wire first.&quot;</div>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Platform</h4>
+              <Link href="https://vnp.veklom.com" className="hover:text-cos-accent transition-colors">Veklom Nexus Protocol (VNP)</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Capability OS</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Identity & Evidence (PGL)</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Settlement (x402)</Link>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Resources</h4>
+              <Link href="/docs" className="hover:text-cos-accent transition-colors">Documentation</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Enterprise Exchange (EEE)</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Governed Boundaries (VCGB)</Link>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Company</h4>
+              <Link href="#" className="hover:text-cos-accent transition-colors">About</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Trust Model</Link>
+              <Link href="#" className="hover:text-cos-accent transition-colors">Contact</Link>
+            </div>
+          </div>
+          
+          <div className="border-t border-rule data-[machine=true]:border-wire pt-8 flex flex-col md:flex-row justify-between items-center gap-4 max-w-6xl mx-auto text-xs">
+            <div>&copy; {new Date().getFullYear()} VEKLOM — the era is early.</div>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-cos-text">Privacy</Link>
+              <Link href="#" className="hover:text-cos-text">Terms</Link>
+            </div>
+          </div>
         </footer>
 
       </div>
