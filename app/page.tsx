@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, Zap, Lock, Database, Activity, GitCommit, FileText, XCircle } from "lucide-react";
+import { ShieldCheck, Zap, Lock, Database, Activity, GitCommit, FileText, XCircle, Terminal } from "lucide-react";
 import { useUIStore } from "@/lib/store/ui-store";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 
@@ -154,11 +154,11 @@ export default function M2MLandingPage() {
 
       {/* Hero */}
       <section className="flex flex-col items-center text-center px-6 pt-32 pb-20 max-w-4xl mx-auto relative z-10">
-        <div className="font-mono text-xs tracking-widest uppercase mb-8 text-cos-accent-dim" data-machine={isMachine}>
+        <div className="font-mono text-xs tracking-widest uppercase mb-8 text-ink-400" data-machine={isMachine}>
           {isMachine ? '// global deterministic policy-anchored substrate' : 'The missing layer in the AI ecosystem'}
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-sans font-medium tracking-tight mb-8 leading-[1.1] text-cos-text">
+        <h1 className="text-5xl md:text-7xl font-sans font-medium tracking-tight mb-8 leading-[1.1] text-ink-50">
           VIO Intent Infrastructure
         </h1>
 
@@ -170,15 +170,15 @@ export default function M2MLandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 items-center mb-20">
-          <Link href="/os" className="px-8 py-4 bg-cos-text text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity data-[machine=true]:bg-cos-accent data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
+          <Link href="/os" className="px-8 py-4 bg-brand-500 text-bg-900 font-semibold rounded-lg hover:bg-brand-400 transition-colors data-[machine=true]:bg-cos-accent data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
             {isMachine ? 'GET /capabilities' : 'See how it works'}
           </Link>
         </div>
 
         {/* Machine Feed */}
         {isMachine && (
-          <div className="font-mono text-xs text-left w-full max-w-2xl bg-cos-accent/5 border border-wire rounded-lg p-6 leading-loose text-cos-accent-dim shadow-2xl">
-            <div className="feed-line">$ verify intent <span className="text-cos-accent">req.39481</span> <span className="border border-wire text-[10px] px-1.5 py-0.5 rounded ml-2">POLICY OK</span></div>
+          <div className="font-mono text-xs text-left w-full max-w-2xl bg-cos-accent/5 border border-cos-border rounded-lg p-6 leading-loose text-ink-400 shadow-2xl">
+            <div className="feed-line">$ verify intent <span className="text-cos-accent">req.39481</span> <span className="border border-cos-border text-[10px] px-1.5 py-0.5 rounded ml-2">POLICY OK</span></div>
             <div className="feed-line">$ authority checked · policy bounded · identity wrapped</div>
             <div className="feed-line">$ resolution capability <span className="text-cos-accent">edge.compute</span> · residency scored</div>
             <div className="feed-line">$ anchored <span className="text-cos-accent">✓</span> evidence sealed · execution granted</div>
@@ -188,60 +188,60 @@ export default function M2MLandingPage() {
 
       {/* The Core Concept */}
       <section className="px-6 py-32 max-w-4xl mx-auto relative z-10">
-        <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-cos-accent-dim" data-machine={isMachine}>
+        <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-ink-400" data-machine={isMachine}>
           {isMachine ? 'PROTOCOL GUARANTEES' : 'A Category, Not a Feature'}
         </span>
         
         {!isMachine ? (
           <>
-            <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text">
-              VIO (Intent Infrastructure) isn't about orchestrating agents. It's about governing the intent <strong className="text-cos-accent-dim italic font-semibold">before the agent even exists</strong>.
+            <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-ink-50">
+              VIO (Intent Infrastructure) isn't about orchestrating agents. It's about governing the intent <strong className="text-ink-400 italic font-semibold">before the agent even exists</strong>.
             </p>
-            <p className="text-xl font-serif leading-[1.6] mb-8 transition-colors text-cos-text/80">
+            <p className="text-xl font-serif leading-[1.6] mb-8 transition-colors text-ink-50/80">
               When a machine acts on your behalf, "the AI did it" isn't an answer anyone accepts — not a regulator, not a customer, not your own board. We don't just route workloads; we wrap execution in identity, policy, and cryptographic proof.
             </p>
           </>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-mono text-sm">
-            <div className="border border-wire p-6 rounded-md bg-void-panel">
+            <div className="border border-cos-border p-6 rounded-md bg-cos-surface">
               <span className="text-cos-accent mb-2 block">01. Intent</span>
-              <div className="text-cos-accent-dim">Intent is verified, not assumed.</div>
+              <div className="text-ink-400">Intent is verified, not assumed.</div>
             </div>
-            <div className="border border-wire p-6 rounded-md bg-void-panel">
+            <div className="border border-cos-border p-6 rounded-md bg-cos-surface">
               <span className="text-cos-accent mb-2 block">02. Identity</span>
-              <div className="text-cos-accent-dim">Identity is bound, not inferred.</div>
+              <div className="text-ink-400">Identity is bound, not inferred.</div>
             </div>
-            <div className="border border-wire p-6 rounded-md bg-void-panel">
+            <div className="border border-cos-border p-6 rounded-md bg-cos-surface">
               <span className="text-cos-accent mb-2 block">03. Policy</span>
-              <div className="text-cos-accent-dim">Policy is enforced, not suggested.</div>
+              <div className="text-ink-400">Policy is enforced, not suggested.</div>
             </div>
-            <div className="border border-wire p-6 rounded-md bg-void-panel">
+            <div className="border border-cos-border p-6 rounded-md bg-cos-surface">
               <span className="text-cos-accent mb-2 block">04. Trust</span>
-              <div className="text-cos-accent-dim">Trust is scored, not hand-waived.</div>
+              <div className="text-ink-400">Trust is scored, not hand-waived.</div>
             </div>
-            <div className="border border-wire p-6 rounded-md bg-void-panel">
+            <div className="border border-cos-border p-6 rounded-md bg-cos-surface">
               <span className="text-cos-accent mb-2 block">05. Execution</span>
-              <div className="text-cos-accent-dim">Execution is deterministic, not emergent.</div>
+              <div className="text-ink-400">Execution is deterministic, not emergent.</div>
             </div>
-            <div className="border border-wire p-6 rounded-md bg-void-panel">
+            <div className="border border-cos-border p-6 rounded-md bg-cos-surface">
               <span className="text-cos-accent mb-2 block">06. Evidence</span>
-              <div className="text-cos-accent-dim">Evidence is anchored, not implied.</div>
+              <div className="text-ink-400">Evidence is anchored, not implied.</div>
             </div>
           </div>
         )}
       </section>
 
       {/* The 8 Layers of VIO */}
-      <section className="px-6 py-24 bg-cos-bg-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500 relative z-10" data-machine={isMachine}>
+      <section className="px-6 py-24 bg-bg-900 border-y border-border data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border transition-colors duration-500 relative z-10" data-machine={isMachine}>
         <div className="max-w-6xl mx-auto">
-          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-cos-accent-dim" data-machine={isMachine}>
+          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-ink-400" data-machine={isMachine}>
             The Foundation
           </span>
-          <h2 className="font-serif text-3xl md:text-5xl font-semibold max-w-[20ch] leading-[1.2] mb-16 text-cos-text data-[machine=true]:font-mono data-[machine=true]:text-3xl" data-machine={isMachine}>
-            {isMachine ? 'THE 8 LAYERS OF VIO' : <>The highest standard for <em className="italic font-normal text-cos-accent-dim" data-machine={isMachine}>AI Agent Governance</em>.</>}
+          <h2 className="font-serif text-3xl md:text-5xl font-semibold max-w-[20ch] leading-[1.2] mb-16 text-ink-50 data-[machine=true]:font-mono data-[machine=true]:text-3xl" data-machine={isMachine}>
+            {isMachine ? 'THE 8 LAYERS OF VIO' : <>The highest standard for <em className="italic font-normal text-ink-400" data-machine={isMachine}>AI Agent Governance</em>.</>}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[2px] bg-rule data-[machine=true]:bg-wire border border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[2px] bg-border data-[machine=true]:bg-cos-border border border-border data-[machine=true]:border-cos-border" data-machine={isMachine}>
             {[
               {
                 title: "Intent Verification",
@@ -294,9 +294,9 @@ export default function M2MLandingPage() {
             ].map((layer, i) => {
               const Icon = layer.icon;
               return (
-                <div key={i} className="p-8 bg-cos-bg-dim data-[machine=true]:bg-void-panel transition-colors flex flex-col h-full" data-machine={isMachine}>
+                <div key={i} className="p-8 bg-bg-900 data-[machine=true]:bg-cos-surface transition-colors flex flex-col h-full" data-machine={isMachine}>
                   <div className="flex items-center gap-3 mb-4">
-                    <Icon className="w-5 h-5 text-cos-accent-dim" />
+                    <Icon className="w-5 h-5 text-ink-400" />
                     <div className="font-mono text-[11px] tracking-wider uppercase opacity-50">Layer 0{i + 1}</div>
                   </div>
                   <h4 className="font-serif text-xl font-semibold mb-3 data-[machine=true]:font-sans data-[machine=true]:text-base data-[machine=true]:text-cos-accent" data-machine={isMachine}>{layer.title}</h4>
@@ -311,19 +311,88 @@ export default function M2MLandingPage() {
       </section>
 
       {/* Competitive Moat: VNP, EEE, VCGB */}
-      <section className="px-6 py-32 max-w-5xl mx-auto relative z-10 text-center">
-        <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-cos-accent-dim" data-machine={isMachine}>
-          {isMachine ? 'ACTIVE NETWORK METROLOGY' : 'Beyond Simple Benchmarks'}
-        </span>
-        <h2 className="text-3xl md:text-5xl font-serif leading-[1.2] mb-12 transition-colors text-cos-text data-[machine=true]:font-mono data-[machine=true]:text-3xl" data-machine={isMachine}>
-          {isMachine ? 'VNP / EEE / VCGB' : 'We don\'t just measure benchmarks. We measure truth.'}
-        </h2>
-        <p className="text-lg md:text-xl font-serif leading-[1.6] max-w-3xl mx-auto transition-colors text-cos-text/80 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:text-left data-[machine=true]:border data-[machine=true]:border-wire data-[machine=true]:p-8 data-[machine=true]:rounded-md data-[machine=true]:bg-void-panel" data-machine={isMachine}>
-          {isMachine ? 
-            "The Veklom Nexus Protocol (VNP) abandons easily manipulated metrics. We measure what matters to the M2M economy using cryptographically secure Active Network Metrology. P99 Latency is geographically normalized. Uptime is mathematically proven. x402 settlement instantly slashes providers who fail to meet constraints." : 
-            "Every big infrastructure looked absurd right before it became invisible. We're building the deterministic policy substrate that governments, regulated industries, and major enterprises require before they let autonomous agents run their critical workflows. This is the highest standard for AI agent governance."
-          }
-        </p>
+      <section className="px-6 py-32 max-w-6xl mx-auto relative z-10">
+        <div className="text-center mb-16">
+          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-ink-400" data-machine={isMachine}>
+            {isMachine ? 'ACTIVE NETWORK METROLOGY & GOVERNANCE' : 'Beyond Simple Benchmarks'}
+          </span>
+          <h2 className="text-3xl md:text-5xl font-serif leading-[1.2] mb-6 transition-colors text-ink-50 data-[machine=true]:font-mono data-[machine=true]:text-3xl" data-machine={isMachine}>
+            {isMachine ? 'VNP / EEE / VCGB' : 'Measuring the Complete Truth'}
+          </h2>
+          <p className="text-lg md:text-xl font-serif leading-[1.6] max-w-3xl mx-auto transition-colors text-ink-50/80 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:text-center" data-machine={isMachine}>
+            {isMachine ? 
+              "We measure what matters to the M2M economy using cryptographically secure Active Network Metrology and capability boundaries. True governance requires evaluating the complete stack." : 
+              "We don't just measure latency or uptime in a vacuum. We measure the complete operational reality: the network, the evidence, and the governance boundaries working together."
+            }
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Link href="/vnp" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
+            <div className="w-10 h-10 rounded bg-bg-700 border border-border flex items-center justify-center mb-6 group-hover:bg-brand-500/10 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:border-cos-accent/20 data-[machine=true]:group-hover:bg-cos-accent/20 transition-colors">
+              <Activity className="w-5 h-5 text-ink-50 data-[machine=true]:text-cos-accent" data-machine={isMachine} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-ink-50 data-[machine=true]:text-cos-accent data-[machine=true]:font-mono" data-machine={isMachine}>VNP</h3>
+            <div className="text-sm text-ink-400 font-mono mb-4">Veklom Nexus Protocol</div>
+            <p className="text-sm text-ink-400 leading-relaxed">Measures physical network reality: P99 Latency, Uptime, and Settlement. The foundational layer of observability.</p>
+          </Link>
+
+          <Link href="/eee" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
+            <div className="w-10 h-10 rounded bg-bg-700 border border-border flex items-center justify-center mb-6 group-hover:bg-brand-500/10 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:border-cos-accent/20 data-[machine=true]:group-hover:bg-cos-accent/20 transition-colors">
+              <FileText className="w-5 h-5 text-ink-50 data-[machine=true]:text-cos-accent" data-machine={isMachine} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-ink-50 data-[machine=true]:text-cos-accent data-[machine=true]:font-mono" data-machine={isMachine}>EEE</h3>
+            <div className="text-sm text-ink-400 font-mono mb-4">Execution Evidence Envelope</div>
+            <p className="text-sm text-ink-400 leading-relaxed">Standardizes the evidence. A tamper-evident record binding capability, authority, policy, and effects.</p>
+          </Link>
+
+          <Link href="/vcgb" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
+            <div className="w-10 h-10 rounded bg-bg-700 border border-border flex items-center justify-center mb-6 group-hover:bg-brand-500/10 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:border-cos-accent/20 data-[machine=true]:group-hover:bg-cos-accent/20 transition-colors">
+              <ShieldCheck className="w-5 h-5 text-ink-50 data-[machine=true]:text-cos-accent" data-machine={isMachine} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-ink-50 data-[machine=true]:text-cos-accent data-[machine=true]:font-mono" data-machine={isMachine}>VCGB</h3>
+            <div className="text-sm text-ink-400 font-mono mb-4">Capability Governance Benchmark</div>
+            <p className="text-sm text-ink-400 leading-relaxed">Evaluates enforcement boundaries. Tests systems for the correct decision, real-world effect boundary, and conformant evidence.</p>
+          </Link>
+        </div>
+
+        {/* The Final Unified Measurement Card */}
+        <div className="w-full p-8 md:p-12 rounded-xl bg-gradient-to-b from-bg-800 to-bg-900 border border-border data-[machine=true]:from-cos-surface data-[machine=true]:to-bg-900 data-[machine=true]:border-cos-border flex flex-col md:flex-row items-center gap-12" data-machine={isMachine}>
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-brand-500/10 text-brand-500 text-xs font-bold uppercase tracking-wider mb-6 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:text-cos-accent data-[machine=true]:font-mono" data-machine={isMachine}>
+              The Final Measurement
+            </div>
+            <h3 className="text-3xl font-bold mb-4 text-ink-50 data-[machine=true]:text-cos-text data-[machine=true]:font-mono" data-machine={isMachine}>
+              Unified Governed Benchmark
+            </h3>
+            <p className="text-ink-400 leading-relaxed mb-6">
+              Individual metrics are incomplete. The final benchmarking score we measure against is an aggregate of all three. True governance only exists when the network is observable (VNP), the boundary enforces policy (VCGB), and the result is cryptographically anchored (EEE).
+            </p>
+            <div className="flex items-center gap-4 text-sm font-mono font-bold">
+              <span className="text-brand-500 data-[machine=true]:text-cos-accent" data-machine={isMachine}>VNP</span>
+              <span className="text-ink-600">+</span>
+              <span className="text-brand-500 data-[machine=true]:text-cos-accent" data-machine={isMachine}>EEE</span>
+              <span className="text-ink-600">+</span>
+              <span className="text-brand-500 data-[machine=true]:text-cos-accent" data-machine={isMachine}>VCGB</span>
+              <span className="text-ink-600">=</span>
+              <span className="text-ink-50 bg-bg-700 px-3 py-1 rounded data-[machine=true]:bg-cos-surface2" data-machine={isMachine}>ABSOLUTE TRUTH</span>
+            </div>
+          </div>
+          
+          <div className="w-full md:w-1/3 flex-shrink-0 relative">
+            <div className="aspect-square rounded-full border border-dashed border-border data-[machine=true]:border-cos-border/50 flex items-center justify-center relative p-8" data-machine={isMachine}>
+              <div className="absolute top-0 right-1/4 w-12 h-12 bg-bg-800 border border-border rounded-lg flex items-center justify-center text-xs font-mono font-bold text-ink-400 data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:text-cos-accent" data-machine={isMachine}>VNP</div>
+              <div className="absolute bottom-1/4 -right-4 w-12 h-12 bg-bg-800 border border-border rounded-lg flex items-center justify-center text-xs font-mono font-bold text-ink-400 data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:text-cos-accent" data-machine={isMachine}>EEE</div>
+              <div className="absolute bottom-1/4 -left-4 w-12 h-12 bg-bg-800 border border-border rounded-lg flex items-center justify-center text-xs font-mono font-bold text-ink-400 data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:text-cos-accent" data-machine={isMachine}>VCGB</div>
+              
+              <div className="w-full h-full rounded-full bg-brand-500/5 data-[machine=true]:bg-cos-accent/5 flex items-center justify-center border border-brand-500/20 data-[machine=true]:border-cos-accent/20" data-machine={isMachine}>
+                <div className="w-16 h-16 rounded-full bg-brand-500 flex items-center justify-center data-[machine=true]:bg-cos-accent shadow-[0_0_30px_rgba(255,184,0,0.3)] data-[machine=true]:shadow-[0_0_30px_rgba(0,229,255,0.3)]" data-machine={isMachine}>
+                  <ShieldCheck className="w-8 h-8 text-bg-900 data-[machine=true]:text-cos-bg" data-machine={isMachine} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Raw WebMCP View Overlay */}

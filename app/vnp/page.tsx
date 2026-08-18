@@ -105,7 +105,7 @@ export default function VNPLandingPage() {
           </motion.p>
           
           <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/vnp/docs" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-cos-surface text-paper font-bold text-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
+            <Link href="/vnp/docs" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-cos-surface text-bg-900 font-bold text-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
               Open Docs Hub <ArrowRight className="w-5 h-5" />
             </Link>
             <Link href="/vnp/methodology" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-cos-text/5 border border-cos-text/10 text-cos-text font-bold text-lg hover:bg-cos-text/10 transition-colors flex items-center justify-center">
@@ -116,7 +116,7 @@ export default function VNPLandingPage() {
       </section>
 
       {/* Dimensions of Trust Section */}
-      <section id="protocol" className="py-24 px-6 border-t border-rule bg-cos-bg-dim relative scroll-mt-16 text-cos-text">
+      <section id="protocol" className="py-24 px-6 border-t border-border bg-bg-900 relative scroll-mt-16 text-cos-text">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 max-w-3xl mx-auto">
             <span className="inline-flex items-center gap-1 text-cos-accent text-xs font-bold uppercase tracking-widest bg-cos-accent/5 border border-cos-accent/10 px-3 py-1 rounded-full mb-4">
@@ -193,7 +193,7 @@ export default function VNPLandingPage() {
       </section>
 
       {/* Methodology Section */}
-      <section id="methodology" className="py-24 px-6 border-t border-rule bg-cos-bg relative scroll-mt-16 text-cos-text">
+      <section id="methodology" className="py-24 px-6 border-t border-border bg-bg-800 relative scroll-mt-16 text-cos-text">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
@@ -219,12 +219,12 @@ export default function VNPLandingPage() {
             
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-cos-accent/10 to-transparent blur-2xl opacity-50 rounded-3xl -z-10" />
-              <div className="border border-rule rounded-2xl overflow-hidden bg-cos-bg-dim shadow-2xl">
-                <div className="p-4 border-b border-rule bg-cos-text/5 flex items-center gap-2">
+              <div className="border border-border rounded-2xl overflow-hidden bg-bg-900 shadow-2xl">
+                <div className="p-4 border-b border-border bg-cos-text/5 flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
                   <span className="text-xs font-mono text-cos-text/50">BACKEND VIEW: VNP_TOPOLOGY_MESH</span>
                 </div>
-                <div className="h-[500px] overflow-hidden p-6 relative bg-cos-bg">
+                <div className="h-[500px] overflow-hidden p-6 relative bg-bg-800">
                   <div className="transform scale-[0.85] origin-top-left w-[117%] h-[117%] pointer-events-none">
                     <NetworkTopologyPanel />
                   </div>
@@ -236,7 +236,7 @@ export default function VNPLandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 border-t border-rule relative overflow-hidden bg-cos-bg text-cos-text">
+      <section className="py-32 border-t border-border relative overflow-hidden bg-bg-800 text-cos-text">
         <div className="absolute inset-0 bg-cos-accent/5" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cos-accent/10 blur-[100px] rounded-full pointer-events-none" />
         
@@ -265,7 +265,7 @@ export default function VNPLandingPage() {
             </div>
           </div>
 
-          <Link href="/vnp/claim" className="inline-flex px-10 py-5 rounded-lg bg-cos-text text-paper font-bold text-lg hover:opacity-90 transition-colors items-center gap-2 shadow-lg shadow-white/5">
+          <Link href="/vnp/claim" className="inline-flex px-10 py-5 rounded-lg bg-cos-text text-bg-900 font-bold text-lg hover:opacity-90 transition-colors items-center gap-2 shadow-lg shadow-white/5">
             Submit API for VNP Evaluation <Zap className="w-5 h-5" />
           </Link>
         </div>
