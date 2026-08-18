@@ -89,17 +89,17 @@ const nextConfig = {
       // Legacy auth paths
       {
         source: "/workspace/login",
-        destination: "/login",
+        destination: "/",
         permanent: true,
       },
       {
         source: "/workspace/signup",
-        destination: "/signup",
+        destination: "/",
         permanent: true,
       },
       {
         source: "/workspace/dashboard",
-        destination: "/control-node",
+        destination: "/",
         permanent: true,
       },
       // CANONICAL REDIRECTS: Legacy workspace → UACP v5 canonical routes
@@ -110,27 +110,27 @@ const nextConfig = {
       },
       {
         source: "/dashboard",
-        destination: "/control-node",
+        destination: "/",
         permanent: false,
       },
       {
         source: "/wallet",
-        destination: "/treasury",
+        destination: "/",
         permanent: false,
       },
       {
         source: "/wallet/:path*",
-        destination: "/treasury",
+        destination: "/",
         permanent: false,
       },
       {
         source: "/token-wallet",
-        destination: "/treasury",
+        destination: "/",
         permanent: false,
       },
       {
         source: "/token-wallet/:path*",
-        destination: "/treasury",
+        destination: "/",
         permanent: false,
       },
       // Keep old /terminal route working but now it renders the new page

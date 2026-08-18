@@ -8,6 +8,7 @@ import {
   BookOpenCheck,
   Boxes,
   CircleDollarSign,
+  Cloud,
   Command,
   FileCheck2,
   LayoutGrid,
@@ -20,6 +21,7 @@ import {
 import { crossCuttingStages, spineStages, type StageDefinition } from "@/lib/cos/stages";
 
 const icons = {
+  computeless: Cloud,
   capabilities: LayoutGrid,
   mount: Boxes,
   blueprint: BookOpenCheck,

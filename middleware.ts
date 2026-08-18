@@ -149,7 +149,7 @@ export async function middleware(request: NextRequest) {
 
   // ── Legacy route redirects ─────────────────────────────────────────────────
   if (url.pathname === '/workspace' || url.pathname === '/overview') {
-    return NextResponse.redirect(new URL('/os', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // ── interlink-cAPI: Edge capability check ─────────────────────────────────

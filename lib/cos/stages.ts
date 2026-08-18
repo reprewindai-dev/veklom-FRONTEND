@@ -3,6 +3,7 @@ import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 
 export type StageEndpointClass = "live" | "proxy" | "absent";
 export type StageId =
+  | "computeless"
   | "capabilities"
   | "mount"
   | "blueprint"
@@ -34,6 +35,17 @@ export interface StageDefinition {
 }
 
 export const stages: StageDefinition[] = [
+  {
+    id: "computeless",
+    label: "Compute-Less",
+    route: "/os/computeless",
+    purpose: "Execute distributed operations without underlying traditional compute infrastructure.",
+    owner: "Veklom Compute-Less Cloud",
+    endpoints: [
+      { method: "GET", path: "/api/v1/computeless/telemetry", classification: "live", response: "telemetry stream" },
+      { method: "GET", path: "/api/v1/computeless/evidence", classification: "live", response: "evidence payload" }
+    ],
+  },
   {
     id: "capabilities",
     label: "Capabilities",
