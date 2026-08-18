@@ -29,7 +29,7 @@ const checks = [
   { stage: "Capabilities", method: "GET", path: "/api/cappo/v1/capability/beacons", auth: false },
   { stage: "Capabilities", method: "GET", path: "/api/cappo/.well-known/capability-beacon-keys", auth: false },
   // Non-mutating contract reachability check. An empty body may return 400/422;
-  // that is recorded as CONTRACT_REACHED, not as a usable runtime pass.
+  // that is recorded as CONTRACT_REACHED, not as a verified/usable runtime pass.
   { stage: "Capabilities", method: "POST", path: "/api/cappo/v1/capability/beacons/verify", auth: false, body: {} },
   { stage: "Mount", method: "GET", path: "/api/cappo/v1/capability/packages", auth: true },
   { stage: "Blueprint", method: "GET", path: "/api/v1/gpc/stats", auth: true },
@@ -60,7 +60,7 @@ function redact(text) {
 }
 
 function classify(status, bodyText) {
-  if (status === 402) return "PAYMENT_REQUIRED";
+  if (status === 402) return "PAYMENT_REQUIRED_OBSERVED";
   if (status === 401) return "AUTHENTICATION_REQUIRED";
   if (status === 403) return "AUTHORITY_DENIED";
   if (status === 400 || status === 422) return "CONTRACT_REACHED";
@@ -68,8 +68,8 @@ function classify(status, bodyText) {
   if (status >= 500) return "UPSTREAM_FAILURE";
   if (status >= 200 && status < 300) {
     const trimmed = bodyText.trim();
-    if (!trimmed || trimmed === "{}" || trimmed === "[]" || trimmed === "null") return "NEEDS_PROOF";
-    return "USABLE";
+    if (!trimmed || trimmed === "{}" || trimmed === "[]" || trimmed === "null") return "HTTP_RESPONSE_OBSERVED_EMPTY";
+    return "HTTP_RESPONSE_OBSERVED";
   }
   return "UNEXPECTED";
 }
@@ -154,16 +154,16 @@ const counts = results.reduce((acc, result) => {
   acc[result.classification] = (acc[result.classification] || 0) + 1;
   return acc;
 }, {});
-const usable = results.filter((r) => r.classification === "USABLE" || r.classification === "PAYMENT_REQUIRED").length;
+const observedResponses = results.filter((r) => ["HTTP_RESPONSE_OBSERVED", "HTTP_RESPONSE_OBSERVED_EMPTY", "PAYMENT_REQUIRED_OBSERVED", "CONTRACT_REACHED"].includes(r.classification)).length;
 const failures = results.filter((r) => ["NOT_FOUND", "UPSTREAM_FAILURE", "NETWORK_FAILURE", "TIMEOUT", "UNEXPECTED"].includes(r.classification)).length;
 
 console.log(`Capability OS runtime audit: ${origin}`);
 console.log(`Session: ${bearer ? "present" : "absent (authenticated checks skipped)"}`);
-console.log(`Checks: ${results.length} | usable/reachable: ${usable} | hard failures: ${failures}`);
+console.log(`Checks: ${results.length} | HTTP/contract observations: ${observedResponses} | hard failures: ${failures}`);
 console.log("");
 for (const result of results) {
   const status = result.status === null ? "---" : String(result.status);
-  console.log(`${result.stage.padEnd(12)} ${result.method.padEnd(4)} ${status.padEnd(3)} ${result.classification.padEnd(24)} ${String(result.ms).padStart(5)}ms  ${result.path}`);
+  console.log(`${result.stage.padEnd(12)} ${result.method.padEnd(4)} ${status.padEnd(3)} ${result.classification.padEnd(29)} ${String(result.ms).padStart(5)}ms  ${result.path}`);
 }
 console.log("");
 console.log("Classification counts:", counts);
@@ -172,9 +172,10 @@ const report = {
   audited_at: new Date().toISOString(),
   origin,
   authenticated: Boolean(bearer),
-  methodology: "Current-source, non-mutating Capability OS browser-path audit. The 23rd call is a contract-only empty-body beacon verification probe; CONTRACT_REACHED is not counted as usable.",
+  methodology: "Current-source, non-mutating Capability OS browser-path audit. Check 5 is a contract-only empty-body capability-beacon verification probe; HTTP/contract observations are not runtime verification.",
+  verification_state: "NOT_VERIFIED",
   counts,
-  usable_or_payment_reachable: usable,
+  http_or_contract_observations: observedResponses,
   hard_failures: failures,
   results,
 };
