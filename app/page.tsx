@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 export default function M2MLandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [resonance, setResonance] = useState(0); // 0 = chaos, 1 = absolute resonance
-  const [isMachine, setIsMachine] = useState(false);
+  const isMachine = true;
   const [isRawOpen, setIsRawOpen] = useState(false);
 
   useEffect(() => {
@@ -135,10 +135,6 @@ export default function M2MLandingPage() {
     };
   }, []);
 
-  const crossThreshold = () => {
-    setIsMachine(!isMachine);
-  };
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsRawOpen(false);
@@ -220,17 +216,19 @@ export default function M2MLandingPage() {
         
         {/* Nav */}
         <nav className="flex justify-between items-center p-6 lg:px-12 border-b transition-colors duration-500 border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
-          <div className="font-serif font-black text-2xl tracking-tighter">
-            VEKLOM<span className="text-brass data-[machine=true]:text-cyan" data-machine={isMachine}>.</span>
+          <div className="flex items-center gap-6">
+            <img src="/veklom-wordmark.svg" alt="Veklom Logo" className="h-6 w-auto data-[machine=true]:brightness-200" data-machine={isMachine} />
+            <div className="hidden md:flex gap-6 text-sm font-medium text-ink/80 data-[machine=true]:text-machine-ink/80 transition-colors" data-machine={isMachine}>
+              <Link href="https://vnp.veklom.com" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>VNP</Link>
+              <Link href="#" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>EEE</Link>
+              <Link href="#" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>VCGB</Link>
+            </div>
           </div>
           <div className="flex items-center gap-4 text-xs font-mono">
             <button onClick={() => setIsRawOpen(true)} className="hover:opacity-70 transition-opacity hidden sm:block">
               <span className="opacity-50">&lt;/&gt;</span> View as an agent would fetch it
             </button>
-            <button onClick={crossThreshold} className="flex items-center gap-2 border px-4 py-2 rounded-full transition-colors duration-300 border-rule hover:bg-rule/10 data-[machine=true]:border-wire data-[machine=true]:hover:bg-wire/10" data-machine={isMachine}>
-              <span className="w-2 h-2 rounded-full bg-brass data-[machine=true]:bg-cyan" data-machine={isMachine}></span>
-              <span>{isMachine ? 'Switch to human view' : 'Switch to machine view'}</span>
-            </button>
+            
           </div>
         </nav>
 
@@ -241,12 +239,8 @@ export default function M2MLandingPage() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-serif font-medium tracking-tight mb-8 leading-[1.1] transition-colors duration-500 text-ink data-[machine=true]:text-machine-ink" data-machine={isMachine}>
-            {isMachine ? (
-              <>identity &rarr; authority &rarr; policy &rarr; execution &rarr; <em className="text-cyan font-normal not-italic">proof</em></>
-            ) : (
-              <>Two machines just agreed to <em className="text-brass italic font-normal">trust</em> each other. No one was watching.</>
-            )}
-          </h1>
+  VIO Intent Infrastructure
+</h1>
 
           <p className="text-lg md:text-xl leading-relaxed mb-12 opacity-80 font-serif data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:opacity-60" data-machine={isMachine}>
             {isMachine ? 
@@ -259,9 +253,7 @@ export default function M2MLandingPage() {
             <Link href="/os" className="px-8 py-4 bg-ink text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity data-[machine=true]:bg-cyan data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
               {isMachine ? 'GET /capabilities' : 'See how it works'}
             </Link>
-            <button onClick={crossThreshold} className="px-8 py-4 font-semibold text-ink/70 hover:text-ink transition-colors data-[machine=true]:text-cyan/70 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:hover:text-cyan" data-machine={isMachine}>
-              {isMachine ? '← step back as a human' : 'or step through as a machine →'}
-            </button>
+            
           </div>
 
           {/* Machine Feed */}
@@ -321,6 +313,15 @@ export default function M2MLandingPage() {
           </div>
         </section>
 
+        <div className="flex justify-center max-w-5xl mx-auto mt-24 px-6">
+          <img 
+            src="/images/veklom-logo-m2m.jpg" 
+            alt="Veklom Cybernetic Vision" 
+            className="w-full max-w-sm rounded-xl border border-rule data-[machine=true]:border-wire/40 shadow-2xl opacity-90 data-[machine=true]:opacity-75 transition-all duration-500 filter " 
+            data-machine={isMachine} 
+          />
+        </div>
+
         {/* Eras */}
         <section className="max-w-5xl mx-auto my-24 grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-rule data-[machine=true]:bg-wire border-y border-rule data-[machine=true]:border-wire transition-colors" data-machine={isMachine}>
           {[
@@ -344,16 +345,13 @@ export default function M2MLandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 px-6 py-12 md:py-16 border-t border-rule data-[machine=true]:border-wire font-mono text-xs opacity-60 transition-colors" data-machine={isMachine}>
-          <div className="font-serif italic text-base text-brass-deep data-[machine=true]:font-mono data-[machine=true]:not-italic data-[machine=true]:text-cyan data-[machine=true]:text-xs" data-machine={isMachine}>
-            "Anything is possible, if you're willing to build the wire first."
-          </div>
-          <div>© VEKLOM — the era is early.</div>
+        <footer className="mt-12 border-t border-rule data-[machine=true]:border-wire p-6 lg:px-12 text-sm flex flex-col md:flex-row justify-between items-center transition-colors duration-500 text-ink/60 data-[machine=true]:text-machine-ink/60 gap-4" data-machine={isMachine}>
+          <div><div className="font-mono text-xs mb-1">"Anything is possible, if you're willing to build the wire first."</div></div>
+          <div>&copy; VEKLOM — the era is early.</div>
         </footer>
 
       </div>
 
-      {/* RAW AGENT VIEW OVERLAY */}
       {isRawOpen && (
         <div className="fixed inset-0 z-50 bg-[#0D1114] text-[#CFEFE9] font-mono flex flex-col">
           <div className="flex justify-between items-center p-4 border-b border-[#1E8B79]/30 text-[11px] shrink-0 text-[#1E8B79]">
