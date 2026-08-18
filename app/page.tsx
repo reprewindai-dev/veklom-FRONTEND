@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 export default function M2MLandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [resonance, setResonance] = useState(0); // 0 = chaos, 1 = absolute resonance
-  const [isMachine, setIsMachine] = useState(false);
+  const isMachine = true;
   const [isRawOpen, setIsRawOpen] = useState(false);
 
   useEffect(() => {
@@ -135,10 +135,6 @@ export default function M2MLandingPage() {
     };
   }, []);
 
-  const crossThreshold = () => {
-    setIsMachine(!isMachine);
-  };
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsRawOpen(false);
@@ -197,14 +193,14 @@ export default function M2MLandingPage() {
           50% { opacity: 0.3; }
         }
 
-        .bg-paper { background-color: var(--paper); }
-        .bg-paper-dim { background-color: var(--paper-dim); }
+        .bg-cos-bg { background-color: var(--paper); }
+        .bg-cos-bg-dim { background-color: var(--paper-dim); }
         .bg-void { background-color: var(--void); }
         .bg-void-panel { background-color: var(--void-panel); }
-        .text-ink { color: var(--ink); }
+        .text-cos-text { color: var(--ink); }
         .text-machine-ink { color: var(--machine-ink); }
-        .text-cyan { color: var(--cyan); }
-        .text-cyan-dim { color: var(--cyan-dim); }
+        .text-cos-accent { color: var(--cyan); }
+        .text-cos-accent-dim { color: var(--cyan-dim); }
         .text-brass { color: var(--brass); }
         .text-brass-deep { color: var(--brass-deep); }
         .border-rule { border-color: var(--rule); }
@@ -221,38 +217,30 @@ export default function M2MLandingPage() {
         {/* Nav */}
         <nav className="flex justify-between items-center p-6 lg:px-12 border-b transition-colors duration-500 border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
           <div className="flex items-center gap-6">
-            <img src="/veklom-wordmark.svg" alt="Veklom Logo" className="h-6 w-auto data-[machine=true]:brightness-200" data-machine={isMachine} />
-            <div className="hidden md:flex gap-6 text-sm font-medium text-ink/80 data-[machine=true]:text-machine-ink/80 transition-colors" data-machine={isMachine}>
-              <Link href="https://terminal.veklom.com" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>Terminal</Link>
-              <Link href="https://vnp.veklom.com" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>VNP</Link>
-              <Link href="#" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>EEE</Link>
-              <Link href="#" className="hover:text-ink data-[machine=true]:hover:text-cyan transition-colors" data-machine={isMachine}>VCGB</Link>
+            <img src="/images/veklom-logo-m2m.jpg" alt="Veklom Logo" className="h-10 w-auto rounded-md shadow-cos-glow border border-cos-border" />
+            <div className="hidden md:flex gap-6 text-sm font-medium text-cos-text/80 text-cos-text/80 transition-colors" data-machine={isMachine}>
+              <Link href="https://vnp.veklom.com" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>VNP</Link>
+              <Link href="#" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>EEE</Link>
+              <Link href="#" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>VCGB</Link>
             </div>
           </div>
           <div className="flex items-center gap-4 text-xs font-mono">
             <button onClick={() => setIsRawOpen(true)} className="hover:opacity-70 transition-opacity hidden sm:block">
               <span className="opacity-50">&lt;/&gt;</span> View as an agent would fetch it
             </button>
-            <button onClick={crossThreshold} className="flex items-center gap-2 border px-4 py-2 rounded-full transition-colors duration-300 border-rule hover:bg-rule/10 data-[machine=true]:border-wire data-[machine=true]:hover:bg-wire/10" data-machine={isMachine}>
-              <span className="w-2 h-2 rounded-full bg-brass data-[machine=true]:bg-cyan" data-machine={isMachine}></span>
-              <span>{isMachine ? 'Switch to human view' : 'Switch to machine view'}</span>
-            </button>
+            
           </div>
         </nav>
 
         {/* Hero */}
         <section className="flex flex-col items-center text-center px-6 pt-32 pb-20 max-w-4xl mx-auto">
-          <div className="font-mono text-xs tracking-widest uppercase mb-8 text-brass data-[machine=true]:text-cyan" data-machine={isMachine}>
+          <div className="font-mono text-xs tracking-widest uppercase mb-8 text-brass text-cos-accent" data-machine={isMachine}>
             {isMachine ? '// live capability layer — no human in this loop' : 'A new kind of trust is arriving'}
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-serif font-medium tracking-tight mb-8 leading-[1.1] transition-colors duration-500 text-ink data-[machine=true]:text-machine-ink" data-machine={isMachine}>
-            {isMachine ? (
-              <>identity &rarr; authority &rarr; policy &rarr; execution &rarr; <em className="text-cyan font-normal not-italic">proof</em></>
-            ) : (
-              <>Two machines just agreed to <em className="text-brass italic font-normal">trust</em> each other. No one was watching.</>
-            )}
-          </h1>
+          <h1 className="text-5xl md:text-7xl font-sans font-medium tracking-tight mb-8 leading-[1.1] text-cos-text">
+  VIO Intent Infrastructure
+</h1>
 
           <p className="text-lg md:text-xl leading-relaxed mb-12 opacity-80 font-serif data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:opacity-60" data-machine={isMachine}>
             {isMachine ? 
@@ -262,21 +250,19 @@ export default function M2MLandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 items-center mb-20">
-            <Link href="/os" className="px-8 py-4 bg-ink text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity data-[machine=true]:bg-cyan data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
+            <Link href="/os" className="px-8 py-4 bg-cos-surface text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity bg-cos-accent data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
               {isMachine ? 'GET /capabilities' : 'See how it works'}
             </Link>
-            <button onClick={crossThreshold} className="px-8 py-4 font-semibold text-ink/70 hover:text-ink transition-colors data-[machine=true]:text-cyan/70 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:hover:text-cyan" data-machine={isMachine}>
-              {isMachine ? '← step back as a human' : 'or step through as a machine →'}
-            </button>
+            
           </div>
 
           {/* Machine Feed */}
           {isMachine && (
-            <div className="font-mono text-xs text-left w-full max-w-2xl bg-cyan/5 border border-wire rounded-lg p-6 leading-loose text-cyan-dim">
-              <div className="feed-line">$ resolve capability <span className="text-cyan">edge.content.serve</span> <span className="border border-wire text-[10px] px-1.5 py-0.5 rounded ml-2">SCOPED</span></div>
+            <div className="font-mono text-xs text-left w-full max-w-2xl bg-cyan/5 border border-wire rounded-lg p-6 leading-loose text-cos-accent-dim">
+              <div className="feed-line">$ resolve capability <span className="text-cos-accent">edge.content.serve</span> <span className="border border-wire text-[10px] px-1.5 py-0.5 rounded ml-2">SCOPED</span></div>
               <div className="feed-line">$ authority checked · policy bounded · budget set</div>
               <div className="feed-line">$ delivery proven · 137.4mb · 18ms median</div>
-              <div className="feed-line">$ settled <span className="text-cyan">✓</span> evidence sealed · reputation +0.4</div>
+              <div className="feed-line">$ settled <span className="text-cos-accent">✓</span> evidence sealed · reputation +0.4</div>
             </div>
           )}
 
@@ -285,29 +271,29 @@ export default function M2MLandingPage() {
 
         {/* Story Section */}
         <section className="px-6 py-32 max-w-3xl mx-auto">
-          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-brass data-[machine=true]:text-cyan" data-machine={isMachine}>
+          <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-6 text-brass text-cos-accent" data-machine={isMachine}>
             The pitch nobody needs explained
           </span>
-          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-ink data-[machine=true]:text-machine-ink/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
-            Every big infrastructure looked absurd right before it became invisible. Wires strung over dirt roads promising <strong className="text-brass-deep italic font-semibold data-[machine=true]:text-cyan data-[machine=true]:not-italic">light in every home</strong>. A machine that promised to move a person faster than a horse could, forever. The pattern repeats because trust always arrives after the wires do — someone has to prove the thing works before anyone believes it.
+          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text text-cos-text/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
+            Every big infrastructure looked absurd right before it became invisible. Wires strung over dirt roads promising <strong className="text-brass-deep italic font-semibold text-cos-accent data-[machine=true]:not-italic">light in every home</strong>. A machine that promised to move a person faster than a horse could, forever. The pattern repeats because trust always arrives after the wires do — someone has to prove the thing works before anyone believes it.
           </p>
-          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-ink data-[machine=true]:text-machine-ink/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
-            We're at that exact moment again, except this time the wires connect machines to other machines, and the thing missing isn't power or speed. It's <strong className="text-brass-deep italic font-semibold data-[machine=true]:text-cyan data-[machine=true]:not-italic">permission</strong> — a way for one piece of software to prove to another that it's allowed to act, that it did what it said, and that it's owed something for the trouble.
+          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text text-cos-text/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
+            We're at that exact moment again, except this time the wires connect machines to other machines, and the thing missing isn't power or speed. It's <strong className="text-brass-deep italic font-semibold text-cos-accent data-[machine=true]:not-italic">permission</strong> — a way for one piece of software to prove to another that it's allowed to act, that it did what it said, and that it's owed something for the trouble.
           </p>
           <hr className="my-16 border-t border-rule data-[machine=true]:border-wire" data-machine={isMachine} />
-          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-ink data-[machine=true]:text-machine-ink/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
+          <p className="text-2xl md:text-3xl font-serif leading-[1.45] mb-8 transition-colors text-cos-text text-cos-text/90 data-[machine=true]:font-sans data-[machine=true]:text-lg" data-machine={isMachine}>
             Veklom is the handshake. Small enough to happen a million times a second. Solid enough that neither side needs a person standing over its shoulder.
           </p>
         </section>
 
         {/* Enterprise Block */}
-        <section className="px-6 py-24 bg-paper-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500" data-machine={isMachine}>
+        <section className="px-6 py-24 bg-cos-bg-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500" data-machine={isMachine}>
           <div className="max-w-5xl mx-auto">
-            <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-brass data-[machine=true]:text-cyan" data-machine={isMachine}>
+            <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-brass text-cos-accent" data-machine={isMachine}>
               What every enterprise has been asking for
             </span>
-            <h2 className="font-serif text-3xl md:text-5xl font-semibold max-w-[20ch] leading-[1.2] mb-16 text-ink data-[machine=true]:text-machine-ink" data-machine={isMachine}>
-              Not more dashboards. A <em className="italic font-normal text-brass data-[machine=true]:text-cyan" data-machine={isMachine}>receipt</em> that holds up when someone asks what happened.
+            <h2 className="font-serif text-3xl md:text-5xl font-semibold max-w-[20ch] leading-[1.2] mb-16 text-cos-text text-cos-text" data-machine={isMachine}>
+              Not more dashboards. A <em className="italic font-normal text-brass text-cos-accent" data-machine={isMachine}>receipt</em> that holds up when someone asks what happened.
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[2px] bg-rule data-[machine=true]:bg-wire border border-rule data-[machine=true]:border-wire" data-machine={isMachine}>
@@ -317,7 +303,7 @@ export default function M2MLandingPage() {
                 { ask: "Don't let it do more than I said.", desc: "Every capability is bounded before it runs — what it's allowed to touch, spend, or reach — not audited afterward and hoped for. The permission is the control, not a report about a permission that didn't hold." },
                 { ask: "Give me something I can show an auditor.", desc: "Not logs scattered across six systems. One evidence trail, per transaction, that a person outside the company could pick up cold and verify without calling you first." }
               ].map((item, i) => (
-                <div key={i} className="p-8 md:p-10 bg-paper-dim data-[machine=true]:bg-void-panel transition-colors" data-machine={isMachine}>
+                <div key={i} className="p-8 md:p-10 bg-cos-bg-dim data-[machine=true]:bg-void-panel transition-colors" data-machine={isMachine}>
                   <div className="font-mono text-[11px] tracking-wider uppercase opacity-50 mb-3">{isMachine ? 'The constraint' : 'The demand'}</div>
                   <h4 className="font-serif text-xl font-semibold mb-3 data-[machine=true]:font-sans data-[machine=true]:text-lg">{item.ask}</h4>
                   <p className="text-[15px] leading-relaxed opacity-70 data-[machine=true]:opacity-60">{item.desc}</p>
@@ -343,8 +329,8 @@ export default function M2MLandingPage() {
             { year: "MORE RECENTLY", title: "A number in every pocket", desc: "Money learned to move at the speed of a phone call. You didn't need to trust a bank teller anymore — you trusted the receipt." },
             { year: "NOW", title: "A handshake in every request", desc: "Software is about to do the same thing — prove it, on its own, every single time, without a person there to vouch for it." }
           ].map((era, i) => (
-            <div key={i} className="bg-paper data-[machine=true]:bg-void p-10 transition-colors" data-machine={isMachine}>
-              <div className="font-mono text-xs tracking-widest mb-4 text-brass-deep data-[machine=true]:text-cyan-dim" data-machine={isMachine}>{era.year}</div>
+            <div key={i} className="bg-cos-bg data-[machine=true]:bg-void p-10 transition-colors" data-machine={isMachine}>
+              <div className="font-mono text-xs tracking-widest mb-4 text-brass-deep text-cos-accent-dim" data-machine={isMachine}>{era.year}</div>
               <h3 className="font-serif text-xl font-semibold mb-3 data-[machine=true]:font-mono data-[machine=true]:text-base data-[machine=true]:font-medium">{era.title}</h3>
               <p className="text-[15px] leading-relaxed opacity-70 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:opacity-65">{era.desc}</p>
             </div>
@@ -354,12 +340,12 @@ export default function M2MLandingPage() {
         {/* Promise Band */}
         <section className="py-24 px-6 text-center border-t border-rule data-[machine=true]:border-wire transition-colors" data-machine={isMachine}>
           <div className="font-serif italic text-3xl md:text-5xl leading-[1.3] data-[machine=true]:font-mono data-[machine=true]:not-italic data-[machine=true]:font-normal data-[machine=true]:text-2xl md:data-[machine=true]:text-3xl" data-machine={isMachine}>
-            Trust, <b className="font-black not-italic text-brass data-[machine=true]:text-cyan data-[machine=true]:font-bold" data-machine={isMachine}>at the speed machines actually work.</b>
+            Trust, <b className="font-black not-italic text-brass text-cos-accent data-[machine=true]:font-bold" data-machine={isMachine}>at the speed machines actually work.</b>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="mt-12 border-t border-rule data-[machine=true]:border-wire p-6 lg:px-12 text-sm flex flex-col md:flex-row justify-between items-center transition-colors duration-500 text-ink/60 data-[machine=true]:text-machine-ink/60 gap-4" data-machine={isMachine}>
+        <footer className="mt-12 border-t border-rule data-[machine=true]:border-wire p-6 lg:px-12 text-sm flex flex-col md:flex-row justify-between items-center transition-colors duration-500 text-cos-text/60 text-cos-text/60 gap-4" data-machine={isMachine}>
           <div><div className="font-mono text-xs mb-1">"Anything is possible, if you're willing to build the wire first."</div></div>
           <div>&copy; VEKLOM — the era is early.</div>
         </footer>
