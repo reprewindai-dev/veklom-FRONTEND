@@ -23,8 +23,8 @@ const config: Config = {
           600: "rgba(255,255,255,0.30)",
         },
         brand: {
-          400: "#8A9BB0", // --accent-steel
-          500: "#00E5FF", // --accent (Cyan)
+          400: "#A0AEC0", // Lighter steel for hover
+          500: "#8A9BB0", // --accent-steel (Human side accent)
           600: "#6B7280", // --unknown
           700: "#4B5563",
         },
