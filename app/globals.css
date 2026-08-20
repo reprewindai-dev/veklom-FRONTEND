@@ -383,35 +383,34 @@ body > * { position: relative; z-index: 1; }
 }
 .cos-label{display:block;font-family:ui-monospace,SFMono-Regular,monospace;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#8A9BB0}.cos-input{margin-top:.5rem;width:100%;border:1px solid rgba(255,255,255,.08);border-radius:.5rem;background:rgba(10,14,26,.7);padding:.75rem;font-size:.875rem;color:rgba(255,255,255,.92);outline:none}.cos-input:focus{border-color:rgba(0,229,255,.6)}
 
-@ k e y f r a m e s   b l a c k h o l e - i m p l o d e   { 
-     0 %   { 
-         t r a n s f o r m :   s c a l e ( 1 ) ; 
-         f i l t e r :   c o n t r a s t ( 1 )   b r i g h t n e s s ( 1 )   s a t u r a t e ( 1 ) ; 
-     } 
-     3 0 %   { 
-         t r a n s f o r m :   s c a l e ( 0 . 0 2 )   s c a l e Y ( 0 . 0 1 ) ; 
-         f i l t e r :   c o n t r a s t ( 4 )   b r i g h t n e s s ( 3 )   s a t u r a t e ( 0 )   i n v e r t ( 1 ) ; 
-         b o r d e r - r a d i u s :   5 0 % ; 
-     } 
-     5 0 %   { 
-         t r a n s f o r m :   s c a l e ( 0 ) ; 
-         o p a c i t y :   0 ; 
-     } 
-     7 0 %   { 
-         t r a n s f o r m :   s c a l e ( 0 . 0 2 )   s c a l e Y ( 0 . 0 1 ) ; 
-         f i l t e r :   c o n t r a s t ( 4 )   b r i g h t n e s s ( 3 )   s a t u r a t e ( 0 ) ; 
-         b o r d e r - r a d i u s :   5 0 % ; 
-         o p a c i t y :   1 ; 
-     } 
-     1 0 0 %   { 
-         t r a n s f o r m :   s c a l e ( 1 ) ; 
-         f i l t e r :   c o n t r a s t ( 1 )   b r i g h t n e s s ( 1 )   s a t u r a t e ( 1 ) ; 
-     } 
- } 
- 
- . m a c h i n e - t r a n s i t i o n - a c t i v e   { 
-     a n i m a t i o n :   b l a c k h o l e - i m p l o d e   0 . 8 s   c u b i c - b e z i e r ( 0 . 7 ,   0 ,   0 . 3 ,   1 )   b o t h ; 
-     o v e r f l o w :   h i d d e n ; 
-     p o i n t e r - e v e n t s :   n o n e ; 
- }  
- 
+@keyframes blackhole-implode {
+  0% {
+    transform: scale(1);
+    filter: contrast(1) brightness(1) saturate(1);
+  }
+  30% {
+    transform: scale(0.02) scaleY(0.01);
+    filter: contrast(4) brightness(3) saturate(0) invert(1);
+    border-radius: 50%;
+  }
+  50% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(0.02) scaleY(0.01);
+    filter: contrast(4) brightness(3) saturate(0);
+    border-radius: 50%;
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    filter: contrast(1) brightness(1) saturate(1);
+  }
+}
+
+.machine-transition-active {
+  animation: blackhole-implode 0.8s cubic-bezier(0.7, 0, 0.3, 1) both;
+  overflow: hidden;
+  pointer-events: none;
+}
