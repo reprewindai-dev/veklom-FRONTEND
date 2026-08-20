@@ -117,7 +117,7 @@ export default function PGLOnboardingPage() {
 
   useEffect(() => {
     if (status.data?.mode) setMode(status.data.mode);
-    if (status.data?.has_pgl_profile && !onboardingCompleted) router.replace("/control-node");
+    if (status.data?.has_pgl_profile && !onboardingCompleted) router.replace("/os");
   }, [status.data, router, onboardingCompleted]);
 
   const [operatorId, setOperatorId] = useState<string>("");
@@ -242,7 +242,7 @@ export default function PGLOnboardingPage() {
           </div>
 
           <button
-            onClick={() => router.replace("/control-node")}
+            onClick={() => router.replace("/os")}
             className="bg-cos-accent text-black hover:bg-cos-accent/80 text-black font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-cos-glow hover:shadow-cos-glow transition-all text-xs font-mono"
           >
             Enter Sovereign Workspace <ChevronRight className="w-4 h-4" />
