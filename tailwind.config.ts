@@ -9,35 +9,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Veklom brand — Sovereign AI Hub. Amber orange on deep black.
-        // Deep black #0A0A0A · Amber orange #FFB800 · White #FFFFFF · Muted gray #A1A1A6
+        // Veklom brand — Sovereign AI Hub. Navy Sovereign Palette.
         bg: {
-          900: "#0A0A0A",
-          800: "#101010",
-          700: "#171717",
-          600: "#1F1F1F",
+          900: "#0A0E1A", // --bg (app canvas)
+          800: "#111827", // --surface (cards, panels)
+          700: "#0D1220", // --surface-2 (nested/inset)
+          600: "#1F2937",
         },
         ink: {
-          50: "#FFFFFF",
-          200: "#E6E6E9",
-          400: "#A1A1A6",
-          600: "#6E6E73",
+          50: "rgba(255,255,255,0.92)",  // --text (primary text)
+          200: "rgba(255,255,255,0.75)",
+          400: "rgba(255,255,255,0.55)", // --text-muted (secondary text)
+          600: "rgba(255,255,255,0.30)",
         },
         brand: {
-          400: "#FFC94D",
-          500: "#FFB800",
-          600: "#E0A100",
-          700: "#B37F00",
+          400: "#8A9BB0", // --accent-steel
+          500: "#00E5FF", // --accent (Cyan)
+          600: "#6B7280", // --unknown
+          700: "#4B5563",
         },
         accent: {
-          green: "#3EE7A2",
-          amber: "#FFB800",
-          red: "#FF5C6C",
-          violet: "#FFB800",
+          cyan: "#00E5FF",
+          steel: "#8A9BB0",
+          verified: "#00FF66",
+          warn: "#FFAB00",
+          danger: "#FF4D4D",
         },
         border: {
-          DEFAULT: "#242424",
-          strong: "#333333",
+          DEFAULT: "rgba(255,255,255,0.08)",
+          strong: "rgba(255,255,255,0.12)",
         },
         void: {
           black: "#030303",
