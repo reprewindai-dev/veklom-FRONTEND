@@ -14,10 +14,10 @@
 
   --void: #07090B;
   --void-panel: #0D1114;
-  --cyan: #4CF2D6;
-  --cyan-dim: #1E8B79;
-  --wire: rgba(76, 242, 214, 0.18);
-  --machine-ink: #CFEFE9;
+  --cyan: #00E5FF;
+  --cyan-dim: #0099AA;
+  --wire: rgba(0,229,255, 0.18);
+  --machine-ink: #B3F7FF;
 }
 
 html, body {
@@ -37,8 +37,8 @@ body:has(.cos-shell) {
 body {
   background-color: var(--void);
   background-image:
-    radial-gradient(1100px 520px at 88% -6%, rgba(76,242,214,0.05), transparent 58%),
-    radial-gradient(900px 520px at 6% 4%, rgba(76,242,214,0.03), transparent 55%),
+    radial-gradient(1100px 520px at 88% -6%, rgba(0,229,255,0.05), transparent 58%),
+    radial-gradient(900px 520px at 6% 4%, rgba(0,229,255,0.03), transparent 55%),
     radial-gradient(800px 620px at 50% 122%, rgba(181,119,46,0.03), transparent 60%),
     linear-gradient(180deg, var(--void) 0%, #000000 100%);
   background-attachment: fixed;
@@ -84,8 +84,8 @@ body > * { position: relative; z-index: 1; }
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  border-color: rgba(76,242,214,0.30);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 50px -24px rgba(0,0,0,0.9), 0 0 0 1px rgba(76,242,214,0.06);
+  border-color: rgba(0,229,255,0.30);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 50px -24px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,229,255,0.06);
 }
 
 .glass {
@@ -98,12 +98,12 @@ body > * { position: relative; z-index: 1; }
 .brand-mark {
   background: radial-gradient(120% 120% at 50% 35%, #1c1c1c 0%, var(--void) 100%);
   border: 1px solid #2a2a2a;
-  box-shadow: 0 0 0 1px rgba(76,242,214,0.12), 0 8px 28px -8px rgba(76,242,214,0.45);
+  box-shadow: 0 0 0 1px rgba(0,229,255,0.12), 0 8px 28px -8px rgba(0,229,255,0.45);
 }
-.brand-glow { box-shadow: 0 0 80px -16px rgba(76,242,214,0.40); }
+.brand-glow { box-shadow: 0 0 80px -16px rgba(0,229,255,0.40); }
 
 .text-gradient {
-  background: linear-gradient(120deg, #FFFFFF 0%, #CFEFE9 60%, #4CF2D6 100%);
+  background: linear-gradient(120deg, #FFFFFF 0%, #B3F7FF 60%, #00E5FF 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -125,7 +125,7 @@ body > * { position: relative; z-index: 1; }
 .input:focus {
   border-color: var(--cyan);
   background: rgba(20,20,20,0.95);
-  box-shadow: 0 0 0 3px rgba(76,242,214,0.18);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.18);
 }
 
 /* ---- Buttons ---- */
@@ -140,16 +140,16 @@ body > * { position: relative; z-index: 1; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
 .btn-primary {
   color: #07090B;
-  background: linear-gradient(180deg, #CFEFE9 0%, #4CF2D6 60%, #1E8B79 100%);
-  box-shadow: 0 10px 28px -12px rgba(76,242,214,0.7), 0 1px 0 rgba(255,255,255,0.3) inset;
+  background: linear-gradient(180deg, #B3F7FF 0%, #00E5FF 60%, #0099AA 100%);
+  box-shadow: 0 10px 28px -12px rgba(0,229,255,0.7), 0 1px 0 rgba(255,255,255,0.3) inset;
 }
-.btn-primary:hover:not(:disabled) { box-shadow: 0 14px 34px -12px rgba(76,242,214,0.9), 0 1px 0 rgba(255,255,255,0.35) inset; }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 14px 34px -12px rgba(0,229,255,0.9), 0 1px 0 rgba(255,255,255,0.35) inset; }
 .btn-ghost {
   color: #FFFFFF;
   background: rgba(23,23,23,0.7);
   border: 1px solid rgba(51,51,51,0.9);
 }
-.btn-ghost:hover:not(:disabled) { background: rgba(31,31,31,0.9); border-color: rgba(76,242,214,0.45); }
+.btn-ghost:hover:not(:disabled) { background: rgba(31,31,31,0.9); border-color: rgba(0,229,255,0.45); }
 
 /* ---- Tier badge ---- */
 .tier-badge {
