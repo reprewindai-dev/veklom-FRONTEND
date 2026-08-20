@@ -328,7 +328,7 @@ export default function M2MLandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Link href="/vnp" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
+          <Link href="https://vnp.veklom.com" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
             <div className="w-10 h-10 rounded bg-bg-700 border border-border flex items-center justify-center mb-6 group-hover:bg-brand-500/10 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:border-cos-accent/20 data-[machine=true]:group-hover:bg-cos-accent/20 transition-colors">
               <Activity className="w-5 h-5 text-ink-50 data-[machine=true]:text-cos-accent" data-machine={isMachine} />
             </div>
@@ -337,7 +337,7 @@ export default function M2MLandingPage() {
             <p className="text-sm text-ink-400 leading-relaxed">Measures physical network reality: P99 Latency, Uptime, and Settlement. The foundational layer of observability.</p>
           </Link>
 
-          <Link href="/eee" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
+          <Link href="https://eee.veklom.com" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
             <div className="w-10 h-10 rounded bg-bg-700 border border-border flex items-center justify-center mb-6 group-hover:bg-brand-500/10 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:border-cos-accent/20 data-[machine=true]:group-hover:bg-cos-accent/20 transition-colors">
               <FileText className="w-5 h-5 text-ink-50 data-[machine=true]:text-cos-accent" data-machine={isMachine} />
             </div>
@@ -346,7 +346,7 @@ export default function M2MLandingPage() {
             <p className="text-sm text-ink-400 leading-relaxed">Standardizes the evidence. A tamper-evident record binding capability, authority, policy, and effects.</p>
           </Link>
 
-          <Link href="/vcgb" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
+          <Link href="https://vcgb.veklom.com" className="group p-8 rounded-xl bg-bg-800 border border-border hover:border-brand-500/50 transition-colors data-[machine=true]:bg-cos-surface data-[machine=true]:border-cos-border data-[machine=true]:hover:border-cos-accent/50" data-machine={isMachine}>
             <div className="w-10 h-10 rounded bg-bg-700 border border-border flex items-center justify-center mb-6 group-hover:bg-brand-500/10 data-[machine=true]:bg-cos-accent/10 data-[machine=true]:border-cos-accent/20 data-[machine=true]:group-hover:bg-cos-accent/20 transition-colors">
               <ShieldCheck className="w-5 h-5 text-ink-50 data-[machine=true]:text-cos-accent" data-machine={isMachine} />
             </div>
