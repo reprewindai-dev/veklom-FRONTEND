@@ -170,7 +170,7 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
           {isLandingPage && (
             <a 
               href="/terminal" 
-              className="px-4 py-1.5 bg-[#FFB800]/10 border border-[#FFB800]/40 hover:bg-[#FFB800]/20 text-[#FFB800] hover:text-white font-mono text-[10px] font-bold uppercase rounded tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,184,0,0.1)] hover:shadow-[0_0_15px_rgba(255,184,0,0.3)] animate-pulse"
+              className="px-4 py-1.5 bg-[#00E5FF]/10 border border-[#00E5FF]/40 hover:bg-[#00E5FF]/20 text-[#00E5FF] hover:text-white font-mono text-[10px] font-bold uppercase rounded tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,184,0,0.1)] hover:shadow-[0_0_15px_rgba(255,184,0,0.3)] animate-pulse"
             >
               [ ACCESS SOVEREIGN CONSOLE ]
             </a>

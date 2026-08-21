@@ -392,7 +392,7 @@ export default function VanguardPlayground() {
                 <span className="text-[10px] bg-[#b8860b]/20 text-[#b8860b] px-2 py-0.5 rounded border border-[#b8860b]/30">COGNITIVE INLINE GATEWAY</span>
               </h1>
               <p className="text-[11px] text-gray-400 mt-1 max-w-4xl leading-relaxed">
-                Compiles machine credentials directly with natural language policy compilation (<strong className="text-white">SEKED</strong>). Outperforming legacy competitors <strong className="text-cyan-400">Aembit</strong> (10x Machine Identity), <strong className="text-[#00E5FF]">LangSmith</strong> (10x Observability), and <strong className="text-[#FFB800]">CrewAI</strong> (10x Multi-Agent Orchestration).
+                Compiles machine credentials directly with natural language policy compilation (<strong className="text-white">SEKED</strong>). Outperforming legacy competitors <strong className="text-cyan-400">Aembit</strong> (10x Machine Identity), <strong className="text-[#00E5FF]">LangSmith</strong> (10x Observability), and <strong className="text-[#00E5FF]">CrewAI</strong> (10x Multi-Agent Orchestration).
               </p>
             </div>
           </div>
@@ -526,7 +526,7 @@ export default function VanguardPlayground() {
                 <button
                   onClick={() => handleExecute('credentials')}
                   disabled={executionState === 'running'}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.02] hover:bg-yellow-500/5 text-left text-[11px] font-bold text-yellow-400 transition-all hover:border-yellow-500/40 disabled:opacity-50"
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.02] hover:bg-cyan-500/5 text-left text-[11px] font-bold text-cyan-400 transition-all hover:border-cyan-500/40 disabled:opacity-50"
                 >
                   <span className="flex items-center gap-2">
                     <KeyRound className="w-4 h-4" /> Key Leakage / Dynamic Redaction Swap
@@ -576,7 +576,7 @@ export default function VanguardPlayground() {
                     let color = 'text-gray-400';
                     if (log.startsWith('[SYSTEM]')) color = 'text-cyan-400';
                     if (log.startsWith('[ATTACK]')) color = 'text-red-500 font-bold';
-                    if (log.startsWith('[GATEWAY]')) color = 'text-yellow-500 font-bold';
+                    if (log.startsWith('[GATEWAY]')) color = 'text-cyan-500 font-bold';
                     if (log.startsWith('[SHIELD]')) color = 'text-green-400 font-extrabold';
                     return (
                       <div key={i} className={`${color}`}>
@@ -616,7 +616,7 @@ export default function VanguardPlayground() {
                   {/* Dynamic secret redaction simulation */}
                   <div className="text-[9.5px] font-mono text-cyan-400 mt-2 bg-cyan-950/20 p-2 rounded border border-cyan-500/10 break-all leading-relaxed relative">
                     {executionState === 'success' && activeThreat === 'credentials' ? (
-                      <span className="text-yellow-400 font-bold">
+                      <span className="text-cyan-400 font-bold">
                         AWS_KEY_REDACTED: [UACP_SHIELD_MASK_******]
                       </span>
                     ) : executionState === 'success' ? (

@@ -8,13 +8,13 @@ export const ROIPanel: React.FC = () => {
   const metrics = [
     { label: 'Equipment Breakdowns', value: '75%', trend: 'Decrease', icon: <TrendingDown size={14} />, color: 'text-red-400' },
     { label: 'Maintenance Labour', value: '45%', trend: 'Reduction', icon: <Users size={14} />, color: 'text-cyan-400' },
-    { label: 'P-F Interval Delay', value: '12.4h', trend: 'Optimization', icon: <Zap size={14} />, color: 'text-amber-400' },
+    { label: 'P-F Interval Delay', value: '12.4h', trend: 'Optimization', icon: <Zap size={14} />, color: 'text-cyan-400' },
   ];
 
   return (
     <div className="bg-white/5 rounded-2xl border border-white/10 p-6 flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-2">
-        <BarChart3 size={18} className="text-amber-400" />
+        <BarChart3 size={18} className="text-cyan-400" />
         <h2 className="text-sm font-mono uppercase tracking-widest text-white/80">Operational ROI</h2>
       </div>
 

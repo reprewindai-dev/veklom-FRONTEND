@@ -111,7 +111,7 @@ export default function AuthorityPanel({
         return 'text-green-400';
       case 'pending':
       case 'preparing':
-        return 'text-yellow-400';
+        return 'text-cyan-400';
       case 'failed':
       case 'denied':
       case 'revoked':
@@ -144,7 +144,7 @@ export default function AuthorityPanel({
       case 'low':
         return 'text-green-400 bg-green-500/20';
       case 'medium':
-        return 'text-yellow-400 bg-yellow-500/20';
+        return 'text-cyan-400 bg-cyan-500/20';
       case 'high':
         return 'text-red-400 bg-red-500/20';
       default:
@@ -270,7 +270,7 @@ export default function AuthorityPanel({
                   <div className="flex justify-between">
                     <span className="text-gray-400">Remaining:</span>
                     <span className={`font-medium ${
-                      context.budget.remaining_cents > 1000 ? 'text-green-400' : 'text-yellow-400'
+                      context.budget.remaining_cents > 1000 ? 'text-green-400' : 'text-cyan-400'
                     }`}>
                       ${(context.budget.remaining_cents / 100).toFixed(2)}
                     </span>
@@ -278,7 +278,7 @@ export default function AuthorityPanel({
                   <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
                     <div 
                       className={`h-2 rounded-full ${
-                        context.budget.remaining_cents > 1000 ? 'bg-green-500' : 'bg-yellow-500'
+                        context.budget.remaining_cents > 1000 ? 'bg-green-500' : 'bg-cyan-500'
                       }`}
                       style={{ 
                         width: `${(context.budget.remaining_cents / context.budget.approved_cents) * 100}%` 
@@ -359,7 +359,7 @@ export default function AuthorityPanel({
                   <div className="flex justify-between">
                     <span className="text-gray-400">Compliance:</span>
                     <span className={`capitalize ${
-                      context.evidence.compliance_status === 'compliant' ? 'text-green-400' : 'text-yellow-400'
+                      context.evidence.compliance_status === 'compliant' ? 'text-green-400' : 'text-cyan-400'
                     }`}>
                       {context.evidence.compliance_status}
                     </span>

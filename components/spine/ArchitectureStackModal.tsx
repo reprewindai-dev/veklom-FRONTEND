@@ -17,7 +17,7 @@ export const ArchitectureStackModal: React.FC<ArchitectureStackModalProps> = ({
       num: 8,
       name: 'EVIDENCE, MEASUREMENT & SETTLEMENT',
       components: 'PGL Cryptographic Proof Ledger | VNP Metrics | x402 Micropayment Gas',
-      color: 'border-amber-500/40 text-amber-300 bg-amber-950/20',
+      color: 'border-cyan-500/40 text-cyan-300 bg-cyan-950/20',
       description: 'Produces SHA-256 state transition signatures and handles micro-metered gas finality.',
     },
     {

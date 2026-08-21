@@ -88,7 +88,7 @@ export default function AmbientIntervention() {
         >
           {/* Ambient Glow Effects */}
           <div className={`pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full blur-[80px] ${
-            eventData?.type === "QUARANTINE" ? "bg-amber-500/20" : 
+            eventData?.type === "QUARANTINE" ? "bg-cyan-500/20" : 
             eventData?.type === "PAYMENT_REQUIRED" ? "bg-emerald-500/20" : "bg-indigo-500/20"
           }`} />
           
@@ -101,7 +101,7 @@ export default function AmbientIntervention() {
 
           <div className="mb-6 flex items-center gap-4">
             <div className={`flex h-12 w-12 items-center justify-center rounded-full border ${
-              eventData?.type === "QUARANTINE" ? "border-amber-500/30 bg-amber-500/10 text-amber-400" : 
+              eventData?.type === "QUARANTINE" ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400" : 
               eventData?.type === "PAYMENT_REQUIRED" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" :
               "border-indigo-500/30 bg-indigo-500/10 text-indigo-400"
             }`}>
@@ -116,7 +116,7 @@ export default function AmbientIntervention() {
                  "Ambient Intervention"}
               </h2>
               <p className={`text-sm ${
-                eventData?.type === "QUARANTINE" ? "text-amber-300" : 
+                eventData?.type === "QUARANTINE" ? "text-cyan-300" : 
                 eventData?.type === "PAYMENT_REQUIRED" ? "text-emerald-300" : "text-indigo-300"
               }`}>
                 Ambient Control Edge Node
@@ -165,17 +165,17 @@ export default function AmbientIntervention() {
 
           {eventData?.type === "QUARANTINE" && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs text-white/50 uppercase tracking-wider">Quorum Status</span>
-                  <span className="text-xs font-mono text-amber-400">0 / {eventData?.metadata?.required_count || 2} Approvals</span>
+                  <span className="text-xs font-mono text-cyan-400">0 / {eventData?.metadata?.required_count || 2} Approvals</span>
                 </div>
                 <div className="w-full bg-black/50 h-2 rounded-full overflow-hidden">
-                  <div className="bg-amber-500 h-full w-[0%]"></div>
+                  <div className="bg-cyan-500 h-full w-[0%]"></div>
                 </div>
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={handleAction} className="rounded-xl bg-amber-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-amber-500 flex items-center gap-2">
+                <button type="button" onClick={handleAction} className="rounded-xl bg-cyan-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-cyan-500 flex items-center gap-2">
                   <CheckCircle2 size={16} /> Provide Signature
                 </button>
               </div>

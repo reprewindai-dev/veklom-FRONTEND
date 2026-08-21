@@ -24,7 +24,7 @@ interface DiscoveryState {
 function badgeClass(state: DiscoveryState["proof"]["probes"][number]["state"]) {
   if (state === "verified") return "border-emerald-500/30 text-emerald-400 bg-emerald-500/10";
   if (state === "needs_payment") return "border-cyan-500/30 text-cyan-300 bg-cyan-500/10";
-  if (state === "needs_auth") return "border-amber-500/30 text-amber-300 bg-amber-500/10";
+  if (state === "needs_auth") return "border-cyan-500/30 text-cyan-300 bg-cyan-500/10";
   return "border-red-500/30 text-red-300 bg-red-500/10";
 }
 
@@ -53,7 +53,7 @@ export default function VeklomDiscoveryPage() {
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                   : proofState === "error"
                     ? "border-red-500/30 bg-red-500/10 text-red-300"
-                    : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                    : "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
               }`}
             >
               Discovery Proof: {proofState}

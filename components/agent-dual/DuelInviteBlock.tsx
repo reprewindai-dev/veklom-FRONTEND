@@ -273,7 +273,7 @@ export function DuelInviteBlock({
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.player > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
                       Agent A: ${myPlayer ? myPlayer.bets.player.toFixed(2) : "0.00"}
                     </span>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.banker > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.banker > 0 ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
                       Agent B: ${myPlayer ? myPlayer.bets.banker.toFixed(2) : "0.00"}
                     </span>
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.tie > 0 ? 'bg-purple-500/15 border-purple-500/30 text-purple-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
@@ -349,7 +349,7 @@ export function DuelInviteBlock({
                         <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.player > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
                           Agent A: ${peerPlayer.bets.player.toFixed(2)}
                         </span>
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.banker > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.banker > 0 ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
                           Agent B: ${peerPlayer.bets.banker.toFixed(2)}
                         </span>
                         <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.tie > 0 ? 'bg-purple-500/15 border-purple-500/30 text-purple-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>

@@ -25,7 +25,7 @@ export const IdentityGovernancePanel: React.FC<IdentityGovernancePanelProps> = (
            <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-2">
               <div className="flex justify-between items-center text-[10px] font-mono text-white/40 uppercase">
                  <span>Cross App Access (XAA)</span>
-                 <span className={`px-1.5 rounded ${data.xaa_status === 'enforced' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'}`}>
+                 <span className={`px-1.5 rounded ${data.xaa_status === 'enforced' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-cyan-400/10 text-cyan-400'}`}>
                     {data.xaa_status}
                  </span>
               </div>

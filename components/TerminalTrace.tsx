@@ -98,7 +98,7 @@ export const TerminalTrace: React.FC<TerminalTraceProps> = ({
 
   const getFileIcon = (path: string) => {
     const lower = path.toLowerCase();
-    if (lower.includes('env') || lower.includes('.env')) return <Settings className="w-3.5 h-3.5 text-yellow-500" />;
+    if (lower.includes('env') || lower.includes('.env')) return <Settings className="w-3.5 h-3.5 text-cyan-500" />;
     if (lower.includes('deploy') || lower.includes('k8s') || lower.includes('.yaml') || lower.includes('.yml')) return <Settings className="w-3.5 h-3.5 text-cyan-400" />;
     if (lower.includes('db/') || lower.includes('.sql') || lower.includes('schema')) return <Database className="w-3.5 h-3.5 text-indigo-400" />;
     if (lower.includes('.tsx') || lower.includes('.ts') || lower.includes('.js')) return <FileCode className="w-3.5 h-3.5 text-[#00FF41]" />;
@@ -209,7 +209,7 @@ export const TerminalTrace: React.FC<TerminalTraceProps> = ({
         <div className="hidden md:block px-4 md:px-5 py-3.5 bg-[#080808] border-b border-[#222]">
           <div className="flex items-center justify-between mb-2 md:mb-3 select-none">
             <span className="text-[10px] font-mono font-bold tracking-widest text-[#666] uppercase flex items-center space-x-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${isScanning ? 'bg-amber-400 animate-ping' : events.length > 0 ? 'bg-[#00FF41]' : 'bg-gray-700'}`}></span>
+              <span className={`w-1.5 h-1.5 rounded-full ${isScanning ? 'bg-cyan-400 animate-ping' : events.length > 0 ? 'bg-[#00FF41]' : 'bg-gray-700'}`}></span>
               <span>Matrix Monitor: [File Tree Sweep Index]</span>
             </span>
             <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">

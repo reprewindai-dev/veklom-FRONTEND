@@ -12,7 +12,7 @@
   --color-void-metal: #121215;
   --color-electric-cyan: #00E5FF;
   --color-matrix-emerald: #00FF66;
-  --color-hazard-amber: #FFAB00;
+  --color-hazard-cyan: #00E5FF;
   --color-laser-red: #FF003C;
   --color-border-opacity: rgba(255, 255, 255, 0.05);
   
@@ -112,7 +112,7 @@ body {
   text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
 }
 
-.text-glow-amber {
+.text-glow-cyan {
   text-shadow: 0 0 8px rgba(255, 171, 0, 0.6);
 }
 

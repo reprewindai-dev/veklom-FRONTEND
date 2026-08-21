@@ -58,7 +58,7 @@ const fmtPct = (n: number | undefined | null) => {
 
 const STATUS_COLORS: Record<BondStatusLevel, { bg: string; border: string; text: string; label: string }> = {
   healthy: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-400", label: "Healthy" },
-  warning: { bg: "bg-amber-500/10", border: "border-amber-500/30", text: "text-amber-400", label: "Warning" },
+  warning: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", text: "text-cyan-400", label: "Warning" },
   breaching: { bg: "bg-orange-500/10", border: "border-orange-500/30", text: "text-orange-400", label: "Breaching" },
   critical: { bg: "bg-rose-500/10", border: "border-rose-500/30", text: "text-rose-400", label: "Critical" },
 };
@@ -195,7 +195,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                   probe.state === "verified"
                     ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
                     : probe.state === "needs_proof"
-                      ? "border-amber-500/30 text-amber-300 bg-amber-500/10"
+                      ? "border-cyan-500/30 text-cyan-300 bg-cyan-500/10"
                       : "border-rose-500/30 text-rose-300 bg-rose-500/10"
                 }`}
               >
@@ -205,31 +205,31 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
           </div>
         </div>
         {stakingRoute?.marketProof?.state !== "verified" && (
-          <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+          <div className="mt-3 text-xs text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
             {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
           </div>
         )}
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
-          <div className={`rounded border px-3 py-2 ${verifierRegistrationAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
+          <div className={`rounded border px-3 py-2 ${verifierRegistrationAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-cyan-500/25 text-cyan-300 bg-cyan-500/10"}`}>
             Verifier registration: {stakingRoute?.writeActions?.verifierRegistration?.state || "loading"}
           </div>
-          <div className={`rounded border px-3 py-2 ${stakePlacementAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-amber-500/25 text-amber-300 bg-amber-500/10"}`}>
+          <div className={`rounded border px-3 py-2 ${stakePlacementAvailable ? "border-emerald-500/25 text-emerald-300 bg-emerald-500/10" : "border-cyan-500/25 text-cyan-300 bg-cyan-500/10"}`}>
             Stake placement: {stakingRoute?.writeActions?.stakePlacement?.state || "loading"}
           </div>
         </div>
       </div>
       {/* Protocol Stats */}
       {protocolStats.probeWorkersActive === false && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/8 border border-amber-500/20 text-[11px] font-mono text-amber-400">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/8 border border-cyan-500/20 text-[11px] font-mono text-cyan-400">
           <Activity className="w-3 h-3 shrink-0" />
           Probe workers offline — latency measurements will populate once validators connect and begin measuring.
         </div>
       )}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]", sub: protocolStats.totalValueBonded === 0 ? "No validators staked" : undefined },
+          { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#00E5FF]", sub: protocolStats.totalValueBonded === 0 ? "No validators staked" : undefined },
           { label: "Active APIs", value: protocolStats.activeApis != null ? String(protocolStats.activeApis) : "0", icon: Server, color: "text-cyan-400" },
-          { label: "Active Verifiers", value: protocolStats.activeVerifiers != null ? String(protocolStats.activeVerifiers) : "0", icon: Users, color: "text-[#FFB800]", sub: protocolStats.activeVerifiers === 0 ? "None registered" : undefined },
+          { label: "Active Verifiers", value: protocolStats.activeVerifiers != null ? String(protocolStats.activeVerifiers) : "0", icon: Users, color: "text-[#00E5FF]", sub: protocolStats.activeVerifiers === 0 ? "None registered" : undefined },
           { label: "Settlement Rate", value: fmtPct(protocolStats.settlementRate), icon: CheckCircle, color: protocolStats.settlementRate == null ? "text-[#A1A1A6]" : "text-emerald-400" },
           { label: "Total Penalties", value: fmtUSD(protocolStats.totalPenalties), icon: AlertTriangle, color: "text-rose-400" },
         ].map((stat) => (
@@ -247,11 +247,11 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       {/* Continuous Slashing Function */}
       <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
         <div className="flex items-center gap-3 mb-3">
-          <Zap className="w-4 h-4 text-[#FFB800]" />
+          <Zap className="w-4 h-4 text-[#00E5FF]" />
           <span className="text-xs font-mono uppercase tracking-widest text-[#A1A1A6]">Continuous Slashing Function</span>
         </div>
         <div className="font-mono text-sm text-white/90 bg-[#111111] border border-[#1A1A1A] rounded-lg px-4 py-3">
-          <span className="text-[#FFB800]">Penalty(t)</span> ={" "}
+          <span className="text-[#00E5FF]">Penalty(t)</span> ={" "}
           <span className="text-[#A1A1A6]">{"{"}</span>{" "}
           <span className="text-emerald-400">0</span>{" "}
           <span className="text-[#A1A1A6]">if</span>{" "}
@@ -265,7 +265,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       {/* Provider Bond Registry */}
       <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl overflow-hidden">
         <div className="p-5 flex items-center gap-3 border-b border-[#1A1A1A]">
-          <Lock className="w-4 h-4 text-[#FFB800]" />
+          <Lock className="w-4 h-4 text-[#00E5FF]" />
           <span className="text-sm font-semibold">Provider Bond Registry</span>
           <span className="ml-auto text-[10px] font-mono text-[#A1A1A6] tracking-widest uppercase">USDC Performance Bonds</span>
         </div>
@@ -294,7 +294,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                   <div className="text-sm text-white">{p.name}</div>
                   <div className="text-[10px] font-mono text-[#A1A1A6]">{p.provider}</div>
                   {awaiting && (
-                    <div className="text-[9px] font-mono text-amber-500/60 mt-0.5">awaiting probe data</div>
+                    <div className="text-[9px] font-mono text-cyan-500/60 mt-0.5">awaiting probe data</div>
                   )}
                 </div>
                 <div className="font-mono text-sm text-[#A1A1A6]">{fmtMs(p.targetP95Ms)}</div>
@@ -394,7 +394,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
         {/* Stake on SLA Performance */}
         <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
           <div className="flex items-center gap-3 mb-4">
-            <DollarSign className="w-4 h-4 text-[#FFB800]" />
+            <DollarSign className="w-4 h-4 text-[#00E5FF]" />
             <span className="text-sm font-semibold">Stake on SLA Performance</span>
           </div>
           <div className="space-y-4">
@@ -403,7 +403,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <select
                 value={selectedMarketId}
                 onChange={(e) => setSelectedMarketId(e.target.value)}
-                className="w-full bg-[#111111] border border-[#1A1A1A] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FFB800]/40"
+                className="w-full bg-[#111111] border border-[#1A1A1A] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#00E5FF]/40"
               >
                 {markets.map((m) => <option key={m.id} value={m.id} className="bg-[#111111]">{m.title}</option>)}
                 {markets.length === 0 && <option value="">No markets available</option>}
@@ -417,7 +417,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 value={stakeAmount}
                 onChange={(e) => setStakeAmount(e.target.value)}
                 placeholder="10.00"
-                className="w-full bg-[#111111] border border-[#1A1A1A] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FFB800]/40"
+                className="w-full bg-[#111111] border border-[#1A1A1A] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#00E5FF]/40"
               />
             </div>
 
@@ -451,7 +451,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
             <button
               onClick={handleStake}
               disabled={!selectedMarketId || stakePending || !stakePlacementAvailable}
-              className="w-full py-2.5 rounded-lg text-sm font-medium bg-[#FFB800]/10 border border-[#FFB800]/30 text-[#FFB800] hover:bg-[#FFB800]/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-2.5 rounded-lg text-sm font-medium bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {stakePending ? "Processing..." : stakePlacementAvailable ? `Stake ${stakeOutcome} — $${stakeNum.toFixed(2)} USDC` : "Stake disabled until BYOS returns verified markets"}
             </button>
@@ -468,7 +468,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       {/* Challenge Market */}
       <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
         <div className="flex items-center gap-3 mb-4">
-          <AlertTriangle className="w-4 h-4 text-[#FFB800]" />
+          <AlertTriangle className="w-4 h-4 text-[#00E5FF]" />
           <span className="text-sm font-semibold">Challenge Market</span>
           <span className="ml-auto text-[10px] font-mono text-[#A1A1A6] tracking-widest uppercase">Two-Tier Dispute Resolution</span>
         </div>
@@ -484,7 +484,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <div>Resolution: Auto-checked against verifier distribution</div>
               <div>Speed: Sub-second (smart contract validation)</div>
             </div>
-            <div className="mt-3 text-[10px] text-amber-300 font-mono">Resolution telemetry needs verified settlement rows before live-rate claims are displayed.</div>
+            <div className="mt-3 text-[10px] text-cyan-300 font-mono">Resolution telemetry needs verified settlement rows before live-rate claims are displayed.</div>
           </div>
 
           <div className="bg-[#111111] border border-[#1A1A1A] rounded-lg p-4">
@@ -506,7 +506,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       {/* x402 Micro-Staking */}
       <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
         <div className="flex items-center gap-3 mb-4">
-          <Globe className="w-4 h-4 text-[#FFB800]" />
+          <Globe className="w-4 h-4 text-[#00E5FF]" />
           <span className="text-sm font-semibold">x402 Micro-Staking Integration</span>
           <span className="ml-auto text-[10px] font-mono text-[#A1A1A6] tracking-widest uppercase">HTTP 402 Payment Required</span>
         </div>
@@ -536,7 +536,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                 "Needs on-chain proof: periodic net-balance settlement on Base L2",
               ].map((step, i) => (
                 <div key={i} className="flex items-start gap-3 text-xs text-[#A1A1A6]">
-                  <span className="w-5 h-5 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-[9px] font-mono flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-[#00E5FF] text-[9px] font-mono flex items-center justify-center shrink-0 mt-0.5">
                     {i + 1}
                   </span>
                   {step}
@@ -550,7 +550,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       {/* Verifier Network */}
       <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl overflow-hidden">
         <div className="p-5 flex items-center gap-3 border-b border-[#1A1A1A]">
-          <Globe className="w-4 h-4 text-[#FFB800]" />
+          <Globe className="w-4 h-4 text-[#00E5FF]" />
           <span className="text-sm font-semibold">Verifier Network</span>
           <span className="ml-auto text-[10px] font-mono text-[#A1A1A6]">
             W<sub>i</sub> = Stake<sub>i</sub> * log(Reputation<sub>i</sub> + 1) * Diversity<sub>i</sub>
@@ -571,14 +571,14 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <div className="text-sm text-white font-mono">{v.address}</div>
               <div className="text-[10px] text-[#A1A1A6]">{v.region} / {v.asn}</div>
             </div>
-            <div className="font-mono text-sm text-[#FFB800]">${v.stake.toLocaleString()}</div>
+            <div className="font-mono text-sm text-[#00E5FF]">${v.stake.toLocaleString()}</div>
             <div className="font-mono text-sm text-[#A1A1A6]">{v.reputation}</div>
             <div className="font-mono text-sm text-cyan-400">{v.diversityScore.toFixed(2)}</div>
             <div className="font-mono text-sm text-white">{v.weight.toLocaleString()}</div>
             <div className="font-mono text-sm text-[#A1A1A6]">{v.measurementCount.toLocaleString()}</div>
             <div className="text-right flex items-center justify-end gap-2">
               <span className="font-mono text-sm text-[#A1A1A6]">{v.accuracy.toFixed(1)}%</span>
-              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono border ${v.active ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-300"}`}>
+              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono border ${v.active ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"}`}>
                 {v.active ? "Active" : "Inactive"}
               </span>
             </div>
@@ -593,7 +593,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       {kdeData && (
         <div className="bg-[#0D0D0D] border border-[#1A1A1A] rounded-xl p-5">
           <div className="flex items-center gap-3 mb-4">
-            <Zap className="w-4 h-4 text-[#FFB800]" />
+            <Zap className="w-4 h-4 text-[#00E5FF]" />
             <span className="text-sm font-semibold">KDE Consensus — Measurement Distribution</span>
             <select
               value={selectedKdeApiId}
@@ -608,8 +608,8 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
               <AreaChart data={kdeData.curve.points.map((x: number, i: number) => ({ x: Math.round(x), d: kdeData.curve.density[i] }))}>
                 <defs>
                   <linearGradient id="densityGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FFB800" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#FFB800" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#00E5FF" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#00E5FF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" />
@@ -620,8 +620,8 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
                   labelFormatter={(v) => `${v}ms`}
                   formatter={(v) => [(v as number).toFixed(6), "Density"]}
                 />
-                <ReferenceLine x={Math.round(kdeData.consensus.finalScore)} stroke="#FFB800" strokeDasharray="4 4" label={{ value: "Consensus", fill: "#FFB800", fontSize: 9 }} />
-                <Area type="monotone" dataKey="d" stroke="#FFB800" fill="url(#densityGrad)" strokeWidth={1.5} />
+                <ReferenceLine x={Math.round(kdeData.consensus.finalScore)} stroke="#00E5FF" strokeDasharray="4 4" label={{ value: "Consensus", fill: "#00E5FF", fontSize: 9 }} />
+                <Area type="monotone" dataKey="d" stroke="#00E5FF" fill="url(#densityGrad)" strokeWidth={1.5} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

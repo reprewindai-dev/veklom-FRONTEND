@@ -115,7 +115,7 @@ export const PGLLedgerExplorer: React.FC<PGLLedgerExplorerProps> = ({ records })
             </div>
             <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg text-center">
               <span className="text-slate-400 block text-[10px]">GAS SETTLED</span>
-              <span className="text-base font-bold text-amber-400">
+              <span className="text-base font-bold text-cyan-400">
                 {records.reduce((acc, r) => acc + r.x402GasSettled, 0).toFixed(4)} VEK
               </span>
             </div>
@@ -175,7 +175,7 @@ export const PGLLedgerExplorer: React.FC<PGLLedgerExplorerProps> = ({ records })
 
                   <div className="flex justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-800">
                     <span className="truncate max-w-[200px]">Sig: {rec.pglSignature}</span>
-                    <span className="text-amber-400 font-bold">{rec.x402GasSettled} VEK</span>
+                    <span className="text-cyan-400 font-bold">{rec.x402GasSettled} VEK</span>
                   </div>
                 </div>
               );
@@ -228,7 +228,7 @@ export const PGLLedgerExplorer: React.FC<PGLLedgerExplorerProps> = ({ records })
 
               <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg space-y-1">
                 <span className="text-slate-500 block text-[10px]">x402 GAS MICROPAYMENT</span>
-                <span className="text-amber-400 font-bold">{selectedRecord.x402GasSettled} VEK Settled</span>
+                <span className="text-cyan-400 font-bold">{selectedRecord.x402GasSettled} VEK Settled</span>
               </div>
             </div>
 
@@ -236,7 +236,7 @@ export const PGLLedgerExplorer: React.FC<PGLLedgerExplorerProps> = ({ records })
             <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
-                  <Sliders className="h-3.5 w-3.5 text-amber-400" />
+                  <Sliders className="h-3.5 w-3.5 text-cyan-400" />
                   Tamper Detection Simulator
                 </span>
 

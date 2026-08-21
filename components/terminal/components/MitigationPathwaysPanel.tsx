@@ -9,8 +9,8 @@ export const MitigationPathwaysPanel: React.FC = () => {
       id: 'IMP-Ren',
       label: 'Renewables',
       icon: <Zap size={14} />,
-      color: 'bg-yellow-400',
-      textColor: 'text-yellow-400',
+      color: 'bg-cyan-400',
+      textColor: 'text-cyan-400',
       description: 'Massive shift to solar/wind, eliminating unabated coal by 2050.'
     },
     {

@@ -55,7 +55,7 @@ const PALETTES: PaletteOption[] = [
   { id: "teal", name: "Teal / Black (Governed)", glowColor: "shadow-[0_0_25px_rgba(6,182,212,0.15)]", borderColor: "border-cyan-500/40", textColor: "text-cyan-400", bgColor: "bg-[#080c0d]/80", badgeBg: "bg-cyan-500/10" },
   { id: "red", name: "Red / Graphite (Rogue)", glowColor: "shadow-[0_0_25px_rgba(239,68,68,0.15)]", borderColor: "border-rose-500/40", textColor: "text-rose-400", bgColor: "bg-[#0f0a0a]/80", badgeBg: "bg-rose-500/10" },
   { id: "violet", name: "Violet / Navy (Research)", glowColor: "shadow-[0_0_25px_rgba(139,92,246,0.15)]", borderColor: "border-violet-500/40", textColor: "text-violet-400", bgColor: "bg-[#0a0912]/80", badgeBg: "bg-violet-500/10" },
-  { id: "gold", name: "Gold / Charcoal (Premium)", glowColor: "shadow-[0_0_25px_rgba(245,158,11,0.15)]", borderColor: "border-amber-500/40", textColor: "text-amber-400", bgColor: "bg-[#110e08]/80", badgeBg: "bg-amber-500/10" },
+  { id: "gold", name: "Gold / Charcoal (Premium)", glowColor: "shadow-[0_0_25px_rgba(245,158,11,0.15)]", borderColor: "border-cyan-500/40", textColor: "text-cyan-400", bgColor: "bg-[#110e08]/80", badgeBg: "bg-cyan-500/10" },
   { id: "green", name: "Green / Slate (Eco-Route)", glowColor: "shadow-[0_0_25px_rgba(16,185,129,0.15)]", borderColor: "border-emerald-500/40", textColor: "text-emerald-400", bgColor: "bg-[#080d0a]/80", badgeBg: "bg-emerald-500/10" },
 ];
 
@@ -197,7 +197,7 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
       teal: "cyan",
       red: "rose",
       violet: "violet",
-      gold: "amber",
+      gold: "cyan",
       green: "emerald",
     };
 
@@ -253,7 +253,7 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
       return { level: "COMPLIANT SOVEREIGN SECURE", color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" };
     }
     if (security >= 4) {
-      return { level: "GOVERNED RUNTIME COUPLING", color: "text-amber-400 bg-amber-500/10 border-amber-500/30" };
+      return { level: "GOVERNED RUNTIME COUPLING", color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" };
     }
     return { level: "STANDARD ENTROPIC BUFFER", color: "text-neutral-400 bg-neutral-900 border-neutral-800" };
   };
@@ -351,7 +351,7 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
 
                 {/* Glowing active avatar sphere */}
                 <div className="my-6 relative flex items-center justify-center">
-                  <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${selectedPalette === "teal" ? "bg-cyan-500" : selectedPalette === "red" ? "bg-rose-500" : selectedPalette === "violet" ? "bg-violet-500" : selectedPalette === "gold" ? "bg-amber-500" : "bg-emerald-500"}`}></div>
+                  <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${selectedPalette === "teal" ? "bg-cyan-500" : selectedPalette === "red" ? "bg-rose-500" : selectedPalette === "violet" ? "bg-violet-500" : selectedPalette === "gold" ? "bg-cyan-500" : "bg-emerald-500"}`}></div>
                   <div className="w-24 h-24 rounded-full border border-neutral-800 bg-neutral-950/90 flex items-center justify-center text-5xl cursor-default animate-bounce relative z-10 shadow-lg">
                     {baseObj.avatar}
                   </div>
@@ -389,7 +389,7 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
                 <div><span className="text-neutral-500">workspace_id:</span> <span className="text-neutral-200">sandbox_demo</span></div>
                 <div className="pt-0.5"><span className="text-neutral-500">genome_hash:</span> <span className="text-cyan-500 block break-all font-mono">sha256:{getPglHexStr(selectedBase + "_" + attributes.intelligence + "_" + attributes.speed, 32)}...</span></div>
                 <div><span className="text-neutral-500">constitution_hash:</span> <span className="text-violet-500 block break-all font-mono">sha256:{getPglHexStr((characterName || "unit") + "_" + attributes.security + "_" + attributes.reliability + "_" + selectedPalette, 32)}...</span></div>
-                <div><span className="text-neutral-500">plan_hash:</span> <span className="text-amber-500 block break-all font-mono">sha256:{getPglHexStr(getBestRoleFit() + "_" + intendedAction, 32)}...</span></div>
+                <div><span className="text-neutral-500">plan_hash:</span> <span className="text-cyan-500 block break-all font-mono">sha256:{getPglHexStr(getBestRoleFit() + "_" + intendedAction, 32)}...</span></div>
                 <div><span className="text-neutral-500">tool_manifest_hash:</span> <span className="text-emerald-500 block break-all font-mono">sha256:{getPglHexStr(requestedScopes.concat().sort().join(","), 32)}...</span></div>
                 <div><span className="text-neutral-500">delegation_chain_hash:</span> <span className="text-neutral-600 block break-all font-mono">sha256:{getPglHexStr(agentId + "_chain", 32)}...</span></div>
                 <div><span className="text-neutral-500">input_hash:</span> <span className="text-neutral-600 block break-all font-mono">sha256:{getPglHexStr(intendedAction || "empty_input", 32)}...</span></div>
@@ -419,13 +419,13 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
                 <div><span className="text-neutral-550 mr-1">pgl_pre_cert_id:</span><span className="text-neutral-300">pgl_cert_pre_{getPglHexStr(agentId, 12)}</span></div>
                 <div><span className="text-neutral-550 mr-1">genome_hash:</span><span className="text-cyan-500/85 font-mono">sha256:{getPglHexStr(selectedBase + "_" + attributes.intelligence + "_" + attributes.speed, 24)}...</span></div>
                 <div><span className="text-neutral-550 mr-1">constitution_hash:</span><span className="text-violet-500/85 font-mono">sha256:{getPglHexStr((characterName || "unit") + "_" + attributes.security + "_" + attributes.reliability + "_" + selectedPalette, 24)}...</span></div>
-                <div><span className="text-neutral-550 mr-1">plan_hash:</span><span className="text-amber-500/85 font-mono">sha256:{getPglHexStr(getBestRoleFit() + "_" + intendedAction, 24)}...</span></div>
+                <div><span className="text-neutral-550 mr-1">plan_hash:</span><span className="text-cyan-500/85 font-mono">sha256:{getPglHexStr(getBestRoleFit() + "_" + intendedAction, 24)}...</span></div>
                 <div><span className="text-neutral-550 mr-1">tool_manifest_hash:</span><span className="text-emerald-550 font-mono">sha256:{getPglHexStr(requestedScopes.concat().sort().join(","), 24)}...</span></div>
                 <div><span className="text-neutral-550 mr-1">delegation_chain_hash:</span><span className="text-neutral-500 font-mono text-[7px]">{getPglHexStr(agentId + "_chain", 24)}...</span></div>
                 <div><span className="text-neutral-550 mr-1">seked_attestation_hash:</span><span className="text-neutral-550 font-mono">{getPglHexStr(agentId + "_seked", 24)}...</span></div>
                 <div><span className="text-neutral-550 mr-1">directive_summary:</span><span className="text-neutral-350 lowercase">&quot;powered by {selectedBase} core w/ {attributes.intelligence}/10 autonomy&quot;</span></div>
                 <div><span className="text-neutral-550 mr-1">risk_tier:</span><span className="text-rose-400 font-bold">{risk.level}</span></div>
-                <div><span className="text-neutral-550 mr-1">budget_approved_cents:</span><span className="text-amber-400 font-bold">{attributes.speed * 100}¢</span></div>
+                <div><span className="text-neutral-550 mr-1">budget_approved_cents:</span><span className="text-cyan-400 font-bold">{attributes.speed * 100}¢</span></div>
                 <div><span className="text-neutral-550 mr-1">delegation_depth:</span><span className="text-violet-400 font-bold">{attributes.creativity}</span></div>
                 <div><span className="text-neutral-550 mr-1">ttl_seconds:</span><span className="text-cyan-400 font-mono">{attributes.intelligence * 360}s</span></div>
                 <div><span className="text-neutral-550 mr-1">scope:</span><span className="text-emerald-400">[{requestedScopes.join(", ") || "no_destructive"}]</span></div>
@@ -494,7 +494,7 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
                       p.id === "teal" ? "bg-cyan-400" :
                       p.id === "red" ? "bg-rose-500" :
                       p.id === "violet" ? "bg-violet-400" :
-                      p.id === "gold" ? "bg-amber-400" : "bg-emerald-400"
+                      p.id === "gold" ? "bg-cyan-400" : "bg-emerald-400"
                     }`}></div>
                     <span className="text-[7.5px] uppercase font-bold tracking-tight">{p.name.split(" ")[0]}</span>
                   </button>
@@ -509,7 +509,7 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
               <span className="text-[10px] uppercase font-bold text-neutral-450 tracking-wider">04. Configure Governance Authority Posture</span>
               <div className="flex items-center gap-3">
                 <span className="text-[9px] font-bold text-neutral-450 font-mono uppercase tracking-wide">
-                  BALANCE: <b className={`font-mono font-black ${pointsRemaining === 0 ? "text-cyan-400" : pointsRemaining < 0 ? "text-rose-500" : "text-amber-400"}`}>{pointsRemaining} NODES</b> REMAINING
+                  BALANCE: <b className={`font-mono font-black ${pointsRemaining === 0 ? "text-cyan-400" : pointsRemaining < 0 ? "text-rose-500" : "text-cyan-400"}`}>{pointsRemaining} NODES</b> REMAINING
                 </span>
                 <button 
                   onClick={handleResetPoints}
@@ -575,10 +575,10 @@ export default function CharacterCreator({ onAgentCreated }: CharacterCreatorPro
                   >-</button>
                   <div className="flex-1 bg-neutral-950 h-2.5 rounded overflow-hidden p-0.5 border border-neutral-850 flex items-center justify-start gap-0.5 relative">
                     {Array.from({ length: attributes.speed }).map((_, i) => (
-                      <div key={i} className="h-full bg-amber-500/80 rounded-sm" style={{ width: `${100 / 10}%` }}></div>
+                      <div key={i} className="h-full bg-cyan-500/80 rounded-sm" style={{ width: `${100 / 10}%` }}></div>
                     ))}
                   </div>
-                  <span className="w-4 font-bold text-right text-amber-500">{attributes.speed}</span>
+                  <span className="w-4 font-bold text-right text-cyan-500">{attributes.speed}</span>
                   <button 
                     onClick={() => handleSetStat("speed", attributes.speed + 1)}
                     className="w-5 h-5 bg-neutral-900 border border-neutral-800 text-center text-xs text-neutral-400 rounded hover:text-white hover:border-neutral-700 font-bold active:scale-95"

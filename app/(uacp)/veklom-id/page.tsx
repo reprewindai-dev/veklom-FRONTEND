@@ -36,7 +36,7 @@ export default function VeklomIdPage() {
                   probe.state === "verified"
                     ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
                     : probe.state === "needs_proof"
-                      ? "border-amber-500/30 text-amber-300 bg-amber-500/10"
+                      ? "border-cyan-500/30 text-cyan-300 bg-cyan-500/10"
                       : "border-red-500/30 text-red-300 bg-red-500/10"
                 }`}
               >

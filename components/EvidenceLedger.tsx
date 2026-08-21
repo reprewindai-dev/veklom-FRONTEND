@@ -954,7 +954,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                       userDecision === 'APPROVED' ? 'text-emerald-400' :
                       userDecision === 'ESCALATED' ? 'text-[#FF6B00]' :
                       userDecision === 'BLOCKED' ? 'text-red-500' :
-                      findings.some(f => f.risk_level === 'CRITICAL' || f.risk_level === 'HIGH') ? 'text-yellow-500' :
+                      findings.some(f => f.risk_level === 'CRITICAL' || f.risk_level === 'HIGH') ? 'text-cyan-500' :
                       'text-emerald-400'
                     }`}>
                       {userDecision ? `DECISION: ${userDecision}` : isCompleted ? 'SIGNATURE REQ' : 'IN PROGRESS'}
@@ -993,14 +993,14 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                     <div 
                       title={`MEDIUM: ${mediumCount}`}
                       style={{ width: `${Math.max(10, mediumPct)}%` }} 
-                      className="h-full bg-amber-500 hover:opacity-85 transition-opacity duration-150"
+                      className="h-full bg-cyan-500 hover:opacity-85 transition-opacity duration-150"
                     />
                   )}
                   {lowCount > 0 && (
                     <div 
                       title={`LOW: ${lowCount}`}
                       style={{ width: `${Math.max(10, lowPct)}%` }} 
-                      className="h-full bg-yellow-400 hover:opacity-85 transition-opacity duration-150"
+                      className="h-full bg-cyan-400 hover:opacity-85 transition-opacity duration-150"
                     />
                   )}
                   {safeCount > 0 && (
@@ -1028,12 +1028,12 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                     <span className="text-[7.5px] font-mono text-red-400 block font-bold">HIGH</span>
                     <span className="text-[10px] font-mono font-bold text-gray-300">{highCount}</span>
                   </div>
-                  <div className="py-1 border border-amber-500/10 bg-amber-950/5 rounded-xs">
+                  <div className="py-1 border border-cyan-500/10 bg-cyan-950/5 rounded-xs">
                     <span className="text-[7.5px] font-mono text-[#FF6B00] block font-bold">MED</span>
                     <span className="text-[10px] font-mono font-bold text-gray-300">{mediumCount}</span>
                   </div>
-                  <div className="py-1 border border-yellow-400/10 bg-yellow-950/5 rounded-xs">
-                    <span className="text-[7.5px] font-mono text-yellow-500 block font-bold">LOW</span>
+                  <div className="py-1 border border-cyan-400/10 bg-cyan-950/5 rounded-xs">
+                    <span className="text-[7.5px] font-mono text-cyan-500 block font-bold">LOW</span>
                     <span className="text-[10px] font-mono font-bold text-gray-300">{lowCount}</span>
                   </div>
                   <div className="py-1 border border-emerald-500/10 bg-emerald-950/5 rounded-xs">
@@ -1063,8 +1063,8 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                         <span className={`px-1 text-[8px] rounded-xs font-bold shrink-0 ${
                           f.risk_level === 'CRITICAL' ? 'bg-red-950 text-red-500 border border-red-500/30' :
                           f.risk_level === 'HIGH' ? 'bg-red-950 text-red-400 border border-red-500/15' :
-                          f.risk_level === 'MEDIUM' ? 'bg-amber-950/50 text-[#FF6B00] border border-[#FF6B00]/15' :
-                          'bg-yellow-950/40 text-yellow-500'
+                          f.risk_level === 'MEDIUM' ? 'bg-cyan-950/50 text-[#FF6B00] border border-[#FF6B00]/15' :
+                          'bg-cyan-950/40 text-cyan-500'
                         }`}>
                           {f.risk_level}
                         </span>
@@ -1099,7 +1099,7 @@ export const EvidenceLedger: React.FC<EvidenceLedgerProps> = ({
                 <button
                   onClick={handleExportJSON}
                   disabled={events.length === 0}
-                  className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-gradient-to-r from-orange-600 via-[#FF6B00] to-amber-500 hover:opacity-90 disabled:opacity-30 text-black font-extrabold text-[10px] uppercase tracking-widest rounded-xs transition-all border border-[#FF6B00]/30 select-none cursor-pointer disabled:cursor-not-allowed shadow-[0_0_12px_rgba(255,107,0,0.15)]"
+                  className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-gradient-to-r from-orange-600 via-[#FF6B00] to-cyan-500 hover:opacity-90 disabled:opacity-30 text-black font-extrabold text-[10px] uppercase tracking-widest rounded-xs transition-all border border-[#FF6B00]/30 select-none cursor-pointer disabled:cursor-not-allowed shadow-[0_0_12px_rgba(255,107,0,0.15)]"
                   title="Generate and Download full event logs and findings report in JSON format"
                 >
                   <Code className="w-4 h-4 text-black stroke-[3]" />

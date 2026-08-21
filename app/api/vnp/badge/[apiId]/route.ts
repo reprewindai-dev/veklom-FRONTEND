@@ -8,7 +8,7 @@ const SILVER_MIN = 75;
 const BRONZE_MIN = 60;
 
 function tierFor(score: number) {
-  if (score >= GOLD_MIN)   return { label: 'GOLD',   color: '#FFB800', text: '#000000' };
+  if (score >= GOLD_MIN)   return { label: 'GOLD',   color: '#00E5FF', text: '#000000' };
   if (score >= SILVER_MIN) return { label: 'SILVER', color: '#A1A1A6', text: '#000000' };
   if (score >= BRONZE_MIN) return { label: 'BRONZE', color: '#CD7F32', text: '#000000' };
   return                          { label: 'VNP',    color: '#333333', text: '#FFFFFF' };
@@ -105,3 +105,4 @@ export async function GET(
     },
   });
 }
+

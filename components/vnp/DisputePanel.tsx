@@ -60,7 +60,7 @@ function deterministicDisputes(score: VNPScore): VNPDispute[] {
 }
 
 const STATUS_STYLES: Record<VNPDispute["status"], { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
-  open: { label: "OPEN", color: "#FFB800", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)", icon: Clock },
+  open: { label: "OPEN", color: "#00E5FF", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)", icon: Clock },
   reviewing: { label: "REVIEWING", color: "#37C9EC", bg: "rgba(55,201,236,0.1)", border: "rgba(55,201,236,0.25)", icon: Activity },
   resolved_upheld: { label: "UPHELD", color: "#3EE7A2", bg: "rgba(62,231,162,0.1)", border: "rgba(62,231,162,0.25)", icon: CheckCircle2 },
   resolved_overturned: { label: "OVERTURNED", color: "#A78BFA", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.25)", icon: Shield },
@@ -74,7 +74,7 @@ export default function DisputePanel({ score }: DisputePanelProps) {
   return (
     <div className="space-y-3 p-4 rounded-xl border border-[#242424] bg-[#0A0A0A]/80">
       <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="w-4 h-4 text-[#FFB800]" />
+        <AlertTriangle className="w-4 h-4 text-[#00E5FF]" />
         <span className="text-xs font-semibold uppercase tracking-widest text-[#A1A1A6]">
           Dispute History
         </span>

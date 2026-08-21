@@ -109,13 +109,13 @@ function shortHash(value?: string | null): string {
 function proofTone(state?: string): string {
   if (state === "verified") return "text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/10";
   if (state === "error") return "text-red-300 border-red-400/25 bg-red-500/10";
-  return "text-[#FFB800] border-[#FFB800]/25 bg-[#FFB800]/10";
+  return "text-[#00E5FF] border-[#00E5FF]/25 bg-[#00E5FF]/10";
 }
 
 function dotTone(state?: string): string {
   if (state === "verified") return "bg-[#00FF66]";
   if (state === "error") return "bg-red-400";
-  return "bg-[#FFB800]";
+  return "bg-[#00E5FF]";
 }
 
 function ProofPanel({ title, value, subtitle, state }: { title: string; value: string; subtitle: string; state: string }) {
@@ -138,8 +138,8 @@ const SCORECARD_AXIS_IDS: VNPDimensionId[] = [
 
 function EvidenceGate({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-[#FFB800]/25 bg-[#FFB800]/5 p-6">
-      <div className="flex items-center gap-2 text-[#FFB800] font-mono text-[11px] uppercase tracking-widest font-bold">
+    <div className="rounded-xl border border-[#00E5FF]/25 bg-[#00E5FF]/5 p-6">
+      <div className="flex items-center gap-2 text-[#00E5FF] font-mono text-[11px] uppercase tracking-widest font-bold">
         <AlertCircle className="w-4 h-4" />
         {title}
       </div>
@@ -251,7 +251,7 @@ export default function NexusProtocol() {
                         <div className="text-xs font-bold text-white/80">{api.name}</div>
                         <div className="text-[9px] text-white/40 uppercase font-mono">{api.provider}</div>
                       </div>
-                      <div className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${api.score >= 95 ? "bg-[#00FF66]/10 text-[#00FF66] border border-[#00FF66]/20" : api.score >= 90 ? "bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20" : "bg-hazard-amber/10 text-hazard-amber border border-hazard-amber/20"}`}>
+                      <div className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${api.score >= 95 ? "bg-[#00FF66]/10 text-[#00FF66] border border-[#00FF66]/20" : api.score >= 90 ? "bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20" : "bg-hazard-cyan/10 text-hazard-cyan border border-hazard-cyan/20"}`}>
                         {api.score} {api.grade}
                       </div>
                     </div>
@@ -346,7 +346,7 @@ export default function NexusProtocol() {
                   </div>
 
                   <div className="mt-2 p-4 bg-void-black border border-white/5 rounded-lg font-mono text-[10px] flex flex-col gap-3">
-                    <div className={`text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 ${selectedApi.anchorHash && selectedApi.txHash ? "text-[#00FF66]" : "text-[#FFB800]"}`}>
+                    <div className={`text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 ${selectedApi.anchorHash && selectedApi.txHash ? "text-[#00FF66]" : "text-[#00E5FF]"}`}>
                       <Shield className="w-3.5 h-3.5" />
                       {selectedApi.anchorHash && selectedApi.txHash ? "CRYPTOGRAPHIC PROOF RETURNED" : "CRYPTOGRAPHIC ANCHOR NEEDS PROOF"}
                     </div>
@@ -381,8 +381,8 @@ export default function NexusProtocol() {
                       </div>
                       <div>
                         <div className="text-white/30 uppercase">Leaderboard Route</div>
-                        <div className={`flex items-center gap-1.5 font-bold ${state?.leaderboard_state === "verified" ? "text-[#00FF66]" : "text-[#FFB800]"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${state?.leaderboard_state === "verified" ? "bg-[#00FF66]" : "bg-[#FFB800]"}`} />
+                        <div className={`flex items-center gap-1.5 font-bold ${state?.leaderboard_state === "verified" ? "text-[#00FF66]" : "text-[#00E5FF]"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${state?.leaderboard_state === "verified" ? "bg-[#00FF66]" : "bg-[#00E5FF]"}`} />
                           {state?.leaderboard_state === "verified" ? "Verified" : "Needs x402 proof"}
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export default function NexusProtocol() {
                       </div>
                     </div>
                     <div className="text-right font-mono">
-                      <div className={node.status === "warning" ? "text-xs font-bold text-[#FFB800]" : "text-xs font-bold text-[#00FF66]"}>{fmtMs(node.latency)}</div>
+                      <div className={node.status === "warning" ? "text-xs font-bold text-[#00E5FF]" : "text-xs font-bold text-[#00FF66]"}>{fmtMs(node.latency)}</div>
                       <div className="text-[9px] text-white/30">{fmtMoney(node.throughput)} bond</div>
                     </div>
                   </div>
@@ -451,7 +451,7 @@ export default function NexusProtocol() {
                     {nodes.map((node) => (
                       <div key={node.id} className="p-3 rounded-lg border border-white/10 bg-black/50">
                         <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${node.status === "warning" ? "bg-[#FFB800]" : "bg-[#00FF66]"}`} />
+                          <span className={`w-2 h-2 rounded-full ${node.status === "warning" ? "bg-[#00E5FF]" : "bg-[#00FF66]"}`} />
                           <span className="text-[10px] font-mono text-white/70 truncate">{node.name}</span>
                         </div>
                         <div className="mt-2 text-[9px] font-mono text-white/35">{fmtMs(node.latency)} observed P95</div>
@@ -516,7 +516,7 @@ export default function NexusProtocol() {
                 {docTab === "governance" ? (
                   <>
                     <h1 className="text-lg font-bold text-white border-b border-white/10 pb-2">Veklom Nexus Protocol (VNP) - Governance Charter v1.0</h1>
-                    <div className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded text-yellow-200/80 mb-4 font-mono text-[10px]">
+                    <div className="p-3 bg-cyan-500/5 border border-cyan-500/20 rounded text-cyan-200/80 mb-4 font-mono text-[10px]">
                       STATUS: Methodology and governance text. Live operational claims on this page come only from BYOS and CAPPO route probes.
                     </div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-4">1. Mission & Values</h2>
@@ -583,7 +583,7 @@ export default function NexusProtocol() {
                         <div className="text-sm font-bold text-white/85">{agent.identity?.agent_name || agent.identity?.agent_id}</div>
                         <div className="text-[9px] font-mono text-white/40">{agent.identity?.agent_id}</div>
                       </div>
-                      <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${agent.risk?.threat_level === "yellow" ? proofTone("needs_proof") : proofTone("verified")}`}>{agent.risk?.threat_level || "unknown"}</span>
+                      <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${agent.risk?.threat_level === "cyan" ? proofTone("needs_proof") : proofTone("verified")}`}>{agent.risk?.threat_level || "unknown"}</span>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-mono text-white/50">
                       <div>Trust <span className="text-[#00E5FF]">{fmtNumber(agent.trust?.score)}</span></div>

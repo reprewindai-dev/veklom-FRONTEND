@@ -51,8 +51,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${mode === 'production' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
-              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${mode === 'production' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${mode === 'production' ? 'bg-emerald-400' : 'bg-cyan-400'}`}></span>
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${mode === 'production' ? 'bg-emerald-500' : 'bg-cyan-500'}`}></span>
             </span>
             <span className="font-semibold tracking-wide text-slate-200">
               VEKLOM cAPI CONTROL PLANE v2.4.0
@@ -75,7 +75,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               onClick={() => setMode('demo')}
               className={`px-2.5 py-1 rounded text-2xs font-semibold tracking-wider transition-all ${
                 mode === 'demo'
-                  ? 'bg-amber-600 text-white shadow'
+                  ? 'bg-cyan-600 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -92,7 +92,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               Ollama Local: {ollamaStatus?.connected ? (
                 <span className="text-emerald-400 font-bold">ONLINE ({ollamaStatus.latencyMs}ms)</span>
               ) : (
-                <span className="text-amber-400 font-medium">STANDBY ({ollamaStatus?.error ? 'Daemon Offline' : 'Checking...'})</span>
+                <span className="text-cyan-400 font-medium">STANDBY ({ollamaStatus?.error ? 'Daemon Offline' : 'Checking...'})</span>
               )}
             </span>
             <button

@@ -14,7 +14,7 @@ export const GenomeDNA: React.FC<GenomeDNAProps> = ({ genome, mini }) => {
 
   const DNA_LAYERS = [
     { key: 'model', label: 'VNP Ledger Node', icon: <Network size={14} />, color: 'from-[#00E5FF] to-[#0077FF]' },
-    { key: 'prompt', label: 'SLA Guardrail', icon: <Shield size={14} />, color: 'from-[#FFB800] to-[#FF8C00]' },
+    { key: 'prompt', label: 'SLA Guardrail', icon: <Shield size={14} />, color: 'from-[#00E5FF] to-[#FF8C00]' },
     { key: 'policy', label: 'x402 Execution', icon: <Zap size={14} />, color: 'from-[#00FF66] to-[#00CC44]' },
     { key: 'watchtower', label: 'Identity Core (PGL)', icon: <Lock size={14} />, color: 'from-[#FF003C] to-[#CC0030]' },
   ];
@@ -80,7 +80,7 @@ export const GenomeDNA: React.FC<GenomeDNAProps> = ({ genome, mini }) => {
     <div className="bg-black/80 backdrop-blur-2xl rounded-2xl border border-[#00E5FF]/20 p-6 flex flex-col gap-5 relative overflow-hidden group hover:border-[#00E5FF]/40 transition-all duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#00E5FF]/10 to-transparent rounded-full blur-[60px] -mr-32 -mt-32 pointer-events-none group-hover:scale-110 transition-transform duration-700" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#FFB800]/5 to-transparent rounded-full blur-[40px] -ml-24 -mb-24 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#00E5FF]/5 to-transparent rounded-full blur-[40px] -ml-24 -mb-24 pointer-events-none" />
       
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/50 to-transparent opacity-50" />
 

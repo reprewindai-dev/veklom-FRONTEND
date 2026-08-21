@@ -48,7 +48,7 @@ export const ThreatLandscape: React.FC<ThreatLandscapeProps> = ({ surfaces }) =>
                     transition={{ duration: 1, delay: i * 0.1 }}
                     className={`h-full ${
                       s.containment > 0.8 ? 'bg-green-400' : 
-                      s.containment > 0.5 ? 'bg-amber-400' : 'bg-red-400'
+                      s.containment > 0.5 ? 'bg-cyan-400' : 'bg-red-400'
                     }`}
                   />
                </div>

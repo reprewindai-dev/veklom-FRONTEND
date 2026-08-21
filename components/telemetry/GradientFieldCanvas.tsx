@@ -25,10 +25,10 @@ export default function GradientFieldCanvas() {
     window.addEventListener('resize', handleResize);
 
     const nodes = [
-      { id: 'ollama', x: 0.2, y: 0.5, label: 'Ollama (Primary)', color: '#FFB800' },
+      { id: 'ollama', x: 0.2, y: 0.5, label: 'Ollama (Primary)', color: '#00E5FF' },
       { id: 'groq', x: 0.5, y: 0.3, label: 'Groq (Fast Fallback)', color: '#FFA000' },
       { id: 'gemini', x: 0.8, y: 0.5, label: 'Gemini (Heavy Fallback)', color: '#FF8F00' },
-      { id: 'openai', x: 0.8, y: 0.7, label: 'OpenAI (Heavy Fallback)', color: '#FFB800' }
+      { id: 'openai', x: 0.8, y: 0.7, label: 'OpenAI (Heavy Fallback)', color: '#00E5FF' }
     ];
 
     let time = 0;
@@ -73,7 +73,7 @@ export default function GradientFieldCanvas() {
         ctx.fillStyle = '#ffffff';
         ctx.fill();
         ctx.shadowBlur = 10;
-        ctx.shadowColor = '#FFB800';
+        ctx.shadowColor = '#00E5FF';
       };
 
       // Ollama to Groq

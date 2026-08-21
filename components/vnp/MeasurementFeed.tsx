@@ -131,7 +131,7 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
   }, [scores]);
 
   const typeStyles: Record<FeedEntry["type"], { bg: string; text: string; border: string }> = {
-    MEASUREMENT: { bg: "bg-[#FFB800]/10", text: "text-[#FFB800]", border: "border-[#FFB800]/20" },
+    MEASUREMENT: { bg: "bg-[#00E5FF]/10", text: "text-[#00E5FF]", border: "border-[#00E5FF]/20" },
     ANCHOR: { bg: "bg-[#37C9EC]/10", text: "text-[#37C9EC]", border: "border-[#37C9EC]/20" },
     SCORE_UPDATE: { bg: "bg-[#3EE7A2]/10", text: "text-[#3EE7A2]", border: "border-[#3EE7A2]/20" },
     DISPUTE: { bg: "bg-[#FF5C6C]/10", text: "text-[#FF5C6C]", border: "border-[#FF5C6C]/20" },
@@ -141,7 +141,7 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
     <div className="h-full flex flex-col font-mono text-xs">
       {/* Header */}
       <div className="flex items-center gap-2 p-4 border-b border-[#1A1A1A] bg-[#050505]">
-        <Terminal className="w-4 h-4 text-[#FFB800]" />
+        <Terminal className="w-4 h-4 text-[#00E5FF]" />
         <span className="text-[#A1A1A6] font-semibold tracking-widest uppercase text-[10px]">
           VNP Measurement Feed
         </span>
@@ -152,9 +152,9 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
       </div>
 
       {/* Proof state banner */}
-      <div className="px-3 py-2 bg-[#FFB800]/5 border-b border-[#FFB800]/10 flex items-center gap-2">
-        <AlertCircle className="w-3 h-3 text-[#FFB800]" />
-        <span className="text-[9px] text-[#FFB800]/80 tracking-wide">
+      <div className="px-3 py-2 bg-[#00E5FF]/5 border-b border-[#00E5FF]/10 flex items-center gap-2">
+        <AlertCircle className="w-3 h-3 text-[#00E5FF]" />
+        <span className="text-[9px] text-[#00E5FF]/80 tracking-wide">
           Feed derived from scored API data. Independent k6 SSE stream: Needs proof
         </span>
       </div>

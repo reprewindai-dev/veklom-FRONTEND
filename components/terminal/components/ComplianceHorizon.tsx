@@ -38,7 +38,7 @@ export const ComplianceHorizon: React.FC = () => {
       requirement: 'Governance',
       status: 'Configuring',
       detail: 'Watchtower Layer monitoring real-time I/O violations and bias drifts.',
-      icon: <AlertTriangle size={12} className="text-amber-400" />
+      icon: <AlertTriangle size={12} className="text-cyan-400" />
     }
   ];
 
@@ -46,10 +46,10 @@ export const ComplianceHorizon: React.FC = () => {
     <div className="bg-white/5 rounded-2xl border border-white/10 p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Scale size={18} className="text-amber-400" />
+          <Scale size={18} className="text-cyan-400" />
           <h2 className="text-sm font-mono uppercase tracking-widest text-white/80">Compliance Horizon (2026)</h2>
         </div>
-        <span className="text-[9px] font-mono text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">MANDATORY TRACK</span>
+        <span className="text-[9px] font-mono text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">MANDATORY TRACK</span>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -62,7 +62,7 @@ export const ComplianceHorizon: React.FC = () => {
               </div>
               <span className={`text-[8px] font-mono uppercase px-1.5 py-0.5 rounded ${
                 reg.status === 'Compliant' ? 'text-green-400 bg-green-400/10' :
-                reg.status === 'Active' ? 'text-cyan-400 bg-cyan-400/10' : 'text-amber-400 bg-amber-400/10'
+                reg.status === 'Active' ? 'text-cyan-400 bg-cyan-400/10' : 'text-cyan-400 bg-cyan-400/10'
               }`}>
                 {reg.status}
               </span>
@@ -84,7 +84,7 @@ export const ComplianceHorizon: React.FC = () => {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: '85%' }}
-              className="h-full bg-gradient-to-r from-cyan-400 to-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]"
+              className="h-full bg-gradient-to-r from-cyan-400 to-cyan-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]"
             />
          </div>
       </div>

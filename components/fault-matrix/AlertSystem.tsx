@@ -275,7 +275,7 @@ export default function AlertSystem({ onAppendLedger, onStateUpdate, notificatio
                         ? 'bg-cyan-950/60 text-cyan-400 border border-cyan-800/40' 
                         : log.status === 'failed' 
                         ? 'bg-red-950/60 text-red-400'
-                        : 'bg-yellow-950/60 text-yellow-400 animate-pulse'
+                        : 'bg-cyan-950/60 text-cyan-400 animate-pulse'
                     }`}>
                       {log.status}
                     </span>

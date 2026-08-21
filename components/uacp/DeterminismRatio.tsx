@@ -51,7 +51,7 @@ export const DeterminismRatio: React.FC<DeterminismRatioProps> = ({ ratio, certa
                         initial={{ width: 0 }}
                         animate={{ width: `${noise * 100}%` }}
                         transition={{ duration: 1.5 }}
-                        className="h-full bg-amber-400"
+                        className="h-full bg-cyan-400"
                     />
                 </div>
             </div>

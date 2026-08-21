@@ -38,7 +38,7 @@ export const GovernanceRoadmap: React.FC<GovernanceRoadmapProps> = ({ phases }) 
               {/* Dot */}
               <div className={`absolute left-[13px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-black z-10 transition-colors ${
                 phase.status === 'completed' ? 'bg-emerald-400' :
-                phase.status === 'in-progress' ? 'bg-amber-400 animate-pulse' : 'bg-white/20'
+                phase.status === 'in-progress' ? 'bg-cyan-400 animate-pulse' : 'bg-white/20'
               }`} />
 
               <div className="p-4 rounded-xl bg-black/40 border border-white/5 group-hover:border-purple-400/30 transition-all flex flex-col gap-2">
@@ -49,7 +49,7 @@ export const GovernanceRoadmap: React.FC<GovernanceRoadmapProps> = ({ phases }) 
                     </div>
                     <div className={`text-[8px] font-mono uppercase px-1.5 py-0.5 rounded ${
                         phase.status === 'completed' ? 'bg-emerald-400/10 text-emerald-400' :
-                        phase.status === 'in-progress' ? 'bg-amber-400/10 text-amber-400' : 'bg-white/5 text-white/30'
+                        phase.status === 'in-progress' ? 'bg-cyan-400/10 text-cyan-400' : 'bg-white/5 text-white/30'
                     }`}>
                         {phase.status.replace('-', ' ')}
                     </div>

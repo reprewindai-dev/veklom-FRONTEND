@@ -27,7 +27,7 @@ interface StatusBadgeProps {
 
 function StatusBadge({ status }: StatusBadgeProps) {
   const colors = {
-    pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/50",
+    pending: "bg-cyan-500/20 text-cyan-400 border-cyan-500/50",
     approved: "bg-green-500/20 text-green-400 border-green-500/50",
     rejected: "bg-red-500/20 text-red-400 border-red-500/50",
     executed: "bg-blue-500/20 text-blue-400 border-blue-500/50",
@@ -47,7 +47,7 @@ interface ActionBadgeProps {
 function ActionBadge({ action }: ActionBadgeProps) {
   const colors = {
     RUN: "bg-green-500/20 text-green-400",
-    HOLD: "bg-yellow-500/20 text-yellow-400",
+    HOLD: "bg-cyan-500/20 text-cyan-400",
     BLOCK: "bg-red-500/20 text-red-400",
   };
 
@@ -145,11 +145,11 @@ export default function AuthorityDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Pending</p>
-              <p className="text-2xl font-bold text-yellow-400">
+              <p className="text-2xl font-bold text-cyan-400">
                 {runs.filter(r => r.status === "pending").length}
               </p>
             </div>
-            <Pause className="w-8 h-8 text-yellow-500" />
+            <Pause className="w-8 h-8 text-cyan-500" />
           </div>
         </div>
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">

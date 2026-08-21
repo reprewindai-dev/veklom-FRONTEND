@@ -504,7 +504,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
   if (isLoadingAuth) {
     return (
       <div className="bg-[#0b0e14]/40 border border-slate-900/60 rounded-xl p-8 flex flex-col items-center justify-center space-y-4 backdrop-blur-md">
-        <Activity className="w-8 h-8 text-amber-500 animate-pulse" />
+        <Activity className="w-8 h-8 text-cyan-500 animate-pulse" />
         <span className="text-[10px] font-mono text-slate-500 tracking-widest uppercase">INITIALIZING SOVEREIGN TELEMETRY NODE...</span>
       </div>
     );
@@ -513,19 +513,19 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
   if (needsAuth || !user) {
     return (
       <div className="bg-[#0b0e14]/60 border border-slate-800/80 rounded-2xl p-8 text-center backdrop-blur-md max-w-lg mx-auto shadow-2xl">
-        <div className="mx-auto w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center mb-6 border border-amber-500/20 text-amber-500">
-          <Lock className="w-5 h-5 text-amber-500" />
+        <div className="mx-auto w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center mb-6 border border-cyan-500/20 text-cyan-500">
+          <Lock className="w-5 h-5 text-cyan-500" />
         </div>
-        <span className="text-[10px] font-mono text-amber-500 font-bold uppercase tracking-[0.25em] block mb-2">TELEMETRY ACCESS LOCKED</span>
+        <span className="text-[10px] font-mono text-cyan-500 font-bold uppercase tracking-[0.25em] block mb-2">TELEMETRY ACCESS LOCKED</span>
         <h3 className="text-xl font-bold text-white mb-3">{meta.title}</h3>
         <p className="text-xs text-slate-400 leading-relaxed mb-6">
           Authorized telemetry records are encrypted and bound within Veklom's zero-trust space. Please authenticate with your Google account to synchronize secure audit timelines.
         </p>
         <button 
           onClick={handleLogin} 
-          className="w-full py-3 border border-slate-800 rounded-lg bg-[#111622] hover:bg-[#161d2d] text-amber-500 hover:text-amber-400 font-mono text-xs uppercase tracking-wider font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-lg"
+          className="w-full py-3 border border-slate-800 rounded-lg bg-[#111622] hover:bg-[#161d2d] text-cyan-500 hover:text-cyan-400 font-mono text-xs uppercase tracking-wider font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-lg"
         >
-          <KeyRound className="w-4 h-4 text-amber-500" />
+          <KeyRound className="w-4 h-4 text-cyan-500" />
           <span>Sign In and Sync Nodes</span>
         </button>
       </div>
@@ -536,10 +536,10 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
     <div className="bg-[#0b0e14]/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col w-full text-slate-300">
       
       {/* Dynamic Header */}
-      <div className="border-b border-slate-800/80 p-5 bg-gradient-to-r from-amber-500/5 to-transparent flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="border-b border-slate-800/80 p-5 bg-gradient-to-r from-cyan-500/5 to-transparent flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 rounded-lg flex items-center justify-center">
               <Cpu className="w-4 h-4" />
             </div>
             <div>
@@ -553,7 +553,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
           <div className="flex items-center space-x-1.5 bg-[#111622] border border-slate-800 px-2.5 py-1 rounded">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-slate-500">Operator:</span>
-            <span className="text-amber-400 font-semibold">{user.email?.split('@')[0]}</span>
+            <span className="text-cyan-400 font-semibold">{user.email?.split('@')[0]}</span>
           </div>
           <button 
             onClick={handleSignOut}
@@ -579,12 +579,12 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
               <div className="hidden sm:block h-3 w-px bg-slate-800" />
               <div className="flex items-center space-x-1.5">
                 <span className="text-slate-500 font-medium">Active Requests:</span>
-                <span className="text-amber-400 font-bold">{pulseData.active_requests}</span>
+                <span className="text-cyan-400 font-bold">{pulseData.active_requests}</span>
               </div>
               <div className="hidden sm:block h-3 w-px bg-slate-800" />
               <div className="flex items-center space-x-1.5">
                 <span className="text-slate-500 font-medium">Avg Latency:</span>
-                <span className="text-amber-400 font-bold">{pulseData.latency_ms} ms</span>
+                <span className="text-cyan-400 font-bold">{pulseData.latency_ms} ms</span>
               </div>
             </>
           )}
@@ -606,7 +606,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center text-[10px] font-bold">1</span>
+                <span className="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold">1</span>
                 Sovereign SLA Endorsement
               </h4>
               {configuration?.baaSigned && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded px-1.5 font-bold uppercase font-mono">Endorsed</span>}
@@ -624,7 +624,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                     value={signatureName} 
                     onChange={e => setSignatureName(e.target.value)} 
                     placeholder="e.g. Susan Vance, CMO"
-                    className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-amber-500 focus:outline-none"
+                    className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-cyan-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -635,11 +635,11 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                     value={signerEmail} 
                     onChange={e => setSignerEmail(e.target.value)} 
                     placeholder="susan.vance@regionalhealth.org"
-                    className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-amber-500 focus:outline-none"
+                    className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-cyan-500 focus:outline-none"
                     required
                   />
                 </div>
-                <button type="submit" className="w-full py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <button type="submit" className="w-full py-1.5 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer">
                   <Signature className="w-3.5 h-3.5" />
                   <span>Execute SLA Attestation</span>
                 </button>
@@ -659,7 +659,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
           {/* Step 2: Secrets and Parameters */}
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-              <span className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center text-[10px] font-bold">2</span>
+              <span className="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold">2</span>
               Node Configuration
             </h4>
             
@@ -675,7 +675,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                     value={licenseKeyInput} 
                     onChange={e => setLicenseKeyInput(e.target.value)} 
                     placeholder={configuration?.licenseKey ? "••••••••••••••••••••••••" : "Paste cryptographic key..."}
-                    className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-amber-500 focus:outline-none"
+                    className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-cyan-500 focus:outline-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -685,7 +685,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                       type="text" 
                       value={workspaceIdInput} 
                       onChange={e => setWorkspaceIdInput(e.target.value)} 
-                      className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-amber-500 focus:outline-none"
+                      className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -694,13 +694,13 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                       type="text" 
                       value={ollamaUrlInput} 
                       onChange={e => setOllamaUrlInput(e.target.value)} 
-                      className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-amber-500 focus:outline-none"
+                      className="w-full text-xs px-2.5 py-1.5 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                 </div>
                 <button 
                   onClick={handleSaveLicense}
-                  className="w-full py-1.5 bg-[#161d2d] hover:bg-[#1a2538] border border-slate-800 text-amber-500 hover:text-amber-400 font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-1.5 bg-[#161d2d] hover:bg-[#1a2538] border border-slate-800 text-cyan-500 hover:text-cyan-400 font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <KeyRound className="w-3.5 h-3.5" />
                   <span>Commit Secret Signatures</span>
@@ -714,20 +714,20 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
           {/* Step 3: Hardware Boot */}
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-              <span className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center text-[10px] font-bold">3</span>
+              <span className="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold">3</span>
               Isolation Sandbox Boot
             </h4>
 
             {configuration?.licenseKey ? (
               <div className="space-y-2 font-mono">
                 {isDeploying ? (
-                  <div className="bg-[#0b0e14] border border-slate-850 p-3 rounded-lg text-[9px] text-amber-400 space-y-2">
+                  <div className="bg-[#0b0e14] border border-slate-850 p-3 rounded-lg text-[9px] text-cyan-400 space-y-2">
                     <div className="flex justify-between text-white font-bold uppercase">
                       <span>Loading parameters...</span>
                       <span>{deployProgress}%</span>
                     </div>
                     <div className="w-full bg-[#111622] h-1.5 rounded overflow-hidden">
-                      <div className="bg-amber-500 h-full transition-all duration-300" style={{ width: `${deployProgress}%` }} />
+                      <div className="bg-cyan-500 h-full transition-all duration-300" style={{ width: `${deployProgress}%` }} />
                     </div>
                     <div className="h-20 overflow-y-auto space-y-1 text-slate-400 border-t border-slate-800 pt-1.5 scrollbar-thin">
                       {deployLogs.map((log, i) => (
@@ -766,7 +766,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
           <div className="bg-[#111622]/40 border border-slate-800/80 rounded-xl p-4 space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Database className="w-4 h-4 text-amber-500" />
+                <Database className="w-4 h-4 text-cyan-500" />
                 Attestation Workbench
               </span>
               <span className="text-[9px] text-slate-500 font-normal">REAL-TIME SANDBOXED INTERACTION</span>
@@ -782,7 +782,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                       <button 
                         key={idx}
                         onClick={() => setIntakeText(sample.notes)}
-                        className="text-left text-[10px] p-2 bg-[#0b0e14] hover:bg-[#111622] border border-slate-800 rounded transition font-mono truncate text-amber-500/80 hover:text-amber-400 cursor-pointer"
+                        className="text-left text-[10px] p-2 bg-[#0b0e14] hover:bg-[#111622] border border-slate-800 rounded transition font-mono truncate text-cyan-500/80 hover:text-cyan-400 cursor-pointer"
                       >
                         {sample.title}
                       </button>
@@ -798,7 +798,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                     onChange={e => setIntakeText(e.target.value)}
                     placeholder={meta.sourcePlaceholder}
                     rows={3}
-                    className="w-full text-xs p-2 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-amber-500 focus:outline-none font-mono resize-none scrollbar-thin"
+                    className="w-full text-xs p-2 border border-slate-800 rounded bg-[#0b0e14] text-slate-200 focus:border-cyan-500 focus:outline-none font-mono resize-none scrollbar-thin"
                   />
                 </div>
 
@@ -806,7 +806,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                 <button 
                   onClick={executeTelemetryAnalysis}
                   disabled={isClassifying || !intakeText.trim()}
-                  className="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-slate-950 font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-slate-950 font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {isClassifying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                   <span>{isClassifying ? "Scrubbing & Analyzing..." : "Run Telemetry Classification"}</span>
@@ -837,7 +837,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                       </div>
                       <div>
                         <span className="text-slate-500 block text-[8px] uppercase tracking-wider">{meta.summaryLabel}</span>
-                        <p className="text-[9px] text-amber-500/90 leading-snug bg-amber-500/5 p-2 rounded mt-1 border border-amber-500/10">{activeResult.soapSummary}</p>
+                        <p className="text-[9px] text-cyan-500/90 leading-snug bg-cyan-500/5 p-2 rounded mt-1 border border-cyan-500/10">{activeResult.soapSummary}</p>
                       </div>
                       <div className="flex justify-between items-center text-[8px] text-slate-500 pt-1">
                         <span>Watermark: {activeResult.watermark}</span>
@@ -856,7 +856,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
           <div className="bg-[#111622]/40 border border-slate-800/80 rounded-xl p-4 flex-1 flex flex-col min-h-[180px] max-h-[250px]">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center justify-between mb-2">
               <span className="flex items-center gap-1.5">
-                <History className="w-4 h-4 text-amber-500" />
+                <History className="w-4 h-4 text-cyan-500" />
                 VNP Settlement Audit Ledger
               </span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -869,7 +869,7 @@ export default function TriageTelemetry({ context }: TriageTelemetryProps) {
                 auditTrails.map((audit) => (
                   <div key={audit.id} className="bg-[#0b0e14] border border-slate-850/60 p-2 rounded flex flex-col space-y-1">
                     <div className="flex justify-between items-center text-slate-400">
-                      <span className="text-amber-500/90 font-bold uppercase tracking-wider">{audit.eventType}</span>
+                      <span className="text-cyan-500/90 font-bold uppercase tracking-wider">{audit.eventType}</span>
                       <span className="text-slate-600">{new Date(audit.timestamp).toLocaleTimeString()}</span>
                     </div>
                     <p className="text-slate-350 leading-snug">{audit.details}</p>

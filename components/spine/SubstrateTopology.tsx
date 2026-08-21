@@ -22,7 +22,7 @@ export const SubstrateTopology: React.FC<SubstrateTopologyProps> = ({
       case 'local_k8s':
         return <Server className="h-6 w-6 text-emerald-400" />;
       case 'aws_edge':
-        return <Cloud className="h-6 w-6 text-amber-400" />;
+        return <Cloud className="h-6 w-6 text-cyan-400" />;
       case 'azure_sovereign':
         return <Globe className="h-6 w-6 text-sky-400" />;
       case 'rf_microcontroller':
@@ -101,7 +101,7 @@ export const SubstrateTopology: React.FC<SubstrateTopologyProps> = ({
                     <div className="flex items-center space-x-1.5">
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${
-                          isOnline ? 'bg-emerald-400' : isDegraded ? 'bg-amber-400' : 'bg-rose-500'
+                          isOnline ? 'bg-emerald-400' : isDegraded ? 'bg-cyan-400' : 'bg-rose-500'
                         }`}
                       />
                       <span className="text-xs font-mono uppercase text-slate-300">{node.status}</span>
@@ -157,7 +157,7 @@ export const SubstrateTopology: React.FC<SubstrateTopologyProps> = ({
                 onClick={() => onToggleNodeStatus(selectedNode.id, 'degraded')}
                 className={`px-2.5 py-1 text-xs font-mono rounded cursor-pointer ${
                   selectedNode.status === 'degraded'
-                    ? 'bg-amber-500/20 text-amber-400 font-bold'
+                    ? 'bg-cyan-500/20 text-cyan-400 font-bold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >

@@ -79,15 +79,15 @@ export default function OpenSourcePage() {
           </div>
 
           <div className="p-8 rounded-2xl bg-bg-900 border border-border shadow-2xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FFB800]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
             <div className="flex items-center gap-4 mb-6 relative z-10">
-              <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
-                <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+              <div className="w-12 h-12 rounded-xl bg-[#00E5FF]/10 flex items-center justify-center border border-[#00E5FF]/20">
+                <ShieldCheck className="w-6 h-6 text-[#00E5FF]" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold">EEE & VCGB Protocols</h3>
-                <div className="text-sm font-mono text-[#FFB800]">Status: Open Sourced</div>
+                <div className="text-sm font-mono text-[#00E5FF]">Status: Open Sourced</div>
               </div>
             </div>
             
@@ -96,10 +96,10 @@ export default function OpenSourcePage() {
             </p>
             
             <div className="flex gap-4 relative z-10">
-              <Link href="/eee/docs" className="px-6 py-3 rounded-lg bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/20 font-bold hover:bg-[#FFB800]/20 transition-colors flex items-center gap-2">
+              <Link href="/eee/docs" className="px-6 py-3 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20 font-bold hover:bg-[#00E5FF]/20 transition-colors flex items-center gap-2">
                 <FileText className="w-4 h-4" /> EEE Spec
               </Link>
-              <Link href="/vcgb/docs" className="px-6 py-3 rounded-lg bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/20 font-bold hover:bg-[#FFB800]/20 transition-colors flex items-center gap-2">
+              <Link href="/vcgb/docs" className="px-6 py-3 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20 font-bold hover:bg-[#00E5FF]/20 transition-colors flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4" /> VCGB Spec
               </Link>
             </div>

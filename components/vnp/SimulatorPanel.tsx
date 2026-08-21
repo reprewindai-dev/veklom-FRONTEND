@@ -75,13 +75,13 @@ const PRESETS: PresetIntent[] = [
 
 const SEKED_STYLES: Record<SEKEDDirective, string> = {
   HALT:      'text-[#FF003C] bg-[#FF003C]/10 border-[#FF003C]/30',
-  WAIT:      'text-[#FFAB00] bg-[#FFAB00]/10 border-[#FFAB00]/30',
-  STABILIZE: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30',
-  GRIND:     'text-[#FFB800] bg-[#FFB800]/10 border-[#FFB800]/30',
+  WAIT:      'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30',
+  STABILIZE: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/30',
+  GRIND:     'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30',
   CLARIFY:   'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30',
   FORTIFY:   'text-violet-400 bg-violet-400/10 border-violet-400/30',
   EXECUTE:   'text-[#00FF66] bg-[#00FF66]/10 border-[#00FF66]/30',
-  EXPAND:    'text-[#FFB800] bg-[#FFB800]/10 border-[#FFB800]/30',
+  EXPAND:    'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30',
 };
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -224,7 +224,7 @@ export default function SimulatorPanel() {
 
   const stepBorderClass = (s: StepStatus) => {
     if (s === 'completed') return 'border-[#00FF66]/30 bg-[#00FF66]/[0.03]';
-    if (s === 'running')   return 'border-[#FFB800]/50 bg-[#FFB800]/[0.04]';
+    if (s === 'running')   return 'border-[#00E5FF]/50 bg-[#00E5FF]/[0.04]';
     if (s === 'blocked')   return 'border-[#FF003C]/30 bg-[#FF003C]/[0.03]';
     if (s === 'quarantined') return 'border-[#8B5CF6]/40 bg-[#8B5CF6]/[0.04]';
     return 'border-slate-800 bg-[#101010]';
@@ -232,7 +232,7 @@ export default function SimulatorPanel() {
 
   const stepNumClass = (s: StepStatus) => {
     if (s === 'completed') return 'border-[#00FF66]/30 bg-[#00FF66]/10 text-[#00FF66]';
-    if (s === 'running')   return 'border-[#FFB800]/40 bg-[#FFB800]/10 text-[#FFB800]';
+    if (s === 'running')   return 'border-[#00E5FF]/40 bg-[#00E5FF]/10 text-[#00E5FF]';
     if (s === 'blocked')   return 'border-[#FF003C]/30 bg-[#FF003C]/10 text-[#FF003C]';
     if (s === 'quarantined') return 'border-[#8B5CF6]/30 bg-[#8B5CF6]/10 text-[#8B5CF6]';
     return 'border-slate-800 bg-[#0A0A0A] text-slate-500';
@@ -240,7 +240,7 @@ export default function SimulatorPanel() {
 
   const stepNameClass = (s: StepStatus) => {
     if (s === 'completed') return 'text-[#00FF66]';
-    if (s === 'running')   return 'text-[#FFB800]';
+    if (s === 'running')   return 'text-[#00E5FF]';
     if (s === 'blocked')   return 'text-[#FF003C]';
     if (s === 'quarantined') return 'text-[#8B5CF6]';
     return 'text-slate-400';
@@ -248,7 +248,7 @@ export default function SimulatorPanel() {
 
   const termLineClass = (line: string) => {
     if (line.includes('✕') || line.includes('⚠ BLOCK') || line.includes('HALTED')) return 'text-[#FF003C]';
-    if (line.includes('⚠')) return 'text-[#FFAB00]';
+    if (line.includes('⚠')) return 'text-[#00E5FF]';
     if (line.includes('✓') || line.includes('EAT') || line.includes('COMPLETE')) return 'text-[#00FF66]';
     return 'text-slate-400';
   };
@@ -256,7 +256,7 @@ export default function SimulatorPanel() {
   const threatBadgeClass = (t: ThreatLevel) => {
     if (t === 'CLEAN')    return 'text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/5';
     if (t === 'CRITICAL') return 'text-[#FF003C] border-[#FF003C]/25 bg-[#FF003C]/5';
-    return 'text-[#FFAB00] border-[#FFAB00]/25 bg-[#FFAB00]/5';
+    return 'text-[#00E5FF] border-[#00E5FF]/25 bg-[#00E5FF]/5';
   };
 
   const sekedMetrics = {
@@ -282,7 +282,7 @@ export default function SimulatorPanel() {
               onChange={e => setIntent(e.target.value)}
               disabled={isRunning}
               rows={4}
-              className="w-full bg-[#070b12] border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-300 font-mono resize-none focus:outline-none focus:border-[#FFB800]/40 placeholder-slate-600 disabled:opacity-50 transition-colors"
+              className="w-full bg-[#070b12] border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-300 font-mono resize-none focus:outline-none focus:border-[#00E5FF]/40 placeholder-slate-600 disabled:opacity-50 transition-colors"
               placeholder="Describe what the agent should do…"
             />
           </div>
@@ -296,7 +296,7 @@ export default function SimulatorPanel() {
                   onClick={() => setPolicyTab(t)}
                   className={`flex-1 py-2.5 text-[10px] font-mono font-bold uppercase tracking-widest transition-colors ${
                     policyTab === t
-                      ? 'text-[#FFB800] bg-[#FFB800]/5 border-b-2 border-[#FFB800]'
+                      ? 'text-[#00E5FF] bg-[#00E5FF]/5 border-b-2 border-[#00E5FF]'
                       : 'text-slate-500 hover:text-slate-300'
                   }`}
                 >
@@ -312,7 +312,7 @@ export default function SimulatorPanel() {
                     <select
                       value={agentModel}
                       onChange={e => setAgentModel(e.target.value)}
-                      className="w-full bg-[#070b12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono focus:outline-none focus:border-[#FFB800]/40"
+                      className="w-full bg-[#070b12] border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono focus:outline-none focus:border-[#00E5FF]/40"
                     >
                       <option value="gemini-pro">Gemini Pro — VNP 94 · T1</option>
                       <option value="gpt-4o">GPT-4o — VNP 91 · T1</option>
@@ -330,7 +330,7 @@ export default function SimulatorPanel() {
                           onClick={() => setSafetyLevel(l)}
                           className={`py-1.5 rounded text-[9px] font-mono font-bold uppercase border transition-all ${
                             safetyLevel === l
-                              ? 'bg-[#FFB800]/10 border-[#FFB800]/40 text-[#FFB800]'
+                              ? 'bg-[#00E5FF]/10 border-[#00E5FF]/40 text-[#00E5FF]'
                               : 'bg-[#070b12] border-slate-800 text-slate-500 hover:text-slate-300'
                           }`}
                         >
@@ -341,12 +341,12 @@ export default function SimulatorPanel() {
                   </div>
                   <div>
                     <label className="text-[9px] font-mono tracking-widest text-slate-500 uppercase block mb-1.5">
-                      Budget Cap: <span className="text-[#FFB800]">${budgetCap.toFixed(2)}</span>
+                      Budget Cap: <span className="text-[#00E5FF]">${budgetCap.toFixed(2)}</span>
                     </label>
                     <input
                       type="range" min={0.5} max={50} step={0.5} value={budgetCap}
                       onChange={e => setBudgetCap(parseFloat(e.target.value))}
-                      className="w-full accent-[#FFB800]"
+                      className="w-full accent-[#00E5FF]"
                     />
                     <div className="flex justify-between text-[9px] font-mono text-slate-500 mt-1">
                       <span>$0.50</span><span>$50.00</span>
@@ -411,12 +411,12 @@ export default function SimulatorPanel() {
                   disabled={isRunning}
                   className={`w-full text-left p-3 rounded-lg border transition-all disabled:opacity-40 ${
                     scenario.id === s.id
-                      ? 'border-[#FFB800]/40 bg-[#FFB800]/5'
+                      ? 'border-[#00E5FF]/40 bg-[#00E5FF]/5'
                       : 'border-slate-800 bg-[#070b12] hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className={`text-[11px] font-semibold ${scenario.id === s.id ? 'text-[#FFB800]' : 'text-slate-300'}`}>
+                    <span className={`text-[11px] font-semibold ${scenario.id === s.id ? 'text-[#00E5FF]' : 'text-slate-300'}`}>
                       {s.label}
                     </span>
                     <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${threatBadgeClass(s.threat)}`}>
@@ -436,7 +436,7 @@ export default function SimulatorPanel() {
             <button
               onClick={run}
               disabled={isRunning}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#FFB800] hover:bg-[#E0A100] disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 font-bold text-sm transition-all shadow-[0_0_24px_rgba(255,184,0,0.12)] hover:shadow-[0_0_32px_rgba(255,184,0,0.22)]"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00E5FF] hover:bg-[#E0A100] disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 font-bold text-sm transition-all shadow-[0_0_24px_rgba(255,184,0,0.12)] hover:shadow-[0_0_32px_rgba(255,184,0,0.22)]"
             >
               <Play className="w-4 h-4" />
               {isRunning ? 'Running…' : 'Run Enforcement'}
@@ -465,7 +465,7 @@ export default function SimulatorPanel() {
               </div>
               <div className="flex items-center gap-4 text-[10px] font-mono shrink-0 ml-4">
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#00FF66]" /><span className="text-slate-500">SEALED</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#FFB800] animate-pulse" /><span className="text-slate-500">ACTIVE</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" /><span className="text-slate-500">ACTIVE</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#FF003C]" /><span className="text-slate-500">BLOCKED</span></div>
               </div>
             </div>
@@ -499,12 +499,12 @@ export default function SimulatorPanel() {
                       {/* Icon */}
                       <div className={`p-2 rounded-lg border ${
                         done    ? 'border-[#00FF66]/20 bg-[#00FF66]/5' :
-                        active  ? 'border-[#FFB800]/30 bg-[#FFB800]/5' :
+                        active  ? 'border-[#00E5FF]/30 bg-[#00E5FF]/5' :
                         blocked ? 'border-[#FF003C]/20 bg-[#FF003C]/5' :
                         'border-slate-800 bg-[#0A0A0A]'
                       }`}>
                         <Icon className={`w-4 h-4 ${
-                          done ? 'text-[#00FF66]' : active ? 'text-[#FFB800]' : blocked ? 'text-[#FF003C]' : 'text-slate-500'
+                          done ? 'text-[#00FF66]' : active ? 'text-[#00E5FF]' : blocked ? 'text-[#FF003C]' : 'text-slate-500'
                         }`} />
                       </div>
 
@@ -531,7 +531,7 @@ export default function SimulatorPanel() {
                         )}
                         {active && (
                           <div className="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full w-3/5 bg-[#FFB800] rounded-full animate-pulse" />
+                            <div className="h-full w-3/5 bg-[#00E5FF] rounded-full animate-pulse" />
                           </div>
                         )}
                       </div>
@@ -627,9 +627,9 @@ export default function SimulatorPanel() {
               {(Object.entries(sekedMetrics) as [string, number][]).map(([k, v]) => (
                 <div key={k} className="text-center">
                   <div className="text-[9px] font-mono text-slate-500 uppercase">{k}</div>
-                  <div className={`text-xs font-bold font-mono mt-0.5 ${v < 50 ? 'text-[#FF003C]' : v < 75 ? 'text-[#FFAB00]' : 'text-[#00FF66]'}`}>{v}</div>
+                  <div className={`text-xs font-bold font-mono mt-0.5 ${v < 50 ? 'text-[#FF003C]' : v < 75 ? 'text-[#00E5FF]' : 'text-[#00FF66]'}`}>{v}</div>
                   <div className="h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
-                    <div className={`h-full rounded-full ${v < 50 ? 'bg-[#FF003C]' : v < 75 ? 'bg-[#FFAB00]' : 'bg-[#00FF66]'}`} style={{ width: `${v}%` }} />
+                    <div className={`h-full rounded-full ${v < 50 ? 'bg-[#FF003C]' : v < 75 ? 'bg-[#00E5FF]' : 'bg-[#00FF66]'}`} style={{ width: `${v}%` }} />
                   </div>
                 </div>
               ))}
@@ -640,12 +640,12 @@ export default function SimulatorPanel() {
           <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-[#070b12]">
               <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-[#FFB800]" />
+                <Terminal className="w-4 h-4 text-[#00E5FF]" />
                 <span className="text-[10px] font-mono font-bold tracking-widest text-slate-300 uppercase">Execution Trace</span>
               </div>
               <div className="flex gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FF003C]/50" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FFAB00]/50" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF]/50" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#00FF66]/50" />
               </div>
             </div>
@@ -656,7 +656,7 @@ export default function SimulatorPanel() {
                   <div key={i} className={termLineClass(line)}>{line}</div>
                 ))
               }
-              {isRunning && <div className="text-[#FFB800] animate-pulse">█</div>}
+              {isRunning && <div className="text-[#00E5FF] animate-pulse">█</div>}
             </div>
           </div>
 
@@ -664,7 +664,7 @@ export default function SimulatorPanel() {
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 relative">
             <div className="flex items-center justify-between mb-3">
               <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">Enforcement Ledger</div>
-              <span className="text-[8px] font-mono font-bold px-2 py-0.5 rounded border bg-amber-500/10 border-amber-500/20 text-amber-500 tracking-wider">SANDBOX EMULATION</span>
+              <span className="text-[8px] font-mono font-bold px-2 py-0.5 rounded border bg-cyan-500/10 border-cyan-500/20 text-cyan-500 tracking-wider">SANDBOX EMULATION</span>
             </div>
             <div className="space-y-2.5">
               {[
@@ -673,7 +673,7 @@ export default function SimulatorPanel() {
                 { label: 'Executions Blocked',    val: blockedCount,                       color: 'text-[#FF003C]'  },
                 { label: 'Avg Pipeline Latency',  val: `${Math.round(avgLatency)}ms`,      color: 'text-[#00E5FF]'  },
                 { label: 'Quarantined Requests',  val: scenario.id === 'anomaly_quarantine' && !isRunning ? '1 this session' : '0 this session', color: 'text-[#8B5CF6]' },
-                { label: 'Governed Compute Spend', val: '$12.40',                          color: 'text-[#FFB800]'  },
+                { label: 'Governed Compute Spend', val: '$12.40',                          color: 'text-[#00E5FF]'  },
                 { label: 'Budget Remaining',       val: `$${(budgetCap - 0.80).toFixed(2)}`,color:'text-[#00FF66]' },
                 { label: 'Policy Violations',      val: '0 this session',                 color: 'text-slate-400'  },
               ].map(s => (
@@ -694,7 +694,7 @@ export default function SimulatorPanel() {
                 { label: 'BudgetCheckMiddleware',   status: 'ACTIVE',    color: 'text-[#00FF66]' },
                 { label: 'JWT Validation (PGL)',    status: 'VERIFIED',  color: 'text-[#00FF66]' },
                 { label: 'MELT-Guard Behavioral',   status: 'WATCHING',  color: 'text-[#00E5FF]' },
-                { label: 'HITL Gate',               status: 'ARMED',     color: 'text-[#FFAB00]' },
+                { label: 'HITL Gate',               status: 'ARMED',     color: 'text-[#00E5FF]' },
                 { label: 'OPTIONS Preflight Bypass',status: 'ALLOWED',   color: 'text-slate-400' },
               ].map(z => (
                 <div key={z.label} className="flex items-center justify-between py-1 border-b border-slate-800 last:border-0">
@@ -711,7 +711,7 @@ export default function SimulatorPanel() {
               <p className="text-slate-300 font-bold">WHAT VEKLOM RUNTIME DOES</p>
               <p>Veklom decides what agents are allowed to do — before they do it — and verifies whether the systems they call are trustworthy enough to receive the action.</p>
               <p>Every execution is policy-gated, budget-bounded, identity-resolved, cryptographically sealed, and stored in the immutable evidence ledger.</p>
-              <p className="text-[#FFB800]">No EAT = no execution. Always.</p>
+              <p className="text-[#00E5FF]">No EAT = no execution. Always.</p>
             </div>
           </div>
         </div>

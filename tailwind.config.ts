@@ -1,4 +1,4 @@
-﻿import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
@@ -28,7 +28,7 @@ const config: Config = {
           midGray: "var(--theme-mid-gray)",
           white: "var(--theme-white, #FFF)",
         },
-        // Veklom brand — Sovereign AI Hub. Navy Sovereign Palette.
+        // Veklom brand � Sovereign AI Hub. Navy Sovereign Palette.
         bg: {
           900: "#0A0E1A", // --bg (app canvas)
           800: "#111827", // --surface (cards, panels)
@@ -51,7 +51,7 @@ const config: Config = {
           cyan: "#00E5FF",
           steel: "#8A9BB0",
           verified: "#00FF66",
-          warn: "#FFAB00",
+          warn: "#00E5FF",
           danger: "#FF4D4D",
         },
         border: {
@@ -71,7 +71,7 @@ const config: Config = {
           emerald: "#00FF66",
         },
         hazard: {
-          amber: "#FFAB00",
+          cyan: "#00E5FF",
         },
         laser: {
           red: "#FF003C",
@@ -86,7 +86,7 @@ const config: Config = {
           text: "rgba(255,255,255,0.92)",
           muted: "rgba(255,255,255,0.55)",
           verified: "#00FF66",
-          warn: "#FFAB00",
+          warn: "#00E5FF",
           danger: "#FF4D4D",
           info: "#00E5FF",
           unknown: "#6B7280",

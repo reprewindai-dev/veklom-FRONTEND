@@ -27,15 +27,15 @@ export default function DegradedBanner() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className="relative z-[200] flex w-full items-center justify-between bg-amber-500/20 px-4 py-2 border-b border-amber-500/30 text-amber-100"
+          className="relative z-[200] flex w-full items-center justify-between bg-cyan-500/20 px-4 py-2 border-b border-cyan-500/30 text-cyan-100"
         >
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-4 w-4 text-amber-400" />
+            <AlertTriangle className="h-4 w-4 text-cyan-400" />
             <span className="text-sm font-medium">{message || "Veklom Core Services are currently experiencing instability. Control Plane is in Read-Only Mode."}</span>
           </div>
           <button 
             onClick={() => setIsDegraded(false)}
-            className="rounded p-1 hover:bg-amber-500/20 text-amber-200/70 hover:text-amber-200"
+            className="rounded p-1 hover:bg-cyan-500/20 text-cyan-200/70 hover:text-cyan-200"
           >
             <X size={16} />
           </button>

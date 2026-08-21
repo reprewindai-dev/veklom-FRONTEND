@@ -31,11 +31,11 @@ function highlightJson(json: string): React.ReactNode[] {
         cls = 'text-matrix-emerald font-medium';
       }
     } else if (/true|false/.test(match[0])) {
-      cls = 'text-amber-400 font-bold';
+      cls = 'text-cyan-400 font-bold';
     } else if (/null/.test(match[0])) {
       cls = 'text-zinc-500 italic';
     } else {
-      cls = 'text-hazard-amber font-semibold';
+      cls = 'text-hazard-cyan font-semibold';
     }
 
     parts.push(<span key={match.index} className={cls}>{match[0]}</span>);
@@ -347,7 +347,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
         <div className={`flex items-start gap-2 border-b px-4 py-2 font-mono text-[10px] uppercase tracking-widest ${
           sourceProof.state === "verified"
             ? "border-matrix-emerald/20 bg-matrix-emerald/5 text-matrix-emerald"
-            : "border-hazard-amber/25 bg-hazard-amber/5 text-hazard-amber"
+            : "border-hazard-cyan/25 bg-hazard-cyan/5 text-hazard-cyan"
         }`}>
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <div className="min-w-0 flex-1">
@@ -384,7 +384,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
         </div>
         <div className="flex items-center gap-2">
           <span className="text-white/30">Degraded:</span>
-          <span className="text-hazard-amber font-bold">{swarmStats.degraded}</span>
+          <span className="text-hazard-cyan font-bold">{swarmStats.degraded}</span>
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <span className="text-white/30">Tasks in Flight:</span>
@@ -497,7 +497,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#00E5FF] bg-[rgba(0,229,255,0.2)]" style={{boxShadow: '0 0 5px #00E5FF'}}/> Active (Pulsing)</div>
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white/20 bg-[#0f0f12]" /> Idle (Dim)</div>
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#FF003C] bg-[rgba(255,0,60,0.2)]" /> Blocked (Warning)</div>
-        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#FFAB00] bg-[rgba(255,171,0,0.15)]" /> Degraded (High Load)</div>
+        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#00E5FF] bg-[rgba(255,171,0,0.15)]" /> Degraded (High Load)</div>
         <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white bg-transparent" /> Selected Focus</div>
         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10">
           <div className="px-1 py-0.5 bg-white/10 text-white rounded-[2px] text-[8px] font-bold leading-none">D</div> Diagnostics mode
@@ -515,8 +515,8 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
       >
         {agents.length === 0 && (
           <div className="absolute inset-0 z-10 flex items-center justify-center p-6 pointer-events-none">
-            <div className="max-w-lg border border-hazard-amber/25 bg-black/85 p-5 text-center font-mono shadow-[0_0_40px_rgba(0,0,0,0.75)]">
-              <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-hazard-amber/70" />
+            <div className="max-w-lg border border-hazard-cyan/25 bg-black/85 p-5 text-center font-mono shadow-[0_0_40px_rgba(0,0,0,0.75)]">
+              <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-hazard-cyan/70" />
               <h3 className="text-xs font-bold uppercase tracking-widest text-white">
                 No Registered Swarm Nodes
               </h3>
@@ -542,7 +542,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
             
             {/* Edge Connections between Leaders and Core */}
             {orbitEdges.map((edge) => {
-              const pulseColor = edge.dept === 'Engineering' ? '#00FF66' : edge.dept === 'Research' ? '#00E5FF' : edge.dept === 'Revenue' ? '#FFAB00' : '#888888';
+              const pulseColor = edge.dept === 'Engineering' ? '#00FF66' : edge.dept === 'Research' ? '#00E5FF' : edge.dept === 'Revenue' ? '#00E5FF' : '#888888';
               return (
                 <g key={edge.id}>
                   {/* Backdrop Connection Edge Line */}
@@ -622,7 +622,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                 strokeColor = '#FF003C';
                 fillColor = 'rgba(255, 0, 60, 0.2)';
               } else if (agent.status === 'Degraded' || agent.metrics.cpu > 90 || agent.metrics.latency > 2000) {
-                strokeColor = '#FFAB00';
+                strokeColor = '#00E5FF';
                 fillColor = 'rgba(255, 171, 0, 0.15)';
               } else if (isLead) {
                 strokeColor = 'rgba(255, 255, 255, 0.4)';
@@ -693,7 +693,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                   {(agent.status === 'Degraded' || agent.metrics.cpu > 90 || agent.metrics.latency > 2000) && agent.status !== 'Blocked' && (
                     <g transform={`translate(${agent.x + r + 3}, ${agent.y - r - 2}) scale(0.6)`}>
                       <circle cx="0" cy="0" r="8" fill="rgba(255,171,0,0.2)" className="animate-pulse" />
-                      <text x="0" y="4" textAnchor="middle" fill="#FFAB00" fontSize="12" fontWeight="bold" fontFamily="monospace">⚠</text>
+                      <text x="0" y="4" textAnchor="middle" fill="#00E5FF" fontSize="12" fontWeight="bold" fontFamily="monospace">⚠</text>
                     </g>
                   )}
 
@@ -804,7 +804,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
 
                 {/* Mission Text area */}
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold"><Flame className="w-2.5 h-2.5 text-hazard-amber" /> Dedicated Swarm Mission</span>
+                  <span className="text-[10px] uppercase text-white/35 block flex items-center gap-1 font-bold"><Flame className="w-2.5 h-2.5 text-hazard-cyan" /> Dedicated Swarm Mission</span>
                   <p className="text-white/75 bg-[#030303] p-2.5 border border-white/5 rounded-none text-[11px] leading-relaxed">
                     {selectedAgent.mission}
                   </p>
@@ -843,7 +843,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                         <div className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
                           selectedAgent.pgl_status === 'verified' ? 'bg-[#3EE7A2]/10 text-[#3EE7A2] border border-[#3EE7A2]/20' :
                           selectedAgent.pgl_status === 'revoked' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                          'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                          'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'
                         }`}>
                           {selectedAgent.pgl_status || 'unverified'}
                         </div>
@@ -851,10 +851,10 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                     )}
                     {selectedAgent.warnings && selectedAgent.warnings.length > 0 && (
                       <div>
-                        <span className="text-[9px] text-hazard-amber block uppercase font-bold">Warnings</span>
+                        <span className="text-[9px] text-hazard-cyan block uppercase font-bold">Warnings</span>
                         <div className="space-y-1 mt-1">
                           {selectedAgent.warnings.map((w, i) => (
-                            <div key={i} className="flex items-start gap-1.5 text-[10px] text-hazard-amber/90 font-mono">
+                            <div key={i} className="flex items-start gap-1.5 text-[10px] text-hazard-cyan/90 font-mono">
                               <span className="mt-0.5">⚠</span>
                               <span>{w}</span>
                             </div>
@@ -877,7 +877,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                       ))}
                     </div>
                   ) : (
-                    <div className="text-[10px] bg-hazard-amber/5 border border-hazard-amber/20 text-hazard-amber/80 px-2 py-1 font-mono">
+                    <div className="text-[10px] bg-hazard-cyan/5 border border-hazard-cyan/20 text-hazard-cyan/80 px-2 py-1 font-mono">
                       Needs proof: BYOS registry did not return capability scopes for this agent.
                     </div>
                   )}
@@ -922,7 +922,7 @@ export default function SwarmMap({ agents, onAgentUpdate, isDemoMode = false, so
                     </button>
                   </div>
                   {traceError && (
-                    <div className="text-[9px] font-mono text-hazard-amber/80 bg-hazard-amber/5 border border-hazard-amber/20 px-2 py-1 mt-1">
+                    <div className="text-[9px] font-mono text-hazard-cyan/80 bg-hazard-cyan/5 border border-hazard-cyan/20 px-2 py-1 mt-1">
                       ⚠ {traceError}
                     </div>
                   )}

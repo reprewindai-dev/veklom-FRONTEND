@@ -10,7 +10,7 @@ export function CircuitBreakerStatus({ circuit }: { circuit: CircuitState }) {
       circuit.state === 'CLOSED'
         ? 'border-accent-green/20 bg-accent-green/5'
         : circuit.state === 'HALF_OPEN'
-        ? 'border-amber-500/20 bg-amber-500/5'
+        ? 'border-cyan-500/20 bg-cyan-500/5'
         : 'border-red-500/20 bg-red-500/5'
     }`}>
       <Activity size={13} className={circuitColor(circuit.state)} />
@@ -24,7 +24,7 @@ export function CircuitBreakerStatus({ circuit }: { circuit: CircuitState }) {
           </p>
         )}
         {circuit.state === 'HALF_OPEN' && (
-          <p className="text-[11px] text-amber-400/70 mt-0.5">
+          <p className="text-[11px] text-cyan-400/70 mt-0.5">
             Probing Ollama… {circuit.failures}/{circuit.threshold} failures. Recovery in progress.
           </p>
         )}
@@ -35,7 +35,7 @@ export function CircuitBreakerStatus({ circuit }: { circuit: CircuitState }) {
         )}
       </div>
       {circuit.state !== 'CLOSED' && (
-        <Link href="/status" className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 shrink-0">
+        <Link href="/status" className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 shrink-0">
           Monitor <ChevronRight size={10} />
         </Link>
       )}

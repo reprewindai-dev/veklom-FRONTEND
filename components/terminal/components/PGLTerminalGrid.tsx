@@ -36,7 +36,7 @@ export default function PGLTerminalGrid({ agents, onSelectAgent }: Props) {
               {agent.status === 'cleared' ? (
                 <Shield className="w-4 h-4 text-[#00FF66]" />
               ) : (
-                <Activity className="w-4 h-4 text-[#FFAB00]" />
+                <Activity className="w-4 h-4 text-[#00E5FF]" />
               )}
             </div>
 

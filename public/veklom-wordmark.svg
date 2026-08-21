@@ -5,10 +5,10 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <g filter="url(#vglow)" stroke="#FFB800" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+  <g filter="url(#vglow)" stroke="#00E5FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
     <path d="M30 32 L62 96 L94 32"/>
   </g>
-  <circle cx="62" cy="52" r="8.5" fill="#FFB800" filter="url(#vglow)"/>
+  <circle cx="62" cy="52" r="8.5" fill="#00E5FF" filter="url(#vglow)"/>
   <text x="112" y="90" font-family="Geist, Inter, system-ui, -apple-system, Segoe UI, sans-serif"
         font-size="86" font-weight="800" letter-spacing="-3" fill="#FFFFFF">eklom</text>
 </svg>

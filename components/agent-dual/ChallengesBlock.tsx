@@ -21,7 +21,7 @@ export function ChallengesBlock({ challenges, onClaimReward, onClaimAll, bankrol
       case 'streak':
         return <Flame className="w-5 h-5 text-orange-500" />;
       case 'wager_milestone':
-        return <Coins className="w-5 h-5 text-amber-500" />;
+        return <Coins className="w-5 h-5 text-cyan-500" />;
       case 'tie_win':
         return <Trophy className="w-5 h-5 text-emerald-500" />;
       case 'bot_cycles':
@@ -77,12 +77,12 @@ export function ChallengesBlock({ challenges, onClaimReward, onClaimAll, bankrol
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">
               Cumulative Reward Pool
             </span>
-            <div className="text-2xl font-black font-mono text-amber-500">
+            <div className="text-2xl font-black font-mono text-cyan-500">
               ${totalRewardsPotential.toFixed(2)} <span className="text-slate-600 text-[11px]">USDC</span>
             </div>
             <p className="text-[9px] font-mono text-slate-400">Max potential daily drop</p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
+          <div className="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-500">
             <Trophy className="w-6 h-6" />
           </div>
         </div>
@@ -111,7 +111,7 @@ export function ChallengesBlock({ challenges, onClaimReward, onClaimAll, bankrol
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
           <div>
             <h3 className="text-sm font-bold font-sans text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
               Daily Challenges Registry
             </h3>
             <p className="text-[10px] text-slate-500 font-mono mt-0.5">

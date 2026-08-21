@@ -154,7 +154,7 @@ export default function DataGrid({ runs }: DataGridProps) {
                   if (run.status === 'running') badgeStyle = 'text-electric-cyan border-electric-cyan/35 bg-electric-cyan/10 animate-pulse';
 
                   let policyStyle = 'text-matrix-emerald/80 border-matrix-emerald/30';
-                  if (run.policyStatus === 'warning') policyStyle = 'text-hazard-amber/80 border-hazard-amber/30';
+                  if (run.policyStatus === 'warning') policyStyle = 'text-hazard-cyan/80 border-hazard-cyan/30';
                   if (run.policyStatus === 'violated') policyStyle = 'text-laser-red/80 border-laser-red/30';
 
                   return (
@@ -296,7 +296,7 @@ export default function DataGrid({ runs }: DataGridProps) {
                     <span className="text-white/30">Verification Integrity Score:</span>
                     <span className={`font-black ${
                       run.policyStatus === 'passed' ? 'text-matrix-emerald' : 
-                      run.policyStatus === 'warning' ? 'text-hazard-amber' : 'text-laser-red'
+                      run.policyStatus === 'warning' ? 'text-hazard-cyan' : 'text-laser-red'
                     }`}>
                       {run.policyStatus.toUpperCase()}
                     </span>

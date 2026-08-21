@@ -306,7 +306,7 @@ export default function ControlNodePage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]/40 font-mono">Policy Mode</span>
-              <span className={`text-xs font-medium tracking-wide ${capiPoliciesVerified ? "text-white/90" : "text-[#FFAB00]"}`}>
+              <span className={`text-xs font-medium tracking-wide ${capiPoliciesVerified ? "text-white/90" : "text-[#00E5FF]"}`}>
                 {capiPoliciesVerified ? "Zero-Trust Active" : "Needs proof"}
               </span>
             </div>
@@ -392,7 +392,7 @@ export default function ControlNodePage() {
                   <div className="space-y-4 text-[11px] font-mono">
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Policy Engine</span>
-                      <span className={capiPoliciesVerified ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{proofLabel(capiPoliciesVerified, canonical.isLoading)}</span>
+                      <span className={capiPoliciesVerified ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#00E5FF] font-bold tracking-wider"}>{proofLabel(capiPoliciesVerified, canonical.isLoading)}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Approval Mode</span>
@@ -400,17 +400,17 @@ export default function ControlNodePage() {
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Budget Guard</span>
-                      <span className={hasSpendToday ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{hasSpendToday ? "OBSERVED" : "NEEDS PROOF"}</span>
+                      <span className={hasSpendToday ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#00E5FF] font-bold tracking-wider"}>{hasSpendToday ? "OBSERVED" : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Circuit Breaker</span>
-                      <span className={byosHealthy && capiHealthy ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{byosHealthy && capiHealthy ? "OBSERVED" : "NEEDS PROOF"}</span>
+                      <span className={byosHealthy && capiHealthy ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#00E5FF] font-bold tracking-wider"}>{byosHealthy && capiHealthy ? "OBSERVED" : "NEEDS PROOF"}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">VNP Staking</span>
-                      <span className="text-[#FFAB00] font-bold tracking-wider">NEEDS PROOF</span>
+                      <span className="text-[#00E5FF] font-bold tracking-wider">NEEDS PROOF</span>
                     </div>
-                    <div className={`pt-2 mt-4 bg-gradient-to-r ${nodeProtection === "PROOF SOURCES VERIFIED" ? "from-[#00FF66]/10 border-[#00FF66] text-[#00FF66]" : "from-[#FFAB00]/10 border-[#FFAB00] text-[#FFAB00]"} to-transparent border-l-2 px-3 py-2 tracking-[0.2em] text-[10px] uppercase shadow-[inset_0_0_20px_rgba(0,255,102,0.05)]`}>
+                    <div className={`pt-2 mt-4 bg-gradient-to-r ${nodeProtection === "PROOF SOURCES VERIFIED" ? "from-[#00FF66]/10 border-[#00FF66] text-[#00FF66]" : "from-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]"} to-transparent border-l-2 px-3 py-2 tracking-[0.2em] text-[10px] uppercase shadow-[inset_0_0_20px_rgba(0,255,102,0.05)]`}>
                       {nodeProtection}
                     </div>
                   </div>
@@ -428,7 +428,7 @@ export default function ControlNodePage() {
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Audit Trace</span>
-                      <span className={auditTrace === "ACTIVE" ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#FFAB00] font-bold tracking-wider"}>{auditTrace}</span>
+                      <span className={auditTrace === "ACTIVE" ? "text-[#00FF66] font-bold tracking-wider text-glow-emerald" : "text-[#00E5FF] font-bold tracking-wider"}>{auditTrace}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-white/40 uppercase tracking-widest">Replay State</span>
@@ -451,7 +451,7 @@ export default function ControlNodePage() {
                     const stateClass = source.state === "healthy"
                       ? "text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/5"
                       : source.state === "degraded"
-                        ? "text-[#FFAB00] border-[#FFAB00]/25 bg-[#FFAB00]/5"
+                        ? "text-[#00E5FF] border-[#00E5FF]/25 bg-[#00E5FF]/5"
                         : "text-[#FF003C] border-[#FF003C]/25 bg-[#FF003C]/5";
 
                     return (
@@ -478,7 +478,7 @@ export default function ControlNodePage() {
                           </div>
                           <div className="flex items-center justify-between gap-3">
                             <span>Overview</span>
-                            <span className={source.overview.ok ? "text-[#00FF66]" : "text-[#FFAB00]"}>
+                            <span className={source.overview.ok ? "text-[#00FF66]" : "text-[#00E5FF]"}>
                               {source.overview.ok ? `${source.overview.status} / ${source.overview.latency_ms}ms` : source.overview.error || "Needs proof"}
                             </span>
                           </div>
@@ -515,14 +515,14 @@ export default function ControlNodePage() {
                     </div>
                   )}
 
-                  <div className="p-3 border border-[#FFAB00]/30 bg-[#FFAB00]/5 rounded-lg backdrop-blur-sm">
+                  <div className="p-3 border border-[#00E5FF]/30 bg-[#00E5FF]/5 rounded-lg backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-[#FFAB00]/90 font-medium font-sans text-sm tracking-wide">{hasSpendToday ? "Budget Signal Observed" : "Budget Proof Unavailable"}</span>
-                      <span className="text-[9px] bg-[#FFAB00]/10 text-[#FFAB00] border border-[#FFAB00]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">{hasSpendToday ? "OBSERVED" : "NEEDS PROOF"}</span>
+                      <span className="text-[#00E5FF]/90 font-medium font-sans text-sm tracking-wide">{hasSpendToday ? "Budget Signal Observed" : "Budget Proof Unavailable"}</span>
+                      <span className="text-[9px] bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 px-1.5 py-0.5 rounded font-mono tracking-widest">{hasSpendToday ? "OBSERVED" : "NEEDS PROOF"}</span>
                     </div>
                     <div className="text-[11px] text-white/50 mb-3 font-mono leading-relaxed">{hasSpendToday ? `Live canonical usage reports $${spendToday.toFixed(4)} spend.` : "No live billing signal returned by BYOS or cAPI canonical probes."}</div>
                     <Link href="/budget">
-                      <button className="text-[9px] px-3 py-1.5 border border-[#FFAB00]/40 bg-[#FFAB00]/10 hover:bg-[#FFAB00]/20 text-white/90 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,171,0,0.15)]">MANAGE BUDGET</button>
+                      <button className="text-[9px] px-3 py-1.5 border border-[#00E5FF]/40 bg-[#00E5FF]/10 hover:bg-[#00E5FF]/20 text-white/90 rounded uppercase tracking-[0.2em] font-mono transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,171,0,0.15)]">MANAGE BUDGET</button>
                     </Link>
                   </div>
 

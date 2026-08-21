@@ -161,7 +161,7 @@ export default function AiAdvisorPanel() {
                 }`}>
                   {m.text}
                   {m.isSimulated && (
-                    <div className="mt-3.5 pt-2 border-t border-amber-500/20 text-[10px] text-amber-400/80 flex items-center gap-1">
+                    <div className="mt-3.5 pt-2 border-t border-cyan-500/20 text-[10px] text-cyan-400/80 flex items-center gap-1">
                       <Sparkles className="w-3 h-3 flex-shrink-0" />
                       <span>Fallback parameters loaded (Config simulated). See Settings &gt; Secrets to active real live model.</span>
                     </div>

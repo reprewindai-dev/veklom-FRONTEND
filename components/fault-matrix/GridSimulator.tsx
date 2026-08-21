@@ -402,7 +402,7 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
     if (cell.type === 'start') {
       classes += "bg-cyan-950/65 text-cyan-400 font-bold border border-cyan-455 shadow-[0_0_12px_rgba(6,182,212,0.4)]";
     } else if (cell.type === 'target') {
-      classes += "bg-amber-950/65 text-amber-400 font-bold border border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
+      classes += "bg-cyan-950/65 text-cyan-400 font-bold border border-cyan-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
     } else if (cell.type === 'obstacle') {
       classes += "bg-[#111622] border border-slate-800 shadow-inner";
     } else if (isCurrent) {
@@ -458,7 +458,7 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
               onClick={() => setPlacementMode('target')}
               className={`p-2 rounded text-xs font-mono border transition-all cursor-pointer ${
                 placementMode === 'target'
-                  ? 'bg-amber-950/40 border-amber-500 text-amber-300 font-semibold shadow-[0_0_8px_rgba(245,158,11,0.35)]'
+                  ? 'bg-cyan-950/40 border-cyan-500 text-cyan-300 font-semibold shadow-[0_0_8px_rgba(245,158,11,0.35)]'
                   : 'bg-[#111622] border-slate-800/80 text-slate-500 hover:text-slate-400'
               }`}
             >
@@ -495,7 +495,7 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
               {Array.from({ length: 120 }).map((_, i) => {
                 let colorClass = "bg-[#111622]";
                 if (i < activeAgentCount) {
-                  const stateColors = ["bg-cyan-400", "bg-sky-400", "bg-amber-400", "bg-blue-400"];
+                  const stateColors = ["bg-cyan-400", "bg-sky-400", "bg-cyan-400", "bg-blue-400"];
                   colorClass = stateColors[i % stateColors.length];
                 }
                 return (
@@ -574,7 +574,7 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
             <span>🟢 Start</span>
           </div>
           <div className="flex items-center gap-1.5 justify-center">
-            <span className="w-2.5 h-2.5 bg-amber-950 border border-amber-400 rounded-sm inline-block" />
+            <span className="w-2.5 h-2.5 bg-cyan-950 border border-cyan-400 rounded-sm inline-block" />
             <span>🎯 Target</span>
           </div>
           <div className="flex items-center gap-1.5 justify-center">
@@ -588,7 +588,7 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="bg-[#0a0c14]/85 border border-cyan-500/20 p-4 rounded-xl flex-1 shadow-xl">
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="text-amber-500 w-5 h-5 animate-pulse" />
+            <AlertTriangle className="text-cyan-500 w-5 h-5 animate-pulse" />
             <h3 className="text-md uppercase font-mono font-semibold tracking-wide text-cyan-300">
               Fault Injection Matrix
             </h3>
@@ -603,12 +603,12 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
                 key={f.event} 
                 className={`p-3 rounded-lg border transition-all ${
                   f.active 
-                    ? 'bg-amber-950/20 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)]' 
+                    ? 'bg-cyan-950/20 border-cyan-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)]' 
                     : 'bg-[#0d1117] border-slate-900/60 hover:order-slate-800'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className={`text-xs font-mono font-bold ${f.active ? 'text-amber-400' : 'text-slate-300'}`}>
+                  <span className={`text-xs font-mono font-bold ${f.active ? 'text-cyan-400' : 'text-slate-300'}`}>
                     {f.event}
                   </span>
                   
@@ -620,13 +620,13 @@ export default function GridSimulator({ onAppendLedger, onStateUpdate }: GridSim
                       checked={f.active} 
                       onChange={() => toggleFault(i)} 
                     />
-                    <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-amber-400 after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-900/60 transition-all"></div>
+                    <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-cyan-400 after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-900/60 transition-all"></div>
                   </label>
                 </div>
                 
                 {f.active && (
-                  <div className="text-[10px] font-mono text-slate-400 leading-relaxed border-t border-amber-900/40 mt-1.5 pt-1.5 animate-fade-in">
-                    <span className="text-amber-500/80 uppercase font-extrabold mr-1">IMPACT:</span> {f.impact}
+                  <div className="text-[10px] font-mono text-slate-400 leading-relaxed border-t border-cyan-900/40 mt-1.5 pt-1.5 animate-fade-in">
+                    <span className="text-cyan-500/80 uppercase font-extrabold mr-1">IMPACT:</span> {f.impact}
                     <div className="text-cyan-400/95 mt-1">
                       <span className="text-cyan-500 uppercase font-extrabold mr-1">RECOVERY:</span> {f.recovery}
                     </div>

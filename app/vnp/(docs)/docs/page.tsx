@@ -42,7 +42,7 @@ export default function DocsHubPage() {
   return (
     <div className="space-y-12 pb-24">
       <div>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] text-xs font-bold uppercase tracking-widest mb-5">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-[#00E5FF] text-xs font-bold uppercase tracking-widest mb-5">
           <FileCheck className="w-3.5 h-3.5" /> Updated July 7
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight mb-6">VNP Documentation Hub</h1>
@@ -60,7 +60,7 @@ export default function DocsHubPage() {
           const Icon = item.icon;
           return (
             <div key={item.label} className="bg-black/40 border border-white/10 rounded-xl p-4">
-              <div className="flex items-center gap-2 text-[#FFB800] text-xs font-mono uppercase tracking-widest mb-2">
+              <div className="flex items-center gap-2 text-[#00E5FF] text-xs font-mono uppercase tracking-widest mb-2">
                 <Icon className="w-3.5 h-3.5" /> {item.label}
               </div>
               <div className="text-sm font-semibold text-white">{item.value}</div>
@@ -73,10 +73,10 @@ export default function DocsHubPage() {
         {sections.map((section, idx) => {
           const Icon = section.icon;
           return (
-            <div key={idx} className="bg-white/5 border border-white/10 p-8 rounded-2xl hover:border-[#FFB800]/30 transition-colors group">
+            <div key={idx} className="bg-white/5 border border-white/10 p-8 rounded-2xl hover:border-[#00E5FF]/30 transition-colors group">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20 group-hover:bg-[#FFB800]/20 transition-colors">
-                  <Icon className="w-6 h-6 text-[#FFB800]" />
+                <div className="w-12 h-12 rounded-xl bg-[#00E5FF]/10 flex items-center justify-center border border-[#00E5FF]/20 group-hover:bg-[#00E5FF]/20 transition-colors">
+                  <Icon className="w-6 h-6 text-[#00E5FF]" />
                 </div>
                 <h2 className="text-xl font-bold">{section.title}</h2>
               </div>
@@ -84,8 +84,8 @@ export default function DocsHubPage() {
               <ul className="space-y-3">
                 {section.links.map((link, i) => (
                   <li key={i}>
-                    <Link href={link.href} className="text-gray-300 hover:text-[#FFB800] transition-colors flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800]/50" />
+                    <Link href={link.href} className="text-gray-300 hover:text-[#00E5FF] transition-colors flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]/50" />
                       {link.name}
                     </Link>
                   </li>

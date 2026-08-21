@@ -113,7 +113,7 @@ export const AbideBlueprintView: React.FC = () => {
                   </div>
                   <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
                     <div className="text-slate-400 text-3xs">X402 Settlement</div>
-                    <div className="text-amber-400 font-bold text-2xs mt-1 flex items-center justify-center gap-1">
+                    <div className="text-cyan-400 font-bold text-2xs mt-1 flex items-center justify-center gap-1">
                       <DollarSign className="w-3 h-3" /> {blueprint.x402Settlement.amountMicroTokens} uVNP
                     </div>
                   </div>

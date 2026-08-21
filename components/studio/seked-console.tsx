@@ -39,7 +39,7 @@ export function SekedConsole() {
                 <div key={agent.agent_id} className="p-2 bg-bg-900 border border-ink-800 rounded flex flex-col gap-1">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-medium text-white truncate max-w-[120px]" title={agent.name}>{agent.name}</span>
-                    <span className={`text-[10px] px-1 rounded ${agent.ratios?.sigma >= 5 ? 'bg-accent-green/20 text-accent-green' : 'bg-accent-yellow/20 text-accent-yellow'}`}>
+                    <span className={`text-[10px] px-1 rounded ${agent.ratios?.sigma >= 5 ? 'bg-accent-green/20 text-accent-green' : 'bg-accent-cyan/20 text-accent-cyan'}`}>
                       &Sigma; {agent.ratios?.sigma || 0}
                     </span>
                   </div>

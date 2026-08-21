@@ -164,7 +164,7 @@ export const HerdrAgentEngine: React.FC<HerdrAgentEngineProps> = ({
               </div>
 
               <div className="flex items-center space-x-1 bg-slate-950 p-1.5 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
-                <Sparkles className="h-4 w-4 text-amber-400" />
+                <Sparkles className="h-4 w-4 text-cyan-400" />
                 <span>Gemini Substrate AI Active</span>
               </div>
             </div>

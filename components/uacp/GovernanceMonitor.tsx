@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 export const GovernanceMonitor: React.FC = () => {
   const securityControls = [
     { label: 'PII Redaction', status: 'Active', icon: <LockIcon size={12} />, color: 'text-cyan-400' },
-    { label: 'Audit Traceability', status: 'Propagating', icon: <Eye size={12} />, color: 'text-amber-400' },
+    { label: 'Audit Traceability', status: 'Propagating', icon: <Eye size={12} />, color: 'text-cyan-400' },
     { label: 'Access Constraints', status: 'Verified', icon: <ShieldCheck size={12} />, color: 'text-green-400' },
   ];
 

@@ -22,7 +22,7 @@ export function fmtUsd(n: number | undefined | null, digits = 2): string {
    Palette for chart accents
    ========================================================================= */
 export const ACCENT = {
-  amber: "#FFB800",
+  cyan: "#00E5FF",
   cyan: "#37C9EC",
   green: "#3EE7A2",
   violet: "#B98BFF",
@@ -34,10 +34,10 @@ export type AccentKey = keyof typeof ACCENT;
 /* =========================================================================
    Pill — route / status / severity chips
    ========================================================================= */
-type PillTone = "amber" | "cyan" | "green" | "red" | "violet" | "neutral";
+type PillTone = "cyan" | "cyan" | "green" | "red" | "violet" | "neutral";
 
 const PILL_TONES: Record<PillTone, string> = {
-  amber: "text-brand-400 border-brand-500/40 bg-brand-500/10",
+  cyan: "text-brand-400 border-brand-500/40 bg-brand-500/10",
   cyan: "text-[#7fdcf0] border-[#37C9EC]/40 bg-[#37C9EC]/10",
   green: "text-accent-green border-accent-green/40 bg-accent-green/10",
   red: "text-accent-red border-accent-red/40 bg-accent-red/10",
@@ -48,14 +48,14 @@ const PILL_TONES: Record<PillTone, string> = {
 export function statusTone(value?: string): PillTone {
   const v = (value || "").toLowerCase();
   if (/(pass|healthy|active|verified|on-pace|connected|continuous|ready|resolved|live)/.test(v)) return "green";
-  if (/(redact|review|rotat|progress|pending|warn|expir|degraded)/.test(v)) return "amber";
+  if (/(redact|review|rotat|progress|pending|warn|expir|degraded)/.test(v)) return "cyan";
   if (/(fail|crit|error|breach|over|halt|blocked)/.test(v)) return "red";
   return "neutral";
 }
 export function routeTone(route?: string): PillTone {
   const v = (route || "").toLowerCase();
   if (v.includes("aws") || v.includes("burst")) return "cyan";
-  return "amber";
+  return "cyan";
 }
 
 export function Pill({
@@ -93,7 +93,7 @@ export function RoutePill({ route }: { route?: string }) {
    ========================================================================= */
 export function Sparkline({
   data,
-  color = ACCENT.amber,
+  color = ACCENT.cyan,
   height = 44,
   className,
 }: {
@@ -143,7 +143,7 @@ export function StatTile({
   delta,
   deltaTone = "neutral",
   spark,
-  sparkColor = ACCENT.amber,
+  sparkColor = ACCENT.cyan,
   loading,
 }: {
   label: string;
@@ -226,7 +226,7 @@ export function DualLineChart({
   points,
   aKey,
   bKey,
-  aColor = ACCENT.amber,
+  aColor = ACCENT.cyan,
   bColor = ACCENT.cyan,
   labelKey = "hour",
   height = 220,
@@ -403,7 +403,7 @@ export function KV({ k, v, mono = true }: { k: string; v: ReactNode; mono?: bool
 /* =========================================================================
    ProgressBar
    ========================================================================= */
-export function ProgressBar({ percent, color = ACCENT.amber }: { percent: number; color?: string }) {
+export function ProgressBar({ percent, color = ACCENT.cyan }: { percent: number; color?: string }) {
   const p = Math.max(0, Math.min(100, percent || 0));
   return (
     <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">

@@ -149,7 +149,7 @@ export default function Sidebar({
     state === "online" ? "LIVE" : state === "degraded" ? "DEGRADED" : "NEEDS PROOF";
 
   const probeClass = (state: "online" | "degraded" | "needs_proof") =>
-    state === "online" ? "text-matrix-emerald" : state === "degraded" ? "text-[#FFAB00]" : "text-laser-red";
+    state === "online" ? "text-matrix-emerald" : state === "degraded" ? "text-[#00E5FF]" : "text-laser-red";
 
   return (
     <aside className="w-64 h-full border-r border-[#ffffff0a] bg-void-black flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto scrollbar-hide">
@@ -205,7 +205,7 @@ export default function Sidebar({
 
                     {(item.isLive || probeState !== "needs_proof") && (
                       <div className={`flex items-center gap-1 text-[8px] font-bold ${probeClass(probeState)}`}>
-                        <div className={`w-1 h-1 rounded-full ${probeState === "online" ? "bg-matrix-emerald animate-pulse" : probeState === "degraded" ? "bg-[#FFAB00]" : "bg-laser-red"}`} />
+                        <div className={`w-1 h-1 rounded-full ${probeState === "online" ? "bg-matrix-emerald animate-pulse" : probeState === "degraded" ? "bg-[#00E5FF]" : "bg-laser-red"}`} />
                         {probeLabel(probeState)}
                       </div>
                     )}

@@ -486,15 +486,15 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
                 {/* BANKER SPACE */}
                 <div className={`p-4 rounded border transition-all ${
                   currentStep.state.phase !== 'setup' && hand.outcome === 'banker' && currentStepIndex === steps.length - 1
-                    ? 'bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/10'
+                    ? 'bg-cyan-500/10 border-cyan-500 shadow-md shadow-cyan-500/10'
                     : 'bg-[#0b0c11]/80 border-white/5'
                 }`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold text-amber-500 font-sans flex items-center gap-1">
+                    <span className="text-[11px] font-bold text-cyan-500 font-sans flex items-center gap-1">
                       🌀 AGENT B (Quiet Switch)
                     </span>
                     {currentStep.state.bankerPackets.length > 0 && (
-                      <span className="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/20">
+                      <span className="text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-500 px-1.5 py-0.5 rounded border border-cyan-500/20">
                         {currentStep.state.bankerScore} Pts
                       </span>
                     )}
@@ -638,7 +638,7 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
               {/* Panel 1: Wager Analysis */}
               <div className="bg-[#0b0c10] border border-white/10 rounded-lg p-4 space-y-3 shadow-md">
                 <div className="flex items-center gap-1.5 border-b border-white/5 pb-2">
-                  <Coins className="w-4 h-4 text-amber-500" />
+                  <Coins className="w-4 h-4 text-cyan-500" />
                   <span className="text-[10px] font-mono uppercase font-black tracking-widest text-slate-300">
                     Wager Allocator Review
                   </span>
@@ -646,7 +646,7 @@ export function QuantumReplayModal({ isOpen, onClose, replayData }: QuantumRepla
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between font-mono text-[10px]">
                     <span className="text-slate-500">Risk Profile:</span>
-                    <span className="text-amber-500 font-bold">{bettingFeedback.riskFactor}</span>
+                    <span className="text-cyan-500 font-bold">{bettingFeedback.riskFactor}</span>
                   </div>
                   <p className="text-slate-400 leading-relaxed font-sans text-[11px]">
                     {bettingFeedback.analysis}

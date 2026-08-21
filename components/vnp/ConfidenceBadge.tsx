@@ -4,7 +4,7 @@ import type { VNPConfidence } from "@/lib/vnp/types";
 
 const LEVEL_STYLES = {
   high: { label: "HIGH", color: "#3EE7A2", bg: "rgba(62,231,162,0.1)", border: "rgba(62,231,162,0.25)" },
-  medium: { label: "MEDIUM", color: "#FFB800", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)" },
+  medium: { label: "MEDIUM", color: "#00E5FF", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)" },
   low: { label: "LOW", color: "#FF9F43", bg: "rgba(255,159,67,0.1)", border: "rgba(255,159,67,0.25)" },
   provisional: { label: "PROVISIONAL", color: "#FF5C6C", bg: "rgba(255,92,108,0.1)", border: "rgba(255,92,108,0.25)" },
   unmeasured: { label: "UNMEASURED", color: "#A1A1A6", bg: "rgba(161,161,166,0.1)", border: "rgba(161,161,166,0.25)" },

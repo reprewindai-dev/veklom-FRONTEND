@@ -362,7 +362,7 @@ export default function Dashboard({
           </div>
           <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Active Quarantines</div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-mono font-bold text-amber-500">{pendingQuarantines}</span>
+            <span className="text-3xl font-mono font-bold text-cyan-500">{pendingQuarantines}</span>
             <span className="text-[10px] text-gray-500 font-mono">held limits</span>
           </div>
           <button
@@ -448,7 +448,7 @@ export default function Dashboard({
                 </div>
                 <div className="flex justify-between text-gray-400">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-sm" />
+                    <span className="w-1.5 h-1.5 bg-cyan-500 rounded-sm" />
                     Database Sync Actions (50cr/req)
                   </span>
                   <span className="text-gray-300">45%</span>
@@ -540,7 +540,7 @@ export default function Dashboard({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#23272E] pb-3">
           <div>
             <h3 className="text-xs font-bold text-[#D1D5DB] uppercase tracking-wider flex items-center gap-1.5">
-              <Gauge className="w-4 h-4 text-amber-500 animate-pulse" />
+              <Gauge className="w-4 h-4 text-cyan-500 animate-pulse" />
               Automated Behavioral Drift Detector
             </h3>
             <p className="text-[10px] text-gray-500 mt-1 font-mono">
@@ -552,7 +552,7 @@ export default function Dashboard({
             <div className="space-y-1">
               <div className="flex justify-between items-center text-[10px] text-gray-400 font-mono">
                 <span>DRIFT THRESHOLD DEVIATION SENSITIVITY</span>
-                <span className="font-bold text-amber-500 font-mono text-[11px] ml-2">
+                <span className="font-bold text-cyan-500 font-mono text-[11px] ml-2">
                   {driftThreshold}% TVD
                 </span>
               </div>
@@ -564,7 +564,7 @@ export default function Dashboard({
                   step="5"
                   value={driftThreshold}
                   onChange={(e) => setDriftThreshold(Number(e.target.value))}
-                  className="w-40 accent-amber-500 cursor-pointer text-xs h-1 font-mono bg-[#1A1D23] rounded-lg"
+                  className="w-40 accent-cyan-500 cursor-pointer text-xs h-1 font-mono bg-[#1A1D23] rounded-lg"
                   id="drift-sensitivity-slider"
                 />
                 <div className="flex gap-1">
@@ -574,7 +574,7 @@ export default function Dashboard({
                       onClick={() => setDriftThreshold(val)}
                       className={`px-1.5 py-0.5 rounded text-[9px] font-mono transition-all font-bold uppercase border ${
                         driftThreshold === val
-                          ? 'bg-amber-950/40 text-amber-400 border-amber-600/60'
+                          ? 'bg-cyan-950/40 text-cyan-400 border-cyan-600/60'
                           : 'bg-transparent text-gray-500 border-[#23272E] hover:text-gray-300'
                       }`}
                     >
@@ -632,7 +632,7 @@ export default function Dashboard({
                       isDrifting 
                         ? 'bg-red-950/60 text-red-400 border-red-500/50 animate-pulse' 
                         : driftInfo.driftIndex > 0
-                        ? 'bg-amber-950/20 text-amber-500 border-amber-900/30'
+                        ? 'bg-cyan-950/20 text-cyan-500 border-cyan-900/30'
                         : 'bg-[#0F1115] text-green-400 border-green-900/30'
                     }`}>
                       {driftInfo.driftIndex}% DRIFT
@@ -873,7 +873,7 @@ export default function Dashboard({
                                 if (isPeak) {
                                   slotColor = 'bg-red-950/40 border-red-500/60 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)] animate-pulse';
                                 } else if (count >= 5) {
-                                  slotColor = 'bg-amber-950/35 border-amber-600/40 text-amber-300';
+                                  slotColor = 'bg-cyan-950/35 border-cyan-600/40 text-cyan-300';
                                 } else if (count >= 3) {
                                   slotColor = 'bg-blue-950/35 border-blue-600/40 text-blue-300';
                                 } else {
@@ -924,8 +924,8 @@ export default function Dashboard({
                     <span className="text-blue-400">3-4 Normal</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 bg-amber-950/35 border border-amber-600/40 rounded" />
-                    <span className="text-amber-400">5-9 Elev.</span>
+                    <span className="w-3 h-3 bg-cyan-950/35 border border-cyan-600/40 rounded" />
+                    <span className="text-cyan-400">5-9 Elev.</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="w-3 h-3 bg-red-950/40 border border-red-500/60 rounded animate-pulse" />
@@ -988,7 +988,7 @@ export default function Dashboard({
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-blue-400 font-bold">{ev.who.agentName}</span>
                                     <span className="text-gray-600">→</span>
-                                    <span className="text-amber-400 font-bold uppercase text-[9px] bg-amber-950/20 px-1 py-0.1 rounded border border-amber-900/30">{ev.what.capabilityName}</span>
+                                    <span className="text-cyan-400 font-bold uppercase text-[9px] bg-cyan-950/20 px-1 py-0.1 rounded border border-cyan-900/30">{ev.what.capabilityName}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <span className="text-gray-500 font-mono text-[8.5px]">
@@ -1114,8 +1114,8 @@ export default function Dashboard({
           return (
             <div className="space-y-4">
               {sameAgent && (
-                <div className="bg-amber-950/20 border border-amber-900/40 p-2.5 rounded text-amber-400 font-mono text-[9px] flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <div className="bg-cyan-950/20 border border-cyan-900/40 p-2.5 rounded text-cyan-400 font-mono text-[9px] flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-cyan-400" />
                   <span><strong>COMPARATIVE WARNING:</strong> Evaluating identical signatures ({agentA.name}). Select separate peers to compute delta variance benchmarks.</span>
                 </div>
               )}
@@ -1226,7 +1226,7 @@ export default function Dashboard({
                 <div className="bg-[#0B0C0E] border border-[#23272E] p-4 rounded flex flex-col justify-between xl:col-span-1" id="compare-chart-resource">
                   <div className="border-b border-[#23272E]/60 pb-2 mb-3">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-mono flex items-center gap-1">
-                      <Database className="w-3.5 h-3.5 text-amber-400" />
+                      <Database className="w-3.5 h-3.5 text-cyan-400" />
                       Dynamic Quota Allocation Map
                     </span>
                   </div>
@@ -1475,7 +1475,7 @@ export default function Dashboard({
                           </span>
                         </td>
                         <td className="p-2 text-right">
-                          <span className="text-[10px] text-gray-500 font-bold uppercase text-amber-500">
+                          <span className="text-[10px] text-gray-500 font-bold uppercase text-cyan-500">
                             {agentA.status === 'active' && agentB.status === 'active' ? 'HIGH PEER CONCURRENCY' : 'MUTED STATE PRESENT'}
                           </span>
                         </td>
@@ -1542,7 +1542,7 @@ export default function Dashboard({
                     <div className="flex items-center gap-1.5">
                       <span className={`h-1.5 w-1.5 rounded-sm ${
                         agent.trustScore >= 80 ? 'bg-green-400' :
-                        agent.trustScore >= 50 ? 'bg-amber-400' : 'bg-red-500'
+                        agent.trustScore >= 50 ? 'bg-cyan-400' : 'bg-red-500'
                       }`} />
                       <span className="font-bold text-gray-200">{agent.trustScore}</span>
                       <span className="text-[10px] text-gray-600">/100</span>
@@ -1552,7 +1552,7 @@ export default function Dashboard({
                   <td className="py-2.5">
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                       agent.anomalyCount === 0 ? 'bg-[#0B0C0E] text-gray-500 border border-[#23272E]' :
-                      agent.anomalyCount < 3 ? 'bg-amber-950/20 text-amber-400 border border-amber-900/40' :
+                      agent.anomalyCount < 3 ? 'bg-cyan-950/20 text-cyan-400 border border-cyan-900/40' :
                       'bg-red-950/20 text-red-400 border border-red-900/40'
                     }`}>
                       {agent.anomalyCount} anomalies
@@ -1568,7 +1568,7 @@ export default function Dashboard({
                             isDrifting 
                               ? 'text-red-400 bg-red-950/30 border border-red-900/50 animate-pulse' 
                               : driftInfo.driftIndex > 0
-                              ? 'text-amber-400 bg-amber-950/10 border border-amber-900/20'
+                              ? 'text-cyan-400 bg-cyan-950/10 border border-cyan-900/20'
                               : 'text-gray-500 bg-[#0B0C0E] border border-[#23272E]'
                           }`}>
                             {isDrifting && <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" />}
@@ -1719,7 +1719,7 @@ export default function Dashboard({
 
               <div className="bg-[#15181E] border border-[#23272E] p-3 rounded flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
                   <div>
                     <span className="text-white block font-bold text-[11px]">Generate Profile with Gemini API</span>
                     <span className="text-[9px] text-gray-500 block">Create technical summaries & summaries on register</span>
@@ -1729,7 +1729,7 @@ export default function Dashboard({
                   type="checkbox"
                   checked={formData.autoGenerateProfile}
                   onChange={(e) => setFormData(prev => ({ ...prev, autoGenerateProfile: e.target.checked }))}
-                  className="w-4 h-4 accent-amber-500 cursor-pointer"
+                  className="w-4 h-4 accent-cyan-500 cursor-pointer"
                 />
               </div>
 
@@ -1831,7 +1831,7 @@ export default function Dashboard({
                   <span className="text-gray-500 text-[9px] uppercase tracking-wider block mb-1">Trust Score</span>
                   <span className={`text-base font-bold font-sans ${
                     selectedAgent.trustScore >= 80 ? 'text-green-400' :
-                    selectedAgent.trustScore >= 50 ? 'text-amber-400' : 'text-red-500'
+                    selectedAgent.trustScore >= 50 ? 'text-cyan-400' : 'text-red-500'
                   }`}>{selectedAgent.trustScore}/100</span>
                 </div>
                 <div className="p-2.5 bg-[#15181E] border border-[#23272E]/60 rounded-md">
@@ -1850,13 +1850,13 @@ export default function Dashboard({
               <div className="space-y-3.5 border-t border-[#23272E]/60 pt-4">
                 <div className="flex items-center justify-between">
                   <span className="text-white font-bold text-[10px] tracking-wider uppercase flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                     Operational & technical Profile (Gemini AI)
                   </span>
                   <button
                     onClick={() => handleManualRegenerateProfile(selectedAgent.id)}
                     disabled={isGeneratingProfile}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-950/20 text-amber-400 border border-amber-900/40 hover:bg-amber-900/10 text-[9px] font-bold transition-all disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/20 text-cyan-400 border border-cyan-900/40 hover:bg-cyan-900/10 text-[9px] font-bold transition-all disabled:opacity-50 cursor-pointer"
                   >
                     <RefreshCw className={`w-2.5 h-2.5 ${isGeneratingProfile ? 'animate-spin' : ''}`} />
                     <span>REGENERATE</span>
@@ -1901,7 +1901,7 @@ export default function Dashboard({
                     </div>
                     <button
                       onClick={() => handleManualRegenerateProfile(selectedAgent.id)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] tracking-wide transition-all uppercase cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[10px] tracking-wide transition-all uppercase cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>COMPILE_OPERATIONAL_PROFILE</span>

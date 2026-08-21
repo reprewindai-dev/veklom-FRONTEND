@@ -35,7 +35,7 @@ app.add_middleware(
 )
 
 <span className="text-purple-400">@app.get</span>(<span className="text-green-300">"/v1/resource"</span>)
-<span className="text-blue-400">async def</span> <span className="text-yellow-200">get_critical_data</span>():
+<span className="text-blue-400">async def</span> <span className="text-cyan-200">get_critical_data</span>():
     <span className="text-blue-400">return</span> {"{"}<span className="text-green-300">"status"</span>: <span className="text-green-300">"success"</span>, <span className="text-green-300">"data"</span>: <span className="text-green-300">"..."</span>{"}"}
             </pre>
           </div>
@@ -44,8 +44,8 @@ app.add_middleware(
         <section>
           <div className="grid sm:grid-cols-2 gap-6 mt-8">
             <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
-              <div className="w-10 h-10 rounded-lg bg-[#FFB800]/10 flex items-center justify-center mb-4">
-                <Server className="w-5 h-5 text-[#FFB800]" />
+              <div className="w-10 h-10 rounded-lg bg-[#00E5FF]/10 flex items-center justify-center mb-4">
+                <Server className="w-5 h-5 text-[#00E5FF]" />
               </div>
               <h3 className="font-bold text-white mb-2">Zero-Overhead Probing</h3>
               <p className="text-sm text-gray-400 leading-relaxed">

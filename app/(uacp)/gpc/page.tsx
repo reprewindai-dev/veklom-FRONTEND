@@ -127,11 +127,11 @@ export default function GpcPage() {
             </Pill>
             <Pill tone="cyan">Test → Deploy</Pill>
             {deploymentStatus && (
-              <Pill tone="amber">
+              <Pill tone="cyan">
                 {deploymentStatus === 'tested' ? '✅ Ready to deploy' : deploymentStatus}
               </Pill>
             )}
-            <Pill tone="amber" dot={isExecuting}>
+            <Pill tone="cyan" dot={isExecuting}>
               {isExecuting ? 'Running' : 'Ready'}
             </Pill>
           </>
@@ -357,10 +357,10 @@ export default function GpcPage() {
             <h2 className="text-xl font-semibold mb-4">Compiled Pipeline</h2>
 
             {compilationModal.warnings.length > 0 && (
-              <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="mb-4 bg-cyan-50 border border-cyan-200 rounded-lg p-3">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-yellow-800">
+                  <AlertTriangle size={16} className="text-cyan-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-cyan-800">
                     <strong>Warnings:</strong>
                     <ul className="mt-1 space-y-1">
                       {compilationModal.warnings.map((w, i) => (

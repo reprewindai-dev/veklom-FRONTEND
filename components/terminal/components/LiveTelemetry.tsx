@@ -54,7 +54,7 @@ export default function LiveTelemetry({ logs, metrics, onTriggerManualOverride }
   const getLogColor = (type: string) => {
     switch (type) {
       case 'success': return 'text-matrix-emerald';
-      case 'warn': return 'text-hazard-amber';
+      case 'warn': return 'text-hazard-cyan';
       case 'error': return 'text-laser-red';
       default: return 'text-[#ffffffb3]';
     }
@@ -84,7 +84,7 @@ export default function LiveTelemetry({ logs, metrics, onTriggerManualOverride }
 
         <div className="p-3 rounded-none border border-white/5 bg-[#0A0A0C]">
           <span className="text-white/30 block text-[9px] uppercase tracking-wider flex items-center gap-1">
-            <Zap className="w-3 h-3 text-hazard-amber" /> Gas Saved En Route
+            <Zap className="w-3 h-3 text-hazard-cyan" /> Gas Saved En Route
           </span>
           <span className="text-white text-sm font-bold">{metrics.gasSaved.toLocaleString()} Gwei</span>
           <div className="text-[8.5px] text-[#ffffff26] mt-0.5">Optimizer compile bypass</div>

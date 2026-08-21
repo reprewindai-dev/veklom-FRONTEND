@@ -142,7 +142,7 @@ export default function AlertPanel({ configs, logs, onAddConfig, onRefresh, load
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <BellRing className="w-4.5 h-4.5 text-amber-500 animate-bounce" /> SEKED Policy Halts & Kill Switch Triggers ({logs.length})
+              <BellRing className="w-4.5 h-4.5 text-cyan-500 animate-bounce" /> SEKED Policy Halts & Kill Switch Triggers ({logs.length})
             </h3>
 
             <button

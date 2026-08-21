@@ -57,10 +57,10 @@ export default function K8sAutoscalingPanel() {
     }
     if (cpu > 55) {
       return {
-        bg: "bg-amber-950/15 text-amber-400 border-amber-500/40",
+        bg: "bg-cyan-950/15 text-cyan-400 border-cyan-500/40",
         fanSpeed: "0.4s",
-        ledPower: "bg-amber-400 animate-pulse",
-        glowingBar: "bg-amber-400",
+        ledPower: "bg-cyan-400 animate-pulse",
+        glowingBar: "bg-cyan-400",
         stateMsg: "HEAVY INGESTION"
       };
     }
@@ -96,8 +96,8 @@ export default function K8sAutoscalingPanel() {
       <div className="lg:col-span-4 bg-[#0b1017] border border-slate-900 rounded-2xl p-5 space-y-5 flex flex-col justify-between">
         
         <div className="space-y-4">
-          <div className="flex items-center gap-1.5 text-xs text-amber-500 font-mono font-bold uppercase tracking-wider">
-            <Zap className="text-amber-500 w-4 h-4 animate-pulse" />
+          <div className="flex items-center gap-1.5 text-xs text-cyan-500 font-mono font-bold uppercase tracking-wider">
+            <Zap className="text-cyan-500 w-4 h-4 animate-pulse" />
             <span>Load Concurrent Reactor</span>
           </div>
 
@@ -254,7 +254,7 @@ export default function K8sAutoscalingPanel() {
                   {/* Right Side: LEDs & indicators */}
                   <div className="flex items-center gap-2">
                     <div className="text-right font-mono text-[9px]">
-                      <span className={`block font-bold ${podCpu > 75 ? "text-amber-400" : "text-emerald-400"}`}>
+                      <span className={`block font-bold ${podCpu > 75 ? "text-cyan-400" : "text-emerald-400"}`}>
                         {podCpu}% CPU
                       </span>
                       <span className="text-slate-600 block text-[8px]">mem: {isUnhealthy ? "91%" : `${Math.round(35 + (index * 2))}%`}</span>

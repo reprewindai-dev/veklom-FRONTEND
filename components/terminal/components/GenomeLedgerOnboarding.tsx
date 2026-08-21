@@ -23,7 +23,7 @@ export default function GenomeLedgerOnboarding() {
         <div className="w-1/3 flex flex-col gap-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-light text-white tracking-tight">
-              <span className="text-hazard-amber font-bold">Gnomledger</span>
+              <span className="text-hazard-cyan font-bold">Gnomledger</span>
             </h1>
             <p className="text-white/40 text-sm leading-relaxed max-w-sm">
               Provisioning Sovereign Authority node. Establishing secure telemetry and immutable operational chains.
@@ -31,8 +31,8 @@ export default function GenomeLedgerOnboarding() {
           </div>
 
           <div className="mt-20 relative">
-            <div className="w-48 h-48 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center gap-4 group hover:border-hazard-amber/30 transition-all">
-              <div className="p-4 rounded-full bg-hazard-amber/10 text-hazard-amber">
+            <div className="w-48 h-48 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center gap-4 group hover:border-hazard-cyan/30 transition-all">
+              <div className="p-4 rounded-full bg-hazard-cyan/10 text-hazard-cyan">
                 <Fingerprint size={32} />
               </div>
               <div className="text-center">
@@ -41,14 +41,14 @@ export default function GenomeLedgerOnboarding() {
               </div>
 
               {/* Pulsing indicator */}
-              <div className="absolute -inset-4 border border-hazard-amber/5 rounded-full animate-pulse" />
+              <div className="absolute -inset-4 border border-hazard-cyan/5 rounded-full animate-pulse" />
             </div>
           </div>
         </div>
 
         {/* Right Side: Form */}
         <div className="w-1/2 max-w-xl flex flex-col gap-8">
-          <div className="flex items-center gap-2 text-hazard-amber/60">
+          <div className="flex items-center gap-2 text-hazard-cyan/60">
              <User size={14} />
              <span className="text-[10px] font-mono uppercase tracking-[0.2em]">Operator Identity</span>
           </div>
@@ -60,11 +60,11 @@ export default function GenomeLedgerOnboarding() {
 
           <div className="p-8 bg-[#0a0a0c] border border-white/10 rounded-2xl space-y-6 relative overflow-hidden">
              <div className="flex gap-4">
-                <div className="p-3 rounded-xl bg-hazard-amber/10 text-hazard-amber h-fit">
+                <div className="p-3 rounded-xl bg-hazard-cyan/10 text-hazard-cyan h-fit">
                    <Info size={20} />
                 </div>
                 <div className="space-y-2">
-                   <h3 className="text-sm font-bold text-hazard-amber uppercase">Why this matters</h3>
+                   <h3 className="text-sm font-bold text-hazard-cyan uppercase">Why this matters</h3>
                    <p className="text-[11px] text-white/40 leading-relaxed">
                       Establishing a cryptographically bound Operator Identity ensures that all autonomous actions trace back to an authorized human. This prevents unauthorized usage and guarantees compliance with enterprise security models.
                    </p>
@@ -78,7 +78,7 @@ export default function GenomeLedgerOnboarding() {
                      type="text"
                      value={formData.fullName}
                      onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                     className="w-full bg-[#030303] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-hazard-amber/50 transition-all"
+                     className="w-full bg-[#030303] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-hazard-cyan/50 transition-all"
                    />
                 </div>
                 <div className="space-y-2">
@@ -87,7 +87,7 @@ export default function GenomeLedgerOnboarding() {
                      type="email"
                      value={formData.secureEmail}
                      onChange={(e) => setFormData({...formData, secureEmail: e.target.value})}
-                     className="w-full bg-[#030303] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-hazard-amber/50 transition-all"
+                     className="w-full bg-[#030303] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-hazard-cyan/50 transition-all"
                    />
                 </div>
              </div>
@@ -102,7 +102,7 @@ export default function GenomeLedgerOnboarding() {
                 Go Back
              </button>
              <button
-               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-hazard-amber text-black text-sm font-bold hover:bg-hazard-amber/80 transition-all shadow-[0_0_20px_rgba(255,171,0,0.2)]"
+               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-hazard-cyan text-black text-sm font-bold hover:bg-hazard-cyan/80 transition-all shadow-[0_0_20px_rgba(255,171,0,0.2)]"
              >
                 Proceed
                 <ChevronRight size={18} />
@@ -124,7 +124,7 @@ export default function GenomeLedgerOnboarding() {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: '14.28%' }}
-              className="h-full bg-hazard-amber"
+              className="h-full bg-hazard-cyan"
             />
          </div>
          <span className="text-[10px] font-mono text-white/30">01 / 07</span>

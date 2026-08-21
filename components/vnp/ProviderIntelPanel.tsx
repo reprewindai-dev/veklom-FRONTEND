@@ -46,8 +46,8 @@ function getDimensionalScores(api: BenchmarkApiEntry) {
 function gradeFor(score: number): { letter: string; color: string; bg: string } {
   if (score >= 90) return { letter: 'A+', color: '#00FF66', bg: '#00FF66/10' };
   if (score >= 80) return { letter: 'A',  color: '#00FF66', bg: '#00FF66/8'  };
-  if (score >= 70) return { letter: 'B',  color: '#FFB800', bg: '#FFB800/10' };
-  if (score >= 60) return { letter: 'C',  color: '#FFAB00', bg: '#FFAB00/10' };
+  if (score >= 70) return { letter: 'B',  color: '#00E5FF', bg: '#00E5FF/10' };
+  if (score >= 60) return { letter: 'C',  color: '#00E5FF', bg: '#00E5FF/10' };
   if (score >= 50) return { letter: 'D',  color: '#FF7A00', bg: '#FF7A00/10' };
   return                   { letter: 'F',  color: '#FF003C', bg: '#FF003C/10' };
 }
@@ -113,7 +113,7 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search APIs…"
-            className="w-full bg-[#0A0A0A] border border-[#1F1F1F] rounded-lg pl-8 pr-3 py-2 text-xs text-[#E6E6E9] font-mono focus:outline-none focus:border-[#FFB800]/40 placeholder-[#6E6E73]"
+            className="w-full bg-[#0A0A0A] border border-[#1F1F1F] rounded-lg pl-8 pr-3 py-2 text-xs text-[#E6E6E9] font-mono focus:outline-none focus:border-[#00E5FF]/40 placeholder-[#6E6E73]"
           />
         </div>
 
@@ -128,12 +128,12 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
                 onClick={() => setSelectedApiId(api.id)}
                 className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
                   isSelected
-                    ? 'border-[#FFB800]/40 bg-[#FFB800]/5'
+                    ? 'border-[#00E5FF]/40 bg-[#00E5FF]/5'
                     : 'border-[#1F1F1F] bg-[#0A0A0A] hover:border-[#333]'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`text-[11px] font-semibold ${isSelected ? 'text-[#FFB800]' : 'text-[#E6E6E9]'}`}>
+                  <span className={`text-[11px] font-semibold ${isSelected ? 'text-[#00E5FF]' : 'text-[#E6E6E9]'}`}>
                     {api.name}
                   </span>
                   <span className="text-[10px] font-bold font-mono" style={{ color: g.color }}>
@@ -186,12 +186,12 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
               <div className="flex items-center gap-2 text-[10px] font-mono text-[#6E6E73]">
                 <Bell className="w-3 h-3" />
                 <span>Alert below:</span>
-                <span className="text-[#FFB800] font-bold">{alertThreshold}</span>
+                <span className="text-[#00E5FF] font-bold">{alertThreshold}</span>
               </div>
               <input
                 type="range" min={40} max={95} value={alertThreshold}
                 onChange={e => setAlertThreshold(parseInt(e.target.value))}
-                className="w-28 accent-[#FFB800]"
+                className="w-28 accent-[#00E5FF]"
               />
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
                         <span className="text-[10px] font-bold font-mono text-[#FF003C]">{issue.score.toFixed(0)}</span>
                       </div>
                       <p className="text-[9px] text-[#6E6E73] mt-0.5 leading-relaxed">{issue.description}</p>
-                      <div className="mt-1.5 flex items-center gap-1 text-[9px] font-mono text-[#FFB800]">
+                      <div className="mt-1.5 flex items-center gap-1 text-[9px] font-mono text-[#00E5FF]">
                         <ChevronRight className="w-3 h-3" />
                         <span>
                           {issue.key === 'p99_latency'    ? 'Deploy edge cache or regional replicas'
@@ -306,7 +306,7 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
                   const g = gradeFor(score);
                   const isYou = peer.id === selectedApi.id;
                   return (
-                    <div key={peer.id} className={`flex items-center gap-2 py-1 px-2 rounded ${isYou ? 'bg-[#FFB800]/5 border border-[#FFB800]/20' : ''}`}>
+                    <div key={peer.id} className={`flex items-center gap-2 py-1 px-2 rounded ${isYou ? 'bg-[#00E5FF]/5 border border-[#00E5FF]/20' : ''}`}>
                       <div className="w-12 text-right">
                         <span className="text-[10px] font-bold font-mono" style={{ color: g.color }}>{score.toFixed(1)}</span>
                       </div>
@@ -315,7 +315,7 @@ export default function ProviderIntelPanel({ apis }: ProviderIntelPanelProps) {
                       </div>
                       <div className="w-24 flex items-center gap-1">
                         <span className="text-[10px] text-[#A1A1A6] truncate">{peer.name}</span>
-                        {isYou && <span className="text-[8px] font-bold text-[#FFB800] bg-[#FFB800]/15 px-1 rounded">YOU</span>}
+                        {isYou && <span className="text-[8px] font-bold text-[#00E5FF] bg-[#00E5FF]/15 px-1 rounded">YOU</span>}
                       </div>
                     </div>
                   );

@@ -18,7 +18,7 @@ export default function TierGate({
   if (meetsTier(tier, required)) return <>{children}</>;
   return (
     <div className="card p-8 max-w-xl mx-auto text-center">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-bg-700 text-accent-amber mb-3">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-bg-700 text-accent-cyan mb-3">
         <Lock size={20} />
       </div>
       <h2 className="text-lg font-semibold mb-1">{feature} is on {TIER_LABEL[required]}</h2>

@@ -10,7 +10,7 @@ interface SEKEDCompilerProps {
 
 export const SEKEDCompiler: React.FC<SEKEDCompilerProps> = ({ state }) => {
   const params = [
-    { label: 'Energy (E)', value: state.energy, icon: <Zap size={10} />, color: 'text-amber-400' },
+    { label: 'Energy (E)', value: state.energy, icon: <Zap size={10} />, color: 'text-cyan-400' },
     { label: 'Resilience (R)', value: state.resilience, icon: <Shield size={10} />, color: 'text-cyan-400' },
     { label: 'Confidence (C)', value: state.confidence, icon: <Target size={10} />, color: 'text-purple-400' },
     { label: 'Diversity (D)', value: state.diversity, icon: <Layers size={10} />, color: 'text-emerald-400' },
@@ -21,11 +21,11 @@ export const SEKEDCompiler: React.FC<SEKEDCompilerProps> = ({ state }) => {
     <div className="bg-white/5 rounded-2xl border border-white/10 p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Cpu size={18} className="text-amber-400" />
+          <Cpu size={18} className="text-cyan-400" />
           <h2 className="text-sm font-mono uppercase tracking-widest text-white/80">SEKED Compiler</h2>
         </div>
-        <div className="px-3 py-1 bg-amber-400/10 border border-amber-400/20 rounded flex items-center gap-2">
-          <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-tighter">Directive:</span>
+        <div className="px-3 py-1 bg-cyan-400/10 border border-cyan-400/20 rounded flex items-center gap-2">
+          <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-tighter">Directive:</span>
           <span className="text-xs font-mono font-black text-white group-hover:animate-pulse uppercase">{state.directive}</span>
         </div>
       </div>

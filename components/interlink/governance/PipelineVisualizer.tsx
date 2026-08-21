@@ -304,9 +304,9 @@ export default function PipelineVisualizer({
               titleColor = 'text-gray-200';
               badgeComponent = <span className="text-[8px] bg-green-950/40 text-green-400 px-1 rounded font-bold font-mono uppercase">DONE</span>;
             } else if (status === 'warning') {
-              stageBg = 'bg-[#1C160C] border-amber-800 text-amber-400';
-              titleColor = 'text-amber-300';
-              badgeComponent = <span className="text-[8px] bg-amber-950/40 text-amber-400 px-1 rounded font-bold font-mono uppercase">WARN</span>;
+              stageBg = 'bg-[#1C160C] border-cyan-800 text-cyan-400';
+              titleColor = 'text-cyan-300';
+              badgeComponent = <span className="text-[8px] bg-cyan-950/40 text-cyan-400 px-1 rounded font-bold font-mono uppercase">WARN</span>;
             } else if (status === 'error') {
               stageBg = 'bg-[#1F0D0D] border-red-900/50 text-red-400';
               titleColor = 'text-red-300';
@@ -319,7 +319,7 @@ export default function PipelineVisualizer({
                 : status === 'success'
                 ? 'bg-[#15181E] border-green-800 text-green-400 hover:bg-green-950/30'
                 : status === 'warning'
-                ? 'bg-[#15181E] border-amber-800 text-amber-400 hover:bg-amber-950/30'
+                ? 'bg-[#15181E] border-cyan-800 text-cyan-400 hover:bg-cyan-950/30'
                 : status === 'error'
                 ? 'bg-[#15181E] border-red-800 text-red-400 hover:bg-red-950/30'
                 : 'bg-[#15181E] border-[#23272E] text-gray-400 hover:text-white hover:border-gray-600 group-hover:border-gray-500 group-hover:text-gray-200';
@@ -410,7 +410,7 @@ export default function PipelineVisualizer({
                         scen.id === 'scen-standard' || scen.id === 'scen-delegated'
                           ? 'bg-green-950/20 text-green-400 border border-green-900/30'
                           : scen.id === 'scen-quarantine'
-                          ? 'bg-amber-950/20 text-amber-400 border border-amber-900/30'
+                          ? 'bg-cyan-950/20 text-cyan-400 border border-cyan-900/30'
                           : 'bg-red-950/20 text-red-400 border border-red-900/30'
                       }`}>
                         {scen.id === 'scen-standard' ? 'Auto-Approve' : 'Pre-Defined'}
@@ -483,7 +483,7 @@ export default function PipelineVisualizer({
                 if (log.includes('[SYSTEM]')) color = 'text-blue-400 font-bold';
                 else if (log.includes('[PHASE')) color = 'text-green-400 font-bold';
                 else if (log.includes('CRITICAL') || log.includes('EXPLOIT') || log.includes('SECURITY')) color = 'text-red-400 font-bold';
-                else if (log.includes('warning') || log.includes('ANOMALY') || log.includes('Quarantine')) color = 'text-amber-400';
+                else if (log.includes('warning') || log.includes('ANOMALY') || log.includes('Quarantine')) color = 'text-cyan-400';
 
                 return (
                   <div key={lIdx} className={`${color} leading-normal`}>
@@ -557,7 +557,7 @@ export default function PipelineVisualizer({
                   statusColor = 'text-green-400 bg-green-950/20 border-green-900/50';
                   iconContent = <CheckCircle className="w-3.5 h-3.5" />;
                 } else if (status === 'warning') {
-                  statusColor = 'text-amber-400 bg-amber-950/20 border-amber-900/50';
+                  statusColor = 'text-cyan-400 bg-cyan-950/20 border-cyan-900/50';
                   iconContent = <AlertTriangle className="w-3.5 h-3.5" />;
                 } else if (status === 'error') {
                   statusColor = 'text-red-400 bg-red-950/20 border-red-900/50';
@@ -626,10 +626,10 @@ export default function PipelineVisualizer({
 
             {/* Interactive alert box if transaction was quarantined */}
             {currentResult && currentResult.status === 'quarantined' && (
-              <div className="bg-amber-950/20 text-amber-300 border border-amber-900/40 p-4 rounded mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="bg-cyan-950/20 text-cyan-300 border border-cyan-900/40 p-4 rounded mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">
                   <div className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                    <ShieldAlert className="w-4 h-4 text-cyan-400" />
                     Transaction Quarantined Under System Quarantine
                   </div>
                   <p className="text-[10px] text-gray-400 font-mono">
@@ -639,7 +639,7 @@ export default function PipelineVisualizer({
                 <button
                   id="quarantine-redirect-btn"
                   onClick={() => onSelectTab('quarantine')}
-                  className="bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-xs uppercase px-4 py-2 rounded transition-all font-mono tracking-wider shrink-0"
+                  className="bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-bold text-xs uppercase px-4 py-2 rounded transition-all font-mono tracking-wider shrink-0"
                 >
                   Sign Quorum approvals →
                 </button>

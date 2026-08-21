@@ -135,10 +135,10 @@ function BenchmarkCardShape({ axes }: { axes: CompletenessAxis[] }) {
     <div className="border border-[#242424] bg-[#070707] rounded-xl p-4">
       <div className="flex items-center justify-between gap-3 border-b border-[#1F1F1F] pb-3">
         <div>
-          <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#FFB800]">BenchmarkCard Shape</div>
+          <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#00E5FF]">BenchmarkCard Shape</div>
           <div className="text-xs text-[#A1A1A6]">Seven-section proof completeness</div>
         </div>
-        <span className="text-[9px] font-mono border border-[#FFB800]/20 bg-[#FFB800]/10 text-[#FFB800] px-2 py-1 rounded">
+        <span className="text-[9px] font-mono border border-[#00E5FF]/20 bg-[#00E5FF]/10 text-[#00E5FF] px-2 py-1 rounded">
           HEPTAGON
         </span>
       </div>
@@ -146,7 +146,7 @@ function BenchmarkCardShape({ axes }: { axes: CompletenessAxis[] }) {
       <div className="relative mx-auto mt-4 aspect-square max-w-[360px]">
         <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-full overflow-visible">
           <defs>
-            <radialGradient id="benchmark-card-amber-glow" cx="50%" cy="50%" r="50%">
+            <radialGradient id="benchmark-card-cyan-glow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(255,184,0,0.16)" />
               <stop offset="100%" stopColor="rgba(255,184,0,0)" />
             </radialGradient>
@@ -194,7 +194,7 @@ function BenchmarkCardShape({ axes }: { axes: CompletenessAxis[] }) {
                   y={labelY + 12}
                   textAnchor={labelX < center - 8 ? "end" : labelX > center + 8 ? "start" : "middle"}
                   dominantBaseline="middle"
-                  className="fill-[#FFB800] text-[9px] font-mono"
+                  className="fill-[#00E5FF] text-[9px] font-mono"
                 >
                   {axis.value}%
                 </text>
@@ -204,8 +204,8 @@ function BenchmarkCardShape({ axes }: { axes: CompletenessAxis[] }) {
 
           <polygon
             points={valuePoints}
-            fill="url(#benchmark-card-amber-glow)"
-            stroke="#FFB800"
+            fill="url(#benchmark-card-cyan-glow)"
+            stroke="#00E5FF"
             strokeWidth="2"
             strokeLinejoin="round"
           />
@@ -215,7 +215,7 @@ function BenchmarkCardShape({ axes }: { axes: CompletenessAxis[] }) {
             const scaledRadius = (value / 100) * radius;
             const x = center + Math.cos(angle) * scaledRadius;
             const y = center + Math.sin(angle) * scaledRadius;
-            return <circle key={`${index}-${value}`} cx={x} cy={y} r="3.5" fill="#070707" stroke="#FFB800" strokeWidth="2" />;
+            return <circle key={`${index}-${value}`} cx={x} cy={y} r="3.5" fill="#070707" stroke="#00E5FF" strokeWidth="2" />;
           })}
         </svg>
       </div>
@@ -252,10 +252,10 @@ function Section({
   return (
     <section className="border border-[#1F1F1F] bg-[#080909] rounded-xl p-5 relative overflow-hidden">
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-[10px] font-mono font-bold text-[#FFB800] bg-[#FFB800]/10 border border-[#FFB800]/20 rounded px-1.5 py-0.5">
+        <span className="text-[10px] font-mono font-bold text-[#00E5FF] bg-[#00E5FF]/10 border border-[#00E5FF]/20 rounded px-1.5 py-0.5">
           {String(index).padStart(2, "0")}
         </span>
-        <Icon className="w-3.5 h-3.5 text-[#FFB800]" />
+        <Icon className="w-3.5 h-3.5 text-[#00E5FF]" />
         <h3 className="text-xs font-bold font-mono uppercase tracking-[0.2em] text-[#A1A1A6]">{title}</h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">{children}</div>

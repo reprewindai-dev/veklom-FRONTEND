@@ -110,9 +110,9 @@ const SCENARIOS: AuthorityScenario[] = [
     suggestedRoles: ["Report Synthesizer Node", "Policy Auditor Node"],
     constraints: ["Jurisdiction boundaries (EU-only isolation)", "Data masking protocols enforced", "External network filter rules block unapproved endpoints"],
     icon: Mail,
-    colorClass: "text-amber-400 bg-amber-500/5",
-    borderClass: "border-amber-500/35",
-    badgeBg: "bg-amber-500/10",
+    colorClass: "text-cyan-400 bg-cyan-500/5",
+    borderClass: "border-cyan-500/35",
+    badgeBg: "bg-cyan-500/10",
     simulationSteps: [
       { 
         title: "PGL PRE-EXECUTION CERTIFICATE", 
@@ -500,7 +500,7 @@ export default function AuthorityScenarios() {
                 
                 const statusColor = 
                   step.status === "success" ? "text-cyan-400 bg-cyan-900/10 border-cyan-500/20" :
-                  step.status === "warning" ? "text-amber-400 bg-amber-900/10 border-amber-500/20 animate-pulse" :
+                  step.status === "warning" ? "text-cyan-400 bg-cyan-900/10 border-cyan-500/20 animate-pulse" :
                   step.status === "error" ? "text-rose-500 bg-rose-500/10 border-rose-500/30 font-black animate-pulse" :
                   "text-neutral-300 bg-neutral-950 border-neutral-850";
 

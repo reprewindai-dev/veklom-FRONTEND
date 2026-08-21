@@ -9,7 +9,7 @@ export const FlameMeter: React.FC<FlameMeterProps> = ({ winStreak }) => {
   const streakLevel = useMemo(() => {
     if (winStreak === 0) return { title: 'Cold Engine', desc: 'No active streak. Initialize arena route.', color: 'text-slate-500', barColor: 'bg-slate-700', bgGlow: 'from-slate-500/0 to-transparent', label: 'STABLE' };
     if (winStreak === 1) return { title: 'First Spark', desc: 'Combustion started. Keep predicting.', color: 'text-orange-400', barColor: 'bg-orange-500 shadow-orange-500/50', bgGlow: 'from-orange-500/5 to-transparent', label: 'IGNITED' };
-    if (winStreak === 2) return { title: 'Thermal Build', desc: 'Escrow heat rising. Streak active.', color: 'text-amber-400', barColor: 'bg-amber-500 shadow-amber-500/50', bgGlow: 'from-amber-500/10 to-transparent', label: 'WARMING' };
+    if (winStreak === 2) return { title: 'Thermal Build', desc: 'Escrow heat rising. Streak active.', color: 'text-cyan-400', barColor: 'bg-cyan-500 shadow-cyan-500/50', bgGlow: 'from-cyan-500/10 to-transparent', label: 'WARMING' };
     if (winStreak === 3) return { title: 'Plasma Blaze', desc: 'Double damage unlocked. Eject sequence pristine.', color: 'text-red-500', barColor: 'bg-red-500 shadow-red-500/50', bgGlow: 'from-red-500/15 to-transparent', label: 'HOT STREAK' };
     if (winStreak === 4) return { title: 'Nuclear fusion', desc: 'Base gas optimizing. Viral multipliers expected.', color: 'text-pink-500', barColor: 'bg-gradient-to-r from-red-500 to-pink-500 shadow-pink-500/50', bgGlow: 'from-pink-500/20 to-transparent', label: 'OVERDRIVE' };
     if (winStreak >= 5 && winStreak < 8) return { title: 'Cosmic Inferno', desc: 'Total protocol domination. Unstoppable state.', color: 'text-purple-400', barColor: 'bg-gradient-to-r from-pink-500 to-purple-500 shadow-purple-500/60', bgGlow: 'from-purple-500/25 to-transparent', label: 'UNSTOPPABLE' };
@@ -50,7 +50,7 @@ export const FlameMeter: React.FC<FlameMeterProps> = ({ winStreak }) => {
             <div
               key={ember.id}
               className={`absolute bottom-0 rounded-full bg-gradient-to-t ${
-                winStreak >= 5 ? 'from-purple-400 to-cyan-300' : winStreak >= 3 ? 'from-red-500 to-orange-400' : 'from-orange-500 to-yellow-300'
+                winStreak >= 5 ? 'from-purple-400 to-cyan-300' : winStreak >= 3 ? 'from-red-500 to-orange-400' : 'from-orange-500 to-cyan-300'
               } opacity-70`}
               style={{
                 left: ember.left,

@@ -21,28 +21,28 @@ export default function OperatorsPage() {
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-4">
-              <Cpu className="w-6 h-6 text-[#FFB800]" />
+              <Cpu className="w-6 h-6 text-[#00E5FF]" />
               <div>
                 <span className="block font-bold text-sm">Processor</span>
                 <span className="text-gray-400 text-sm">32+ Cores (AVX-512 required for VDFs)</span>
               </div>
             </div>
             <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-4">
-              <HardDrive className="w-6 h-6 text-[#FFB800]" />
+              <HardDrive className="w-6 h-6 text-[#00E5FF]" />
               <div>
                 <span className="block font-bold text-sm">Storage</span>
                 <span className="text-gray-400 text-sm">2TB NVMe PCIe 4.0</span>
               </div>
             </div>
             <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-4">
-              <Server className="w-6 h-6 text-[#FFB800]" />
+              <Server className="w-6 h-6 text-[#00E5FF]" />
               <div>
                 <span className="block font-bold text-sm">Memory</span>
                 <span className="text-gray-400 text-sm">128GB ECC RAM</span>
               </div>
             </div>
             <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-4">
-              <Lock className="w-6 h-6 text-[#FFB800]" />
+              <Lock className="w-6 h-6 text-[#00E5FF]" />
               <div>
                 <span className="block font-bold text-sm">Security</span>
                 <span className="text-gray-400 text-sm">HSM / TPM 2.0 Enclave</span>

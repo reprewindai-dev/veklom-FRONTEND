@@ -140,7 +140,7 @@ export default function HolographicBoard({
           <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-center">
             <div className="text-[9px] font-mono text-[#bc13fe] uppercase">Claims Secure</div>
             <div className="text-xs font-bold text-white tracking-wide font-sans mt-0.5 flex items-center justify-center gap-1">
-              <Trophy className="w-3.5 h-3.5 text-yellow-400" /> {claimedWins} Wins
+              <Trophy className="w-3.5 h-3.5 text-cyan-400" /> {claimedWins} Wins
             </div>
           </div>
         </div>

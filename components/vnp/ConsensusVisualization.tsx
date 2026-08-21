@@ -105,7 +105,7 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
     <div className="max-w-5xl space-y-8">
       {/* Aggregate stats */}
       <div className="grid grid-cols-4 gap-4">
-        <AggStat label="Total Measurements" value={totalMeasurements.toLocaleString()} color="#FFB800" />
+        <AggStat label="Total Measurements" value={totalMeasurements.toLocaleString()} color="#00E5FF" />
         <AggStat label="Active Regions" value={`${VNP_REGIONS.length}`} color="#37C9EC" />
         <AggStat label="APIs Scored" value={`${scores.length}`} color="#3EE7A2" />
         <AggStat label="Avg Margin ±" value={avgConfidence.toFixed(1)} color="#A78BFA" />
@@ -119,22 +119,22 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
             <motion.div
               key={phase.id}
               animate={{
-                borderColor: isActive ? "#FFB800" : "#242424",
+                borderColor: isActive ? "#00E5FF" : "#242424",
                 backgroundColor: isActive ? "rgba(255,184,0,0.04)" : "rgba(13,13,13,1)",
               }}
               className="relative p-5 rounded-xl border overflow-hidden"
             >
               {isActive && (
                 <motion.div
-                  className="absolute inset-0 bg-[#FFB800]/5"
+                  className="absolute inset-0 bg-[#00E5FF]/5"
                   animate={{ opacity: [0.02, 0.06, 0.02] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
               )}
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className={`p-2 rounded-lg ${isActive ? "bg-[#FFB800]/10" : "bg-[#1A1A1A]"}`}>
-                    <phase.icon className={`w-5 h-5 ${isActive ? "text-[#FFB800]" : "text-[#6E6E73]"}`} />
+                  <div className={`p-2 rounded-lg ${isActive ? "bg-[#00E5FF]/10" : "bg-[#1A1A1A]"}`}>
+                    <phase.icon className={`w-5 h-5 ${isActive ? "text-[#00E5FF]" : "text-[#6E6E73]"}`} />
                   </div>
                   <span className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
                     Phase {i + 1}
@@ -143,9 +143,9 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
                     <motion.span
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="ml-auto flex items-center gap-1 text-[9px] font-bold tracking-wider text-[#FFB800]"
+                      className="ml-auto flex items-center gap-1 text-[9px] font-bold tracking-wider text-[#00E5FF]"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800] animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
                       ACTIVE
                     </motion.span>
                   )}
@@ -158,8 +158,8 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
                 </p>
                 {phase.id === "anchor" && (
                   <div className="flex items-center gap-1 mt-2">
-                    <AlertCircle className="w-3 h-3 text-[#FFB800]" />
-                    <span className="text-[9px] text-[#FFB800]/80">Base L2 contract: Not started</span>
+                    <AlertCircle className="w-3 h-3 text-[#00E5FF]" />
+                    <span className="text-[9px] text-[#00E5FF]/80">Base L2 contract: Not started</span>
                   </div>
                 )}
               </div>
@@ -171,13 +171,13 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
       {/* Node topology */}
       <div className="bg-[#0D0D0D] border border-[#242424] rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Server className="w-4 h-4 text-[#FFB800]" />
+          <Server className="w-4 h-4 text-[#00E5FF]" />
           <span className="text-xs font-semibold uppercase tracking-widest text-[#A1A1A6]">
             Node Topology — 5 Regions
           </span>
           <div className="ml-auto flex items-center gap-1">
-            <AlertCircle className="w-3 h-3 text-[#FFB800]" />
-            <span className="text-[9px] text-[#FFB800]/80">k6 agents: Needs proof</span>
+            <AlertCircle className="w-3 h-3 text-[#00E5FF]" />
+            <span className="text-[9px] text-[#00E5FF]/80">k6 agents: Needs proof</span>
           </div>
         </div>
         <div className="grid grid-cols-5 gap-3">
@@ -188,7 +188,7 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
 
             let statusColor = "#6E6E73";
             let statusLabel = "IDLE";
-            if (isContributing) { statusColor = "#FFB800"; statusLabel = "PROBING"; }
+            if (isContributing) { statusColor = "#00E5FF"; statusLabel = "PROBING"; }
             if (isValidating) { statusColor = "#37C9EC"; statusLabel = "VALIDATING"; }
             if (isSealed) { statusColor = "#3EE7A2"; statusLabel = "SEALED"; }
 
@@ -202,7 +202,7 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
               <motion.div
                 key={region.id}
                 animate={{
-                  borderColor: isContributing ? "#FFB80040" : isValidating ? "#37C9EC40" : isSealed ? "#3EE7A240" : "#242424",
+                  borderColor: isContributing ? "#00E5FF40" : isValidating ? "#37C9EC40" : isSealed ? "#3EE7A240" : "#242424",
                 }}
                 className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-[#0A0A0A]"
               >
@@ -257,7 +257,7 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
                 <span>
                   Root: <span className="text-[#FFC94D]">{round.merkleRoot.substring(0, 16)}...</span>
                 </span>
-                <span className="text-[#FFB800]">
+                <span className="text-[#00E5FF]">
                   Anchor: Not started
                 </span>
                 <span>
