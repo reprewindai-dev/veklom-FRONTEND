@@ -74,7 +74,7 @@ export const BoundedScaling: React.FC<BoundedScalingProps> = ({ metrics }) => {
                     <span className="text-[10px] font-mono uppercase">Water Risk Profile</span>
                 </div>
                 <span className={`text-[10px] font-mono uppercase px-1.5 rounded ${
-                    metrics.water_risk === 'low' ? 'bg-green-400/10 text-green-400' : 'bg-cyan-400/10 text-cyan-400'
+                    metrics.water_risk === 'low' ? 'bg-green-400/10 text-green-400' : 'bg-amber-400/10 text-amber-400'
                 }`}>
                     {metrics.water_risk}
                 </span>

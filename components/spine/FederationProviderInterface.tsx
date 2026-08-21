@@ -514,10 +514,10 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
             </div>
 
             <div className="px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-2">
-              <Coins className="h-4 w-4 text-cyan-400" />
+              <Coins className="h-4 w-4 text-amber-400" />
               <div>
                 <span className="text-slate-500 block text-[10px] uppercase">x402 Gas Metered</span>
-                <span className="text-cyan-300 font-bold text-sm">{totalx402Earned.toFixed(2)} VEK</span>
+                <span className="text-amber-300 font-bold text-sm">{totalx402Earned.toFixed(2)} VEK</span>
               </div>
             </div>
 
@@ -553,7 +553,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                 : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            <History className="h-3.5 w-3.5 text-cyan-400" />
+            <History className="h-3.5 w-3.5 text-amber-400" />
             <span>Protocol Archaeology &amp; Lineage</span>
           </button>
 
@@ -656,7 +656,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition">
-              <div className="h-10 w-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4">
+              <div className="h-10 w-10 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
                 <Coins className="h-5 w-5" />
               </div>
               <h3 className="text-base font-bold text-white mb-2">3. x402 Metering &amp; Payout Settlement</h3>
@@ -718,10 +718,10 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
 
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-cyan-400 uppercase">
+                  <span className="text-xs font-mono font-bold text-amber-400 uppercase">
                     Protocol Module D: Federated Execution &amp; Two Invariants Gateway
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                     POST /api/fpi/execute
                   </span>
                 </div>
@@ -753,22 +753,22 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
         <div className="space-y-6">
           {/* Main Hero Header */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="flex items-start gap-4 relative z-10">
-              <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
                 <History className="h-6 w-6" />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-white">Protocol Archaeology for Machine Agency</h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     35-Year Lineage
                   </span>
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed max-w-4xl">
                   HTTP was never just a browser document transport—it was built by Web architecturalists as an extensible machine-interaction substrate. Computless Cloud synthesizes this 35-year lineage into an open governed capability profile.
                 </p>
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/80 text-xs text-cyan-200/90 font-mono italic">
+                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/80 text-xs text-amber-200/90 font-mono italic">
                   &ldquo;HTTP supplies the universal grammar of machine interaction. Computless supplies invariant authority over the state transitions expressed through that grammar.&rdquo;
                 </div>
               </div>
@@ -821,7 +821,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
 
               {/* Gen 4 */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition space-y-2">
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                   Gen 4 (1997–2000)
                 </span>
                 <h4 className="text-sm font-bold text-white">Extensibility Radicals</h4>
@@ -856,16 +856,16 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
               {/* Room 1: PEP / RFC 2774 */}
               <div className="p-5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-cyan-300 uppercase">
+                  <span className="text-xs font-mono font-bold text-amber-300 uppercase">
                     1. PEP / RFC 2774
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                     Mandatory Extensions
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-white">Fail-Closed Capability Contract</h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  RFC 2774 specified that mandatory extension declarations must be fully understood or answered with <code className="text-cyan-300 font-mono">510 Not Extended</code>.
+                  RFC 2774 specified that mandatory extension declarations must be fully understood or answered with <code className="text-amber-300 font-mono">510 Not Extended</code>.
                 </p>
                 <div className="p-2.5 rounded bg-slate-900 border border-slate-800 font-mono text-[11px] text-slate-400">
                   <span className="text-emerald-400">Computless Application:</span> CAPPO Authority Gate enforces zero silent governance downgrades. Missing or invalid grant tokens yield immediate terminal denial.
@@ -972,7 +972,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
           {/* The 6-Stage Governed Capability Profile Pipeline */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Zap className="h-4 w-4 text-cyan-400" />
+              <Zap className="h-4 w-4 text-amber-400" />
               The Governed Capability HTTP Application Profile
             </h3>
 
@@ -984,7 +984,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-center space-y-1.5">
-                <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold block">2. Authority</span>
+                <span className="text-[10px] font-mono text-amber-400 uppercase font-bold block">2. Authority</span>
                 <span className="text-xs font-bold text-white block">CAPPO Gate (RFC 2774)</span>
                 <span className="text-[10px] text-slate-400 block font-mono">Fail-closed token authorization</span>
               </div>
@@ -1008,7 +1008,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-center space-y-1.5">
-                <span className="text-[10px] font-mono text-cyan-300 uppercase font-bold block">6. Settlement</span>
+                <span className="text-[10px] font-mono text-amber-300 uppercase font-bold block">6. Settlement</span>
                 <span className="text-xs font-bold text-white block">x402 Micro-Gas</span>
                 <span className="text-[10px] text-slate-400 block font-mono">Pay-per-execution token payout</span>
               </div>
@@ -1177,7 +1177,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                       className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase ${
                         p.status === 'active'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                       }`}
                     >
                       {p.status}
@@ -1195,7 +1195,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                     </div>
                     <div>
                       <span className="text-slate-500 block text-[10px]">Rate</span>
-                      <span className="text-cyan-300">{p.pricing.pricePerComputeUnitVEK} VEK/u</span>
+                      <span className="text-amber-300">{p.pricing.pricePerComputeUnitVEK} VEK/u</span>
                     </div>
                   </div>
 
@@ -1209,7 +1209,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                     <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
-                          capacityPct > 80 ? 'bg-cyan-500' : 'bg-indigo-500'
+                          capacityPct > 80 ? 'bg-amber-500' : 'bg-indigo-500'
                         }`}
                         style={{ width: `${capacityPct}%` }}
                       />
@@ -1357,7 +1357,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                         </div>
 
                         <div className="text-right font-mono text-xs">
-                          <div className="text-cyan-300 font-bold">{p.pricing.pricePerComputeUnitVEK} VEK/unit</div>
+                          <div className="text-amber-300 font-bold">{p.pricing.pricePerComputeUnitVEK} VEK/unit</div>
                           <div className="text-slate-500 text-[10px]">Uptime SLA: {p.slaUptimePct}%</div>
                         </div>
                       </div>
@@ -1526,7 +1526,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                         {a.computeUnits} vCPU / {a.memoryGb}GB / {a.gpuCores} GPU
                       </td>
                       <td className="py-3 px-4 capitalize text-slate-300">{a.allocationType}</td>
-                      <td className="py-3 px-4 text-cyan-300 font-bold">{a.x402TotalLeaseCostVEK} VEK</td>
+                      <td className="py-3 px-4 text-amber-300 font-bold">{a.x402TotalLeaseCostVEK} VEK</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
@@ -1562,7 +1562,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Zap className="h-5 w-5 text-cyan-400" />
+              <Zap className="h-5 w-5 text-amber-400" />
               Dispatch Federated Execution Workload
             </h2>
 
@@ -1627,7 +1627,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                   onChange={(e) => setExecForceFallback(e.target.checked)}
                   className="rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-indigo-500"
                 />
-                <label htmlFor="execFallback" className="text-xs text-cyan-300">
+                <label htmlFor="execFallback" className="text-xs text-amber-300">
                   Simulate Provider HTTP 503 Outage (Triggers HRMR Fallback Rerouting)
                 </label>
               </div>
@@ -1655,7 +1655,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                   <div className="flex items-center justify-between text-slate-400 border-b border-slate-800/80 pb-2">
                     <span>Job ID: <strong className="text-indigo-400">{execResult.job?.id}</strong></span>
                     <span>Status: <strong className="text-emerald-400">{execResult.job?.status}</strong></span>
-                    <span>x402 Gas Settled: <strong className="text-cyan-300">{execResult.job?.x402GasSettled} VEK</strong></span>
+                    <span>x402 Gas Settled: <strong className="text-amber-300">{execResult.job?.x402GasSettled} VEK</strong></span>
                   </div>
 
                   <p className="text-slate-200">{execResult.job?.outputSummary}</p>
@@ -1700,7 +1700,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                       <td className="py-3 px-4 text-white font-sans">{j.providerName}</td>
                       <td className="py-3 px-4 text-slate-400">{j.capabilityId}</td>
                       <td className="py-3 px-4 text-sky-300">{j.executionTimeMs}ms</td>
-                      <td className="py-3 px-4 text-cyan-300 font-bold">{j.x402GasSettled} VEK</td>
+                      <td className="py-3 px-4 text-amber-300 font-bold">{j.x402GasSettled} VEK</td>
                       <td className="py-3 px-4 text-slate-400 truncate max-w-[150px]">{j.pglProofSignature}</td>
                       <td className="py-3 px-4">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
@@ -1722,7 +1722,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Coins className="h-5 w-5 text-cyan-400" />
+                <Coins className="h-5 w-5 text-amber-400" />
                 x402 Provider Billing &amp; Micro-Gas Settlements
               </h2>
               <p className="text-xs text-slate-400 mt-1">
@@ -1732,7 +1732,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
 
             <button
               onClick={() => handleSettleBilling()}
-              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center space-x-2 transition cursor-pointer shadow-lg shadow-cyan-500/20"
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center space-x-2 transition cursor-pointer shadow-lg shadow-amber-500/20"
             >
               <Coins className="h-4 w-4" />
               <span>Settle All Outstanding Payouts</span>
@@ -1740,7 +1740,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
           </div>
 
           {settleMsg && (
-            <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono">
               {settleMsg}
             </div>
           )}
@@ -1763,12 +1763,12 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
             <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-mono text-slate-400 uppercase">Pending Epoch Payouts</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   PENDING
                 </span>
               </div>
-              <div className="text-xl font-bold font-mono text-cyan-300">
-                {globalTotalPendingVEK.toFixed(4)} <span className="text-xs text-cyan-200 font-normal">VEK</span>
+              <div className="text-xl font-bold font-mono text-amber-300">
+                {globalTotalPendingVEK.toFixed(4)} <span className="text-xs text-amber-200 font-normal">VEK</span>
               </div>
               <p className="text-[10px] text-slate-400">Awaiting batch finality trigger</p>
             </div>
@@ -1806,7 +1806,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Coins className="h-4 w-4 text-cyan-400" />
+                  <Coins className="h-4 w-4 text-amber-400" />
                   Aggregate Settlement Finality by Provider
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -1845,7 +1845,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                         className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
                           isFullySettled
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}
                       >
                         {isFullySettled ? '100% Finalized' : 'Pending Epoch Payout'}
@@ -1862,7 +1862,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block uppercase">Pending</span>
-                        <span className="font-bold text-cyan-300">
+                        <span className="font-bold text-amber-300">
                           {prov.pendingVEK.toFixed(2)} VEK
                         </span>
                       </div>
@@ -1885,14 +1885,14 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                     <div className="space-y-1">
                       <div className="flex justify-between text-[10px] font-mono text-slate-400">
                         <span>Economic Finality Ratio</span>
-                        <span className={isFullySettled ? 'text-emerald-400 font-bold' : 'text-cyan-300'}>
+                        <span className={isFullySettled ? 'text-emerald-400 font-bold' : 'text-amber-300'}>
                           {finalityPct}% Finalized
                         </span>
                       </div>
                       <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
                         <div
                           className={`h-full transition-all duration-500 ${
-                            isFullySettled ? 'bg-emerald-400' : 'bg-gradient-to-r from-emerald-400 to-cyan-400'
+                            isFullySettled ? 'bg-emerald-400' : 'bg-gradient-to-r from-emerald-400 to-amber-400'
                           }`}
                           style={{ width: `${finalityPct}%` }}
                         />
@@ -1914,7 +1914,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                       {prov.pendingVEK > 0 ? (
                         <button
                           onClick={() => handleSettleBilling(prov.pendingSettlementIds[0])}
-                          className="px-3 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[11px] cursor-pointer transition shadow-md shadow-cyan-500/10 flex items-center space-x-1"
+                          className="px-3 py-1 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] cursor-pointer transition shadow-md shadow-amber-500/10 flex items-center space-x-1"
                         >
                           <Coins className="h-3 w-3" />
                           <span>Settle Payout ({prov.pendingVEK.toFixed(2)} VEK)</span>
@@ -1956,13 +1956,13 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                       <td className="py-3 px-4 text-white font-sans">{s.providerName}</td>
                       <td className="py-3 px-4 text-slate-400">{s.period}</td>
                       <td className="py-3 px-4 text-sky-300">{s.jobsExecuted}</td>
-                      <td className="py-3 px-4 text-cyan-300 font-bold">{s.totalx402EarnedVEK} VEK</td>
+                      <td className="py-3 px-4 text-amber-300 font-bold">{s.totalx402EarnedVEK} VEK</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                             s.payoutStatus === 'settled'
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}
                         >
                           {s.payoutStatus}
@@ -1973,7 +1973,7 @@ curl -X POST https://ais-dev-tl2yeqtvmcgg2ynzx5y3a5-803186795055.us-east1.run.ap
                         {s.payoutStatus === 'pending' && (
                           <button
                             onClick={() => handleSettleBilling(s.id)}
-                            className="px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 text-[10px] cursor-pointer transition font-bold"
+                            className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 text-[10px] cursor-pointer transition font-bold"
                           >
                             Settle Now
                           </button>

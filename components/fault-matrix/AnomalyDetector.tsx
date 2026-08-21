@@ -245,7 +245,7 @@ export default function AnomalyDetector({ onAppendLedger, onStateUpdate, onTrigg
 
   const getResourceIcon = (type: MCPResource['type'], state: MCPResource['state']) => {
     let colorClass = "text-cyan-400";
-    if (state === "warning") colorClass = "text-cyan-400 animate-pulse";
+    if (state === "warning") colorClass = "text-amber-400 animate-pulse";
     else if (state === "anomaly") colorClass = "text-red-500 animate-flash";
 
     switch (type) {
@@ -341,7 +341,7 @@ export default function AnomalyDetector({ onAppendLedger, onStateUpdate, onTrigg
                     <div>
                       <span>CURR: </span>
                       <span className={`font-bold ${
-                        res.state === 'anomaly' ? 'text-red-500 font-extrabold' : res.state === 'warning' ? 'text-cyan-400' : 'text-cyan-400'
+                        res.state === 'anomaly' ? 'text-red-500 font-extrabold' : res.state === 'warning' ? 'text-amber-400' : 'text-cyan-400'
                       }`}>
                         {res.value} {res.unit}
                       </span>
@@ -437,11 +437,11 @@ export default function AnomalyDetector({ onAppendLedger, onStateUpdate, onTrigg
             
             {/* Draw Vertical Line indicators */}
             <div 
-              className="absolute h-full top-0 border-l border-cyan-500 border-dashed z-10"
+              className="absolute h-full top-0 border-l border-amber-500 border-dashed z-10"
               style={{ left: `${(fStat / 6.5) * 80 + 10}%` }}
               title={`Current F-statistic: ${fStat}`}
             >
-              <div className="bg-cyan-950/90 text-cyan-300 border border-cyan-500 text-[8px] font-mono p-1 rounded rounded-bl-none translate-x-1 mt-10 shadow-lg">
+              <div className="bg-amber-950/90 text-amber-300 border border-amber-500 text-[8px] font-mono p-1 rounded rounded-bl-none translate-x-1 mt-10 shadow-lg">
                 F_stat: {fStat}
               </div>
             </div>
@@ -525,7 +525,7 @@ export default function AnomalyDetector({ onAppendLedger, onStateUpdate, onTrigg
                 onClick={() => setFFilter('moderate')}
                 className={`py-1 px-1 rounded border transition-all text-center cursor-pointer truncate ${
                   fFilter === 'moderate'
-                    ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-400 font-bold shadow-[0_0_8px_rgba(245,158,11,0.1)]'
+                    ? 'bg-amber-950/40 border-amber-500/50 text-amber-400 font-bold shadow-[0_0_8px_rgba(245,158,11,0.1)]'
                     : 'bg-transparent border-slate-900 text-slate-400 hover:text-slate-200 hover:border-slate-805'
                 }`}
                 title="F_crit <= F < 1.5 * F_crit (Moderate deviance)"

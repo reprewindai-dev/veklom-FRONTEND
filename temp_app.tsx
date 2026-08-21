@@ -14,20 +14,19 @@ import CouncilMatrix from './components/CouncilMatrix';
 import DataGrid from './components/DataGrid';
 import LiveTelemetry from './components/LiveTelemetry';
 import QuantumTerminal from './components/QuantumTerminal';
-import QuantumDashboard from './components/QuantumDashboard';
 import GenomeLedgerOnboarding from './components/GenomeLedgerOnboarding';
 import IncidentsSlashing from './components/IncidentsSlashing';
 import { AmphotericRuntimeControl } from './components/AmphotericRuntimeControl';
 import NexusProtocol from './components/NexusProtocol';
 import TriageTelemetry from '@/components/telemetry/TriageTelemetry';
 import VanguardPlayground from './components/VanguardPlayground';
-
+import { controlStore } from './data/simulation';
 
 interface TerminalAppProps {
   defaultTab?: string;
 }
 
-export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
+export default function App({ defaultTab = 'terminal' }: TerminalAppProps) {
   // Primary Navigation State
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [isLandingPage, setIsLandingPage] = useState<boolean>(false);
@@ -36,6 +35,9 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
     if (typeof window !== "undefined") {
       const isLanding = window.location.pathname === "/";
       setIsLandingPage(isLanding);
+      if (isLanding) {
+        setActiveTab('terminal');
+      }
     }
   }, []);
 
@@ -54,16 +56,23 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Runtime state populated from live routes when the backend returns proof.
-  const [agents, setAgents] = useState<any[]>([]);
-  const [runs, setRuns] = useState<any[]>([]);
-  const [delegates, setDelegates] = useState<any[]>([]);
-  const [logs, setLogs] = useState<any[]>([]);
-  const [liveMetrics, setLiveMetrics] = useState<any>({ globalThroughput: 0, complianceScore: 100, slaMisses: 0, activeYieldTokens: 0, totalPglRequests: 0, autoRoutedExecutions: 0, mcpIOHeartbeat: 0, throughput: 0, attestationRate: 0, gasSaved: 0, activeQueue: 0, uptime: '0h', totalExecutions: 0 });
+  // Local Reactive State mirroring our central control simulation store
+  const [agents, setAgents] = useState<AgentNode[]>(controlStore.agents);
+  const [runs, setRuns] = useState<VeklomRun[]>(controlStore.runs);
+  const [delegates, setDelegates] = useState<Delegate[]>(controlStore.delegates);
+  const [logs, setLogs] = useState<TelemetryTick[]>(controlStore.logs);
+  const [liveMetrics, setLiveMetrics] = useState(controlStore.liveMetrics);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   // Future integration point:
   useEffect(() => {
+    return controlStore.subscribe(() => {
+      setAgents([...controlStore.agents]);
+      setRuns([...controlStore.runs]);
+      setDelegates([...controlStore.delegates]);
+      setLogs([...controlStore.logs]);
+      setLiveMetrics({ ...controlStore.liveMetrics });
+    });
   }, []);
 
   // Update a single agent properties (Reboot / Diagnostics actions)
@@ -83,58 +92,11 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
 
   // Handle high priority manual execution injection
   const handleTriggerManualOverride = async (intentText: string, policyText: string) => {
-    setLogs(prev => [{
-      timestamp: new Date().toISOString(),
-      source: 'Terminal',
-      message: `Submitting governed execution intent through /api/v1/capi/execute with policy ${policyText}.`,
-      type: 'warn'
-    }, ...prev]);
-
-    try {
-      const response = await fetch('/api/v1/capi/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'terminal_manual_override',
-          payload: { intent: intentText, policy: policyText },
-          target_protocol: 'terminal',
-          workspace_id: 'control-plane'
-        })
-      });
-      const data = await response.json().catch(() => ({}));
-      setLogs(prev => [{
-        timestamp: new Date().toISOString(),
-        source: 'CAPI',
-        message: response.ok
-          ? `Execution accepted: ${data.execution_id || data.run_id || data.status || 'receipt returned'}`
-          : `Execution rejected: ${data.detail || data.error || response.statusText}`,
-        type: response.ok ? 'success' : 'error'
-      }, ...prev]);
-    } catch (err) {
-      setLogs(prev => [{
-        timestamp: new Date().toISOString(),
-        source: 'CAPI',
-        message: `Execution proxy unavailable: ${err instanceof Error ? err.message : String(err)}`,
-        type: 'error'
-      }, ...prev]);
-    }
+    await controlStore.triggerManualRun(intentText, policyText);
   };
 
-
-  if (isLandingPage) {
-    return (
-      <div className="w-full h-[550px] lg:h-[650px] rounded-xl shadow-2xl border border-white/10 overflow-hidden relative bg-[#030303] text-white/90 font-sans">
-        {/* Futuristic Scanline CRT overlay for cinematic feel */}
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-electric-cyan/2 w-full animate-scanline pointer-events-none z-50" />
-        <div className="w-full h-full relative">
-          <QuantumTerminal />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-screen h-screen border-4 border-[#0A0A0C] bg-[#030303] text-white/90 overflow-hidden flex flex-col font-sans relative">
+    <div className={`${isLandingPage ? 'w-full h-[550px] lg:h-[650px] rounded-xl shadow-2xl border border-white/10' : 'w-screen h-screen border-4 border-[#0A0A0C]'} bg-[#030303] text-white/90 overflow-hidden flex flex-col font-sans relative`}>
 
       
       {/* 1. Futuristic Scanline CRT overlay for cinematic feel */}
@@ -145,31 +107,33 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]"></div>
-            <span className="text-xs font-bold tracking-[0.2em] uppercase">Veklom Control Plane</span>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase">UACP v5 Control Plane</span>
           </div>
           <div className="h-4 w-px bg-white/20"></div>
           <div className="flex items-center gap-4 font-mono text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded border border-white/10">
-            <span className="text-white/30">RUNTIME_NODE:</span>
+            <span className="text-white/30">CAPI_NODE:</span>
             <select 
               className="bg-transparent text-white/80 outline-none cursor-pointer hover:text-white transition-colors"
               onChange={(e) => {
                 import('./data/pglLoader').then(m => m.setCapiBaseUrl(e.target.value));
               }}
-              defaultValue=""
+              defaultValue="https://api.veklom.com"
             >
-              <option value="" className="bg-black text-white">Control Proxy (same-origin)</option>
-              <option value="https://api.veklom.com" className="bg-black text-white">BYOS API (api.veklom.com)</option>
-              <option value="https://capi.veklom.com" className="bg-black text-white">CAPPO CAPI (capi.veklom.com)</option>
+              <option value="https://api.veklom.com" className="bg-black text-white">Veklom Cloud (api.veklom.com)</option>
+              <option value="http://localhost:8088" className="bg-black text-white">Veklom Local (8088)</option>
+              <option value="http://localhost:8080" className="bg-black text-white">Interlink Rust (8080)</option>
+              <option value="https://cappo.veklom.com" className="bg-black text-white">CAPPO Cloud (cappo-backend)</option>
+              <option value="http://localhost:8001" className="bg-black text-white">CAPPO Local (8001)</option>
             </select>
             <div className="w-px h-3 bg-white/20"></div>
-            <span>ROUTING: SAME-ORIGIN</span>
-            <span className="text-[#00FF66]">PROOF: LIVE ROUTES</span>
+            <span>LATENCY: 4MS</span>
+            <span className="text-[#00FF66]">OS_HEALTH: 100%</span>
           </div>
         </div>
         <div className="flex items-center gap-6">
           {isLandingPage && (
             <a 
-              href="/terminal" 
+              href="/login" 
               className="px-4 py-1.5 bg-[#FFB800]/10 border border-[#FFB800]/40 hover:bg-[#FFB800]/20 text-[#FFB800] hover:text-white font-mono text-[10px] font-bold uppercase rounded tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,184,0,0.1)] hover:shadow-[0_0_15px_rgba(255,184,0,0.3)] animate-pulse"
             >
               [ ACCESS SOVEREIGN CONSOLE ]
@@ -199,11 +163,15 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
       {/* Main Content Split Frame */}
       <div className="flex-grow flex overflow-hidden relative">
         {/* 2. Primary Navigation Sidebar */}
-        <Sidebar
-          mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
-          throughput={liveMetrics.throughput}
-          agentsCount={agents.length}
-        />
+        {!isLandingPage && (
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
+            throughput={liveMetrics.throughput}
+            agentsCount={agents.length}
+          />
+        )}
 
 
         {/* 3. Central Application Viewport */}
@@ -212,9 +180,6 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
           {/* VIEW CONTAINER */}
           <div className="flex-grow overflow-y-auto overflow-x-hidden relative bg-[#030303]">
             {activeTab === 'overview' && (
-              <QuantumDashboard />
-            )}
-            {activeTab === 'swarm-map' && (
               <SwarmMap 
                 agents={agents} 
                 onAgentUpdate={handleAgentUpdate}
@@ -260,8 +225,6 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
               <CouncilMatrix 
                 delegates={delegates}
                 onVotePropose={handleVotePropose}
-                logs={logs}
-                metrics={liveMetrics}
               />
             )}
 
@@ -293,7 +256,7 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
           </div>
 
           {/* 4. Live Telemetry Console Ticker */}
-          {!isLandingPage && ['overview', 'swarm-map', 'terminal'].includes(activeTab) && (
+          {!isLandingPage && ['overview', 'terminal'].includes(activeTab) && (
             <div className="h-72 border-t border-white/[0.05] bg-[#030303] shrink-0 relative z-10 select-none">
               <LiveTelemetry
                 logs={logs}
@@ -321,4 +284,3 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
     </div>
   );
 }
-

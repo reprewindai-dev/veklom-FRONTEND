@@ -20,7 +20,7 @@ export const SpectralAnalysis: React.FC<SpectralAnalysisProps> = ({ data }) => {
     <div className="w-full h-32 bg-black/40 rounded-xl border border-white/5 p-4 flex flex-col gap-3 relative overflow-hidden group">
       <div className="flex justify-between items-center text-[9px] font-mono text-white/30 uppercase tracking-[0.2em]">
         <span>FFT Spectral Analysis (ISO 10816)</span>
-        <span className="text-cyan-400 group-hover:text-cyan-300 transition-colors">Vibration Triggered</span>
+        <span className="text-amber-400 group-hover:text-amber-300 transition-colors">Vibration Triggered</span>
       </div>
 
       <div className="flex-1 flex items-end gap-1 px-1">
@@ -36,7 +36,7 @@ export const SpectralAnalysis: React.FC<SpectralAnalysisProps> = ({ data }) => {
           // 2x RPM harmonic
           if (i === 10) {
             height = v2;
-            color = 'bg-cyan-400/50';
+            color = 'bg-amber-400/50';
           }
           // Sub-harmonics or carpet noise spikes
           if (i > 20 && Math.random() > 0.8) {
@@ -63,7 +63,7 @@ export const SpectralAnalysis: React.FC<SpectralAnalysisProps> = ({ data }) => {
               <span className="text-[8px] font-mono text-white/40 uppercase">1x RPM (Unbalance)</span>
            </div>
            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/50" />
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400/50" />
               <span className="text-[8px] font-mono text-white/40 uppercase">2x RPM (Misalign)</span>
            </div>
         </div>
@@ -78,7 +78,7 @@ export const SpectralAnalysis: React.FC<SpectralAnalysisProps> = ({ data }) => {
         <div className="flex gap-2">
            {['MCAR', 'MAR', 'MNAR'].map(type => (
              <div key={type} className="flex items-center gap-1">
-                <div className={`w-1 h-1 rounded-full ${type === 'MNAR' ? 'bg-cyan-400' : 'bg-green-400'}`} />
+                <div className={`w-1 h-1 rounded-full ${type === 'MNAR' ? 'bg-amber-400' : 'bg-green-400'}`} />
                 <span className="text-[7px] font-mono text-white/30">{type}</span>
              </div>
            ))}

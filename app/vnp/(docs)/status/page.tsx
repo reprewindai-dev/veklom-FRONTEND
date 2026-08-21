@@ -216,7 +216,7 @@ export default function StatusPage() {
         <p className="text-xl text-gray-400 leading-relaxed mb-2">
           Every claim below shows only what the backend actually returned, with its source and
           measurement window. Where evidence is absent, the row reads{" "}
-          <span className="text-cyan-300 font-semibold">Needs proof</span> rather than a
+          <span className="text-amber-300 font-semibold">Needs proof</span> rather than a
           fabricated uptime or &ldquo;Connected&rdquo; label.
         </p>
         <p className="text-sm text-gray-500 font-mono">
@@ -262,7 +262,7 @@ export default function StatusPage() {
       {/* Per-node telemetry table — the raw evidence behind the telemetry row */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <Server className="w-6 h-6 text-[#00E5FF]" />
+          <Server className="w-6 h-6 text-[#FFB800]" />
           <h2 className="text-2xl font-bold">Per-node telemetry</h2>
         </div>
         {topologyOk === false ? (
@@ -342,13 +342,13 @@ export default function StatusPage() {
 
       <div className="bg-white/5 border border-white/10 rounded-xl p-8">
         <div className="flex items-center gap-3 mb-4">
-          <ShieldCheck className="w-6 h-6 text-[#00E5FF]" />
+          <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
           <h3 className="text-xl font-bold">How to read this page</h3>
         </div>
         <p className="text-gray-400 leading-relaxed">
           A badge is not proof. <span className="text-emerald-300 font-semibold">Present</span> means
           the backend returned the stated evidence at fetch time;{" "}
-          <span className="text-cyan-300 font-semibold">Needs proof</span> means the required
+          <span className="text-amber-300 font-semibold">Needs proof</span> means the required
           evidence was absent or the source was unreachable. Node connectivity is derived from each
           node&rsquo;s returned status and heartbeat freshness, never from the existence of a node
           record or a nonzero observation count.

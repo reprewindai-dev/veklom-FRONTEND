@@ -1486,14 +1486,14 @@ func LogEvent(key string, latency float64, success bool) {
                   const labelStyles = {
                     low: 'text-emerald-400 border-emerald-950/40 hover:bg-emerald-950/20 active:bg-emerald-950',
                     medium: 'text-cyan-400 border-cyan-950/40 hover:bg-cyan-950/20 active:bg-cyan-950',
-                    high: 'text-cyan-500 border-cyan-950/40 hover:bg-cyan-950/20 active:bg-cyan-950',
+                    high: 'text-amber-500 border-amber-950/40 hover:bg-amber-950/20 active:bg-amber-950',
                     extreme: 'text-rose-500 border-rose-950/40 hover:bg-rose-950/20 active:bg-rose-950'
                   };
 
                   const activeStyles = {
                     low: 'bg-emerald-500 text-slate-950 font-bold',
                     medium: 'bg-cyan-500 text-slate-950 font-bold',
-                    high: 'bg-cyan-500 text-slate-950 font-bold',
+                    high: 'bg-amber-500 text-slate-950 font-bold',
                     extreme: 'bg-rose-500 text-slate-950 font-bold'
                   };
 
@@ -1556,7 +1556,7 @@ func LogEvent(key string, latency float64, success bool) {
                 successPercentage > 80 
                   ? 'bg-emerald-950/30 border-emerald-800/20 text-emerald-400' 
                   : successPercentage > 50 
-                    ? 'bg-cyan-950/30 border-cyan-800/20 text-cyan-500' 
+                    ? 'bg-amber-950/30 border-amber-800/20 text-amber-500' 
                     : 'bg-rose-950/30 border-rose-800/20 text-rose-400'
               }`}>
                 <Gauge className="w-5 h-5" />
@@ -1568,7 +1568,7 @@ func LogEvent(key string, latency float64, success bool) {
               <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
                 <div 
                   className={`h-full transition-all duration-500 ${
-                    successPercentage > 80 ? 'bg-emerald-500' : successPercentage > 50 ? 'bg-cyan-500' : 'bg-rose-500'
+                    successPercentage > 80 ? 'bg-emerald-500' : successPercentage > 50 ? 'bg-amber-500' : 'bg-rose-500'
                   }`}
                   style={{ width: `${successPercentage}%` }}
                 ></div>
@@ -1608,12 +1608,12 @@ func LogEvent(key string, latency float64, success bool) {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs text-slate-400 font-semibold tracking-wider uppercase">Active Leased Locks</p>
-                <h3 className="text-3xl font-bold tracking-tight text-cyan-500 mt-1">
+                <h3 className="text-3xl font-bold tracking-tight text-amber-500 mt-1">
                   {Object.keys(activeLocks).length}
                 </h3>
               </div>
-              <div className="p-2 bg-cyan-950/30 border border-cyan-850/20 text-cyan-500 rounded-xl">
-                <Lock className="w-5 h-5 text-cyan-400" />
+              <div className="p-2 bg-amber-950/30 border border-amber-850/20 text-amber-500 rounded-xl">
+                <Lock className="w-5 h-5 text-amber-400" />
               </div>
             </div>
 
@@ -1778,12 +1778,12 @@ func LogEvent(key string, latency float64, success bool) {
                           }}
                           className={`px-3 py-1.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all border cursor-pointer ${
                             isKeyFiltered
-                              ? 'bg-cyan-950/60 border-cyan-800 text-cyan-400 font-extrabold'
+                              ? 'bg-amber-950/60 border-amber-800 text-amber-400 font-extrabold'
                               : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
                           }`}
                           title={`Filter executions to the busy lock key: ${busyKey}`}
                         >
-                          <Lock className="w-3 h-3 text-cyan-500" />
+                          <Lock className="w-3 h-3 text-amber-500" />
                           <span>Filter Key ({busyKey.replace('lock:', '')})</span>
                         </button>
                       );
@@ -2037,7 +2037,7 @@ func LogEvent(key string, latency float64, success bool) {
                     )}
                     { contentionLevel === 'high' && (
                       <p className="text-slate-400 leading-relaxed">
-                        <strong className="text-cyan-500">Resource Contention:</strong> Colliding atomic lock allocations block worker threads. Execution timers drift, generating outliers (tail spike latencies) above p95 bounds.
+                        <strong className="text-amber-500">Resource Contention:</strong> Colliding atomic lock allocations block worker threads. Execution timers drift, generating outliers (tail spike latencies) above p95 bounds.
                       </p>
                     )}
                     { contentionLevel === 'extreme' && (
@@ -2062,7 +2062,7 @@ func LogEvent(key string, latency float64, success bool) {
               </div>
               <div>
                 <span className="text-slate-500 font-medium block">Locks Expired</span>
-                <span className="font-mono text-cyan-500 font-bold text-sm block mt-0.5">{stats.cumulativeExpirations}</span>
+                <span className="font-mono text-amber-500 font-bold text-sm block mt-0.5">{stats.cumulativeExpirations}</span>
               </div>
             </div>
           </div>
@@ -2261,14 +2261,14 @@ func LogEvent(key string, latency float64, success bool) {
                     badgeColor = 'text-rose-400';
                     logPrefixBg = 'bg-rose-950/50 border border-rose-900/30 text-rose-400';
                   } else if (log.type === 'expired') {
-                    badgeColor = 'text-cyan-500';
-                    logPrefixBg = 'bg-cyan-950/50 border border-cyan-900/30 text-cyan-500';
+                    badgeColor = 'text-amber-500';
+                    logPrefixBg = 'bg-amber-950/50 border border-amber-900/30 text-amber-500';
                   } else if (log.type === 'system') {
                     badgeColor = 'text-blue-400';
                     logPrefixBg = 'bg-blue-950/50 border border-blue-900/30 text-blue-400';
                   } else if (log.type === 'warn') {
-                    badgeColor = 'text-cyan-400';
-                    logPrefixBg = 'bg-cyan-950/60 border border-cyan-900/30 text-cyan-400';
+                    badgeColor = 'text-amber-400';
+                    logPrefixBg = 'bg-amber-950/60 border border-amber-900/30 text-amber-400';
                   }
 
                   const isExactHighlight = searchLogQuery && log.timestamp === searchLogQuery;
@@ -2318,7 +2318,7 @@ func LogEvent(key string, latency float64, success bool) {
           <div id="keyspace-lease-card" className="lg:col-span-4 bg-slate-900/30 border border-slate-900 rounded-2xl p-6 shadow-xl flex flex-col justify-between gap-4 h-[350px]">
             <div className="border-b border-slate-800/65 pb-4">
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-cyan-500" />
+                <Lock className="w-4 h-4 text-amber-500" />
                 <h2 className="text-sm font-bold uppercase tracking-wider text-white">Active Leased Keyspace</h2>
               </div>
             </div>
@@ -2336,7 +2336,7 @@ func LogEvent(key string, latency float64, success bool) {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 overflow-hidden">
-                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
                           <span className="text-[11px] font-mono text-cyan-200 font-semibold truncate" title={lock.key}>
                             {lock.key}
                           </span>
@@ -2395,11 +2395,11 @@ func LogEvent(key string, latency float64, success bool) {
                       <div className="space-y-1">
                         <div className="flex justify-between items-center text-[9px] font-mono text-slate-500">
                           <span>Remaining Time:</span>
-                          <span className="text-cyan-400 font-bold">{(remainingMs / 1000).toFixed(1)}s left</span>
+                          <span className="text-amber-400 font-bold">{(remainingMs / 1000).toFixed(1)}s left</span>
                         </div>
                         <div className="bg-slate-950 rounded-full h-1.5 border border-slate-900 overflow-hidden">
                           <div 
-                            className="h-full bg-cyan-500 rounded-full transition-all duration-300" 
+                            className="h-full bg-amber-500 rounded-full transition-all duration-300" 
                             style={{ width: `${completionPercentage}%` }}
                           ></div>
                         </div>

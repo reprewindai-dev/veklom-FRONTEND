@@ -107,15 +107,15 @@ export default function AgentReplayController({ agent, onClose }: Props) {
           {isPlaying && (
             <div className="flex space-x-4 animate-pulse">
               <span className="text-gray-600">[{new Date().toISOString().split('T')[1].slice(0, -1)}]</span>
-              <span className="text-[#00E5FF]">_</span>
+              <span className="text-[#FFAB00]">_</span>
             </div>
           )}
         </div>
         
         {/* Alignment Warning */}
-        <div className="h-12 bg-[#00E5FF]/10 border-t border-[#00E5FF]/30 flex items-center px-4 space-x-3">
-          <AlertTriangle className="w-4 h-4 text-[#00E5FF]" />
-          <span className="text-xs font-mono text-[#00E5FF]">
+        <div className="h-12 bg-[#FFAB00]/10 border-t border-[#FFAB00]/30 flex items-center px-4 space-x-3">
+          <AlertTriangle className="w-4 h-4 text-[#FFAB00]" />
+          <span className="text-xs font-mono text-[#FFAB00]">
             DETERMINISTIC ALIGNMENT ENFORCED. ALL TOOL OUTPUTS WILL BE SYNCED WITH RUN {agent.run_id}.
           </span>
         </div>

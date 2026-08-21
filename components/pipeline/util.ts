@@ -41,13 +41,13 @@ export function timeAgo(iso: string): string {
 export const DECISION_STYLE: Record<string, { fg: string; bg: string; label: string }> = {
   authorized: { fg: "text-signal", bg: "bg-signal/10 border-signal/30", label: "AUTHORIZED" },
   denied: { fg: "text-rose-300", bg: "bg-rose-500/10 border-rose-500/30", label: "DENIED" },
-  quarantined: { fg: "text-cyan-300", bg: "bg-cyan-500/10 border-cyan-500/30", label: "QUARANTINED" },
+  quarantined: { fg: "text-amber-300", bg: "bg-amber-500/10 border-amber-500/30", label: "QUARANTINED" },
   error: { fg: "text-mute", bg: "bg-white/5 border-white/15", label: "ERROR" },
 };
 
 export const PHASE_STYLE: Record<string, { ring: string; dot: string; text: string }> = {
   pass: { ring: "border-signal/50", dot: "bg-signal", text: "text-signal" },
-  warn: { ring: "border-cyan-400/50", dot: "bg-cyan-400", text: "text-cyan-300" },
+  warn: { ring: "border-amber-400/50", dot: "bg-amber-400", text: "text-amber-300" },
   fail: { ring: "border-rose-500/50", dot: "bg-rose-500", text: "text-rose-300" },
   skipped: { ring: "border-white/15", dot: "bg-white/30", text: "text-mute" },
   pending: { ring: "border-white/10", dot: "bg-white/15", text: "text-mute" },
@@ -55,14 +55,14 @@ export const PHASE_STYLE: Record<string, { ring: string; dot: string; text: stri
 
 export const THREAT_STYLE: Record<string, string> = {
   green: "text-signal",
-  cyan: "text-cyan-300",
+  yellow: "text-amber-300",
   orange: "text-orange-400",
   red: "text-rose-400",
 };
 
 export const SEVERITY_STYLE: Record<string, string> = {
   low: "text-mute",
-  medium: "text-cyan-300",
+  medium: "text-amber-300",
   high: "text-orange-400",
   critical: "text-rose-400",
 };

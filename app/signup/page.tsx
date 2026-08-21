@@ -71,7 +71,7 @@ export default function SignupPage() {
           <label className="text-xs text-ink-400">Password</label>
           <input type="password" required value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 8 characters" className="input mt-1.5" />
           <div className="mt-1.5 text-[11px]">
-            <span className={pwTooShort ? "text-accent-cyan" : "text-ink-600"}>
+            <span className={pwTooShort ? "text-accent-amber" : "text-ink-600"}>
               {pwTooShort ? `${MIN_PW - pw.length} more character${MIN_PW - pw.length === 1 ? "" : "s"} needed` : `Minimum ${MIN_PW} characters`}
             </span>
           </div>

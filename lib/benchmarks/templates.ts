@@ -61,7 +61,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         temperature: 0.2,
         model: "gemini-3.5-flash",
         avatar: "📬",
-        color: "cyan"
+        color: "amber"
       },
       {
         id: "policy-auditor",
@@ -157,7 +157,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         temperature: 0.1,
         model: "gemini-3.5-flash",
         avatar: "🏦",
-        color: "cyan"
+        color: "amber"
       }
     ],
     steps: [

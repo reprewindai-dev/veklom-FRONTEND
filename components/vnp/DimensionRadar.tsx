@@ -22,7 +22,7 @@ export default function DimensionRadar({
   dimensions,
   height = 220,
   showLabels = true,
-  accentColor = "#00E5FF",
+  accentColor = "#FFB800",
 }: DimensionRadarProps) {
   const data = VNP_DIMENSIONS.map((def) => {
     const dim = dimensions.find((d) => d.id === def.id);

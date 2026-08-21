@@ -218,7 +218,7 @@ export default function CommunalResonanceEngine({
             />
             {isGameActive && calledNumbersCount > 0 && (
               <div className="absolute bottom-1 right-2 flex items-center gap-1 text-[8px] text-[#00f3ff]/70 font-mono bg-[#00f3ff]/10 border border-[#00f3ff]/20 px-1.5 py-0.5 rounded">
-                <Flame className="w-2.5 h-2.5 text-cyan-500 animate-bounce" /> {calledNumbersCount} DRAWS ACTIVE
+                <Flame className="w-2.5 h-2.5 text-amber-500 animate-bounce" /> {calledNumbersCount} DRAWS ACTIVE
               </div>
             )}
           </div>
@@ -249,7 +249,7 @@ export default function CommunalResonanceEngine({
                 </div>
                 <div className="flex justify-between">
                   <span>Resonance state:</span>
-                  <span className="text-cyan-400 font-bold">{playerResonance.cardiac_coherence > 0.85 ? 'ELEVATED' : 'STABLE'}</span>
+                  <span className="text-amber-400 font-bold">{playerResonance.cardiac_coherence > 0.85 ? 'ELEVATED' : 'STABLE'}</span>
                 </div>
               </div>
             </div>

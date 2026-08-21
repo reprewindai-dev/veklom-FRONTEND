@@ -157,7 +157,7 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
           value={totalAttestations.toLocaleString()}
           sub="SHA-256 hash-linked events"
           icon={Database}
-          accent="#00E5FF"
+          accent="#FFB800"
         />
         <StatBlock
           label="Avg Trust Index"
@@ -179,8 +179,8 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
       {pglStatus?.profile && (
         <div className="bg-[#0D0D0D] border border-[#242424] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 rounded-lg bg-[#00E5FF]/10">
-              <FileKey className="w-4 h-4 text-[#00E5FF]" />
+            <div className="p-2 rounded-lg bg-[#FFB800]/10">
+              <FileKey className="w-4 h-4 text-[#FFB800]" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-white">Root PGL Certificate</h3>
@@ -199,7 +199,7 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
             <CertRow label="Chain Head" value={pglStatus.profile.chain_head || "—"} mono onCopy={copyToClipboard} copiedHash={copiedHash} />
             <div className="flex items-center gap-3 p-3 rounded-lg border border-[#242424] bg-[#0A0A0A]">
               <span className="text-[10px] text-[#6E6E73] w-28 shrink-0">Ledger Events</span>
-              <span className="text-sm font-mono text-[#00E5FF]">{pglStatus.profile.ledger_event_count.toLocaleString()}</span>
+              <span className="text-sm font-mono text-[#FFB800]">{pglStatus.profile.ledger_event_count.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg border border-[#242424] bg-[#0A0A0A]">
               <span className="text-[10px] text-[#6E6E73] w-28 shrink-0">Mode</span>
@@ -212,7 +212,7 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
       {/* Attestation Cycle Indicator */}
       <div className="bg-[#0D0D0D] border border-[#242424] rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-4 h-4 text-[#00E5FF]" />
+          <Activity className="w-4 h-4 text-[#FFB800]" />
           <span className="text-xs font-semibold uppercase tracking-widest text-[#A1A1A6]">
             M2M Trust Attestation Cycle
           </span>
@@ -224,7 +224,7 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
           {VNP_REGIONS.map((region, i) => {
             const phaseIndex = (attestationCycle + i) % 3;
             const phases = [
-              { label: "SIGNING", color: "#00E5FF" },
+              { label: "SIGNING", color: "#FFB800" },
               { label: "VERIFYING", color: "#37C9EC" },
               { label: "ANCHORED", color: "#3EE7A2" },
             ] as const;
@@ -260,7 +260,7 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
       {/* Agent Genome Registry */}
       <div className="bg-[#0D0D0D] border border-[#242424] rounded-xl overflow-hidden">
         <div className="flex items-center gap-2 p-4 border-b border-[#1A1A1A]">
-          <Lock className="w-4 h-4 text-[#00E5FF]" />
+          <Lock className="w-4 h-4 text-[#FFB800]" />
           <span className="text-xs font-semibold uppercase tracking-widest text-[#A1A1A6]">
             Agent Genome Registry
           </span>
@@ -392,7 +392,7 @@ export default function PGLIdentityLayer({ scores }: PGLIdentityLayerProps) {
             label="Attestation Depth"
             count={Math.min(totalAttestations, 9999)}
             total={10000}
-            color="#00E5FF"
+            color="#FFB800"
             description="Cumulative hash-chain depth across all registered genomes"
           />
         </div>
@@ -441,7 +441,7 @@ function CertRow({ label, value, mono, onCopy, copiedHash }: {
           {copiedHash === value ? (
             <Check className="w-3 h-3 text-[#3EE7A2]" />
           ) : (
-            <Copy className="w-3 h-3 text-[#6E6E73] hover:text-[#00E5FF]" />
+            <Copy className="w-3 h-3 text-[#6E6E73] hover:text-[#FFB800]" />
           )}
         </button>
       )}
@@ -453,7 +453,7 @@ function StatusPill({ status }: { status: "active" | "quarantined" | "pending" }
   const styles = {
     active: "bg-[#3EE7A2]/10 text-[#3EE7A2] border-[#3EE7A2]/30",
     quarantined: "bg-[#FF5C6C]/10 text-[#FF5C6C] border-[#FF5C6C]/30",
-    pending: "bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30",
+    pending: "bg-[#FFB800]/10 text-[#FFB800] border-[#FFB800]/30",
   };
   return (
     <span className={`px-1.5 py-0.5 rounded border text-[8px] font-mono font-bold uppercase tracking-widest ${styles[status]}`}>
@@ -482,7 +482,7 @@ function DetailField({ label, value, mono, copyable, onCopy, copiedHash }: {
             {copiedHash === value ? (
               <Check className="w-3 h-3 text-[#3EE7A2]" />
             ) : (
-              <Copy className="w-3 h-3 text-[#6E6E73] hover:text-[#00E5FF]" />
+              <Copy className="w-3 h-3 text-[#6E6E73] hover:text-[#FFB800]" />
             )}
           </button>
         )}

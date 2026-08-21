@@ -24,8 +24,8 @@ export interface PEdge {
 }
 
 export const CAT_COLOR: Record<string, string> = {
-  veklom: "#00E5FF",      // Veklom governance
-  agents: "#F59E0B",      // cyan-orange
+  veklom: "#FFB800",      // Veklom governance
+  agents: "#F59E0B",      // amber-orange
   models: "#22D3EE",      // cyan
   retrieval: "#A78BFA",   // violet
   integrations: "#3FB6FF",// blue
@@ -33,9 +33,9 @@ export const CAT_COLOR: Record<string, string> = {
   runtime: "#34D399",     // green
   custom: "#FB7185",      // rose
   tools: "#3FB6FF",       // legacy
-  routing: "#00E5FF",     // cyan
+  routing: "#FFB800",     // amber
   output: "#3EE7A2",      // green
-  langchain: "#F59E0B",   // cyan-orange
+  langchain: "#F59E0B",   // amber-orange
   input: "#8892AB",       // neutral
 };
 
@@ -148,7 +148,7 @@ export default function PipelineCanvas({
                 key={ed.id}
                 d={d}
                 fill="none"
-                stroke={running ? "#00E5FF" : "#5b6478"}
+                stroke={running ? "#FFB800" : "#5b6478"}
                 strokeWidth={1.6}
                 markerEnd="url(#pc-arrow)"
                 strokeDasharray={running ? "6 5" : undefined}
@@ -160,7 +160,7 @@ export default function PipelineCanvas({
             const s = nodes.find((n) => n.id === connect.from);
             if (!s) return null;
             const a = portPos(s, "out");
-            return <path d={`M ${a.x} ${a.y} C ${a.x + 70} ${a.y}, ${connect.x - 70} ${connect.y}, ${connect.x} ${connect.y}`} fill="none" stroke="#00E5FF" strokeWidth={1.6} strokeDasharray="4 4" />;
+            return <path d={`M ${a.x} ${a.y} C ${a.x + 70} ${a.y}, ${connect.x - 70} ${connect.y}, ${connect.x} ${connect.y}`} fill="none" stroke="#FFB800" strokeWidth={1.6} strokeDasharray="4 4" />;
           })()}
         </svg>
 
@@ -178,7 +178,7 @@ export default function PipelineCanvas({
               className={clsx(
                 "group absolute select-none rounded-lg border bg-bg-800 shadow-lg cursor-grab active:cursor-grabbing transition-shadow",
                 isSel ? "border-brand-400 ring-1 ring-brand-400/40"
-                : isActive ? "border-cyan-400 ring-2 ring-cyan-400/50 bg-cyan-400/10 animate-pulse shadow-cyan-950"
+                : isActive ? "border-amber-400 ring-2 ring-amber-400/50 bg-amber-400/10 animate-pulse shadow-amber-950"
                 : "border-border-strong hover:border-ink-600"
               )}
               style={{ left: n.x, top: n.y, width: NODE_W, height: NODE_H }}

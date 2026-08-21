@@ -30,7 +30,7 @@ export function LeaderboardBlock({ entries, userAddress }: LeaderboardBlockProps
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3 mb-4">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-cyan-500" />
+          <Trophy className="w-4 h-4 text-amber-500" />
           <h2 className="text-sm font-bold font-mono tracking-wider text-white uppercase flex items-center gap-1.5 font-sans">
             Global dApp Competitive Leaderboard
           </h2>
@@ -83,10 +83,10 @@ export function LeaderboardBlock({ entries, userAddress }: LeaderboardBlockProps
                         <span
                           className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold text-black ${
                             player.rank === 1
-                              ? 'bg-cyan-400'
+                              ? 'bg-amber-400'
                               : player.rank === 2
                               ? 'bg-slate-300'
-                              : 'bg-cyan-700'
+                              : 'bg-amber-700'
                           }`}
                         >
                           {player.rank}
@@ -109,7 +109,7 @@ export function LeaderboardBlock({ entries, userAddress }: LeaderboardBlockProps
                       +${player.totalWonUsdc.toLocaleString()} USDC
                     </td>
                     {/* Best multiplier */}
-                    <td className="py-2.5 text-right text-cyan-400 font-bold">
+                    <td className="py-2.5 text-right text-amber-400 font-bold">
                       {player.bestMultiplier.toFixed(2)}x
                     </td>
                     {/* Streak */}
@@ -129,7 +129,7 @@ export function LeaderboardBlock({ entries, userAddress }: LeaderboardBlockProps
                           player.agentPreference === 'Vector North'
                             ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                             : player.agentPreference === 'Quiet Switch'
-                            ? 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'
+                            ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                             : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
                         }`}
                       >

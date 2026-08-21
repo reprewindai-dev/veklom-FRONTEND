@@ -259,20 +259,20 @@ export const AmphotericRuntimeControl: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg border transition-all ${isSimulated ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-            <ShieldCheck className={`w-6 h-6 ${isSimulated ? 'text-cyan-400 shadow-[0_0_10px_rgba(245,158,11,0.25)]' : 'text-emerald-400'}`} />
+          <div className={`p-2 rounded-lg border transition-all ${isSimulated ? 'bg-amber-500/10 border-amber-500/30' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+            <ShieldCheck className={`w-6 h-6 ${isSimulated ? 'text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.25)]' : 'text-emerald-400'}`} />
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               Amphoteric Runtime Enforcement
               {isSimulated && (
-                <span className="text-[9px] font-mono font-extrabold uppercase bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 rounded tracking-widest animate-pulse">
+                <span className="text-[9px] font-mono font-extrabold uppercase bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2 py-0.5 rounded tracking-widest animate-pulse">
                   SIMULATED FALLBACK
                 </span>
               )}
             </h1>
             <p className="text-xs text-white/40 uppercase tracking-widest font-mono">
-              Connected to: <span className={isSimulated ? 'text-cyan-400 font-bold' : 'text-emerald-400'}>{API_BASE_URL}</span>
+              Connected to: <span className={isSimulated ? 'text-amber-400 font-bold' : 'text-emerald-400'}>{API_BASE_URL}</span>
             </p>
           </div>
         </div>

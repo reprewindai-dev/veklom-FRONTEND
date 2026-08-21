@@ -596,7 +596,7 @@ export default function X402Sandbox({ onTransactionSettled }: X402SandboxProps) 
                   <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="bg-[#040711] p-3 rounded-xl border border-indigo-950 mt-2 font-mono text-[10px] text-[#cad8f8]">
                     <span className="text-[#526a9b] block uppercase text-[8px] font-bold mb-1">Generated PAYMENT-SIGNATURE Header</span>
                     <div>PAYMENT-SIGNATURE:</div>
-                    <div className="text-cyan-400 break-all">{signatureData.signature}</div>
+                    <div className="text-yellow-400 break-all">{signatureData.signature}</div>
                     <div className="text-indigo-400 text-[9px] mt-1">EIP-712 Standard structure securely verified off-chain.</div>
                   </motion.div>
                 )}
@@ -708,7 +708,7 @@ export default function X402Sandbox({ onTransactionSettled }: X402SandboxProps) 
               <div key={idx} className={
                 log.includes('[ERROR]') ? 'text-rose-400' :
                 log.includes('[SYSTEM]') ? 'text-[#718ab6]' :
-                log.includes('[OVERRIDE]') ? 'text-cyan-400 font-bold' :
+                log.includes('[OVERRIDE]') ? 'text-yellow-400 font-bold' :
                 log.includes('[FACILITATOR]') ? 'text-[#14bd96]' :
                 log.includes('[HTTP 402]') ? 'text-cyan-300 font-bold' : 'text-[#a4b8e6]'
               }>

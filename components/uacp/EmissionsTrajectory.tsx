@@ -80,7 +80,7 @@ export const EmissionsTrajectory: React.FC<EmissionsTrajectoryProps> = ({ data }
             <span className="text-[9px] font-mono text-white/30 uppercase mb-1">2025 Projection</span>
             <div className="flex items-end gap-2">
                <span className="text-xl font-bold text-white">38.1</span>
-               <span className="text-[10px] text-cyan-400 font-mono mb-1">+1.1% Trend</span>
+               <span className="text-[10px] text-amber-400 font-mono mb-1">+1.1% Trend</span>
             </div>
          </div>
       </div>

@@ -147,7 +147,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
               <CheckCircle2 className="w-4 h-4" /> PROD ENGINE (REAL PGL SIGNATURES)
             </span>
           ) : (
-            <span className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-bold text-xs flex items-center gap-1.5">
+            <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono font-bold text-xs flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4" /> DEMO SANDBOX (SIMULATED PAYLOADS)
             </span>
           )}
@@ -208,7 +208,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
                   <span className="text-cyan-400 font-bold flex items-center gap-1.5 text-2xs">
                     <Cpu className="w-3.5 h-3.5" /> Ollama Local Daemon Config
                   </span>
-                  <span className={`text-3xs px-2 py-0.5 rounded ${ollamaStatus?.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                  <span className={`text-3xs px-2 py-0.5 rounded ${ollamaStatus?.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                     {ollamaStatus?.connected ? 'ONLINE' : 'STANDBY'}
                   </span>
                 </div>
@@ -271,7 +271,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
             {/* BYOK Key Input */}
             <div className="space-y-1.5">
               <label className="text-2xs font-mono text-slate-400 uppercase flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-cyan-400" /> Bring Your Own Key (Optional Vault Secret)
+                <Key className="w-3.5 h-3.5 text-amber-400" /> Bring Your Own Key (Optional Vault Secret)
               </label>
               <input
                 type="password"
@@ -436,7 +436,7 @@ export const CapiSandboxView: React.FC<CapiSandboxViewProps> = ({
                   </div>
                   <div className="p-2 bg-slate-950 rounded-lg border border-slate-800">
                     <div className="text-slate-400 text-3xs">Cost</div>
-                    <div className="text-cyan-400 font-bold mt-0.5">${invocationResult.vnpMetrics.costMicros / 1000000}</div>
+                    <div className="text-amber-400 font-bold mt-0.5">${invocationResult.vnpMetrics.costMicros / 1000000}</div>
                   </div>
                 </div>
 

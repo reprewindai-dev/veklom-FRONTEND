@@ -44,7 +44,7 @@ export const AgentLatencyVisualizer: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <Activity size={18} className="text-emerald-400" />
           <h3 className="text-xs font-mono uppercase tracking-widest text-white/80">Real-Time Latency Metrics</h3>
-          <span className="text-[9px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">
+          <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">
             Sandbox Telemetry
           </span>
         </div>

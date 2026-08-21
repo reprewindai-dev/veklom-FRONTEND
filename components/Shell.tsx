@@ -249,7 +249,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             Strict evidence hashing required. Data residency rules applied based on active profile.
           </p>
           <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
-            <Pill tone="cyan">Evidence Logged</Pill>
+            <Pill tone="amber">Evidence Logged</Pill>
             <Pill tone="cyan">Residency Checked</Pill>
           </div>
         </div>
@@ -374,7 +374,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   Every request evaluated by policy on Hetzner. AWS burst gated by tenant rule.
                 </p>
                 <div className="mt-2.5 flex items-center gap-1.5">
-                  <Pill tone="cyan">Hetzner</Pill>
+                  <Pill tone="amber">Hetzner</Pill>
                   <Pill tone="cyan">AWS</Pill>
                 </div>
               </div>

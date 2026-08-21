@@ -84,7 +84,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
       case 'nay': return 'text-laser-red border-laser-red/30 bg-laser-red/10';
       case 'abstain':
       case 'absustain' as any: 
-        return 'text-hazard-cyan border-hazard-cyan/30 bg-hazard-cyan/10';
+        return 'text-hazard-amber border-hazard-amber/30 bg-hazard-amber/10';
       default: return 'text-electric-cyan border-electric-cyan/20 bg-electric-cyan/5';
     }
   };
@@ -100,7 +100,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
         </div>
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-none bg-white/[0.01] border border-white/5 text-[10px] text-white/50 leading-relaxed max-w-sm">
-            <span className="text-hazard-cyan font-bold uppercase block font-sans">• QUORUM THRESHOLD: 65% YEA VOTE WEIGHT</span>
+            <span className="text-hazard-amber font-bold uppercase block font-sans">• QUORUM THRESHOLD: 65% YEA VOTE WEIGHT</span>
             ArbiterOS requires structural quorum representation to seal state ledger paths.
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
             <div className="space-y-1.5 font-mono">
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-white/40 uppercase">Consensus Weight:</span>
-                <span className={voteAnalysis.isQuorumPassed ? 'text-matrix-emerald font-semibold' : 'text-hazard-cyan'}>
+                <span className={voteAnalysis.isQuorumPassed ? 'text-matrix-emerald font-semibold' : 'text-hazard-amber'}>
                   {voteAnalysis.yeaPercentage.toFixed(1)}% ({voteAnalysis.yeaWeights} / {voteAnalysis.totalWeight} units)
                 </span>
               </div>
@@ -141,7 +141,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
                   className={`absolute left-0 top-0 h-full opacity-35 ${
                     voteAnalysis.isQuorumPassed 
                       ? 'bg-gradient-to-r from-matrix-emerald/50 to-matrix-emerald animate-liquid-fill' 
-                      : 'bg-gradient-to-r from-hazard-cyan/35 to-hazard-cyan animate-fast-pulse'
+                      : 'bg-gradient-to-r from-hazard-amber/35 to-hazard-amber animate-fast-pulse'
                   }`}
                   style={{ backgroundSize: '200% 100%' }}
                 />
@@ -162,7 +162,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
                 <span className={`text-[10px] font-black z-10 uppercase px-2 py-0.5 rounded-none ${
                    voteAnalysis.isQuorumPassed 
                      ? 'text-matrix-emerald bg-matrix-emerald/10 border border-matrix-emerald/20 animate-pulse-glow border-solid' 
-                     : 'text-hazard-cyan bg-hazard-cyan/10 border border-hazard-cyan/20'
+                     : 'text-hazard-amber bg-hazard-amber/10 border border-hazard-amber/20'
                  }`}>
                   {voteAnalysis.isQuorumPassed ? '✓ QUORUM SECURE' : '⚠ WAITING STATE'}
                 </span>
@@ -236,7 +236,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
               </div>
               <div className="p-3 border border-white/5 bg-white/[0.01]">
                 <div className="text-white/30 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-hazard-cyan" /> Gas Saved
+                  <Zap className="w-3 h-3 text-hazard-amber" /> Gas Saved
                 </div>
                 <div className="text-white text-xs font-bold font-sans">{metrics.gasSaved.toLocaleString()}</div>
               </div>
@@ -257,7 +257,7 @@ export default function CouncilMatrix({ delegates, onVotePropose, logs, metrics 
               </div>
               <div className="h-44 bg-[#040406] border border-white/10 p-3 overflow-y-auto font-mono text-[10.5px] leading-relaxed space-y-1.5 select-text scroll-thin">
                 {logs.slice(-10).reverse().map((log, idx) => {
-                  const logColor = log.type === 'error' ? 'text-laser-red' : log.type === 'warn' ? 'text-hazard-cyan' : log.type === 'success' ? 'text-matrix-emerald' : 'text-[#ffffffb3]';
+                  const logColor = log.type === 'error' ? 'text-laser-red' : log.type === 'warn' ? 'text-hazard-amber' : log.type === 'success' ? 'text-matrix-emerald' : 'text-[#ffffffb3]';
                   return (
                     <div key={idx} className="flex items-start gap-2">
                       <span className="text-white/20 select-none">[{log.timestamp?.substring(11, 19) || '00:00:00'}]</span>

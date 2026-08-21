@@ -43,16 +43,16 @@ export default function x402Page() {
         </section>
 
         <section className="grid md:grid-cols-2 gap-6 mt-6">
-          <div className="bg-[#00E5FF]/5 border border-[#00E5FF]/20 p-6 rounded-xl relative overflow-hidden group hover:border-[#00E5FF]/50 transition-colors">
-            <Lock className="w-8 h-8 text-[#00E5FF] mb-4" />
+          <div className="bg-[#FFB800]/5 border border-[#FFB800]/20 p-6 rounded-xl relative overflow-hidden group hover:border-[#FFB800]/50 transition-colors">
+            <Lock className="w-8 h-8 text-[#FFB800] mb-4" />
             <h3 className="font-bold text-lg mb-2 text-white">Verifiable Delay Functions (VDF)</h3>
             <p className="text-sm text-gray-400 leading-relaxed">
               Nodes publish an encrypted commitment of their timing data, utilizing a strict sequential VDF. This mathematically guarantees a 30-second delay before the decryption key can be calculated, preventing front-running and ensuring that all node commitments are irrevocably locked before the plaintext is revealed.
             </p>
           </div>
           
-          <div className="bg-[#00E5FF]/5 border border-[#00E5FF]/20 p-6 rounded-xl relative overflow-hidden group hover:border-[#00E5FF]/50 transition-colors">
-            <Zap className="w-8 h-8 text-[#00E5FF] mb-4" />
+          <div className="bg-[#FFB800]/5 border border-[#FFB800]/20 p-6 rounded-xl relative overflow-hidden group hover:border-[#FFB800]/50 transition-colors">
+            <Zap className="w-8 h-8 text-[#FFB800] mb-4" />
             <h3 className="font-bold text-lg mb-2 text-white">zk-SNARK Instant Settlement</h3>
             <p className="text-sm text-gray-400 leading-relaxed">
               Despite the 30-second VDF lock, settlement must occur instantly. VNP nodes generate a zk-SNARK proof demonstrating that their encrypted commitment constitutes a genuine SLA failure based on local TTFB timings. The smart contract validates this mathematical proof instantly without seeing the raw data, allowing immediate micro-slashing of the provider's bond.

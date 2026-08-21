@@ -77,7 +77,7 @@ function AgentMetric({ label, value, max, unit, color, threshold }: AgentMetricP
 function AgentStatusBadge({ status }: { status: string }) {
   const config = {
     active: { color: "bg-green-500/20 text-green-400 border-green-500/50", icon: CheckCircle },
-    idle: { color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/50", icon: Activity },
+    idle: { color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/50", icon: Activity },
     error: { color: "bg-red-500/20 text-red-400 border-red-500/50", icon: AlertTriangle },
     recovering: { color: "bg-blue-500/20 text-blue-400 border-blue-500/50", icon: TrendingUp },
   };
@@ -189,11 +189,11 @@ export default function AgentSekedMonitoring() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Recovering</p>
-              <p className="text-2xl font-bold text-cyan-400">
+              <p className="text-2xl font-bold text-yellow-400">
                 {agentData.filter(a => a.status === "recovering").length}
               </p>
             </div>
-            <TrendingUp className="w-8 h-8 text-cyan-500" />
+            <TrendingUp className="w-8 h-8 text-yellow-500" />
           </div>
         </div>
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
@@ -238,7 +238,7 @@ export default function AgentSekedMonitoring() {
                   value={agent.measurement.E}
                   max={9}
                   unit=""
-                  color="bg-cyan-500"
+                  color="bg-yellow-500"
                   threshold={7}
                 />
                 <AgentMetric

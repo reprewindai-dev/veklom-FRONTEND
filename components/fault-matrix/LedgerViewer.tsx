@@ -80,7 +80,7 @@ export default function LedgerViewer({ ledger, onAppendLedger }: LedgerViewerPro
     switch (type) {
       case 'IDENTITY': return 'bg-cyan-950/80 text-cyan-400 border border-cyan-805/30';
       case 'AUTHORITY': return 'bg-purple-950/80 text-purple-400 border border-purple-705/30';
-      case 'EXECUTION': return 'bg-cyan-950/80 text-cyan-400 border border-cyan-705/30';
+      case 'EXECUTION': return 'bg-amber-950/80 text-amber-400 border border-amber-705/30';
       case 'PROOF': return 'bg-cyan-950/45 text-cyan-300 border border-cyan-600/35';
       default: return 'bg-slate-950 text-slate-400 border border-slate-850';
     }
@@ -146,7 +146,7 @@ export default function LedgerViewer({ ledger, onAppendLedger }: LedgerViewerPro
                   <div className={`absolute left-0 top-0 h-full w-1 ${
                     block.eventType === 'IDENTITY' ? 'bg-cyan-500' :
                     block.eventType === 'AUTHORITY' ? 'bg-purple-500' :
-                    block.eventType === 'EXECUTION' ? 'bg-cyan-500' : 'bg-cyan-400'
+                    block.eventType === 'EXECUTION' ? 'bg-amber-500' : 'bg-cyan-400'
                   }`} />
 
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pl-2">
@@ -343,7 +343,7 @@ export default function LedgerViewer({ ledger, onAppendLedger }: LedgerViewerPro
                     <div>
                       <span className="text-slate-500 font-bold block">ECONOMIC GAS FEE METER</span>
                       <div className="bg-[#010204] p-1.5 rounded border border-slate-950 mt-1 space-y-0.5">
-                        <span className="text-cyan-400 font-semibold block">{selectedBlock.gasPaidLamports.toLocaleString()} Lamports</span>
+                        <span className="text-amber-400 font-semibold block">{selectedBlock.gasPaidLamports.toLocaleString()} Lamports</span>
                         <span className="text-slate-500 text-[8px] block">≈ {(selectedBlock.gasPaidLamports / 1000000000).toFixed(8)} SOL (CONSENSUS PAID)</span>
                       </div>
                     </div>

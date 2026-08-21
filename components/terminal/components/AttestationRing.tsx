@@ -136,7 +136,7 @@ export default function AttestationRing({
                     strokeWidth: 2,
                     strokeDashoffset: 150,
                     strokeOpacity: 0.5,
-                    stroke: isFailed ? '#FF003C' : isRunning ? '#00E5FF' : '#222',
+                    stroke: isFailed ? '#FF003C' : isRunning ? '#FFAB00' : '#222',
                   }
             }
             transition={{

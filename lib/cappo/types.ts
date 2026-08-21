@@ -330,7 +330,7 @@ export interface CostAllocationRecord {
   action_taken: "allowed" | "escalated" | "denied" | "auto_charged";
 }
 
-export type ThreatLevel = "green" | "cyan" | "orange" | "red";
+export type ThreatLevel = "green" | "yellow" | "orange" | "red";
 
 export interface RiskFactor {
   factor_name: string;

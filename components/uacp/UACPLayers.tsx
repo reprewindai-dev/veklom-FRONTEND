@@ -36,7 +36,7 @@ export const UACPLayers: React.FC<UACPLayersProps> = ({ layers }) => {
                 </div>
                 <div className={`px-2 py-0.5 rounded text-[8px] font-mono uppercase ${
                     l.status === 'active' ? 'bg-green-400/10 text-green-400' : 
-                    l.status === 'isolated' ? 'bg-cyan-400/10 text-cyan-400' : 'bg-white/10 text-white/40'
+                    l.status === 'isolated' ? 'bg-amber-400/10 text-amber-400' : 'bg-white/10 text-white/40'
                 }`}>
                     {l.status}
                 </div>

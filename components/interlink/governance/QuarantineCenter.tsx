@@ -156,10 +156,10 @@ export default function QuarantineCenter({
         <div className="bg-[#0F1115] border border-[#23272E] p-4 rounded xl:col-span-4 space-y-4">
           <div className="border-b border-[#23272E] pb-3 flex justify-between items-center">
             <h3 className="text-xs font-bold text-[#D1D5DB] uppercase tracking-wider flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-cyan-500" />
+              <Clock className="w-4 h-4 text-amber-500" />
               Under Containment
             </h3>
-            <span className="text-[10px] bg-cyan-950/20 text-cyan-400 border border-cyan-900/40 px-2 py-0.5 rounded font-mono">
+            <span className="text-[10px] bg-amber-950/20 text-amber-400 border border-amber-900/40 px-2 py-0.5 rounded font-mono">
               {tickets.filter(t => t.status === 'pending').length} Held
             </span>
           </div>
@@ -181,12 +181,12 @@ export default function QuarantineCenter({
                     }}
                     className={`w-full text-left p-3 rounded border transition-all flex flex-col gap-2 relative ${
                       activeTicketId === ticket.ticketId
-                        ? 'bg-cyan-950/20 border-cyan-500'
+                        ? 'bg-amber-950/20 border-amber-500'
                         : 'bg-[#0B0C0E] border-[#23272E] hover:bg-[#15181E]'
                     }`}
                   >
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-xs font-bold text-cyan-400">{ticket.ticketId}</span>
+                      <span className="font-mono text-xs font-bold text-amber-400">{ticket.ticketId}</span>
                       <span className="text-[9px] bg-[#0B0C0E] border border-[#23272E] text-slate-400 font-mono px-2 py-0.5 rounded">
                         M-of-N: 2 Approvers
                       </span>
@@ -213,7 +213,7 @@ export default function QuarantineCenter({
               <div className="border-b border-[#23272E] pb-3 flex justify-between items-start sm:items-center gap-4 flex-col sm:row-reverse sm:flex-row">
                 <div>
                   <h3 className="text-xs font-bold text-gray-200 uppercase tracking-widest flex items-center gap-2">
-                    <AlertOctagon className="w-5 h-5 text-cyan-500" />
+                    <AlertOctagon className="w-5 h-5 text-amber-500" />
                     Review Quarantine Event: {activeTicket.ticketId}
                   </h3>
                   <p className="text-[10px] text-gray-400 mt-1 font-mono">
@@ -289,7 +289,7 @@ export default function QuarantineCenter({
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-20 bg-[#0F1115] border border-[#23272E] rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-300 ${quorumMet ? 'bg-green-500' : 'bg-cyan-500'}`}
+                        className={`h-full transition-all duration-300 ${quorumMet ? 'bg-green-500' : 'bg-amber-500'}`}
                         style={{ width: `${(signedCount / 2) * 100}%` }}
                       />
                     </div>

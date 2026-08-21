@@ -137,7 +137,7 @@ export default function CarbonController({ onAppendLedger, onStateUpdate }: Carb
               <div className="flex items-center gap-4">
                 <span className="text-slate-550 text-[10px]">{reg.status}</span>
                 <span className={`font-bold ${
-                  reg.carbon < 50 ? 'text-cyan-400' : reg.carbon < 250 ? 'text-cyan-400' : 'text-red-400'
+                  reg.carbon < 50 ? 'text-cyan-400' : reg.carbon < 250 ? 'text-amber-400' : 'text-red-400'
                 }`}>
                   {reg.carbon} g/kWh
                 </span>
@@ -220,7 +220,7 @@ export default function CarbonController({ onAppendLedger, onStateUpdate }: Carb
       <div className="border-t border-slate-900 pt-3 mt-4 text-[10px] font-mono text-slate-500 flex justify-between">
         <span>Green Software Engineering Metrics</span>
         <span className="text-cyan-455 flex items-center gap-1 font-semibold text-cyan-400">
-          <Sparkles className="w-3 h-3 text-cyan-400 animate-spin" /> EST. REDUCTION: 34.7%
+          <Sparkles className="w-3 h-3 text-yellow-400 animate-spin" /> EST. REDUCTION: 34.7%
         </span>
       </div>
       

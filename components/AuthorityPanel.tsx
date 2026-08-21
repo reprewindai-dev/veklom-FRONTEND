@@ -182,7 +182,7 @@ export function AuthorityPanel({
   if (error || !data) {
     return (
       <Card className="p-6">
-        <div className="flex items-center gap-2 text-cyan-500">
+        <div className="flex items-center gap-2 text-amber-500">
           <AlertTriangle className="w-5 h-5" />
           <span>
             {authorityContext.error 
@@ -325,7 +325,7 @@ export function AuthorityPanel({
                   ctx.authority_bundle.risk_level === "high"
                     ? "red"
                     : ctx.authority_bundle.risk_level === "medium"
-                    ? "cyan"
+                    ? "amber"
                     : "green"
                 }
               />
@@ -391,7 +391,7 @@ export function AuthorityPanel({
                 <span className="text-sm">{ctx.permissions_summary.denied_tools.length} Denied</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-cyan-500" />
+                <div className="w-3 h-3 rounded-full bg-amber-500" />
                 <span className="text-sm">{ctx.permissions_summary.conditional_tools.length} Conditional</span>
               </div>
             </div>
@@ -414,7 +414,7 @@ export function AuthorityPanel({
                   ctx.risk_assessment.overall_risk_level === "high"
                     ? "red"
                     : ctx.risk_assessment.overall_risk_level === "medium"
-                    ? "cyan"
+                    ? "amber"
                     : "green"
                 }
               />
@@ -451,7 +451,7 @@ export function AuthorityPanel({
                 >
                   <span className={`w-2 h-2 rounded-full ${
                     decision.decision === "approve" ? "bg-emerald-500" :
-                    decision.decision === "deny" ? "bg-red-500" : "bg-cyan-500"
+                    decision.decision === "deny" ? "bg-red-500" : "bg-amber-500"
                   }`} />
                   <span className="text-brand-500">{decision.tool_name}</span>
                   <span className="text-ink-400">{decision.decision}</span>
@@ -509,7 +509,7 @@ export function AuthorityPanel({
               pgl.certificate.risk_category === "high"
                 ? "red"
                 : pgl.certificate.risk_category === "medium"
-                ? "cyan"
+                ? "amber"
                 : "green"
             }
           />
@@ -610,12 +610,12 @@ function Field({
   label: string;
   value: string;
   mono?: boolean;
-  tone?: "green" | "cyan" | "red";
+  tone?: "green" | "amber" | "red";
   className?: string;
 }) {
   const toneClasses = {
     green: "text-emerald-500",
-    cyan: "text-cyan-500",
+    amber: "text-amber-500",
     red: "text-red-500",
   };
 
@@ -655,7 +655,7 @@ function ModeIndicator({ mode }: { mode: string }) {
       },
       replay: {
         label: "Replay Mode",
-        color: "bg-cyan-500",
+        color: "bg-amber-500",
         desc: "Demo mode with cached responses",
       },
       "local-dev": {
@@ -722,7 +722,7 @@ export function CompactAuthorityBadge({
             ctx.risk_assessment?.overall_risk_level === "high"
               ? "text-red-500"
               : ctx.risk_assessment?.overall_risk_level === "medium"
-              ? "text-cyan-500"
+              ? "text-amber-500"
               : "text-emerald-500"
           }`}
         >

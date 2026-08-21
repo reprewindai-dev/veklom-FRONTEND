@@ -575,7 +575,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
       case 'HIGH':
         return 'text-[#FF6B00] border-[#FF6B00]/20 bg-[#FF6B00]/10';
       case 'MEDIUM':
-        return 'text-cyan-500 border-cyan-500/10 bg-cyan-950/10';
+        return 'text-yellow-500 border-yellow-500/10 bg-yellow-950/10';
       case 'LOW':
         return 'text-[#00FF41] border-[#00FF41]/10 bg-[#00FF41]/10';
       default:
@@ -609,7 +609,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
     switch (riskLevel) {
       case 'CRITICAL': return 'text-red-500';
       case 'HIGH': return 'text-orange-500';
-      case 'MEDIUM': return 'text-cyan-500';
+      case 'MEDIUM': return 'text-yellow-500';
       case 'LOW': return 'text-[#00FF41]';
       default: return 'text-[#00FF41]';
     }
@@ -661,7 +661,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
                 
                 <div className="flex items-baseline space-x-1.5">
                   <span className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
-                    humanOperatorScore > 80 ? 'text-[#00FF41]' : humanOperatorScore > 40 ? 'text-cyan-500' : 'text-red-500'
+                    humanOperatorScore > 80 ? 'text-[#00FF41]' : humanOperatorScore > 40 ? 'text-yellow-500' : 'text-red-500'
                   }`}>
                     {humanOperatorScore}%
                   </span>
@@ -672,7 +672,7 @@ export const RiskIndicators: React.FC<RiskIndicatorsProps> = ({
                 <div className="w-full bg-[#111] h-1.5 rounded-full overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-500 ${
-                      humanOperatorScore > 80 ? 'bg-[#00FF41]' : humanOperatorScore > 40 ? 'bg-cyan-500' : 'bg-red-500'
+                      humanOperatorScore > 80 ? 'bg-[#00FF41]' : humanOperatorScore > 40 ? 'bg-yellow-500' : 'bg-red-500'
                     }`}
                     style={{ width: `${humanOperatorScore}%` }}
                   />

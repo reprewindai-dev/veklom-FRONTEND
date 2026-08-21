@@ -95,7 +95,7 @@ export function LifecycleStatusControl() {
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Current State</p>
             <div className="flex items-center space-x-2 text-slate-200">
               {lifecycle.status === "ACTIVE" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-              {lifecycle.status === "PROBATIONARY" && <Activity className="h-4 w-4 text-cyan-500" />}
+              {lifecycle.status === "PROBATIONARY" && <Activity className="h-4 w-4 text-amber-500" />}
               {lifecycle.status === "EXPIRED" && <XCircle className="h-4 w-4 text-red-500" />}
               <span className="font-mono">{lifecycle.status}</span>
             </div>
@@ -107,7 +107,7 @@ export function LifecycleStatusControl() {
         </div>
 
         {lifecycle.warning && (
-          <div className="bg-cyan-500/10 border border-cyan-500/20 p-3 rounded text-sm text-cyan-400 flex items-start space-x-2">
+          <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded text-sm text-amber-400 flex items-start space-x-2">
             <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
             <span>{lifecycle.warning}</span>
           </div>

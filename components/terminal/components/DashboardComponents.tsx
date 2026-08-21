@@ -20,14 +20,14 @@ export const PanelCard = ({ title, children, className = "" }: { title: string; 
 export const StatusBadge = ({ state, text }: { state: 'healthy' | 'warning' | 'critical' | 'neutral', text: string }) => {
   const colors = {
     healthy: 'text-[#00FF66] bg-[#00FF66]/10 border-[#00FF66]/30 shadow-[0_0_10px_rgba(0,255,102,0.1)]',
-    warning: 'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30 shadow-[0_0_10px_rgba(255,171,0,0.1)]',
+    warning: 'text-[#FFAB00] bg-[#FFAB00]/10 border-[#FFAB00]/30 shadow-[0_0_10px_rgba(255,171,0,0.1)]',
     critical: 'text-[#FF003C] bg-[#FF003C]/10 border-[#FF003C]/30 shadow-[0_0_10px_rgba(255,0,60,0.1)]',
     neutral: 'text-[#00E5FF] bg-[#00E5FF]/10 border-[#00E5FF]/30 shadow-[0_0_10px_rgba(0,229,255,0.1)]'
   };
   
   const dots = {
     healthy: 'bg-[#00FF66] shadow-[0_0_6px_#00FF66]',
-    warning: 'bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]',
+    warning: 'bg-[#FFAB00] shadow-[0_0_6px_#FFAB00]',
     critical: 'bg-[#FF003C] shadow-[0_0_6px_#FF003C]',
     neutral: 'bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]'
   };
@@ -67,7 +67,7 @@ export const MetricCard = ({ label, value, subtext, empty = false }: { label: st
 export const ActionRow = ({ type, title, subtitle, actionText, onClick }: { type: 'do_now' | 'review' | 'open', title: string, subtitle: string, actionText: string, onClick?: () => void }) => {
   const styles = {
     do_now: { border: 'border-[#FF003C]/30 hover:border-[#FF003C]/50', bg: 'bg-[#FF003C]/5 hover:bg-[#FF003C]/10', badge: 'bg-[#FF003C]/10 text-[#FF003C] border-[#FF003C]/20', button: 'border-[#FF003C]/30 text-[#FF003C]/80 hover:bg-[#FF003C]/20 hover:text-white hover:border-[#FF003C]/50 hover:shadow-[0_0_15px_rgba(255,0,60,0.15)]' },
-    review: { border: 'border-[#00E5FF]/30 hover:border-[#00E5FF]/50', bg: 'bg-[#00E5FF]/5 hover:bg-[#00E5FF]/10', badge: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/20', button: 'border-[#00E5FF]/30 text-[#00E5FF]/80 hover:bg-[#00E5FF]/20 hover:text-white hover:border-[#00E5FF]/50 hover:shadow-[0_0_15px_rgba(255,171,0,0.15)]' },
+    review: { border: 'border-[#FFAB00]/30 hover:border-[#FFAB00]/50', bg: 'bg-[#FFAB00]/5 hover:bg-[#FFAB00]/10', badge: 'bg-[#FFAB00]/10 text-[#FFAB00] border-[#FFAB00]/20', button: 'border-[#FFAB00]/30 text-[#FFAB00]/80 hover:bg-[#FFAB00]/20 hover:text-white hover:border-[#FFAB00]/50 hover:shadow-[0_0_15px_rgba(255,171,0,0.15)]' },
     open: { border: 'border-[#00E5FF]/30 hover:border-[#00E5FF]/50', bg: 'bg-[#00E5FF]/5 hover:bg-[#00E5FF]/10', badge: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/20', button: 'border-[#00E5FF]/30 text-[#00E5FF]/80 hover:bg-[#00E5FF]/20 hover:text-white hover:border-[#00E5FF]/50 hover:shadow-[0_0_15px_rgba(0,229,255,0.15)]' }
   };
 
@@ -117,13 +117,13 @@ export const TimelineEvent = ({ title, time, detail, isAlert = false }: { title:
 export const LaunchpadCard = ({ title, status, count, urgency }: { title: string, status: string, count: number, urgency: 'high' | 'normal' | 'low' }) => {
   const urgencyColors = {
     high: 'text-[#FF003C] group-hover:text-[#FF003C]',
-    normal: 'text-[#00E5FF] group-hover:text-[#00E5FF]',
+    normal: 'text-[#FFAB00] group-hover:text-[#FFAB00]',
     low: 'text-[#00E5FF] group-hover:text-[#00E5FF]'
   };
 
   const urgencyGlows = {
     high: 'group-hover:shadow-[0_0_20px_rgba(255,0,60,0.12)] group-hover:border-[#FF003C]/30',
-    normal: 'group-hover:shadow-[0_0_20px_rgba(255,171,0,0.1)] group-hover:border-[#00E5FF]/30',
+    normal: 'group-hover:shadow-[0_0_20px_rgba(255,171,0,0.1)] group-hover:border-[#FFAB00]/30',
     low: 'group-hover:shadow-[0_0_20px_rgba(0,229,255,0.1)] group-hover:border-[#00E5FF]/30'
   };
 

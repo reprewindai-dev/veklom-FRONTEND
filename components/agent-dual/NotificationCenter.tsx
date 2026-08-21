@@ -46,7 +46,7 @@ export function NotificationCenter({ notifications, onClear }: NotificationCente
             >
               <div className="mt-0.5">
                 {notif.type === 'jackpot' && (
-                  <div className="p-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-500">
+                  <div className="p-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-500">
                     <Star className="w-3.5 h-3.5" />
                   </div>
                 )}

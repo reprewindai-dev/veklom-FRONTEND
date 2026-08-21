@@ -17,13 +17,13 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
 
       <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
         <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-cyan-500" />
+          <Shield className="w-4 h-4 text-amber-500" />
           <h2 className="text-sm font-bold font-mono tracking-wider text-white uppercase">
             // x402 Escrow Facilitator Registry
           </h2>
         </div>
-        <span className="text-[10px] font-mono text-cyan-400 uppercase flex items-center gap-1">
-          <Flame className="w-3 h-3 animate-pulse text-cyan-400" /> Live Protocol
+        <span className="text-[10px] font-mono text-amber-400 uppercase flex items-center gap-1">
+          <Flame className="w-3 h-3 animate-pulse text-amber-400" /> Live Protocol
         </span>
       </div>
 
@@ -31,7 +31,7 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-[#0a0c12]/60 p-3 rounded border border-white/5 text-center">
             <span className="text-[10px] font-mono text-slate-500 uppercase block">Total Volume Secured</span>
-            <span className="text-2xl font-bold font-mono text-cyan-400 block mt-1 tracking-tight">
+            <span className="text-2xl font-bold font-mono text-amber-400 block mt-1 tracking-tight">
               Needs proof
             </span>
             <span className="text-[9px] font-mono text-slate-500 block mt-0.5">Awaiting BYOS settlement rows</span>
@@ -39,7 +39,7 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
 
           <div className="bg-[#0a0c12]/60 p-3 rounded border border-white/5 text-center">
             <span className="text-[10px] font-mono text-slate-500 uppercase block">Settlement Commission</span>
-            <span className="text-2xl font-bold font-mono text-cyan-500 block mt-1">
+            <span className="text-2xl font-bold font-mono text-amber-500 block mt-1">
               {escrow.facilitatorFeePercent.toFixed(2)}%
             </span>
             <span className="text-[9px] font-mono text-slate-500 block mt-0.5">150 Basis Points</span>
@@ -60,11 +60,11 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500 uppercase">Collateral Ledger:</span>
-            <span className="text-cyan-400 uppercase font-semibold">Needs settlement proof</span>
+            <span className="text-amber-400 uppercase font-semibold">Needs settlement proof</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500 uppercase">Audit Verification status:</span>
-            <span className="text-cyan-500 uppercase font-bold">Read routes only</span>
+            <span className="text-amber-500 uppercase font-bold">Read routes only</span>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export function FacilitatorBlock({ escrow }: FacilitatorBlockProps) {
             </button>
           </div>
 
-          <p className="text-[10px] text-cyan-400 font-mono mt-1">
+          <p className="text-[10px] text-amber-400 font-mono mt-1">
             Collateral writes require a verified BYOS settlement endpoint.
           </p>
         </div>

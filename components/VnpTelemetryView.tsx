@@ -64,7 +64,7 @@ export const VnpTelemetryView: React.FC = () => {
       <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 font-mono text-xs">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm text-white">Infrastructure Node Health</h3>
-          <span className="px-2.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-3xs">
+          <span className="px-2.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-3xs">
             Needs proof
           </span>
         </div>
@@ -72,7 +72,7 @@ export const VnpTelemetryView: React.FC = () => {
           No governed node-health source is wired to this surface. Runtime infrastructure state is not reported.
         </p>
         <div className="flex flex-wrap gap-3 text-3xs uppercase tracking-wider">
-          <span className="text-slate-400">Status: <strong className="text-cyan-400">Not started</strong></span>
+          <span className="text-slate-400">Status: <strong className="text-amber-400">Not started</strong></span>
           <span className="text-slate-400">Next step: <strong className="text-cyan-400">Manual step</strong></span>
         </div>
       </div>
@@ -119,7 +119,7 @@ export const VnpTelemetryView: React.FC = () => {
                     <div>{l.agentIdentity}</div>
                     <div className="text-3xs text-slate-500">{l.humanOwner}</div>
                   </td>
-                  <td className="py-3 text-cyan-400 font-bold">
+                  <td className="py-3 text-amber-400 font-bold">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> {l.remainingSeconds}s
                     </span>
@@ -135,7 +135,7 @@ export const VnpTelemetryView: React.FC = () => {
                       </span>
                     )}
                     {l.status === 'EXPIRED_EVAPORATED' && (
-                      <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 text-3xs font-bold">
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-3xs font-bold">
                         EVAPORATED
                       </span>
                     )}

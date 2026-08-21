@@ -39,7 +39,7 @@ export default function VNPClaimPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white font-sans selection:bg-[#00E5FF]/30 relative z-10 flex flex-col">
+    <main className="min-h-screen bg-[#0A0A0A] text-white font-sans selection:bg-[#FFB800]/30 relative z-10 flex flex-col">
       
       {/* Simple Header */}
       <nav className="border-b border-white/5 bg-[#0A0A0A]/80 backdrop-blur-md sticky top-0 z-50">
@@ -48,7 +48,7 @@ export default function VNPClaimPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Protocol
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#00E5FF] rounded flex items-center justify-center brand-glow">
+            <div className="w-6 h-6 bg-[#FFB800] rounded flex items-center justify-center brand-glow">
               <span className="font-bold text-black text-xs leading-none">V</span>
             </div>
             <span className="font-bold font-mono tracking-wider text-sm">VNP_ONBOARD</span>
@@ -59,7 +59,7 @@ export default function VNPClaimPage() {
       <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
         
         {/* Background Glow */}
-        <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[600px] h-[600px] bg-[#00E5FF]/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[600px] h-[600px] bg-[#FFB800]/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
         <div className="max-w-lg w-full">
           <div className="text-center mb-10">
@@ -85,7 +85,7 @@ export default function VNPClaimPage() {
               
               {resultData && (
                 <div className="bg-black/50 border border-white/10 rounded-lg p-4 mb-6 text-left">
-                  <h3 className="font-bold text-[#00E5FF] mb-2 text-sm">DNS VERIFICATION REQUIRED</h3>
+                  <h3 className="font-bold text-[#FFB800] mb-2 text-sm">DNS VERIFICATION REQUIRED</h3>
                   <p className="text-sm text-gray-400 mb-4">{resultData.instructions}</p>
                   <div className="bg-white/5 p-3 rounded font-mono text-xs text-gray-300 break-all">
                     <strong>Record Name:</strong> {resultData.dns_record}<br/>
@@ -104,7 +104,7 @@ export default function VNPClaimPage() {
               animate={{ opacity: 1, y: 0 }}
               className="obsidian-glass border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent opacity-50" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#FFB800] to-transparent opacity-50" />
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
@@ -116,7 +116,7 @@ export default function VNPClaimPage() {
                         name="provider_name"
                         type="text" 
                         placeholder="e.g. OpenAI, Stripe"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
                       <input type="hidden" name="company_name" value="" />
                     </div>
@@ -127,7 +127,7 @@ export default function VNPClaimPage() {
                         name="api_name"
                         type="text" 
                         placeholder="e.g. GPT-4 Inference"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
                     </div>
                   </div>
@@ -141,7 +141,7 @@ export default function VNPClaimPage() {
                         name="api_domain"
                         type="text" 
                         placeholder="api.provider.com"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
                     </div>
                   </div>
@@ -155,7 +155,7 @@ export default function VNPClaimPage() {
                         name="base_url"
                         type="url" 
                         placeholder="https://api.provider.com/v1"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
                     </div>
                   </div>
@@ -169,7 +169,7 @@ export default function VNPClaimPage() {
                         name="health_path"
                         type="text" 
                         placeholder="/health or /ping"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-2">This is the exact endpoint our global Edge Probes will hit to measure latency.</p>
@@ -182,7 +182,7 @@ export default function VNPClaimPage() {
                       name="contact_email"
                       type="email" 
                       placeholder="engineering@provider.com"
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#FFB800]/50 transition-colors"
                     />
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function VNPClaimPage() {
                   <button 
                     type="submit" 
                     disabled={status === 'submitting'}
-                    className="w-full bg-[#00E5FF] hover:bg-[#00E5FF]/90 text-black font-bold py-4 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    className="w-full bg-[#FFB800] hover:bg-[#FFB800]/90 text-black font-bold py-4 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                   >
                     {status === 'submitting' ? (
                       <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Verifying...</span>

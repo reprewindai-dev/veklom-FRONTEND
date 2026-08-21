@@ -20,7 +20,7 @@ export default function Leaderboard({ entries, currentPlayerWallet }: Leaderboar
       <div className="flex justify-between items-center pb-4 mb-6 border-b border-white/10">
         <div>
           <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <Trophy className="w-4 h-4 text-yellow-400 animate-pulse" />
             <h3 className="font-mono text-sm tracking-widest text-[#00f3ff] uppercase">
               Global Neural Leaderboard
             </h3>
@@ -61,9 +61,9 @@ export default function Leaderboard({ entries, currentPlayerWallet }: Leaderboar
                     `}
                   >
                     <td className="py-3 pl-1 flex items-center gap-1">
-                      {index === 0 && <Award className="w-4 h-4 text-cyan-400" />}
+                      {index === 0 && <Award className="w-4 h-4 text-yellow-400" />}
                       {index === 1 && <Award className="w-4 h-4 text-slate-300" />}
-                      {index === 2 && <Award className="w-4 h-4 text-cyan-500" />}
+                      {index === 2 && <Award className="w-4 h-4 text-amber-500" />}
                       {index > 2 && <span className="w-4 text-center block text-white/40">{index + 1}</span>}
                     </td>
                     <td className="py-3">

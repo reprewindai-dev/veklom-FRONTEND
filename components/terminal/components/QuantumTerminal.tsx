@@ -526,12 +526,12 @@ export default function QuantumTerminal() {
               id="v-terminal"
             >
           <div className="chips-bar flex gap-2 p-2 overflow-x-auto shrink-0 scrollbar-hide">
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 hover:bg-[#00E5FF]/20 rounded-full text-[10px] cursor-pointer text-[#00E5FF]" onClick={() => fillPrompt('veklom compare')}>📊 Veklom vs. Competitors</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 hover:bg-[#00E5FF]/20 rounded-full text-[10px] cursor-pointer text-[#00E5FF]" onClick={() => fillPrompt('veklom test-shield injection')}>🛡️ Prompt Injection Shield</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 hover:bg-[#00E5FF]/20 rounded-full text-[10px] cursor-pointer text-[#00E5FF]" onClick={() => fillPrompt('veklom test-shield credential')}>🔐 Credential Masking / x402 Swap</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 hover:bg-[#00E5FF]/20 rounded-full text-[10px] cursor-pointer text-[#00E5FF]" onClick={() => fillPrompt('veklom test-shield depth')}>🕸️ Schema Moat Depth Limit</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 hover:bg-[#00E5FF]/20 rounded-full text-[10px] cursor-pointer text-[#00E5FF]" onClick={() => fillPrompt('veklom test-shield slash')}>⚡ VNP SLA Autoslash</div>
-            <div className="chip whitespace-nowrap px-3 py-1 bg-[#00E5FF]/10 border border-[#00E5FF]/30 hover:bg-[#00E5FF]/20 rounded-full text-[10px] cursor-pointer text-[#00E5FF]" onClick={() => fillPrompt('veklom status')}>ℹ️ Sovereign Gateway Status</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom compare')}>📊 Veklom vs. Competitors</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield injection')}>🛡️ Prompt Injection Shield</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield credential')}>🔐 Credential Masking / x402 Swap</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield depth')}>🕸️ Schema Moat Depth Limit</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom test-shield slash')}>⚡ VNP SLA Autoslash</div>
+            <div className="chip whitespace-nowrap px-3 py-1 bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 rounded-full text-[10px] cursor-pointer text-[#FFB800]" onClick={() => fillPrompt('veklom status')}>ℹ️ Sovereign Gateway Status</div>
           </div>
 
           <div className="output flex-grow overflow-y-auto p-4 space-y-1" id="output" ref={outRef}>

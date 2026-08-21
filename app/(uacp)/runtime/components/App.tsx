@@ -783,16 +783,16 @@ export default function App() {
 
                     {/* Security warnings and detected policy triggers */}
                     {activePlan.detectedPolicies.length > 0 && (
-                      <div className="p-3 bg-cyan-950/20 border border-cyan-900/40 rounded flex items-start gap-2.5">
-                        <AlertTriangle className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5" />
+                      <div className="p-3 bg-amber-950/20 border border-amber-900/40 rounded flex items-start gap-2.5">
+                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                         <div>
-                          <span className="text-xs font-bold text-cyan-400 block font-mono">Detected Compliance Boundaries Target Logs</span>
+                          <span className="text-xs font-bold text-amber-400 block font-mono">Detected Compliance Boundaries Target Logs</span>
                           <p className="text-[11px] text-slate-300 leading-normal mt-1">
                             Current agent tasks overlap with localized data protection policies:{" "}
-                            <span className="font-bold text-cyan-400">{activePlan.detectedPolicies.join(", ")}</span>. 
+                            <span className="font-bold text-amber-400">{activePlan.detectedPolicies.join(", ")}</span>. 
                             Ensure corresponding gates are checked/authorized prior to cryptographic minting.
                           </p>
-                          <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2 py-1 rounded inline-block">
+                          <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-mono font-bold text-amber-400 bg-amber-950/40 px-2 py-1 rounded inline-block">
                             Risks: {activePlan.potentialRisks.join(" | ")}
                           </div>
                         </div>
@@ -1363,12 +1363,12 @@ export default function App() {
                           }}
                           className={`p-2 rounded border transition cursor-pointer flex flex-col justify-between ${
                             replaySelectedAgent === "agent_gamma" 
-                              ? "bg-cyan-900/20 border-cyan-500 text-white font-bold shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
+                              ? "bg-amber-900/20 border-amber-500 text-white font-bold shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
                               : "bg-[#060a1f] border-slate-900 text-slate-400 hover:text-slate-200 hover:border-slate-800"
                           }`}
                         >
                           <span className="truncate">📦 Gamma Archive [Fork ID]</span>
-                          <span className="text-[8.5px] mt-1 text-cyan-500 font-bold bg-cyan-950/50 border border-cyan-900/60 px-1 rounded max-w-max">Medium Risk</span>
+                          <span className="text-[8.5px] mt-1 text-amber-500 font-bold bg-amber-950/50 border border-amber-900/60 px-1 rounded max-w-max">Medium Risk</span>
                         </div>
                       </div>
                     </div>
@@ -1430,7 +1430,7 @@ export default function App() {
                         onClick={replayRunning ? pauseReplay : startReplay}
                         className={`px-3.5 py-1.5 rounded text-[11px] font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer ${
                           replayRunning 
-                            ? "bg-cyan-600 hover:bg-cyan-500 text-slate-950 animate-pulse" 
+                            ? "bg-amber-600 hover:bg-amber-500 text-slate-950 animate-pulse" 
                             : "bg-magenta-650 hover:bg-magenta-550 text-slate-100 bg-magenta-600 hover:bg-magenta-500"
                         }`}
                       >

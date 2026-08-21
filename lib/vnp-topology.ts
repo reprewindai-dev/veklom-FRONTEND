@@ -144,7 +144,7 @@ export function proofStateClasses(state: ProofState): string {
       return "text-emerald-300 bg-emerald-500/10 border-emerald-500/30";
     case "Needs proof":
     case "Insufficient Evidence":
-      return "text-cyan-300 bg-cyan-500/10 border-cyan-500/30";
+      return "text-amber-300 bg-amber-500/10 border-amber-500/30";
     case "Simulated":
       return "text-indigo-300 bg-indigo-500/10 border-indigo-500/30";
     case "Not started":

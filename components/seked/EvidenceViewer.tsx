@@ -27,7 +27,7 @@ interface VerificationStatusProps {
 
 function VerificationStatus({ status }: VerificationStatusProps) {
   const config = {
-    pending: { icon: Clock, color: "text-cyan-400", label: "Pending" },
+    pending: { icon: Clock, color: "text-yellow-400", label: "Pending" },
     verified: { icon: CheckCircle, color: "text-green-400", label: "Verified" },
     failed: { icon: XCircle, color: "text-red-400", label: "Failed" },
   };
@@ -201,7 +201,7 @@ export default function EvidenceViewer() {
                     proof.action === "RUN" 
                       ? "bg-green-500/20 text-green-400"
                       : proof.action === "HOLD"
-                      ? "bg-cyan-500/20 text-cyan-400"
+                      ? "bg-yellow-500/20 text-yellow-400"
                       : "bg-red-500/20 text-red-400"
                   }`}>
                     {proof.action}

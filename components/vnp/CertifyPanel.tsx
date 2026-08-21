@@ -15,7 +15,7 @@ const TIERS = [
     label: 'VNP Gold',
     minScore: 85,
     days: 30,
-    color: '#00E5FF',
+    color: '#FFB800',
     bg: 'rgba(255,184,0,0.06)',
     border: 'rgba(255,184,0,0.25)',
     badge: 'GOLD',
@@ -119,7 +119,7 @@ function EmbedCode({ apiId, label }: { apiId: string; label: string }) {
             <code className="text-[9px] font-mono text-[#A1A1A6] flex-1 truncate">{code}</code>
             <button
               onClick={() => copy(type, code)}
-              className="shrink-0 flex items-center gap-1 text-[9px] font-mono text-[#6E6E73] hover:text-[#00E5FF] transition-colors"
+              className="shrink-0 flex items-center gap-1 text-[9px] font-mono text-[#6E6E73] hover:text-[#FFB800] transition-colors"
             >
               {copied === type ? <CheckCircle className="w-3 h-3 text-[#00FF66]" /> : <Copy className="w-3 h-3" />}
               {copied === type ? 'Copied' : 'Copy'}
@@ -198,7 +198,7 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
             onClick={() => setActiveView(v.id)}
             className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
               activeView === v.id
-                ? 'bg-[#1A1A1A] text-[#00E5FF] border border-[#00E5FF]/20'
+                ? 'bg-[#1A1A1A] text-[#FFB800] border border-[#FFB800]/20'
                 : 'text-[#6E6E73] hover:text-[#A1A1A6]'
             }`}
           >
@@ -227,7 +227,7 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
                   animate={{ opacity: 1, y: 0 }}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
                     isSelected
-                      ? 'bg-[#0A0A0A] border-[#00E5FF]/30'
+                      ? 'bg-[#0A0A0A] border-[#FFB800]/30'
                       : 'bg-[#0A0A0A] border-[#1F1F1F] hover:border-[#333]'
                   }`}
                 >
@@ -334,8 +334,8 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
         <div className="max-w-2xl space-y-5">
           <div className="bg-[#0A0A0A] border border-[#1F1F1F] rounded-xl p-6">
             <div className="flex items-start gap-4 mb-6">
-              <div className="p-3 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20">
-                <Globe className="w-6 h-6 text-[#00E5FF]" />
+              <div className="p-3 rounded-xl bg-[#FFB800]/10 border border-[#FFB800]/20">
+                <Globe className="w-6 h-6 text-[#FFB800]" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">Claim Your API</h3>
@@ -351,14 +351,14 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
                 <input
                   type="url"
                   placeholder="https://api.yourservice.com"
-                  className="w-full bg-[#171717] border border-[#1F1F1F] rounded-lg px-3 py-2.5 text-sm text-[#E6E6E9] focus:outline-none focus:border-[#00E5FF]/40"
+                  className="w-full bg-[#171717] border border-[#1F1F1F] rounded-lg px-3 py-2.5 text-sm text-[#E6E6E9] focus:outline-none focus:border-[#FFB800]/40"
                 />
               </div>
 
               <div className="bg-[#171717] border border-[#1F1F1F] rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Code className="w-4 h-4 text-[#00E5FF]" />
-                  <span className="text-xs font-bold text-[#00E5FF] font-mono tracking-widest uppercase">Verification Method: DNS TXT Record</span>
+                  <Code className="w-4 h-4 text-[#FFB800]" />
+                  <span className="text-xs font-bold text-[#FFB800] font-mono tracking-widest uppercase">Verification Method: DNS TXT Record</span>
                 </div>
                 <div className="space-y-2 text-xs font-mono">
                   <div className="flex items-center justify-between text-[#6E6E73]">
@@ -373,7 +373,7 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
                 </div>
               </div>
 
-              <button className="w-full py-3 rounded-xl bg-[#00E5FF] hover:bg-[#E0A100] text-[#0A0A0A] font-bold text-sm transition-all shadow-[0_0_20px_rgba(255,184,0,0.12)] hover:shadow-[0_0_30px_rgba(255,184,0,0.22)]">
+              <button className="w-full py-3 rounded-xl bg-[#FFB800] hover:bg-[#E0A100] text-[#0A0A0A] font-bold text-sm transition-all shadow-[0_0_20px_rgba(255,184,0,0.12)] hover:shadow-[0_0_30px_rgba(255,184,0,0.22)]">
                 Generate Verification Key
               </button>
             </div>
@@ -389,7 +389,7 @@ export default function CertifyPanel({ apis }: CertifyPanelProps) {
                 { icon: Star,       label: 'Badge Priority',  desc: 'Verified badge shown in leaderboard' },
               ].map(item => (
                 <div key={item.label} className="flex items-start gap-2 p-3 bg-[#171717] rounded-lg">
-                  <item.icon className="w-4 h-4 text-[#00E5FF] shrink-0 mt-0.5" />
+                  <item.icon className="w-4 h-4 text-[#FFB800] shrink-0 mt-0.5" />
                   <div>
                     <div className="text-xs font-semibold text-white">{item.label}</div>
                     <div className="text-[9px] text-[#6E6E73] mt-0.5">{item.desc}</div>

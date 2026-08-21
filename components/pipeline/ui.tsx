@@ -48,13 +48,13 @@ export function LiveDot({ label = "LIVE" }: { label?: string }) {
   );
 }
 
-export function Meter({ value, max = 100, tone = "signal" }: { value: number; max?: number; tone?: "signal" | "violet" | "rose" | "cyan" }) {
+export function Meter({ value, max = 100, tone = "signal" }: { value: number; max?: number; tone?: "signal" | "violet" | "rose" | "amber" }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   const bar =
     tone === "rose"
       ? "bg-rose-400"
-      : tone === "cyan"
-        ? "bg-cyan-400"
+      : tone === "amber"
+        ? "bg-amber-400"
         : tone === "violet"
           ? "bg-violet"
           : "bg-signal";

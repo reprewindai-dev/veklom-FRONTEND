@@ -963,7 +963,7 @@ function GenomeVisualizer({ genome }: { genome: any }) {
       <div className="bg-cos-surface2/55 border border-cos-border rounded-xl overflow-hidden shadow-cos-card">
         <div className="bg-cos-border border-b border-cos-border px-4 py-2 flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-red-500/50" />
-          <div className="w-2 h-2 rounded-full bg-cyan-500/50" />
+          <div className="w-2 h-2 rounded-full bg-amber-500/50" />
           <div className="w-2 h-2 rounded-full bg-cos-accent/50" />
           <span className="ml-2 text-xs text-cos-steel">genome.json</span>
         </div>

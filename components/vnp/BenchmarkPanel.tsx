@@ -41,7 +41,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
   const getRegionHighlighter = (p99: number) => {
     if (p99 < 350) return "text-emerald-400 bg-emerald-950/40 border-emerald-500/30";
     if (p99 < 700) return "text-blue-400 bg-blue-950/40 border-blue-500/30";
-    if (p99 < 1200) return "text-cyan-400 bg-cyan-950/40 border-cyan-500/30";
+    if (p99 < 1200) return "text-amber-400 bg-amber-950/40 border-amber-500/30";
     return "text-red-400 bg-red-950/40 border-red-500/30";
   };
 
@@ -116,9 +116,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
               <span className="block text-slate-500 uppercase tracking-widest">Telemetry</span>
               <strong className="text-[#00E5FF]">Live</strong>
             </div>
-            <div className="rounded-xl border border-[#00E5FF]/20 bg-[#00E5FF]/10 px-3 py-2">
+            <div className="rounded-xl border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-2">
               <span className="block text-slate-500 uppercase tracking-widest">Runtime</span>
-              <strong className="text-[#00E5FF]">Auth Required</strong>
+              <strong className="text-[#FFB800]">Auth Required</strong>
             </div>
           </div>
         </div>
@@ -214,9 +214,9 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
               <div className="border-b border-slate-900/80 bg-[#080808] p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h5 className="text-[11px] text-slate-400 font-mono font-bold tracking-widest uppercase flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-[#00E5FF]" /> Standardized BenchmarkCard Metadata
+                    <HardDrive className="w-4 h-4 text-[#FFB800]" /> Standardized BenchmarkCard Metadata
                   </h5>
-                  <span className="text-[9px] bg-[#00E5FF]/10 border border-[#00E5FF]/20 text-[#00E5FF] px-2 py-1 rounded font-mono uppercase font-bold tracking-wider">Ref: arXiv:2410.12974v3</span>
+                  <span className="text-[9px] bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] px-2 py-1 rounded font-mono uppercase font-bold tracking-wider">Ref: arXiv:2410.12974v3</span>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-[10px] font-mono">
@@ -246,7 +246,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                   <div className="space-y-2">
                     <span className="text-slate-300 font-bold uppercase border-b border-slate-800 pb-1.5 block tracking-widest">Targeted Risks</span>
                     <div className="space-y-1.5 text-slate-400">
-                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Categories:</span> <span className="text-cyan-400">Runaway Cost</span></div>
+                      <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Categories:</span> <span className="text-amber-400">Runaway Cost</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Pot. Harm:</span> <span>Unsafe Agent Action</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Risk Atlas:</span> <span>High-Freq Timeout</span></div>
                       <div className="grid grid-cols-[80px_1fr]"><span className="text-slate-600">Audience:</span> <span>Enterprise AI Orgs</span></div>
@@ -270,7 +270,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                 {/* Verification stack table */}
                 <div className="lg:col-span-5 p-6 bg-[#0a0a0a]">
                   <h5 className="text-[11px] text-slate-400 font-mono font-bold tracking-widest uppercase mb-5 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-[#00E5FF]" /> {VNP_VERIFICATION_STACK_TITLE}
+                    <Sliders className="w-4 h-4 text-[#FFB800]" /> {VNP_VERIFICATION_STACK_TITLE}
                   </h5>
                   <div className="space-y-4 font-mono text-[11px]">
                     {getVerificationRows(api).map((dim, idx) => (
@@ -321,7 +321,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                             <tr key={reg} className="group hover:bg-[#0c1119]/50 transition-colors">
                               <td className="py-3 font-bold text-slate-300">{regionName}</td>
                               <td className="py-3 text-right font-black text-[#00E5FF]">{geoAdjusted != null ? geoAdjusted : "-"}</td>
-                              <td className={`py-3 text-right ${rData?.errorRate > 0 ? "text-cyan-400" : "text-emerald-400"}`}>{rData?.errorRate != null ? `${rData.errorRate}%` : "-"}</td>
+                              <td className={`py-3 text-right ${rData?.errorRate > 0 ? "text-amber-400" : "text-emerald-400"}`}>{rData?.errorRate != null ? `${rData.errorRate}%` : "-"}</td>
                               <td className="py-3 text-right text-slate-400">{rData?.uptime != null ? `${rData.uptime}%` : "-"} / 12k</td>
                               <td className="py-3 text-right">
                                 {isHighRisk ? (
@@ -342,7 +342,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
               {/* Integrity Footer */}
               <div className="bg-[#020202] border-t border-slate-900 p-3 px-6 flex flex-wrap items-center justify-between gap-4 font-mono text-[9px] text-slate-500 uppercase tracking-widest font-bold">
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5"><Anchor className="w-3 h-3 text-[#00E5FF]" /> Root: {trustBeacon.slice(0, 10)}</span>
+                  <span className="flex items-center gap-1.5"><Anchor className="w-3 h-3 text-[#FFB800]" /> Root: {trustBeacon.slice(0, 10)}</span>
                   <span>Anchor: {new Date().toISOString().split('T')[0]}</span>
                   <span className="text-emerald-400">5 / 5 Nodes Reporting</span>
                 </div>
@@ -373,7 +373,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
           {(Object.keys(selectedApi?.regions || {}) as Array<keyof typeof selectedApi.regions>).map((reg) => {
             const m: RegionMetric = selectedApi.regions[reg];
             if (!m) return null;
-            const p99Color = m.p99 < 350 ? "text-emerald-400" : m.p99 < 800 ? "text-blue-400" : "text-cyan-400";
+            const p99Color = m.p99 < 350 ? "text-emerald-400" : m.p99 < 800 ? "text-blue-400" : "text-amber-400";
 
             return (
               <div key={reg} className="p-3 bg-slate-950/70 border border-slate-900 rounded-xl space-y-2 hover:border-slate-800 transition">
@@ -397,7 +397,7 @@ export default function BenchmarkPanel({ apis, trustBeacon, blockAnchored, onRef
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Error rate:</span>
-                    <span className={m.errorRate > 1 ? "text-cyan-400" : "text-emerald-400"}>{m.errorRate != null ? `${m.errorRate}%` : "-"}</span>
+                    <span className={m.errorRate > 1 ? "text-amber-400" : "text-emerald-400"}>{m.errorRate != null ? `${m.errorRate}%` : "-"}</span>
                   </div>
                 </div>
               </div>

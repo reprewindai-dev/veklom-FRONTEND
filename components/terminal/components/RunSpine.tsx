@@ -61,8 +61,8 @@ export default function RunSpine({ runs, selectedRunId, onSelectRun, isFocusedFr
   const stepsDetails = [
     { name: 'Intent' as SpineStep, icon: HelpCircle, color: '#00E5FF', label: 'EVAL_INTENT' },
     { name: 'Plan' as SpineStep, icon: Activity, color: '#00E5FF', label: 'GEN_SEQUENCE' },
-    { name: 'ArbiterOS' as SpineStep, icon: ShieldCheck, color: '#00E5FF', label: 'GOV_ARBITER_POLICY' },
-    { name: 'Redis Lua' as SpineStep, icon: Database, color: '#00E5FF', label: 'LUA_STATE_LOCK' },
+    { name: 'ArbiterOS' as SpineStep, icon: ShieldCheck, color: '#FFAB00', label: 'GOV_ARBITER_POLICY' },
+    { name: 'Redis Lua' as SpineStep, icon: Database, color: '#FFAB00', label: 'LUA_STATE_LOCK' },
     { name: 'Attestation' as SpineStep, icon: Key, color: '#00FF66', label: 'STATE_ATTEST_SEAL' },
   ];
 
@@ -173,7 +173,7 @@ export default function RunSpine({ runs, selectedRunId, onSelectRun, isFocusedFr
             <div className="flex gap-4 text-[10px] text-white/50 border-b border-white/10 pb-3.5">
               <span>Duration: <strong className="text-white">{selectedRun.duration}</strong></span>
               <span>
-                Evidence hashes: <strong className={selectedRunHasEvidenceHash ? "text-matrix-emerald" : "text-[#00E5FF]"}>
+                Evidence hashes: <strong className={selectedRunHasEvidenceHash ? "text-matrix-emerald" : "text-[#ffab00]"}>
                   {selectedRunHasEvidenceHash ? `${selectedRun.evidenceCount} Sealed` : "Needs proof"}
                 </strong>
               </span>
@@ -181,7 +181,7 @@ export default function RunSpine({ runs, selectedRunId, onSelectRun, isFocusedFr
                 {selectedRunHasEvidenceHash ? (
                   <>Consensus Slot: <strong className="text-white">#{selectedRun.hash.substring(3, 10)}</strong></>
                 ) : (
-                  <>Consensus Slot: <strong className="text-[#00E5FF]">Not emitted</strong></>
+                  <>Consensus Slot: <strong className="text-[#ffab00]">Not emitted</strong></>
                 )}
               </span>
             </div>

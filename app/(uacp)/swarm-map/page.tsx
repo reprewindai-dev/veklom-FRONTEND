@@ -55,7 +55,7 @@ export default function SwarmMapPage() {
   if (error) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-void-black p-6">
-        <div className="max-w-xl border border-hazard-cyan/30 bg-hazard-cyan/5 p-5 font-mono text-sm text-hazard-cyan">
+        <div className="max-w-xl border border-hazard-amber/30 bg-hazard-amber/5 p-5 font-mono text-sm text-hazard-amber">
           <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white">
             <AlertTriangle className="h-4 w-4" />
             Swarm Map Needs Proof

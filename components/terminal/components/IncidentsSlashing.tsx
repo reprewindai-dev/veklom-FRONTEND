@@ -88,13 +88,13 @@ function fmtMs(value: unknown): string {
 function proofTone(state?: string): string {
   if (state === "verified") return "text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/10";
   if (state === "error") return "text-red-300 border-red-400/25 bg-red-500/10";
-  return "text-[#00E5FF] border-[#00E5FF]/25 bg-[#00E5FF]/10";
+  return "text-[#FFB800] border-[#FFB800]/25 bg-[#FFB800]/10";
 }
 
 function severityTone(severity: string): string {
   if (severity === "slashed") return "text-[#FF003C] border-[#FF003C]/30 bg-[#FF003C]/10";
-  if (severity === "breach_risk") return "text-[#00E5FF] border-[#00E5FF]/30 bg-[#00E5FF]/10";
-  if (severity === "warning") return "text-cyan-300 border-cyan-300/25 bg-cyan-300/10";
+  if (severity === "breach_risk") return "text-[#FFB800] border-[#FFB800]/30 bg-[#FFB800]/10";
+  if (severity === "warning") return "text-amber-300 border-amber-300/25 bg-amber-300/10";
   return "text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/10";
 }
 
@@ -149,7 +149,7 @@ export default function IncidentsSlashing() {
 
       <div className="h-12 border-b border-white/10 shrink-0 bg-void-black/80 backdrop-blur flex items-center justify-between px-6 z-10 select-none">
         <div className="flex items-center gap-2">
-          <AlertTriangle className={`w-4.5 h-4.5 ${highestRisk ? "text-[#00E5FF]" : "text-[#00FF66]"}`} />
+          <AlertTriangle className={`w-4.5 h-4.5 ${highestRisk ? "text-[#FFB800]" : "text-[#00FF66]"}`} />
           <span className="text-xs font-bold tracking-widest uppercase text-white">SLA INCIDENTS & SLASHING LEDGER</span>
         </div>
         <div className={`text-[10px] font-mono uppercase px-3 py-1 rounded border ${proofTone(proofState)}`}>
@@ -186,14 +186,14 @@ export default function IncidentsSlashing() {
             value={fmtMoney(data?.totals.pendingPenaltyUsdc)}
             sub="Deviation penalty exposure, not settlement proof"
             icon={Activity}
-            tone={Number(data?.totals.pendingPenaltyUsdc) > 0 ? "text-[#00E5FF]" : "text-[#00FF66]"}
+            tone={Number(data?.totals.pendingPenaltyUsdc) > 0 ? "text-[#FFB800]" : "text-[#00FF66]"}
           />
           <MetricCard
             label="ACTIVE VERIFIERS"
             value={fmtNumber(data?.totals.activeVerifiers)}
             sub="0 means BYOS returned no live verifier rows"
             icon={CheckCircle}
-            tone={Number(data?.totals.activeVerifiers) > 0 ? "text-[#00FF66]" : "text-[#00E5FF]"}
+            tone={Number(data?.totals.activeVerifiers) > 0 ? "text-[#00FF66]" : "text-[#FFB800]"}
           />
         </div>
 
@@ -207,7 +207,7 @@ export default function IncidentsSlashing() {
                 </div>
               )}
               {!isLoading && exposure.length === 0 && (
-                <div className="p-6 rounded-xl border border-[#00E5FF]/25 bg-[#00E5FF]/5 text-[#00E5FF] font-mono text-[11px] uppercase tracking-widest">
+                <div className="p-6 rounded-xl border border-[#FFB800]/25 bg-[#FFB800]/5 text-[#FFB800] font-mono text-[11px] uppercase tracking-widest">
                   No route-backed provider exposure returned. No local incidents are generated.
                 </div>
               )}
@@ -216,7 +216,7 @@ export default function IncidentsSlashing() {
                   key={row.id}
                   onClick={() => setSelectedId(row.id)}
                   className={`w-full p-4 bg-void-metal/30 border transition-all rounded-lg flex flex-col gap-3 relative overflow-hidden text-left ${
-                    selected?.id === row.id ? "border-[#00E5FF]/35" : row.severity === "breach_risk" ? "border-[#00E5FF]/30 hover:border-[#00E5FF]/50" : "border-white/5 hover:border-white/15"
+                    selected?.id === row.id ? "border-[#00E5FF]/35" : row.severity === "breach_risk" ? "border-[#FFB800]/30 hover:border-[#FFB800]/50" : "border-white/5 hover:border-white/15"
                   }`}
                 >
                   <div className="flex justify-between items-start border-b border-white/5 pb-2 shrink-0">
@@ -232,7 +232,7 @@ export default function IncidentsSlashing() {
                       </div>
                     </div>
                     <div className="text-right font-mono">
-                      <div className={row.pendingPenaltyUsdc > 0 ? "text-xs font-bold text-[#00E5FF]" : "text-xs font-bold text-[#00FF66]"}>
+                      <div className={row.pendingPenaltyUsdc > 0 ? "text-xs font-bold text-[#FFB800]" : "text-xs font-bold text-[#00FF66]"}>
                         {fmtMoney(row.pendingPenaltyUsdc)}
                       </div>
                       <div className="text-[8.5px] text-white/30 flex items-center gap-1 justify-end">
@@ -254,7 +254,7 @@ export default function IncidentsSlashing() {
                     </div>
                     <div>
                       <div className="text-white/30 uppercase mb-1">Settlement Evidence</div>
-                      <div className={row.evidenceState === "verified" ? "text-[#00FF66]" : "text-[#00E5FF]"}>
+                      <div className={row.evidenceState === "verified" ? "text-[#00FF66]" : "text-[#FFB800]"}>
                         {row.evidenceState === "verified" ? "Verified by BYOS" : "Needs settlement proof"}
                       </div>
                     </div>
@@ -317,7 +317,7 @@ export default function IncidentsSlashing() {
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-white/40">Protected Incidents</span>
-                <span className={data?.totals.incidentRows ? "text-[#00FF66]" : "text-[#00E5FF]"}>
+                <span className={data?.totals.incidentRows ? "text-[#00FF66]" : "text-[#FFB800]"}>
                   {data?.totals.incidentRows ? fmtNumber(data.totals.incidentRows) : "Needs auth proof"}
                 </span>
               </div>

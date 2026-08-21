@@ -26,12 +26,12 @@ export default function GovernancePage() {
 
         <section>
           <h2 className="text-2xl font-bold mb-4">Strategic Localization: Quinte West Epicenter</h2>
-          <div className="bg-[#00E5FF]/5 border border-[#00E5FF]/20 rounded-xl p-8 relative overflow-hidden">
+          <div className="bg-[#FFB800]/5 border border-[#FFB800]/20 rounded-xl p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-6 opacity-10">
-              <MapPin className="w-32 h-32 text-[#00E5FF]" />
+              <MapPin className="w-32 h-32 text-[#FFB800]" />
             </div>
             <div className="relative z-10">
-              <h3 className="text-[#00E5FF] text-lg font-bold mb-4">Canadian Operational Anchor</h3>
+              <h3 className="text-[#FFB800] text-lg font-bold mb-4">Canadian Operational Anchor</h3>
               <p className="text-gray-300 leading-relaxed mb-6">
                 For a cryptographic protocol of this magnitude to achieve universal adoption, a highly specialized workforce must be trained to deploy, monitor, and defend its infrastructure. The operational rollout and academic integration of VNP is strategically anchored in the Quinte West and Belleville technology corridor in Ontario, Canada.
               </p>

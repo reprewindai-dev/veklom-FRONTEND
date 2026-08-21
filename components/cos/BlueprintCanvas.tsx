@@ -80,7 +80,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
   });
 
   const abideNodes = [
-    { id: "abide-node-a", rawId: "Abide-Node-A", label: "Abide Node A", type: "abide", x: 100, y: 390, color: "#00E5FF", desc: "Lockerphycer physical security isolation enclave." },
+    { id: "abide-node-a", rawId: "Abide-Node-A", label: "Abide Node A", type: "abide", x: 100, y: 390, color: "#FFAB00", desc: "Lockerphycer physical security isolation enclave." },
     { id: "abide-node-b", rawId: "Abide-Node-B", label: "Abide Node B", type: "abide", x: 250, y: 390, color: "#00FF66", desc: "Cappo-backend & BYOS capability verification router." },
     { id: "abide-node-c", rawId: "Abide-Node-C", label: "Abide Node C", type: "abide", x: 400, y: 390, color: "#0A84FF", desc: "Gnomledger decentralized peer lineage witness anchor." }
   ];
@@ -148,13 +148,13 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
     if (visualizeMode === "status") {
       const state = cap.lifecycleState?.toLowerCase() || "";
       if (state.includes("production")) { color = "#00FF66"; extraLabel = "PROD"; }
-      else if (state.includes("simulated")) { color = "#00E5FF"; extraLabel = "SIM"; }
+      else if (state.includes("simulated")) { color = "#FFAB00"; extraLabel = "SIM"; }
       else { color = "#0A84FF"; extraLabel = "CONCEPT"; }
     } else if (visualizeMode === "cost") {
       const price = cap.pricingModel?.priceFloor || 0;
       if (price === 0) { color = "#00FF66"; extraLabel = "FREE"; }
       else if (price < 0.02) { color = "#00E5FF"; extraLabel = `$${price}`; }
-      else if (price < 0.1) { color = "#00E5FF"; extraLabel = `$${price}`; }
+      else if (price < 0.1) { color = "#FFAB00"; extraLabel = `$${price}`; }
       else { color = "#FF4D4D"; extraLabel = `$${price}`; }
     } else if (visualizeMode === "verification") {
       const state = cap.verificationState?.toLowerCase() || "";
@@ -220,7 +220,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(255,255,255,0.2)" />
               </marker>
               <marker id="arrow-dashed" viewBox="0 0 10 10" refX="14" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#00E5FF" />
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFAB00" />
               </marker>
             </defs>
             <rect width="100%" height="100%" fill="url(#graph-grid)" />
@@ -236,7 +236,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
 
               const isHoveredNetwork = hoveredNode ? (link.source === hoveredNode || link.target === hoveredNode) : false;
               let opacity = hoveredNode ? (isHoveredNetwork ? "1" : "0.15") : "0.4";
-              let strokeColor = isHoveredNetwork ? "#00E5FF" : (link.dashed ? "#00E5FF" : "rgba(255,255,255,0.15)");
+              let strokeColor = isHoveredNetwork ? "#00E5FF" : (link.dashed ? "#FFAB00" : "rgba(255,255,255,0.15)");
               let strokeWidth = isHoveredNetwork ? "2.5" : "1.5";
 
               return (
@@ -249,7 +249,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
                      strokeDasharray={link.dashed ? "4 4" : "0"}
                      markerEnd={link.dashed ? "url(#arrow-dashed)" : "url(#arrow)"}
                   />
-                  <circle r={isHoveredNetwork ? "3" : "1.5"} fill={isHoveredNetwork ? "#00E5FF" : "#00E5FF"}>
+                  <circle r={isHoveredNetwork ? "3" : "1.5"} fill={isHoveredNetwork ? "#FFAB00" : "#00E5FF"}>
                     <animateMotion dur={isHoveredNetwork ? "1.5s" : "4s"} repeatCount="indefinite" path={pathData} />
                   </circle>
                 </g>

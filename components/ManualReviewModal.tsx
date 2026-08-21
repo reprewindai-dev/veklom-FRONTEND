@@ -82,7 +82,7 @@ export const ManualReviewModal: React.FC<ManualReviewModalProps> = ({ isOpen, fi
           {/* Escalate */}
           <button
             onClick={() => onDecision('ESCALATED', operatorNote || 'Risk gate warning escalation triggered: Security team audit requested.')}
-            className="px-4 py-2 bg-neutral-900 border border-cyan-500/70 text-cyan-500 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+            className="px-4 py-2 bg-neutral-900 border border-yellow-500/70 text-yellow-500 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <span>Escalate Authority</span>
           </button>

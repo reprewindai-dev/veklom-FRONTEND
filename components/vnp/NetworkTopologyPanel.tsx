@@ -227,7 +227,7 @@ export default function NetworkTopologyPanel() {
 
           {!sourceReachable && (
             <div className="absolute inset-0 flex items-center justify-center text-center">
-              <span className="text-cyan-300/80 text-xs bg-[#03070c]/70 px-4 py-2 rounded-lg border border-cyan-500/20">
+              <span className="text-amber-300/80 text-xs bg-[#03070c]/70 px-4 py-2 rounded-lg border border-amber-500/20">
                 {isLoading
                   ? "Loading beacon topology…"
                   : error

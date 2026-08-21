@@ -105,7 +105,7 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
             <span className="text-white/30">API:</span>
             <span className="text-electric-cyan">api.veklom.com</span>
             <div className="w-px h-3 bg-white/20" />
-            <span className={mcpHeartbeat === 'online' ? 'text-[#00FF66]' : mcpHeartbeat === 'degraded' ? 'text-[#00E5FF]' : 'text-red-400'}>
+            <span className={mcpHeartbeat === 'online' ? 'text-[#00FF66]' : mcpHeartbeat === 'degraded' ? 'text-[#FFAB00]' : 'text-red-400'}>
               {mcpHeartbeat === 'online' ? '● LIVE' : mcpHeartbeat === 'degraded' ? '◐ DEGRADED' : '○ NEEDS PROOF'}
             </span>
           </div>
@@ -115,13 +115,13 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-[9px] text-white/40 leading-none uppercase">ZERO-TRUST ENFORCEMENT</div>
-                <div className={`text-[10px] font-mono uppercase ${mcpHeartbeat === 'online' ? 'text-[#00FF66]' : 'text-[#00E5FF]'}`}>
+                <div className={`text-[10px] font-mono uppercase ${mcpHeartbeat === 'online' ? 'text-[#00FF66]' : 'text-[#FFAB00]'}`}>
                   {mcpHeartbeat === 'online' ? 'ACTIVE / MODE_01' : 'NEEDS PROOF / MODE_01'}
                 </div>
               </div>
               <div className="w-24 h-1.5 bg-white/10 overflow-hidden">
                 <div
-                  className={`h-full ${mcpHeartbeat === 'online' ? 'bg-[#00FF66] shadow-[0_0_4px_#00FF66]' : 'bg-[#00E5FF] shadow-[0_0_4px_#00E5FF]'}`}
+                  className={`h-full ${mcpHeartbeat === 'online' ? 'bg-[#00FF66] shadow-[0_0_4px_#00FF66]' : 'bg-[#FFAB00] shadow-[0_0_4px_#FFAB00]'}`}
                   style={{ width: `${proofPercent}%` }}
                 />
               </div>

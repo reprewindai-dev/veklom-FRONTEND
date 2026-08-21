@@ -15,7 +15,7 @@
     --theme-text-muted: rgba(255, 255, 255, 0.55);
     
     --theme-verified: #00FF66;
-    --theme-warn: #00E5FF;
+    --theme-warn: #FFAB00;
     --theme-danger: #FF4D4D;
     --theme-info: #00E5FF;
     --theme-unknown: #6B7280;
@@ -32,7 +32,7 @@
     --theme-text-muted: rgba(71, 85, 105, 0.65);
     
     --theme-verified: #00FF66;
-    --theme-warn: #00E5FF;
+    --theme-warn: #FFAB00;
     --theme-danger: #FF4D4D;
     --theme-info: #00E5FF;
     --theme-unknown: #6B7280;
@@ -49,7 +49,7 @@
     --theme-text-muted: rgba(255, 255, 255, 0.55);
     
     --theme-verified: #00FF66;
-    --theme-warn: #00E5FF;
+    --theme-warn: #FFAB00;
     --theme-danger: #FF4D4D;
     --theme-info: #00E5FF;
     --theme-unknown: #6B7280;
@@ -302,7 +302,7 @@ body > * { position: relative; z-index: 1; }
   text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
 }
 
-.text-glow-cyan {
+.text-glow-amber {
   text-shadow: 0 0 8px rgba(255, 171, 0, 0.6);
 }
 

@@ -10,7 +10,7 @@ export function BudgetAlert({ budget, hasBudgetWarning }: { budget: Budget; hasB
       hasBudgetWarning
         ? budget.alert_level === 'exhausted'
           ? 'border-red-500/30 bg-red-500/5'
-          : 'border-cyan-500/20 bg-cyan-500/5'
+          : 'border-amber-500/20 bg-amber-500/5'
         : 'border-border bg-bg-700/30'
     }`}>
       <DollarSign size={13} className={budgetColor(budget.alert_level)} />
@@ -39,7 +39,7 @@ export function BudgetAlert({ budget, hasBudgetWarning }: { budget: Budget; hasB
         )}
       </div>
       {hasBudgetWarning && (
-        <Link href="/budget" className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 shrink-0">
+        <Link href="/budget" className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 shrink-0">
           Manage <ChevronRight size={10} />
         </Link>
       )}

@@ -247,7 +247,7 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
               <span className="text-[9px] font-mono text-slate-500 uppercase block tracking-wider">
                 Payment Escrow Registry
               </span>
-              <span className="text-xs font-mono text-cyan-500 truncate block font-bold">
+              <span className="text-xs font-mono text-amber-500 truncate block font-bold">
                 0xCC34...3D1d
               </span>
             </div>
@@ -293,7 +293,7 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
             <div className="bg-[#0a0c12]/60 p-3 rounded border border-white/5">
               <span className="text-[10px] font-mono text-slate-500 uppercase block">ETH Fuel</span>
               <div className="flex items-baseline justify-between mt-1">
-                <span className="text-xl font-bold font-mono text-cyan-400">
+                <span className="text-xl font-bold font-mono text-amber-400">
                   {wallet.balanceEth.toFixed(4)} ETH
                 </span>
                 <span className="text-[9px] font-mono text-emerald-400">Gas-OK</span>
@@ -309,11 +309,11 @@ export function WalletBlock({ wallet, onConnect, onDisconnect }: WalletBlockProp
               </tr>
               <tr className="border-b border-white/5">
                 <td className="py-1 text-slate-500 uppercase">Veklom ID State:</td>
-                <td className="py-1 text-right text-cyan-400 uppercase font-bold">Wallet signature only</td>
+                <td className="py-1 text-right text-amber-400 uppercase font-bold">Wallet signature only</td>
               </tr>
               <tr>
                 <td className="py-1 text-slate-500 uppercase">Settlement standard:</td>
-                <td className="py-1 text-right text-cyan-500 font-bold uppercase">ERC-404 / x402 Facilitator</td>
+                <td className="py-1 text-right text-amber-500 font-bold uppercase">ERC-404 / x402 Facilitator</td>
               </tr>
             </tbody>
           </table>

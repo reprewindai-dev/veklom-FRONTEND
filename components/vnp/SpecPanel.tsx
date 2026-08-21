@@ -343,10 +343,10 @@ CREATE POLICY tenant_isolation_policy ON users
               }`}
             >
               <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-cyan-500" />
+                <FileCode className="w-4 h-4 text-amber-500" />
                 <span>SQLx Connection Pool</span>
               </div>
-              <span className="text-[9px] text-cyan-400 font-bold">Rust</span>
+              <span className="text-[9px] text-amber-400 font-bold">Rust</span>
             </button>
 
             <button
@@ -384,7 +384,7 @@ CREATE POLICY tenant_isolation_policy ON users
         {/* Informational connection counter stats card */}
         <div className="bg-slate-950 border border-slate-900 p-4 rounded-xl space-y-3 font-mono text-[10px]">
           <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-widest flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-cyan-500 animate-pulse" /> Isolation Shield
+            <AlertCircle className="w-4 h-4 text-amber-500 animate-pulse" /> Isolation Shield
           </h4>
           <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
             Rust sets the local tenant connection variable <code className="text-slate-300">vnp.current_tenant_header</code> upon acquiring from pool. PostgreSQL isolates row visibility programmatically inside database hardware.
@@ -420,7 +420,7 @@ CREATE POLICY tenant_isolation_policy ON users
                 disabled={isFlooding}
                 className="p-3 bg-gradient-to-tr from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 disabled:opacity-40 text-white rounded-xl text-xs font-black transition duration-200 flex items-center gap-2 shadow-lg shadow-emerald-950/20 active:scale-95 cursor-pointer selection:bg-transparent"
               >
-                <Zap className="w-4 h-4 text-cyan-300 animate-pulse" />
+                <Zap className="w-4 h-4 text-amber-300 animate-pulse" />
                 <span>{isFlooding ? "BURSTING POOL LOAD..." : "🚀 FIRE 1,000 LOAD PROBES / SEC"}</span>
               </button>
             </div>
@@ -491,7 +491,7 @@ CREATE POLICY tenant_isolation_policy ON users
               </div>
               <div className="p-2.5 bg-[#0e1420]/50 border border-slate-900 rounded-xl">
                 <span>Ingest Queue Wait</span>
-                <span className={`text-sm block mt-1 font-black ${waitQueueCount > 0 ? "text-cyan-500 animate-pulse" : "text-slate-300"}`}>{waitQueueCount} threads</span>
+                <span className={`text-sm block mt-1 font-black ${waitQueueCount > 0 ? "text-amber-500 animate-pulse" : "text-slate-300"}`}>{waitQueueCount} threads</span>
               </div>
               <div className="p-2.5 bg-[#0e1420]/50 border border-slate-900 rounded-xl">
                 <span>SLA Success Rate</span>
@@ -513,7 +513,7 @@ CREATE POLICY tenant_isolation_policy ON users
                   let badge = "text-slate-500";
                   if (log.includes("ACQUIRED")) badge = "text-emerald-400";
                   if (log.includes("SECURITYCHECK") || log.includes("RLS")) badge = "text-cyan-400";
-                  if (log.includes("BURST") || log.includes("FLOOD")) badge = "text-cyan-400 font-extrabold animate-pulse";
+                  if (log.includes("BURST") || log.includes("FLOOD")) badge = "text-yellow-400 font-extrabold animate-pulse";
                   return (
                     <div key={idx} className={`${badge} break-all border-b border-slate-950/20 pb-0.5`}>
                       {log}
@@ -532,7 +532,7 @@ CREATE POLICY tenant_isolation_policy ON users
               <div className="flex items-center gap-3">
                 <div className="flex gap-1.5">
                   <span className="w-3 h-3 rounded-full bg-red-500/80 block" />
-                  <span className="w-3 h-3 rounded-full bg-cyan-500/80 block" />
+                  <span className="w-3 h-3 rounded-full bg-amber-500/80 block" />
                   <span className="w-3 h-3 rounded-full bg-emerald-500/80 block" />
                 </div>
                 <span className="text-[11px] font-mono text-slate-400 select-all tracking-tight truncate max-w-[280px] md:max-w-none">

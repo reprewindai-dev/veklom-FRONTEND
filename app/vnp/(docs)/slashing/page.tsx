@@ -44,7 +44,7 @@ export default function SlashingPage() {
 
           <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden mt-8">
             <div className="p-4 bg-white/5 font-bold text-sm flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-[#00E5FF]" /> MAD-Bounded Estimator Resilience
+              <ShieldAlert className="w-4 h-4 text-[#FFB800]" /> MAD-Bounded Estimator Resilience
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -78,7 +78,7 @@ export default function SlashingPage() {
                   <tr className="hover:bg-white/5 transition-colors">
                     <td className="p-4">Genuine partial failure on 2</td>
                     <td className="p-4 font-mono">2</td>
-                    <td className="p-4 font-mono text-cyan-400">50.0</td>
+                    <td className="p-4 font-mono text-yellow-400">50.0</td>
                     <td className="p-4 font-mono text-green-400">67.70</td>
                   </tr>
                 </tbody>

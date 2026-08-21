@@ -38,7 +38,7 @@ oracle = VNPNodeOracle(
     ed25519_private_key=<span className="text-green-300">"..."</span>
 )
 
-<span className="text-blue-400">async def</span> <span className="text-cyan-200">monitor_api</span>():
+<span className="text-blue-400">async def</span> <span className="text-yellow-200">monitor_api</span>():
     <span className="text-gray-500"># Execute STAMP RFC 8762 micro-session</span>
     result = <span className="text-blue-400">await</span> oracle.probe(
         target_url=<span className="text-green-300">"https://api.tier1-provider.com/v1/chat"</span>,
@@ -55,8 +55,8 @@ oracle = VNPNodeOracle(
         </section>
 
         <section>
-          <div className="bg-[#00E5FF]/5 border border-[#00E5FF]/20 p-6 rounded-xl flex items-start gap-4">
-            <ShieldCheck className="w-6 h-6 text-[#00E5FF] shrink-0 mt-1" />
+          <div className="bg-[#FFB800]/5 border border-[#FFB800]/20 p-6 rounded-xl flex items-start gap-4">
+            <ShieldCheck className="w-6 h-6 text-[#FFB800] shrink-0 mt-1" />
             <div>
               <h3 className="font-bold text-white mb-2">Hardware Security Module (HSM) Requirement</h3>
               <p className="text-sm text-gray-400 leading-relaxed">

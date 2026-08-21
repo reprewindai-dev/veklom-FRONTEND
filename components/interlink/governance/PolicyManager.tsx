@@ -517,8 +517,8 @@ export default function PolicyManager({
 
             {/* Real-time Policy Overlap / Conflict Validation Warning Alert */}
             {validationWarnings.length > 0 && (
-              <div id="policy-validation-alert" className="bg-[#1C130D] border border-cyan-600/30 p-3 rounded space-y-2 mt-2 transition-all">
-                <div className="flex items-center gap-1.5 text-cyan-500 font-mono text-[9.5px] font-bold uppercase tracking-wider">
+              <div id="policy-validation-alert" className="bg-[#1C130D] border border-amber-600/30 p-3 rounded space-y-2 mt-2 transition-all">
+                <div className="flex items-center gap-1.5 text-amber-500 font-mono text-[9.5px] font-bold uppercase tracking-wider">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Policy Validation Alerts ({validationWarnings.length})
                 </div>
@@ -529,7 +529,7 @@ export default function PolicyManager({
                     const badgeText = isConflict ? (isShadowed ? 'SHADOWED' : 'OVERRIDE') : 'REDUNDANT';
                     const badgeColor = isConflict 
                       ? (isShadowed ? 'bg-red-950/40 text-red-400 border border-red-900/60' : 'bg-blue-950/40 text-blue-400 border border-blue-900/60') 
-                      : 'bg-cyan-950/40 text-cyan-400 border border-cyan-900/60';
+                      : 'bg-amber-950/40 text-amber-400 border border-amber-900/60';
 
                     return (
                       <div 
@@ -537,7 +537,7 @@ export default function PolicyManager({
                         className={`text-[10px] p-2 rounded border font-mono leading-relaxed transition-all ${
                           isConflict 
                             ? (isShadowed ? 'bg-red-950/15 border-red-950/50 text-red-300' : 'bg-blue-950/10 border-blue-950/40 text-blue-300')
-                            : 'bg-cyan-950/15 border-cyan-950/40 text-cyan-300'
+                            : 'bg-amber-950/15 border-amber-950/40 text-amber-300'
                         }`}
                       >
                         <div className="flex justify-between items-center mb-1 font-bold">

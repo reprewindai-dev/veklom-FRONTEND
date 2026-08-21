@@ -222,8 +222,8 @@ export const InvariantSimulator: React.FC<InvariantSimulatorProps> = ({
                     </div>
                   )}
                   {routeResult.finalHttpStatus === 503 && (
-                    <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                      <AlertTriangle className="h-6 w-6 text-cyan-400" />
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <AlertTriangle className="h-6 w-6 text-amber-400" />
                     </div>
                   )}
                   <div>
@@ -235,7 +235,7 @@ export const InvariantSimulator: React.FC<InvariantSimulatorProps> = ({
                             ? 'bg-emerald-500/10 text-emerald-400'
                             : routeResult.finalHttpStatus === 403
                             ? 'bg-rose-500/10 text-rose-400'
-                            : 'bg-cyan-500/10 text-cyan-400'
+                            : 'bg-amber-500/10 text-amber-400'
                         }`}
                       >
                         {routeResult.authorityDecision}
@@ -274,7 +274,7 @@ export const InvariantSimulator: React.FC<InvariantSimulatorProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">X-x402-Settlement:</span>
-                    <span className="text-cyan-400">
+                    <span className="text-amber-400">
                       {routeResult.x402SettlementGas ? `${routeResult.x402SettlementGas} VEK` : '0 VEK'}
                     </span>
                   </div>
@@ -300,7 +300,7 @@ export const InvariantSimulator: React.FC<InvariantSimulatorProps> = ({
                           step.status === 'TERMINAL_403'
                             ? 'bg-rose-950/30 border-rose-500/40 text-rose-200'
                             : isFallback
-                            ? 'bg-cyan-950/30 border-cyan-500/40 text-cyan-200'
+                            ? 'bg-amber-950/30 border-amber-500/40 text-amber-200'
                             : 'bg-slate-950 border-slate-800 text-slate-300'
                         }`}
                       >

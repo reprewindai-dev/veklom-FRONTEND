@@ -68,7 +68,7 @@ export const ThesisEvaluationView: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
@@ -84,26 +84,26 @@ export const ThesisEvaluationView: React.FC = () => {
             {/* Detailed Bottlenecks Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
-                <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2 font-mono">
+                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2 font-mono">
                   <ShieldAlert className="w-4 h-4" /> Major Technical Bottlenecks
                 </h4>
                 <div className="space-y-3 text-xs text-slate-300 font-sans">
                   <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1">
-                    <span className="font-bold text-cyan-300 font-mono text-2xs block">1. Hook Lifecycle & Event Loop Divergence</span>
+                    <span className="font-bold text-amber-300 font-mono text-2xs block">1. Hook Lifecycle & Event Loop Divergence</span>
                     <p className="text-2xs text-slate-400 leading-normal">
                       ECC assumes Claude Code&apos;s native event loop (`PreToolUse`, `PostToolUse`, `OnUserPrompt`). Streaming Gemini API operates on request-response or WebSocket streams without persistent client-side hook handlers. Local Ollama nodes are stateless completion engines that lack background event dispatching entirely.
                     </p>
                   </div>
 
                   <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1">
-                    <span className="font-bold text-cyan-300 font-mono text-2xs block">2. Memory State & Context Window Asymmetry</span>
+                    <span className="font-bold text-amber-300 font-mono text-2xs block">2. Memory State & Context Window Asymmetry</span>
                     <p className="text-2xs text-slate-400 leading-normal">
                       Claude Code maintains auto-memory buffers in local files (`.claude/memory`). Gemini features a 1M+ token context window allowing full-context dump, whereas local Ollama models (e.g., Llama-3 8B) operate with 8k–32k context constraints. Syncing state across these models causes severe memory truncation or cache invalidation.
                     </p>
                   </div>
 
                   <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-800 space-y-1">
-                    <span className="font-bold text-cyan-300 font-mono text-2xs block">3. Tool Call Serialization Incompatibility</span>
+                    <span className="font-bold text-amber-300 font-mono text-2xs block">3. Tool Call Serialization Incompatibility</span>
                     <p className="text-2xs text-slate-400 leading-normal">
                       Claude expects XML/JSON tool calls, Gemini requires OpenAPI function declarations, and local Ollama deployments frequently rely on system prompt instructions or JSON markdown blocks.
                     </p>
@@ -300,19 +300,19 @@ export const ThesisEvaluationView: React.FC = () => {
 
               {/* Demo vs Production Separation */}
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                <div className="flex items-center gap-2 text-cyan-400 font-bold font-mono text-xs border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2 text-amber-400 font-bold font-mono text-xs border-b border-slate-800 pb-2">
                   <ShieldCheck className="w-4 h-4" /> 3. Real vs Demo Separation
                 </div>
                 <div className="space-y-2 text-2xs text-slate-300">
                   <p>
-                    <strong className="text-cyan-300 font-mono">Strict Delineation Rules:</strong>
+                    <strong className="text-amber-300 font-mono">Strict Delineation Rules:</strong>
                   </p>
                   <ul className="list-disc pl-4 space-y-1 text-slate-400">
                     <li>
                       <strong className="text-emerald-400 font-mono">PROD_LIVE:</strong> Connected to real Express backend, live Ollama daemon, real Google GenAI SDK, real RepoGate AST scanner, real X402 lease engine, and real PGL Merkle block generation.
                     </li>
                     <li>
-                      <strong className="text-cyan-400 font-mono">DEMO_SANDBOX:</strong> Isolated client simulation with clear visual warning badges and synthetic log indicators.
+                      <strong className="text-amber-400 font-mono">DEMO_SANDBOX:</strong> Isolated client simulation with clear visual warning badges and synthetic log indicators.
                     </li>
                     <li>
                       <strong className="text-slate-200">UI Badges:</strong> Every API call response explicitly highlights execution type (`REAL_SERVER_SIDE_API` vs `DEMO_SIMULATION`).
@@ -386,8 +386,8 @@ export const ThesisEvaluationView: React.FC = () => {
                       <td className="py-2.5 text-slate-400">Mathematically verifiable certificates on `/api/v1/pgl/verify`.</td>
                     </tr>
                     <tr className="hover:bg-slate-900/50">
-                      <td className="py-2.5 text-cyan-300 font-bold">Demo Sandbox Mode</td>
-                      <td className="py-2.5"><span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-bold text-3xs">SIMULATED SANDBOX</span></td>
+                      <td className="py-2.5 text-amber-300 font-bold">Demo Sandbox Mode</td>
+                      <td className="py-2.5"><span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold text-3xs">SIMULATED SANDBOX</span></td>
                       <td className="py-2.5 text-slate-300">Client-side interactive sandbox mode when user explicitly selects `mode: 'demo'` or when live model keys are unset.</td>
                       <td className="py-2.5 text-slate-400">Clearly labeled with `DEMO_SANDBOX_SIMULATION` badge.</td>
                     </tr>

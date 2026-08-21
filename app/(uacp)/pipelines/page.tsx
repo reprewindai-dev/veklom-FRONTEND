@@ -74,7 +74,7 @@ function PipelinesPageContent() {
   return (
     <div className="w-full h-full flex flex-col bg-[#030303]">
       {degraded && (
-        <div className="border-b border-[#00E5FF]/20 bg-[#00E5FF]/5 px-4 py-2 font-mono text-[10px] text-[#00E5FF]">
+        <div className="border-b border-[#ffab00]/20 bg-[#ffab00]/5 px-4 py-2 font-mono text-[10px] text-[#ffab00]">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="font-black uppercase tracking-widest">
               {proof?.state ? proof.state.replace("_", " ") : "needs proof"}
@@ -96,7 +96,7 @@ function PipelinesPageContent() {
       )}
       {runs.length === 0 ? (
         <div className="flex min-h-0 flex-1 items-center justify-center bg-[#030303] p-6 font-mono">
-          <div className="max-w-xl border border-[#00E5FF]/25 bg-[#00E5FF]/5 p-5 text-[#00E5FF]">
+          <div className="max-w-xl border border-[#ffab00]/25 bg-[#ffab00]/5 p-5 text-[#ffab00]">
             <div className="mb-2 text-xs font-black uppercase tracking-widest">
               {proof?.state ? proof.state.replace("_", " ") : "Needs proof"}
             </div>

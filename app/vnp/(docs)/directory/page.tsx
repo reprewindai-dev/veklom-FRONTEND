@@ -116,10 +116,10 @@ export default function DirectoryPage() {
           Candidate APIs the VNP mesh targets. Listing an API here is not a claim that it is live or
           scored — latency and availability appear only when the realtime probe source returns them;
           otherwise each row reads{" "}
-          <span className="text-cyan-300 font-semibold">Needs proof</span>.
+          <span className="text-amber-300 font-semibold">Needs proof</span>.
         </p>
         {sourceReason && (
-          <p className="text-sm text-cyan-300/80 mt-2 font-mono">
+          <p className="text-sm text-amber-300/80 mt-2 font-mono">
             {sourceReason} Source: GET {REALTIME_ENDPOINT}
           </p>
         )}
@@ -132,7 +132,7 @@ export default function DirectoryPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by API name or id…"
-          className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+          className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#FFB800]/50 transition-colors"
         />
       </div>
 
@@ -142,7 +142,7 @@ export default function DirectoryPage() {
           return (
             <section key={category.title}>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-                <Icon className="w-6 h-6 text-[#00E5FF]" />
+                <Icon className="w-6 h-6 text-[#FFB800]" />
                 {category.title}
               </h2>
               <div className="grid gap-4">

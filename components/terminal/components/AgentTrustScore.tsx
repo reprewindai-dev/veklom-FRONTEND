@@ -68,7 +68,7 @@ const getTierColor = (tier: string) => {
   switch(tier) {
     case 'T1': return 'bg-emerald-500/20 text-emerald-400';
     case 'T2': return 'bg-blue-500/20 text-blue-400';
-    case 'T3': return 'bg-cyan-500/20 text-cyan-400';
+    case 'T3': return 'bg-amber-500/20 text-amber-400';
     default: return 'bg-red-500/20 text-red-400';
   }
 };

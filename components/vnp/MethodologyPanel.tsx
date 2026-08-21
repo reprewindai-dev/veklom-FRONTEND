@@ -37,8 +37,8 @@ export default function MethodologyPanel() {
     <div className="max-w-5xl space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 rounded-lg bg-[#00E5FF]/10">
-          <BookOpen className="w-5 h-5 text-[#00E5FF]" />
+        <div className="p-2.5 rounded-lg bg-[#FFB800]/10">
+          <BookOpen className="w-5 h-5 text-[#FFB800]" />
         </div>
         <div>
           <h2 className="text-lg font-semibold text-white">{VNP_METHODOLOGY_VERSION}</h2>
@@ -46,20 +46,20 @@ export default function MethodologyPanel() {
             {VNP_METHODOLOGY_TAGLINE}
           </p>
         </div>
-        <span className="ml-auto px-2 py-0.5 rounded border text-[9px] font-mono font-bold uppercase tracking-widest bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30">
+        <span className="ml-auto px-2 py-0.5 rounded border text-[9px] font-mono font-bold uppercase tracking-widest bg-[#FFB800]/10 text-[#FFB800] border-[#FFB800]/30">
           v1.0
         </span>
       </div>
 
       {/* Canonical Document Stack */}
-      <div className="p-4 rounded-xl border border-[#00E5FF]/20 bg-[#00E5FF]/[0.03] mb-4">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-[#00E5FF] mb-2">Normative Document Stack</div>
+      <div className="p-4 rounded-xl border border-[#FFB800]/20 bg-[#FFB800]/[0.03] mb-4">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-[#FFB800] mb-2">Normative Document Stack</div>
         <div className="grid grid-cols-3 gap-3">
           <DocRef title="VNP Methodology v1.0" status="ACTIVE" desc="Verification stack, evidence status, anti-gaming" />
           <DocRef title="Governance Charter v1.0" status="OPEN COMMENT" desc="BGB/TSC model, WGs, elections, disputes" />
           <DocRef title="WABCG Charter" status="PUBLISHED" desc="W3C Community Group interim governance" />
         </div>
-        <div className="text-[9px] text-[#00E5FF]/60 mt-2 font-mono">
+        <div className="text-[9px] text-[#FFB800]/60 mt-2 font-mono">
           Rule: If there is ever a mismatch between these docs, the normative specification wins.
         </div>
       </div>
@@ -73,7 +73,7 @@ export default function MethodologyPanel() {
           { label: "Anti-Gaming", desc: "Randomized timing, rotating identities, spot checks", icon: Shield },
         ].map((p) => (
           <div key={p.label} className="p-3 rounded-lg border border-[#242424] bg-[#0D0D0D]">
-            <p.icon className="w-4 h-4 text-[#00E5FF] mb-2" />
+            <p.icon className="w-4 h-4 text-[#FFB800] mb-2" />
             <div className="text-[11px] font-semibold text-white">{p.label}</div>
             <div className="text-[10px] text-[#6E6E73] mt-0.5">{p.desc}</div>
           </div>
@@ -101,7 +101,7 @@ export default function MethodologyPanel() {
                   <div className="text-[9px] text-[#6E6E73]">{section.description}</div>
                 </div>
                 <div className="col-span-3 text-center">
-                  <div className="text-[10px] font-mono text-[#00E5FF] font-bold">{section.status}</div>
+                  <div className="text-[10px] font-mono text-[#FFB800] font-bold">{section.status}</div>
                   <div className="text-[8px] text-[#6E6E73]">status</div>
                 </div>
                 <div className="col-span-5 text-[10px] text-[#A1A1A6]">
@@ -140,7 +140,7 @@ export default function MethodologyPanel() {
                     <div className="text-[9px] text-[#6E6E73]">{dim.description}</div>
                   </div>
                   <div className="col-span-2 text-center">
-                    <div className="text-[10px] font-mono text-[#00E5FF] font-bold">
+                    <div className="text-[10px] font-mono text-[#FFB800] font-bold">
                       {(dim.weight * 100).toFixed(0)}%
                     </div>
                     <div className="text-[8px] text-[#6E6E73]">weight</div>
@@ -232,7 +232,7 @@ export default function MethodologyPanel() {
           <div className="grid grid-cols-4 gap-3">
             {[
               { level: "HIGH", min: CONFIDENCE_THRESHOLDS.high, color: "#3EE7A2" },
-              { level: "MEDIUM", min: CONFIDENCE_THRESHOLDS.medium, color: "#00E5FF" },
+              { level: "MEDIUM", min: CONFIDENCE_THRESHOLDS.medium, color: "#FFB800" },
               { level: "LOW", min: CONFIDENCE_THRESHOLDS.low, color: "#FF9F43" },
               { level: "PROVISIONAL", min: 0, color: "#FF5C6C" },
             ].map((t) => (
@@ -306,7 +306,7 @@ export default function MethodologyPanel() {
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
-              <div className="text-[11px] font-semibold text-[#00E5FF] mb-1">Measurement Agent</div>
+              <div className="text-[11px] font-semibold text-[#FFB800] mb-1">Measurement Agent</div>
               <div className="text-[10px] text-[#6E6E73] space-y-0.5">
                 <div>• k6 core with per-API scripts from OpenAPI 3.1</div>
                 <div>• Docker image: veklom/vnp-agent:0.1.x</div>
@@ -398,8 +398,8 @@ export default function MethodologyPanel() {
               { step: "5", label: "Chain Anchoring", desc: "Merkle root + score hash → Base L2 (EIP-155:8453). Raw data → IPFS/Arweave weekly" },
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-3 p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
-                <div className="w-6 h-6 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30 flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-mono font-bold text-[#00E5FF]">{s.step}</span>
+                <div className="w-6 h-6 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/30 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-mono font-bold text-[#FFB800]">{s.step}</span>
                 </div>
                 <div>
                   <div className="text-[11px] text-white font-medium">{s.label}</div>
@@ -475,13 +475,13 @@ export default function MethodologyPanel() {
             <div className="text-[#6E6E73] mb-2">{"// Solidity Interface"}</div>
             <div className="space-y-0.5">
               <div className="text-[#A78BFA]">function</div>
-              <div className="pl-2 text-[#00E5FF]">publishAnchor(</div>
+              <div className="pl-2 text-[#FFB800]">publishAnchor(</div>
               <div className="pl-4 text-[#A1A1A6]">uint256 windowStart,</div>
               <div className="pl-4 text-[#A1A1A6]">uint256 windowEnd,</div>
               <div className="pl-4 text-[#A1A1A6]">bytes32 merkleRoot,</div>
               <div className="pl-4 text-[#A1A1A6]">bytes32 metadataHash,</div>
               <div className="pl-4 text-[#A1A1A6]">bytes32 scoreHash</div>
-              <div className="pl-2 text-[#00E5FF]">{") → uint256 anchorId"}</div>
+              <div className="pl-2 text-[#FFB800]">{") → uint256 anchorId"}</div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 text-[10px]">
@@ -520,7 +520,7 @@ export default function MethodologyPanel() {
           </p>
           <div className="space-y-2">
             {[
-              { tier: "Tier 1 — Automated Review (0–24h)", desc: "Provider submits dispute with evidence. System re-runs from 3 fresh nodes. If variance ≤5% from original → auto-reject. Decision recorded on-chain.", color: "#00E5FF" },
+              { tier: "Tier 1 — Automated Review (0–24h)", desc: "Provider submits dispute with evidence. System re-runs from 3 fresh nodes. If variance ≤5% from original → auto-reject. Decision recorded on-chain.", color: "#FFB800" },
               { tier: "Tier 2 — Technical Panel (1–5 days)", desc: "If variance >5%, escalates to 5-person panel (TSC members + community auditors). All evidence posted publicly. Majority vote, recorded on-chain.", color: "#37C9EC" },
               { tier: "Tier 3 — Community Arbitration (7–14 days)", desc: "UMA Optimistic Oracle model. Challenge bond required. Community members stake on outcomes. Loser's bond is slashed. Final and binding.", color: "#A78BFA" },
             ].map((t) => (
@@ -561,8 +561,8 @@ export default function MethodologyPanel() {
                 <div>• Cannot restrict public benchmark access</div>
               </div>
             </div>
-            <div className="p-3 rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/[0.03]">
-              <div className="text-[11px] font-semibold text-[#00E5FF] mb-2">Technical Steering Committee (TSC)</div>
+            <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03]">
+              <div className="text-[11px] font-semibold text-[#FFB800] mb-2">Technical Steering Committee (TSC)</div>
               <div className="text-[10px] text-[#6E6E73] space-y-0.5">
                 <div>• Max 9 seats (min 3 active)</div>
                 <div>• Elected annually by contributors</div>
@@ -578,7 +578,7 @@ export default function MethodologyPanel() {
             <div className="text-[#A1A1A6] font-medium mb-1">Working Groups</div>
             <div className="grid grid-cols-3 gap-2 text-[#6E6E73]">
               <div>
-                <div className="text-[#00E5FF]">Methodology WG</div>
+                <div className="text-[#FFB800]">Methodology WG</div>
                 <div>Scoring formula, dimensions, anti-gaming</div>
               </div>
               <div>
@@ -639,8 +639,8 @@ export default function MethodologyPanel() {
               <div className="text-[10px] font-mono text-[#A1A1A6]">Apache 2.0</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">Measurement agents, SDKs, dashboards, test harnesses</div>
             </div>
-            <div className="p-3 rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/[0.03]">
-              <div className="text-[11px] font-semibold text-[#00E5FF] mb-1">Benchmark Data</div>
+            <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03]">
+              <div className="text-[11px] font-semibold text-[#FFB800] mb-1">Benchmark Data</div>
               <div className="text-[10px] font-mono text-[#A1A1A6]">CC BY 4.0</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">All published results — permissive, commercial + non-commercial</div>
             </div>
@@ -720,7 +720,7 @@ export default function MethodologyPanel() {
               { num: "6", label: "Gateway Plugins", desc: "Kong/Tyk, Postman, LangChain/MCP tool plugins under future methodology review" },
             ].map((s) => (
               <div key={s.num} className="p-3 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
-                <div className="text-[10px] font-mono text-[#00E5FF] mb-1">{s.num}</div>
+                <div className="text-[10px] font-mono text-[#FFB800] mb-1">{s.num}</div>
                 <div className="text-[10px] font-semibold text-white">{s.label}</div>
                 <div className="text-[9px] text-[#6E6E73] mt-0.5">{s.desc}</div>
               </div>
@@ -739,8 +739,8 @@ export default function MethodologyPanel() {
       >
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/[0.03]">
-              <div className="text-[11px] font-semibold text-[#00E5FF] mb-2">Days 1–30: Lock & Publish</div>
+            <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03]">
+              <div className="text-[11px] font-semibold text-[#FFB800] mb-2">Days 1–30: Lock & Publish</div>
               <div className="text-[10px] text-[#6E6E73] space-y-0.5">
                 <div>• Publish VNP Methodology v1.0</div>
                 <div>• Publish governance charter</div>
@@ -797,8 +797,8 @@ export default function MethodologyPanel() {
               <div className="text-[10px] font-semibold text-[#FF5C6C]">Major methodology revision</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">Adding/removing dimensions. 2/3 TSC + 60-day notice + parallel scoring.</div>
             </div>
-            <div className="p-3 rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/[0.03]">
-              <div className="text-[10px] font-semibold text-[#00E5FF]">Minor (v1.0 &rarr; v1.1)</div>
+            <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03]">
+              <div className="text-[10px] font-semibold text-[#FFB800]">Minor (v1.0 &rarr; v1.1)</div>
               <div className="text-[9px] text-[#6E6E73] mt-1">Weight changes within existing dimensions. 2/3 TSC + 30-day comment.</div>
             </div>
             <div className="p-3 rounded-lg border border-[#3EE7A2]/20 bg-[#3EE7A2]/[0.03]">
@@ -806,8 +806,8 @@ export default function MethodologyPanel() {
               <div className="text-[9px] text-[#6E6E73] mt-1">Bug fixes and measurement procedure clarifications.</div>
             </div>
           </div>
-          <div className="p-3 rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/[0.03] text-[10px]">
-            <div className="text-[#00E5FF] font-semibold mb-1">Current Lock Status</div>
+          <div className="p-3 rounded-lg border border-[#FFB800]/20 bg-[#FFB800]/[0.03] text-[10px]">
+            <div className="text-[#FFB800] font-semibold mb-1">Current Lock Status</div>
             <div className="text-[#A1A1A6]">
               VNP Methodology v1.0 - ACTIVE MEASUREMENT BASELINE. Public methodology updated 2026-07-07.
               Production routes report proof status from the live BYOS and CAPPO backends.
@@ -819,7 +819,7 @@ export default function MethodologyPanel() {
       {/* Footer */}
       <div className="p-4 rounded-xl border border-[#242424] bg-[#0D0D0D] text-[10px] text-[#6E6E73]">
         <div className="flex items-center gap-2 mb-2">
-          <Fingerprint className="w-3.5 h-3.5 text-[#00E5FF]" />
+          <Fingerprint className="w-3.5 h-3.5 text-[#FFB800]" />
           <span className="text-[#A1A1A6] font-medium">Prior Art & References</span>
         </div>
         <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
@@ -858,8 +858,8 @@ function Section({
         onClick={onToggle}
         className="w-full flex items-center gap-3 p-4 hover:bg-[#111111] transition-colors text-left"
       >
-        <div className="p-1.5 rounded-lg bg-[#00E5FF]/10">
-          <Icon className="w-4 h-4 text-[#00E5FF]" />
+        <div className="p-1.5 rounded-lg bg-[#FFB800]/10">
+          <Icon className="w-4 h-4 text-[#FFB800]" />
         </div>
         <span className="text-sm font-semibold text-white flex-1">{label}</span>
         {expanded ? (
@@ -886,7 +886,7 @@ function Section({
 }
 
 function DocRef({ title, status, desc }: { title: string; status: string; desc: string }) {
-  const statusColor = status === "LOCKED" ? "#00E5FF" : status === "OPEN COMMENT" ? "#37C9EC" : "#3EE7A2";
+  const statusColor = status === "LOCKED" ? "#FFB800" : status === "OPEN COMMENT" ? "#37C9EC" : "#3EE7A2";
   return (
     <div className="p-2.5 rounded-lg border border-[#1A1A1A] bg-[#0A0A0A]">
       <div className="text-[10px] font-semibold text-white mb-1">{title}</div>

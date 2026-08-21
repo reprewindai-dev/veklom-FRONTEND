@@ -147,7 +147,7 @@ export default function SekedMeasurement() {
           value={measurement.E}
           onChange={(value) => updateMeasurement('E', value)}
           icon={Zap}
-          color="bg-cyan-500"
+          color="bg-yellow-500"
           description="Physical and mental energy reserves"
         />
         <SliderInput
@@ -229,7 +229,7 @@ export default function SekedMeasurement() {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 directive.action_type === 'EXECUTE' ? 'bg-green-500/20 text-green-400' :
                 directive.action_type === 'PREPARE' ? 'bg-blue-500/20 text-blue-400' :
-                directive.action_type === 'CONSERVE' ? 'bg-cyan-500/20 text-cyan-400' :
+                directive.action_type === 'CONSERVE' ? 'bg-yellow-500/20 text-yellow-400' :
                 directive.action_type === 'RECOVER' ? 'bg-orange-500/20 text-orange-400' :
                 'bg-red-500/20 text-red-400'
               }`}>

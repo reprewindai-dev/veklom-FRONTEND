@@ -316,8 +316,8 @@ export default function QuantumDashboard() {
                      <div className="h-[2px] w-full bg-red-950 absolute bottom-0 left-0"><div className="h-full bg-red-500 transition-all duration-500" style={{width: threatCount > 0 ? '100%' : '0%'}}></div></div>
                   </div>
                   <div>
-                     <div className="text-2xl text-cyan-500 font-sans tracking-tight mb-1 items-baseline flex gap-1">{warnCount} <span className="text-[10px] font-mono tracking-widest text-cyan-300/80">High</span></div>
-                     <div className="h-[2px] w-full bg-cyan-950 absolute bottom-0 right-0 w-[50%]"><div className="h-full bg-cyan-500 transition-all duration-500" style={{width: warnCount > 0 ? '100%' : '0%'}}></div></div>
+                     <div className="text-2xl text-yellow-500 font-sans tracking-tight mb-1 items-baseline flex gap-1">{warnCount} <span className="text-[10px] font-mono tracking-widest text-yellow-300/80">High</span></div>
+                     <div className="h-[2px] w-full bg-yellow-950 absolute bottom-0 right-0 w-[50%]"><div className="h-full bg-yellow-500 transition-all duration-500" style={{width: warnCount > 0 ? '100%' : '0%'}}></div></div>
                   </div>
                </div>
             </div>

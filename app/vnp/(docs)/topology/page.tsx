@@ -50,7 +50,7 @@ export default function TopologyPage() {
                 key={node.region}
                 className="bg-white/5 border border-white/10 p-6 rounded-xl flex gap-4"
               >
-                <Server className="w-7 h-7 text-[#00E5FF] shrink-0" />
+                <Server className="w-7 h-7 text-[#FFB800] shrink-0" />
                 <div>
                   <h3 className="font-bold text-white mb-1 font-mono">{node.region}</h3>
                   <p className="text-sm text-gray-400 leading-relaxed">{node.location}</p>
@@ -65,7 +65,7 @@ export default function TopologyPage() {
             These are the only valid VNP sites. Any operational state — registration, active keys,
             heartbeat freshness, observation counts — is shown exactly as the beacon returns it. When
             the beacon is unreachable or a node is not currently connected, the panel reads{" "}
-            <span className="text-cyan-300 font-semibold">Needs proof</span> rather than implying a
+            <span className="text-amber-300 font-semibold">Needs proof</span> rather than implying a
             live mesh.
           </p>
         </section>
