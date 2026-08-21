@@ -791,7 +791,7 @@ export default function PGLOnboardingPage() {
           {mode !== "live" && (
             <div className="mt-12 text-center">
               <Link
-                href="/control-node"
+                href="/os"
                 className="text-xs text-cos-steel hover:text-cos-text border-b border-dashed border-ink-600 pb-0.5 transition-colors"
               >
                 Skip initialization (Replay Mode)
