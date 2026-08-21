@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from 'react';
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
@@ -46,7 +46,7 @@ export default function OpenSourcePage() {
             Veklom Open Source
           </h1>
           <p className="text-xl text-cos-text/70 max-w-3xl mx-auto leading-relaxed">
-            The foundation of the Machine-to-Machine Economy must be transparent, verifiable, and open. We are committed to open-sourcing the core protocols of the VIO Intent Infrastructure.
+            The foundation of the Machine-to-Machine Economy must be transparent, verifiable, and open. We are committed to open-sourcing the core protocols of the Veklom Protocol.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ export default function OpenSourcePage() {
           </div>
           
           <div className="text-sm font-mono text-cos-text/40 flex items-center justify-center gap-2">
-            <GitCommit className="w-4 h-4" /> VIO-INTENT-INFRA-RELEASE-CANDIDATE
+            <GitCommit className="w-4 h-4" /> VEKLOM-PROTOCOL-RELEASE-CANDIDATE
           </div>
         </div>
 
