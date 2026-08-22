@@ -40,20 +40,20 @@ interface ExposureRow {
 }
 
 interface IncidentsState {
-  generated_at: string;
-  source: string;
-  proof: {
+  generated_at?: string;
+  source?: string;
+  proof?: {
     state: "verified" | "partial" | "error";
     reason: string;
     probes: Probe[];
   };
   protocolStats: any;
   metrics: any;
-  exposure: ExposureRow[];
-  alerts: any[];
-  incidents: any[];
-  auditLogs: any[];
-  totals: {
+  exposure?: ExposureRow[];
+  alerts?: any[];
+  incidents?: any[];
+  auditLogs?: any[];
+  totals?: {
     totalValueBonded: number | null;
     activeApis: number | null;
     activeVerifiers: number | null;
@@ -129,10 +129,13 @@ export default function IncidentsSlashing() {
     refreshInterval: 15000,
   });
 
-  const exposure = data?.exposure || [];
+  const exposure = Array.isArray(data?.exposure) ? data.exposure : [];
   const selected = exposure.find((row) => row.id === selectedId) || exposure[0] || null;
-  const proofState = error ? "error" : data?.proof.state || "needs_proof";
-  const verifiedRoutes = data?.proof.probes.filter((probe) => probe.state === "verified").length || 0;
+  const proof = data?.proof;
+  const probes = proof && Array.isArray(proof.probes) ? proof.probes : [];
+  const totals = data?.totals;
+  const proofState = error ? "error" : proof?.state || "needs_proof";
+  const verifiedRoutes = probes.filter((probe) => probe.state === "verified").length;
 
   useEffect(() => {
     if (!selectedId && exposure.length > 0) setSelectedId(exposure[0].id);
@@ -153,47 +156,47 @@ export default function IncidentsSlashing() {
           <span className="text-xs font-bold tracking-widest uppercase text-white">SLA INCIDENTS & SLASHING LEDGER</span>
         </div>
         <div className={`text-[10px] font-mono uppercase px-3 py-1 rounded border ${proofTone(proofState)}`}>
-          Routes: <span className="text-white">{verifiedRoutes}/{data?.proof.probes.length || 0}</span>
+          Routes: <span className="text-white">{verifiedRoutes}/{probes.length}</span>
           <span className="mx-2 text-white/25">|</span>
           {proofState === "verified" ? "Live proof" : proofState === "error" ? "Source error" : "Partial proof"}
         </div>
       </div>
 
       <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-6 z-10 relative">
-        {data?.proof.reason && (
+        {proof?.reason && (
           <div className={`rounded-lg border px-4 py-3 font-mono text-[10px] uppercase tracking-widest ${proofTone(proofState)}`}>
-            {data.proof.reason}
+            {proof.reason}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <MetricCard
             label="TOTAL BONDED VALUE"
-            value={fmtMoney(data?.totals.totalValueBonded)}
+            value={fmtMoney(totals?.totalValueBonded)}
             sub="BYOS /api/v1/x402/staking/state"
             icon={Coins}
             tone="text-[#00E5FF] text-glow-cyan"
           />
           <MetricCard
             label="SETTLED SLASHES"
-            value={fmtMoney(data?.totals.slashedTotalUsdc)}
+            value={fmtMoney(totals?.slashedTotalUsdc)}
             sub="Sum of slashedTotalUsdc returned by BYOS"
             icon={TrendingDown}
-            tone={Number(data?.totals.slashedTotalUsdc) > 0 ? "text-[#FF003C] text-glow-red" : "text-white/70"}
+            tone={Number(totals?.slashedTotalUsdc) > 0 ? "text-[#FF003C] text-glow-red" : "text-white/70"}
           />
           <MetricCard
             label="PENALTY EXPOSURE"
-            value={fmtMoney(data?.totals.pendingPenaltyUsdc)}
+            value={fmtMoney(totals?.pendingPenaltyUsdc)}
             sub="Deviation penalty exposure, not settlement proof"
             icon={Activity}
-            tone={Number(data?.totals.pendingPenaltyUsdc) > 0 ? "text-[#FFB800]" : "text-[#00FF66]"}
+            tone={Number(totals?.pendingPenaltyUsdc) > 0 ? "text-[#FFB800]" : "text-[#00FF66]"}
           />
           <MetricCard
             label="ACTIVE VERIFIERS"
-            value={fmtNumber(data?.totals.activeVerifiers)}
+            value={fmtNumber(totals?.activeVerifiers)}
             sub="0 means BYOS returned no live verifier rows"
             icon={CheckCircle}
-            tone={Number(data?.totals.activeVerifiers) > 0 ? "text-[#00FF66]" : "text-[#FFB800]"}
+            tone={Number(totals?.activeVerifiers) > 0 ? "text-[#00FF66]" : "text-[#FFB800]"}
           />
         </div>
 
@@ -295,7 +298,7 @@ export default function IncidentsSlashing() {
                 <Database className="w-3.5 h-3.5 text-[#00E5FF]" /> SOURCE ROUTE PROOF
               </div>
               <div className="flex flex-col gap-2">
-                {data?.proof.probes.map((probe) => (
+                {probes.map((probe) => (
                   <div key={probe.route} className="flex items-center justify-between gap-3 border-b border-white/5 pb-2 last:border-0">
                     <span className="text-white/45 truncate">{probe.route}</span>
                     <span className={`px-2 py-0.5 rounded border uppercase ${proofTone(probe.state)}`}>{probe.state}</span>
@@ -303,7 +306,7 @@ export default function IncidentsSlashing() {
                 ))}
               </div>
               <div className="pt-2 text-white/45 leading-normal">
-                Protected incident rows are not invented when `/api/v1/incidents/` returns auth-required. Triggered VNP alerts returned {fmtNumber(data?.totals.triggeredAlerts)} row(s).
+                Protected incident rows are not invented when `/api/v1/incidents/` returns auth-required. Triggered VNP alerts returned {fmtNumber(totals?.triggeredAlerts)} row(s).
               </div>
             </div>
 
@@ -313,17 +316,17 @@ export default function IncidentsSlashing() {
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-white/40">Triggered Alerts</span>
-                <span className="text-white">{fmtNumber(data?.totals.triggeredAlerts)}</span>
+                <span className="text-white">{fmtNumber(totals?.triggeredAlerts)}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-white/40">Protected Incidents</span>
-                <span className={data?.totals.incidentRows ? "text-[#00FF66]" : "text-[#FFB800]"}>
-                  {data?.totals.incidentRows ? fmtNumber(data.totals.incidentRows) : "Needs auth proof"}
+                <span className={totals?.incidentRows ? "text-[#00FF66]" : "text-[#FFB800]"}>
+                  {totals?.incidentRows ? fmtNumber(totals.incidentRows) : "Needs auth proof"}
                 </span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-white/40">Audit Logs</span>
-                <span className="text-white">{fmtNumber(data?.totals.auditRows)}</span>
+                <span className="text-white">{fmtNumber(totals?.auditRows)}</span>
               </div>
               <a
                 href={`${data?.source || "https://api.veklom.com"}/api/v1/x402/staking/state`}
