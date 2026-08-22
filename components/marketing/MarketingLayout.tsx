@@ -97,7 +97,7 @@ export function MarketingLayout({
 
       <div className={`relative z-10 m2m-container ${isMachine ? 'machine' : ''} min-h-screen flex flex-col`}>
         <div className="relative z-20">
-          <GlobalNav />
+          <GlobalNav isMachineOverride={isMachineOverride} />
         </div>
         
         <main className="flex-1">
