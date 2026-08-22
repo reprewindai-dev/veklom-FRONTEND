@@ -59,7 +59,6 @@ export function executeGovernedConsequence(
         signature: request.targetPrecondition.signature,
       } : undefined,
     },
-    handlePaymentRequired: false,
   });
 }
 

@@ -78,4 +78,14 @@ describe("Capability OS truthful vertical-slice transport", () => {
       expect.objectContaining({ method: "GET" }),
     );
   });
+
+  it("keeps the x402 intervention enabled for governed execution", async () => {
+    await executeGovernedConsequence({
+      capabilityLease: { mountId: "mount-1", tokenId: "token-1", nonce: "nonce-1" },
+      operation: "llm.exec",
+      prompt: "prove payment handling",
+    });
+    const [, init] = (fetch as jest.Mock).mock.calls[0];
+    expect(init).not.toHaveProperty("handlePaymentRequired", false);
+  });
 });

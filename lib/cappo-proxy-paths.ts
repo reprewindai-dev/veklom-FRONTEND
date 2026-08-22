@@ -59,6 +59,7 @@ export function isCappoIdentityPath(path: string) {
   }
   if (path.startsWith("/v1/governance/v2/risk/")) return true;
   if (/^\/v1\/identities\/[^/]+\/revoke$/.test(path)) return true;
+  if (/^\/v1\/executions\/[^/]+\/(?:evidence|measurements)$/.test(path)) return true;
   if (matchesAgentRoute(path, "")) return true;
   if (matchesAgentRoute(path, "/certificate")) return true;
   if (matchesAgentRoute(path, "/lifecycle")) return true;

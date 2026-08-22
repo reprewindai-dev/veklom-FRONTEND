@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play, Database, Activity, Terminal as TerminalIcon, Shield, Clock } from 'lucide-react';
 import { ProofBadge } from './ProofBadge';
 import { executeGovernedConsequence } from '@/lib/cos/verticalSlice';
+import { clearSessionCapabilityLease, readSessionCapabilityLease } from '@/lib/cos/lease-session';
 
 interface ExecutionTrace {
-  response: string;
+  response?: unknown;
+  status?: string;
   provider?: string;
   model?: string;
   execution_id?: string;
@@ -30,8 +32,22 @@ export function ExecuteHarness() {
   const [trace, setTrace] = useState<ExecutionTrace | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const lease = readSessionCapabilityLease();
+    if (lease) {
+      setMountId(lease.mountId);
+      setTokenId(lease.tokenId);
+      setNonce(lease.nonce);
+    }
+  }, []);
+
   const handleExecute = async () => {
     if (!prompt) return;
+    const targetParts = [targetId, expectedStateHash, observedStateHash, observedAt, observerSignature];
+    if (targetParts.some(Boolean) && !targetParts.every(Boolean)) {
+      setError('Complete every target precondition field or clear all of them.');
+      return;
+    }
     
     setIsExecuting(true);
     setError(null);
@@ -53,6 +69,7 @@ export function ExecuteHarness() {
       setTrace(data);
       if (data.execution_id) {
         sessionStorage.setItem('veklom_execution_id', data.execution_id);
+        clearSessionCapabilityLease();
       }
     } catch (err: any) {
       setError(err.message || 'Execution failed');
@@ -60,6 +77,13 @@ export function ExecuteHarness() {
       setIsExecuting(false);
     }
   };
+
+  const terminal = Boolean(trace?.execution_id && trace.response !== undefined && !['accepted', 'pending', 'queued'].includes(trace.status ?? ''));
+  const responseText = trace?.response === undefined
+    ? 'No resulting state returned.'
+    : typeof trace.response === 'string'
+      ? trace.response
+      : JSON.stringify(trace.response, null, 2);
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-10 lg:px-10">
@@ -75,7 +99,7 @@ export function ExecuteHarness() {
             Run a mounted capability through the governed runtime and observe the replayable trace.
           </p>
         </div>
-        <ProofBadge status={error ? "Degraded" : trace?.capability_lease?.decision === "allow" && trace.execution_id ? "Verified" : "Needs proof"} />
+        <ProofBadge status={error ? "Degraded" : terminal && trace?.capability_lease?.decision === "allow" ? "Verified" : "Needs proof"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -148,9 +172,9 @@ export function ExecuteHarness() {
                   <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#00FF41]">
                     <Clock size={12} /> {trace.latency_ms}ms
                   </span>
-                  <span className="flex items-center gap-1.5 font-mono text-[10px] text-cos-accent">
+                  {trace.tokens !== undefined && <span className="flex items-center gap-1.5 font-mono text-[10px] text-cos-accent">
                     <Activity size={12} /> {trace.tokens ?? 0} tkns
-                  </span>
+                  </span>}
                 </div>
               )}
             </div>
@@ -179,17 +203,15 @@ export function ExecuteHarness() {
 
               {trace && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                  <div className="text-[#00FF41] mb-2">{'>'} Execution Complete.</div>
-                  <div className="bg-[#111] border border-[#222] rounded p-4 text-gray-200">
-                    {trace.response}
-                  </div>
+                  <div className={terminal ? "text-[#00FF41] mb-2" : "text-cos-warn mb-2"}>{'>'} {terminal ? 'Execution complete.' : `Execution ${trace.status ?? 'accepted'}; resulting state not yet proven.`}</div>
+                  <pre className="whitespace-pre-wrap bg-[#111] border border-[#222] rounded p-4 text-gray-200">{responseText}</pre>
                   <div className="mt-6 border-t border-[#222] pt-4 grid grid-cols-2 gap-4 text-[10px] uppercase tracking-widest">
                     <div>
                       <div className="text-[#555] mb-1">Provider Route</div>
                       <div className="text-white">{trace.provider} ({trace.model})</div>
                     </div>
                     <div>
-                      <div className="text-[#555] mb-1">Audit Hash (PGL)</div>
+                      <div className="text-[#555] mb-1">Execution ID</div>
                       <div className="text-cos-accent font-bold truncate" title={trace.execution_id}>{trace.execution_id}</div>
                     </div>
                   </div>

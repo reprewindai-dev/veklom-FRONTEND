@@ -19,6 +19,8 @@ describe("Capability OS stage transport", () => {
       "/v1/capability/packages",
       "/v1/capability/mounts",
       "/v1/capability/mounts/mnt_123/actions",
+      "/v1/executions/exec_123/evidence",
+      "/v1/executions/exec_123/measurements",
       "/v1/exec",
       "/v1/governance/v2/assess",
       "/v1/vnp/metrics",
