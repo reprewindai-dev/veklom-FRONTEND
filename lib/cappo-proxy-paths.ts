@@ -2,7 +2,6 @@ const CAPPO_PUBLIC_PATHS = [
   "/.well-known/x402",
   "/.well-known/capability-beacon-keys",
   "/api/v1/pricing",
-  "/v1/vnp/metrics",
 ] as const;
 
 const CAPPO_EXEC_PATH = "/v1/exec";
@@ -44,6 +43,7 @@ export function isCappoIdentityPath(path: string) {
     "/v1/governance/v2/assess",
     "/v1/governance/v2/quarantine",
     "/v1/vnp/leaderboard",
+    "/v1/vnp/metrics",
     "/v1/vnp/validators",
     "/v1/vnp/incidents",
     "/v1/vnp/methodology",
