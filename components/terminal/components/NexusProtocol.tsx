@@ -71,7 +71,7 @@ interface NexusState {
   generated_at?: string;
   sources?: { byos?: string; capi?: string };
   proof?: {
-    state: "verified" | "partial" | "error";
+    state: "verified" | "partial" | "none" | "error";
     reason: string;
     probes: NexusProbe[];
   };
@@ -163,7 +163,7 @@ export default function NexusProtocol() {
   const [docTab, setDocTab] = useState<"governance" | "methodology">("governance");
   const [hoveredDimIndex, setHoveredDimIndex] = useState<number | null>(null);
 
-  const { data: state, error, isLoading } = useApi<NexusState>("/nexus-protocol/state", {
+  const { data: state, error, isLoading } = useApi<NexusState>("/api/nexus/state", {
     refreshInterval: 15000,
   });
 
@@ -193,7 +193,7 @@ export default function NexusProtocol() {
   const verifiedProbeCount = probes.filter((probe) => probe.state === "verified").length;
   const proofState = error
     ? "error"
-    : proof?.state === "verified" || proof?.state === "partial" || proof?.state === "error"
+    : proof?.state === "verified" || proof?.state === "partial" || proof?.state === "none" || proof?.state === "error"
       ? proof.state
       : "needs_proof";
   const proofReason = typeof proof?.reason === "string" ? proof.reason : null;
@@ -248,7 +248,7 @@ export default function NexusProtocol() {
         <div className={`flex items-center gap-4 font-mono text-[10px] px-3 py-1 rounded border ${proofTone(proofState)}`}>
           <div className="flex items-center gap-1.5">
             <span className={`w-1.5 h-1.5 rounded-full ${dotTone(proofState)} ${proofState === "verified" ? "animate-pulse" : ""}`} />
-            <span className="uppercase">{proofState === "verified" ? "LIVE PROOF" : proofState === "error" ? "SOURCE ERROR" : "PARTIAL PROOF"}</span>
+            <span className="uppercase">{proofState === "verified" ? "LIVE PROOF" : proofState === "partial" ? "PARTIAL PROOF" : proofState === "error" ? "SOURCE ERROR" : "NO PROOF"}</span>
           </div>
           <div className="w-px h-3 bg-white/20" />
           <div>ROUTES: <span className="text-white">{verifiedProbeCount}/{probes.length}</span></div>

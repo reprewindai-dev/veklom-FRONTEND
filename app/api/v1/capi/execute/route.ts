@@ -3,6 +3,13 @@ import { capiAuthHeaderValue, capiExecutionUrl } from "@/lib/capi-runtime";
 import { hasBearerAuthorization } from "@/lib/authorization";
 
 const MAX_EXEC_BODY_BYTES = 512 * 1024;
+const BYOS_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
+
+type RequesterContext = {
+  id: string;
+  workspace_id: string;
+  role?: string;
+};
 
 type RateLimitBucket = {
   count: number;
@@ -52,12 +59,37 @@ function validateRequest(req: NextRequest): NextResponse | null {
   return null;
 }
 
-function forwardedHeaders(req: NextRequest): Headers {
+async function resolveRequesterContext(req: NextRequest): Promise<RequesterContext | null> {
+  const headers = new Headers({ accept: "application/json" });
+  const authorization = req.headers.get("authorization");
+  const cookie = req.headers.get("cookie");
+  if (authorization) headers.set("authorization", authorization);
+  if (cookie) headers.set("cookie", cookie);
+
+  try {
+    const response = await fetch(`${BYOS_BACKEND_URL.replace(/\/+$/, "")}/api/v1/auth/me`, {
+      method: "GET",
+      headers,
+      redirect: "manual",
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const body = await response.json() as Partial<RequesterContext>;
+    if (!body.id || !body.workspace_id) return null;
+    return { id: body.id, workspace_id: body.workspace_id, role: body.role };
+  } catch {
+    return null;
+  }
+}
+
+function forwardedHeaders(req: NextRequest, requester: RequesterContext): Headers {
   const headers = new Headers(req.headers);
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
   headers.delete("x-api-key");
+  headers.delete("authorization");
+  headers.delete("cookie");
   
   // Security Fix: Prevent client from spoofing authority headers
   headers.delete("x-user-role");
@@ -68,10 +100,9 @@ function forwardedHeaders(req: NextRequest): Headers {
   headers.set("x-veklom-runtime-proxy", "control-plane");
   headers.set("x-veklom-runtime-source", "interlink-capi");
   
-  // Hardcode server-side authority for now (pending full auth session wiring)
-  headers.set("x-user-role", "operator");
-  headers.set("x-user-credits", "9999");
-  headers.set("x-agent-confidence", "1.0");
+  headers.set("x-workspace-id", requester.workspace_id);
+  headers.set("x-veklom-requester-id", requester.id);
+  if (requester.role) headers.set("x-user-role", requester.role);
 
   const apiKey = capiAuthHeaderValue();
   if (apiKey) headers.set("x-api-key", apiKey);
@@ -79,7 +110,7 @@ function forwardedHeaders(req: NextRequest): Headers {
   return headers;
 }
 
-function normalizeCapiPayload(body: Record<string, unknown>): Record<string, unknown> {
+function normalizeCapiPayload(body: Record<string, unknown>, workspaceId: string): Record<string, unknown> {
   const action = typeof body.action === "string" ? body.action : null;
   const agentId = typeof body.agent_id === "string" ? body.agent_id : null;
   const capabilityId = typeof body.capability_id === "string"
@@ -99,7 +130,7 @@ function normalizeCapiPayload(body: Record<string, unknown>): Record<string, unk
     input: {
       target_protocol: body.target_protocol || "capi",
       payload: body.payload || {},
-      workspace_id: body.workspace_id || "default",
+      workspace_id: workspaceId,
     },
     approvals: Array.isArray(body.approvals) ? body.approvals : undefined,
     security: body.security,
@@ -125,6 +156,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const requester = await resolveRequesterContext(req);
+    if (!requester) {
+      return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
+    }
+
     const apiKey = capiAuthHeaderValue();
     if (!apiKey) {
       return NextResponse.json(
@@ -135,7 +171,7 @@ export async function POST(req: NextRequest) {
 
     let payload: Record<string, unknown>;
     try {
-      payload = normalizeCapiPayload(rawBody as Record<string, unknown>);
+      payload = normalizeCapiPayload(rawBody as Record<string, unknown>, requester.workspace_id);
     } catch {
       return NextResponse.json(
         { error: "agent_id, capability_id, and action are required" },
@@ -143,7 +179,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const headers = forwardedHeaders(req);
+    const headers = forwardedHeaders(req, requester);
     headers.set("x-api-key", apiKey);
     const response = await fetch(capiExecutionUrl(), {
       method: "POST",

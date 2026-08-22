@@ -28,5 +28,7 @@ describe("NexusProtocol", () => {
     expect(markup).toContain("Needs proof");
     expect(markup).toContain("ROUTES:");
     expect(markup).toContain("0/0");
+    expect(markup).toContain("NO PROOF");
+    expect(markup).not.toContain("PARTIAL PROOF");
   });
 });
