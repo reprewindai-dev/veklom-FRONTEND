@@ -169,9 +169,9 @@ export function ExecuteHarness() {
               </div>
               {trace && (
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#00FF41]">
+                  {Number.isFinite(trace.latency_ms) && <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#00FF41]">
                     <Clock size={12} /> {trace.latency_ms}ms
-                  </span>
+                  </span>}
                   {trace.tokens !== undefined && <span className="flex items-center gap-1.5 font-mono text-[10px] text-cos-accent">
                     <Activity size={12} /> {trace.tokens ?? 0} tkns
                   </span>}

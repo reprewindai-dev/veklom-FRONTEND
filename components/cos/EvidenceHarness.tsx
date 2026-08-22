@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Activity, Database, FileText, Search, ShieldCheck } from 'lucide-react';
 import { fetchExecutionEvidence } from '@/lib/cos/verticalSlice';
+import { ApiError } from '@/lib/api';
 import { ProofBadge } from './ProofBadge';
 
 type EvidenceRecord = {
@@ -14,10 +15,11 @@ type EvidenceRecord = {
 };
 
 export function EvidenceHarness() {
-  const [executionId, setExecutionId] = useState(() => sessionStorage.getItem('veklom_execution_id') ?? '');
+  const [executionId, setExecutionId] = useState('');
   const [record, setRecord] = useState<EvidenceRecord | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { setExecutionId(sessionStorage.getItem('veklom_execution_id') ?? ''); }, []);
 
   async function retrieve() {
     if (!executionId) return;
@@ -30,7 +32,8 @@ export function EvidenceHarness() {
         verification_reasons: [...(next.verification_reasons ?? []), 'execution_id_mismatch'],
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Evidence unavailable');
+      if (caught instanceof ApiError && caught.status === 404) setRecord(null);
+      else setError(caught instanceof Error ? caught.message : 'Evidence unavailable');
     } finally { setLoading(false); }
   }
 

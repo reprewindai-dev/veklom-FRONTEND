@@ -16,7 +16,7 @@ import { SectionShell } from "@/components/cos/SectionShell";
 import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { Field, FailureNotice } from "@/components/cos/StageParts";
 import { ProofBadge } from "@/components/cos/ProofBadge";
-import { storeSessionCapabilityLease } from "@/lib/cos/lease-session";
+import { clearSessionCapabilityLease, storeSessionCapabilityLease } from "@/lib/cos/lease-session";
 
 type JsonRecord = Record<string, unknown>;
 type PackagePayload = {
@@ -248,6 +248,7 @@ export default function MountPage() {
   async function requestMount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!packageRef || !workspace || !project) return;
+    clearSessionCapabilityLease();
     setBusy(true);
     setActionResponse(undefined);
     setRequestedScope({
@@ -272,6 +273,7 @@ export default function MountPage() {
       },
     );
     if (result.data) {
+      clearSessionCapabilityLease();
       setMountResponse(result.data);
       const issuedToken = asRecord(result.data.token);
       const issuedMount = asRecord(result.data.mount);
@@ -307,6 +309,7 @@ export default function MountPage() {
   async function terminate() {
     if (!mountId) return;
     setBusy(true);
+    clearSessionCapabilityLease();
     const result = await data.call<JsonRecord>(
       endpoint("POST", `/v1/capability/mounts/${mountId}/terminate`, cappoBase),
       { reason: "explicit_terminate" },

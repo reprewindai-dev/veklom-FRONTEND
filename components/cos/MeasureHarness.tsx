@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Activity, BarChart2, RefreshCw, Search, ShieldCheck } from 'lucide-react';
 import { fetchExecutionMeasurement } from '@/lib/cos/verticalSlice';
+import { ApiError } from '@/lib/api';
 import { ProofBadge } from './ProofBadge';
 
 type Measurement = {
@@ -16,10 +17,11 @@ type Measurement = {
 };
 
 export function MeasureHarness() {
-  const [executionId, setExecutionId] = useState(() => sessionStorage.getItem('veklom_execution_id') ?? '');
+  const [executionId, setExecutionId] = useState('');
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { setExecutionId(sessionStorage.getItem('veklom_execution_id') ?? ''); }, []);
 
   async function retrieve() {
     if (!executionId) return;
@@ -28,7 +30,8 @@ export function MeasureHarness() {
       const next = await fetchExecutionMeasurement(executionId) as Measurement;
       setMeasurement(next.execution_id === executionId ? next : { ...next, proof_state: 'failed' });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Measurement unavailable');
+      if (caught instanceof ApiError && caught.status === 404) setMeasurement(null);
+      else setError(caught instanceof Error ? caught.message : 'Measurement unavailable');
     } finally { setLoading(false); }
   }
 
