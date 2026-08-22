@@ -4,21 +4,12 @@ import type { BenchmarkApiEntry } from "@/lib/vnp/types";
 const leaderboardEntry: BenchmarkApiEntry = {
   id: "provider-a",
   name: "Provider A",
-  category: "general",
   p50: 40,
   p95: 80,
   p99: 120,
-  sla: 99.9,
-  drift: 0.1,
-  sovereignTier: 1,
-  complianceLabels: ["x402"],
-  govScore: 90,
-  devScore: 90,
-  endpointUrl: "https://provider.example",
-  throughput: 1000,
-  uptime24h: 99.9,
-  totalStaked: 1000,
-  status: "active",
+  successRatePercent: 100,
+  measuredFrom: "governed_runs",
+  sampleCount: 3,
 };
 
 describe("VNP score evidence gates", () => {
@@ -27,7 +18,8 @@ describe("VNP score evidence gates", () => {
 
     expect(score.status).toBe("unmeasured");
     expect(score.grade).toBe("N/A");
-    expect(score.measurementCount).toBe(0);
+    expect(score.composite).toBeNull();
+    expect(score.measurementCount).toBe(3);
     expect(score.regions).toEqual([]);
     expect(score.provenance.merkleRoot).toBe("Needs proof");
     expect(score.provenance.nodeOperators).toEqual([]);

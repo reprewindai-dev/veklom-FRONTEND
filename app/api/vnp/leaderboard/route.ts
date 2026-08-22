@@ -29,7 +29,6 @@ export async function GET() {
         apiId: s.apiId,
         apiName: s.apiName,
         provider: s.provider,
-        category: s.category,
         composite: s.composite,
         grade: s.grade,
         status: s.status,
