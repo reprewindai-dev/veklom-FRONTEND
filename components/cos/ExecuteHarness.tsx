@@ -5,6 +5,15 @@ import { Play, Database, Activity, Terminal as TerminalIcon, Shield, Clock } fro
 import { ProofBadge } from './ProofBadge';
 import { executeGovernedConsequence } from '@/lib/cos/verticalSlice';
 import { clearSessionCapabilityLease, readSessionCapabilityLease } from '@/lib/cos/lease-session';
+import { useSandboxMode } from '@/lib/cos/sandbox';
+import { executionProofStatus } from '@/lib/cos/vertical-slice-truth';
+import { ApiError } from '@/lib/api';
+
+interface PaymentChallenge {
+  message: string;
+  paymentRequiredHeader?: string | null;
+  facilitatorUrl?: string | null;
+}
 
 interface ExecutionTrace {
   response?: unknown;
@@ -18,6 +27,7 @@ interface ExecutionTrace {
 }
 
 export function ExecuteHarness() {
+  const sandbox = useSandboxMode();
   const [mountId, setMountId] = useState('');
   const [tokenId, setTokenId] = useState('');
   const [nonce, setNonce] = useState('');
@@ -31,6 +41,7 @@ export function ExecuteHarness() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [trace, setTrace] = useState<ExecutionTrace | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentChallenge, setPaymentChallenge] = useState<PaymentChallenge | null>(null);
 
   useEffect(() => {
     const lease = readSessionCapabilityLease();
@@ -39,6 +50,14 @@ export function ExecuteHarness() {
       setTokenId(lease.tokenId);
       setNonce(lease.nonce);
     }
+  }, []);
+
+  useEffect(() => {
+    const handlePaymentRequired = (event: Event) => {
+      setPaymentChallenge((event as CustomEvent<PaymentChallenge>).detail);
+    };
+    window.addEventListener('X402PaymentIntervention', handlePaymentRequired);
+    return () => window.removeEventListener('X402PaymentIntervention', handlePaymentRequired);
   }, []);
 
   const handleExecute = async () => {
@@ -52,6 +71,7 @@ export function ExecuteHarness() {
     setIsExecuting(true);
     setError(null);
     setTrace(null);
+    setPaymentChallenge(null);
 
     try {
       const data = await executeGovernedConsequence({
@@ -71,14 +91,22 @@ export function ExecuteHarness() {
         sessionStorage.setItem('veklom_execution_id', data.execution_id);
         clearSessionCapabilityLease();
       }
-    } catch (err: any) {
-      setError(err.message || 'Execution failed');
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 402) setError(null);
+      else setError(err instanceof Error ? err.message : 'Execution failed');
     } finally {
       setIsExecuting(false);
     }
   };
 
-  const terminal = Boolean(trace?.execution_id && trace.response !== undefined && !['accepted', 'pending', 'queued'].includes(trace.status ?? ''));
+  const proofStatus = executionProofStatus({
+    status: trace?.status,
+    executionId: trace?.execution_id,
+    hasResponse: trace?.response !== undefined,
+    leaseAllowed: trace?.capability_lease?.decision === 'allow',
+    sandbox,
+  });
+  const terminal = proofStatus === 'Verified' || proofStatus === 'Simulated';
   const responseText = trace?.response === undefined
     ? 'No resulting state returned.'
     : typeof trace.response === 'string'
@@ -99,7 +127,7 @@ export function ExecuteHarness() {
             Run a mounted capability through the governed runtime and observe the replayable trace.
           </p>
         </div>
-        <ProofBadge status={error ? "Degraded" : terminal && trace?.capability_lease?.decision === "allow" ? "Verified" : "Needs proof"} />
+        <ProofBadge status={error && !paymentChallenge ? "Degraded" : proofStatus} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -184,6 +212,15 @@ export function ExecuteHarness() {
                 <div className="text-red-400 mb-4 flex items-start gap-2">
                   <span className="text-red-500 font-bold">[ERROR]</span> 
                   {error}
+                </div>
+              )}
+
+              {paymentChallenge && (
+                <div className="mb-4 rounded border border-cos-warn/40 bg-cos-warn/10 p-4 text-cos-warn">
+                  <div className="font-semibold">[PAYMENT REQUIRED — NO PAYMENT INITIATED]</div>
+                  <div className="mt-2 text-xs">{paymentChallenge.message}</div>
+                  {paymentChallenge.paymentRequiredHeader && <div className="mt-2 break-all text-[10px]">Challenge: {paymentChallenge.paymentRequiredHeader}</div>}
+                  {paymentChallenge.facilitatorUrl && <div className="mt-2 break-all text-[10px]">Facilitator: {paymentChallenge.facilitatorUrl}</div>}
                 </div>
               )}
 
