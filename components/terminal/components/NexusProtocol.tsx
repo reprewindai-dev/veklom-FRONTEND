@@ -55,6 +55,11 @@ interface NexusNode {
   activeCycles: number;
 }
 
+interface NexusStakingState {
+  protocolStats?: Record<string, unknown> | null;
+  providers?: unknown[];
+}
+
 interface NexusProbe {
   route: string;
   state: "verified" | "needs_proof" | "error";
@@ -63,22 +68,22 @@ interface NexusProbe {
 }
 
 interface NexusState {
-  generated_at: string;
-  sources: { byos: string; capi: string };
-  proof: {
+  generated_at?: string;
+  sources?: { byos?: string; capi?: string };
+  proof?: {
     state: "verified" | "partial" | "error";
     reason: string;
     probes: NexusProbe[];
   };
-  metrics: any;
-  staking: any;
-  leaderboard: any;
-  leaderboard_state: "verified" | "needs_proof" | "error";
-  x402: any;
-  cappo: any;
-  cards: NexusApiCard[];
-  nodes: NexusNode[];
-  anchoring: {
+  metrics?: Record<string, unknown> | null;
+  staking?: NexusStakingState | null;
+  leaderboard?: unknown;
+  leaderboard_state?: "verified" | "needs_proof" | "error";
+  x402?: unknown;
+  cappo?: { status?: string; agents?: unknown[] } | null;
+  cards?: NexusApiCard[];
+  nodes?: NexusNode[];
+  anchoring?: {
     merkle: string | null;
     merkle_status: string;
     block_anchored: number;
@@ -104,6 +109,10 @@ function fmtMoney(value: unknown): string {
 function shortHash(value?: string | null): string {
   if (!value) return "Needs proof";
   return value.length > 22 ? `${value.slice(0, 12)}...${value.slice(-8)}` : value;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" ? value as Record<string, unknown> : null;
 }
 
 function proofTone(state?: string): string {
@@ -158,25 +167,51 @@ export default function NexusProtocol() {
     refreshInterval: 15000,
   });
 
-  const apiCards = state?.cards || [];
-  const nodes = state?.nodes || [];
+  const stateRecord = asRecord(state);
+  const apiCards = Array.isArray(stateRecord?.cards)
+    ? stateRecord.cards.filter((card): card is NexusApiCard => asRecord(card) !== null)
+    : [];
+  const nodes = Array.isArray(stateRecord?.nodes)
+    ? stateRecord.nodes.filter((node): node is NexusNode => asRecord(node) !== null)
+    : [];
   const selectedApi = apiCards.find((api) => api.id === selectedApiId) || apiCards[0] || null;
-  const verifiedProbeCount = state?.proof.probes.filter((probe) => probe.state === "verified").length || 0;
-  const proofState = error ? "error" : state?.proof.state || "needs_proof";
-  const activeApis = Number(state?.metrics?.active_apis || apiCards.length || 0);
-  const physicalProbes = Number(state?.metrics?.total_physical_probes_recorded || 0);
-  const anchorState = state?.anchoring.block_anchored ? "verified" : "needs_proof";
+  const proof = asRecord(stateRecord?.proof);
+  let probes: NexusProbe[] = [];
+  if (proof) {
+    const candidateProbes = (proof as unknown as Record<string, unknown>)["probes"];
+    if (Array.isArray(candidateProbes)) {
+      probes = candidateProbes.filter((probe): probe is NexusProbe => asRecord(probe) !== null);
+    }
+  }
+  const metrics = asRecord(stateRecord?.metrics);
+  const anchoring = asRecord(stateRecord?.anchoring) as NexusState["anchoring"] | null;
+  const sources = asRecord(stateRecord?.sources);
+  const cappo = asRecord(stateRecord?.cappo);
+  const staking = asRecord(stateRecord?.staking);
+  const stakingStats = asRecord(staking?.protocolStats);
+  const generatedAt = typeof stateRecord?.generated_at === "string" ? stateRecord.generated_at : null;
+  const verifiedProbeCount = probes.filter((probe) => probe.state === "verified").length;
+  const proofState = error
+    ? "error"
+    : proof?.state === "verified" || proof?.state === "partial" || proof?.state === "error"
+      ? proof.state
+      : "needs_proof";
+  const proofReason = typeof proof?.reason === "string" ? proof.reason : null;
+  const activeApis = metrics?.active_apis ?? (apiCards.length > 0 ? apiCards.length : null);
+  const physicalProbes = metrics?.total_physical_probes_recorded ?? null;
+  const anchorState = anchoring?.block_anchored ? "verified" : "needs_proof";
+  const selectedDimensions = selectedApi && Array.isArray(selectedApi.dimensions) ? selectedApi.dimensions : [];
 
   useEffect(() => {
     if (!selectedApiId && apiCards.length > 0) setSelectedApiId(apiCards[0].id);
   }, [apiCards, selectedApiId]);
 
   const cappoAgents = useMemo(() => {
-    const agents = Array.isArray(state?.cappo?.agents) ? state?.cappo.agents : [];
+    const agents = Array.isArray(cappo?.agents) ? cappo.agents : [];
     return agents.slice(0, 8);
-  }, [state]);
+  }, [cappo]);
 
-  if (isLoading && !state) {
+  if (isLoading && !stateRecord) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-[#030303] text-white/40 font-mono text-xs">
         LOADING ROUTE-BACKED NEXUS STATE...
@@ -216,15 +251,15 @@ export default function NexusProtocol() {
             <span className="uppercase">{proofState === "verified" ? "LIVE PROOF" : proofState === "error" ? "SOURCE ERROR" : "PARTIAL PROOF"}</span>
           </div>
           <div className="w-px h-3 bg-white/20" />
-          <div>ROUTES: <span className="text-white">{verifiedProbeCount}/{state?.proof.probes.length || 0}</span></div>
-          <div>LAST: <span className="text-white">{state?.generated_at ? new Date(state.generated_at).toLocaleTimeString() : "Needs proof"}</span></div>
+          <div>ROUTES: <span className="text-white">{verifiedProbeCount}/{probes.length}</span></div>
+          <div>LAST: <span className="text-white">{generatedAt ? new Date(generatedAt).toLocaleTimeString() : "Needs proof"}</span></div>
         </div>
       </div>
 
       <div className="flex-grow overflow-y-auto z-10 p-6 flex flex-col gap-6 relative">
-        {state?.proof.reason && (
+        {proofReason && (
           <div className={`rounded-lg border px-4 py-3 font-mono text-[10px] uppercase tracking-widest ${proofTone(proofState)}`}>
-            {state.proof.reason}
+            {proofReason}
           </div>
         )}
 
@@ -261,7 +296,7 @@ export default function NexusProtocol() {
                         <span className="text-[#00E5FF]/60">VNP v1.0</span>
                       </div>
                       <div className="grid grid-cols-5 gap-1.5" aria-label="Route-backed score vector">
-                        {api.dimensions.slice(0, 5).map((dimension) => (
+                        {(Array.isArray(api.dimensions) ? api.dimensions : []).slice(0, 5).map((dimension) => (
                           <div key={dimension.name} className="h-8 rounded border border-white/10 bg-black/30 overflow-hidden flex items-end" title={`${dimension.name}: ${dimension.score}`}>
                             <div
                               className="w-full bg-[#00FF66]/50 border-t border-[#00FF66]/70"
@@ -278,7 +313,7 @@ export default function NexusProtocol() {
               <div className="mt-2.5 p-4 rounded-xl border border-white/5 bg-void-metal/20">
                 <div className="text-[10px] font-mono tracking-wider text-white/30 uppercase mb-3">SOURCE ROUTES</div>
                 <div className="space-y-2">
-                  {state?.proof.probes.map((probe) => (
+                  {probes.map((probe) => (
                     <div key={probe.route} className="flex items-center justify-between gap-3 text-[9px] font-mono border-b border-white/5 pb-2 last:border-0">
                       <span className="text-white/50 truncate">{probe.route}</span>
                       <span className={`shrink-0 px-2 py-0.5 rounded border uppercase ${proofTone(probe.state)}`}>{probe.state}</span>
@@ -299,7 +334,7 @@ export default function NexusProtocol() {
                       category: "LLM Inference",
                       composite: selectedApi.score,
                       grade: selectedApi.grade as VNPGrade,
-                      dimensions: selectedApi.dimensions.slice(0, 5).map((dim, index) => {
+                      dimensions: selectedDimensions.slice(0, 5).map((dim, index) => {
                         return {
                           id: SCORECARD_AXIS_IDS[index] || "documentation",
                           label: dim.name,
@@ -317,15 +352,15 @@ export default function NexusProtocol() {
                       },
                       regions: [] as VNPRegionalScore[],
                       provenance: {
-                        epochId: state?.generated_at || "needs-proof",
-                        epochStart: state?.metrics?.timestamp || state?.generated_at || new Date(0).toISOString(),
-                        epochEnd: state?.generated_at || state?.metrics?.timestamp || new Date(0).toISOString(),
+                        epochId: generatedAt || "needs-proof",
+                        epochStart: (metrics?.timestamp as string | undefined) || generatedAt || new Date(0).toISOString(),
+                        epochEnd: generatedAt || (metrics?.timestamp as string | undefined) || new Date(0).toISOString(),
                         merkleRoot: selectedApi.anchorHash || "Needs proof",
                         chainAnchorTx: selectedApi.txHash || null,
                         chainAnchorBlock: null,
                         measurementCount: selectedApi.measurementCount,
                         nodeOperators: [],
-                        harnessVersion: state?.metrics?.methodology || "Needs proof",
+                        harnessVersion: String(metrics?.methodology || "Needs proof"),
                         scriptHash: "Needs proof"
                       },
                       lastMeasured: selectedApi.lastUpdated,
@@ -342,8 +377,8 @@ export default function NexusProtocol() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <ProofPanel title="Observed P95" value={fmtMs(selectedApi.observedP95Ms)} subtitle={`Target ${fmtMs(selectedApi.targetP95Ms)}`} state={selectedApi.observedP95Ms ? "verified" : "needs_proof"} />
                     <ProofPanel title="Bond" value={fmtMoney(selectedApi.bondAmountUsdc)} subtitle={`Slashed ${fmtMoney(selectedApi.slashedTotalUsdc)}`} state={selectedApi.bondAmountUsdc ? "verified" : "needs_proof"} />
-                    <ProofPanel title="Merkle Root" value={shortHash(selectedApi.anchorHash)} subtitle={state?.anchoring.merkle_status || "Needs proof"} state={selectedApi.anchorHash ? "verified" : "needs_proof"} />
-                    <ProofPanel title="Base Anchor" value={shortHash(selectedApi.txHash)} subtitle={state?.anchoring.block_status || "Needs proof"} state={anchorState} />
+                    <ProofPanel title="Merkle Root" value={shortHash(selectedApi.anchorHash)} subtitle={anchoring?.merkle_status || "Needs proof"} state={selectedApi.anchorHash ? "verified" : "needs_proof"} />
+                    <ProofPanel title="Base Anchor" value={shortHash(selectedApi.txHash)} subtitle={anchoring?.block_status || "Needs proof"} state={anchorState} />
                   </div>
 
                   <div className="mt-2 p-4 bg-void-black border border-white/5 rounded-lg font-mono text-[10px] flex flex-col gap-3">
@@ -382,9 +417,9 @@ export default function NexusProtocol() {
                       </div>
                       <div>
                         <div className="text-white/30 uppercase">Leaderboard Route</div>
-                        <div className={`flex items-center gap-1.5 font-bold ${state?.leaderboard_state === "verified" ? "text-[#00FF66]" : "text-[#FFB800]"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${state?.leaderboard_state === "verified" ? "bg-[#00FF66]" : "bg-[#FFB800]"}`} />
-                          {state?.leaderboard_state === "verified" ? "Verified" : "Needs x402 proof"}
+                        <div className={`flex items-center gap-1.5 font-bold ${stateRecord?.leaderboard_state === "verified" ? "text-[#00FF66]" : "text-[#FFB800]"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${stateRecord?.leaderboard_state === "verified" ? "bg-[#00FF66]" : "bg-[#FFB800]"}`} />
+                          {stateRecord?.leaderboard_state === "verified" ? "Verified" : "Needs x402 proof"}
                         </div>
                       </div>
                     </div>
@@ -442,8 +477,8 @@ export default function NexusProtocol() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <ProofPanel title="Active APIs" value={fmtNumber(activeApis)} subtitle="/api/v1/vnp/metrics" state={activeApis ? "verified" : "needs_proof"} />
                   <ProofPanel title="Physical Probes" value={fmtNumber(physicalProbes)} subtitle="/api/v1/vnp/metrics" state={physicalProbes ? "verified" : "needs_proof"} />
-                  <ProofPanel title="Validators" value={fmtNumber(state?.metrics?.active_validators)} subtitle="BYOS returned field" state={Number(state?.metrics?.active_validators) > 0 ? "verified" : "needs_proof"} />
-                  <ProofPanel title="Protocol" value={String(state?.metrics?.protocol_version || "Needs proof")} subtitle={String(state?.metrics?.methodology || "No methodology field")} state={state?.metrics?.protocol_version ? "verified" : "needs_proof"} />
+                  <ProofPanel title="Validators" value={fmtNumber(metrics?.active_validators)} subtitle="BYOS returned field" state={Number(metrics?.active_validators) > 0 ? "verified" : "needs_proof"} />
+                  <ProofPanel title="Protocol" value={String(metrics?.protocol_version || "Needs proof")} subtitle={String(metrics?.methodology || "No methodology field")} state={metrics?.protocol_version ? "verified" : "needs_proof"} />
                 </div>
 
                 <div className="h-60 border border-white/5 rounded-lg bg-black/40 relative overflow-hidden flex items-center justify-center">
@@ -464,15 +499,15 @@ export default function NexusProtocol() {
                 <div className="p-4 bg-void-black border border-white/5 rounded-lg flex flex-col gap-3">
                   <div className="flex justify-between items-center text-[10px] font-mono">
                     <span className="text-white/40 uppercase">Route verification progress</span>
-                    <span className="text-[#00FF66] font-bold">{verifiedProbeCount}/{state?.proof.probes.length || 0}</span>
+                    <span className="text-[#00FF66] font-bold">{verifiedProbeCount}/{probes.length}</span>
                   </div>
                   <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-violet-500 via-[#00E5FF] to-[#00FF66] transition-all duration-300" style={{ width: `${state?.proof.probes.length ? (verifiedProbeCount / state.proof.probes.length) * 100 : 0}%` }} />
+                    <div className="h-full bg-gradient-to-r from-violet-500 via-[#00E5FF] to-[#00FF66] transition-all duration-300" style={{ width: `${probes.length ? (verifiedProbeCount / probes.length) * 100 : 0}%` }} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[8.5px] font-mono text-white/30 uppercase">
-                    <span>Metrics: {state?.metrics ? "verified" : "needs proof"}</span>
-                    <span>Staking: {state?.staking ? "verified" : "needs proof"}</span>
-                    <span>CAPPO: {state?.cappo ? "verified" : "needs proof"}</span>
+                    <span>Metrics: {metrics ? "verified" : "needs proof"}</span>
+                    <span>Staking: {staking?.protocolStats ? "verified" : "needs proof"}</span>
+                    <span>CAPPO: {cappo?.status === "ok" ? "verified" : "needs proof"}</span>
                   </div>
                 </div>
               </div>
@@ -541,7 +576,7 @@ export default function NexusProtocol() {
                       <div className="flex justify-between items-center p-2 bg-black/40 border border-white/5 rounded text-[11px]"><span>Governed runtime health</span><strong className="text-[#00E5FF]">CAPPO</strong></div>
                     </div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-6">Proof Gaps</h2>
-                    <p>Leaderboard access currently requires x402 proof, Merkle beacon status is reported by BYOS as `{state?.anchoring.merkle_status || "Needs proof"}`, and Base anchoring is reported as `{state?.anchoring.block_status || "Needs proof"}`.</p>
+                    <p>Leaderboard access currently requires x402 proof, Merkle beacon status is reported by BYOS as `{anchoring?.merkle_status || "Needs proof"}`, and Base anchoring is reported as `{anchoring?.block_status || "Needs proof"}`.</p>
                   </>
                 )}
               </div>
@@ -554,8 +589,8 @@ export default function NexusProtocol() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <ProofPanel title="APIs Scored" value={fmtNumber(activeApis)} subtitle="/api/v1/vnp/metrics" state={activeApis ? "verified" : "needs_proof"} />
               <ProofPanel title="Physical Probes" value={fmtNumber(physicalProbes)} subtitle="Route-backed count" state={physicalProbes ? "verified" : "needs_proof"} />
-              <ProofPanel title="Settlement Entries" value={fmtNumber(state?.metrics?.settlement_entries)} subtitle="BYOS metric" state={Number(state?.metrics?.settlement_entries) > 0 ? "verified" : "needs_proof"} />
-              <ProofPanel title="Anchored Blocks" value={fmtNumber(state?.anchoring.block_anchored)} subtitle={state?.anchoring.block_status || "Needs proof"} state={anchorState} />
+              <ProofPanel title="Settlement Entries" value={fmtNumber(metrics?.settlement_entries)} subtitle="BYOS metric" state={Number(metrics?.settlement_entries) > 0 ? "verified" : "needs_proof"} />
+              <ProofPanel title="Anchored Blocks" value={fmtNumber(anchoring?.block_anchored)} subtitle={anchoring?.block_status || "Needs proof"} state={anchorState} />
             </div>
             <EvidenceGate title="Consensus vector limited to emitted backend fields">
               The previous animated consensus rounds generated deterministic hashes locally. That has been removed. Until BYOS emits consensus epochs, Merkle roots, and region node membership, this tab only displays route-returned aggregate fields.
@@ -566,7 +601,7 @@ export default function NexusProtocol() {
         {subTab === "identity" && (
           <div className="max-w-6xl space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <ProofPanel title="Runtime Health" value={String(state?.cappo?.status || "Needs proof")} subtitle={`${state?.sources.capi || "CAPPO"} /health`} state={state?.cappo?.status === "ok" ? "verified" : "needs_proof"} />
+              <ProofPanel title="Runtime Health" value={String(cappo?.status || "Needs proof")} subtitle={`${sources?.capi || "CAPPO"} /health`} state={cappo?.status === "ok" ? "verified" : "needs_proof"} />
               <ProofPanel title="Governed Exec" value="Auth Required" subtitle="/v1/exec signed envelope" state="needs_proof" />
               <ProofPanel title="PGL Certificates" value="Auth Required" subtitle="ExecutionIdentityV1" state="needs_proof" />
               <ProofPanel title="Audit Ledger" value="Auth Required" subtitle="/v1/audit/ledger" state="needs_proof" />
@@ -606,11 +641,11 @@ export default function NexusProtocol() {
         {subTab === "staking" && (
           <div className="max-w-6xl space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              <ProofPanel title="Bonded Value" value={fmtMoney(state?.staking?.protocolStats?.totalValueBonded)} subtitle="/api/v1/x402/staking/state" state={state?.staking ? "verified" : "needs_proof"} />
-              <ProofPanel title="Active APIs" value={fmtNumber(state?.staking?.protocolStats?.activeApis)} subtitle="Staking state" state={state?.staking ? "verified" : "needs_proof"} />
-              <ProofPanel title="Verifiers" value={fmtNumber(state?.staking?.protocolStats?.activeVerifiers)} subtitle="Staking state" state={Number(state?.staking?.protocolStats?.activeVerifiers) > 0 ? "verified" : "needs_proof"} />
-              <ProofPanel title="Settlement Rate" value={`${fmtNumber(state?.staking?.protocolStats?.settlementRate)}%`} subtitle="Protocol stats" state={state?.staking ? "verified" : "needs_proof"} />
-              <ProofPanel title="Penalties" value={fmtMoney(state?.staking?.protocolStats?.totalPenalties)} subtitle="Protocol stats" state={state?.staking ? "verified" : "needs_proof"} />
+              <ProofPanel title="Bonded Value" value={fmtMoney(stakingStats?.totalValueBonded)} subtitle="/api/v1/x402/staking/state" state={stakingStats ? "verified" : "needs_proof"} />
+              <ProofPanel title="Active APIs" value={fmtNumber(stakingStats?.activeApis)} subtitle="Staking state" state={stakingStats ? "verified" : "needs_proof"} />
+              <ProofPanel title="Verifiers" value={fmtNumber(stakingStats?.activeVerifiers)} subtitle="Staking state" state={Number(stakingStats?.activeVerifiers) > 0 ? "verified" : "needs_proof"} />
+              <ProofPanel title="Settlement Rate" value={`${fmtNumber(stakingStats?.settlementRate)}%`} subtitle="Protocol stats" state={stakingStats ? "verified" : "needs_proof"} />
+              <ProofPanel title="Penalties" value={fmtMoney(stakingStats?.totalPenalties)} subtitle="Protocol stats" state={stakingStats ? "verified" : "needs_proof"} />
             </div>
             <div className="rounded-xl border border-white/10 bg-void-metal/80 p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -618,7 +653,7 @@ export default function NexusProtocol() {
                 <span className="text-xs font-bold uppercase tracking-widest text-white/70">Provider Bonds</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Array.isArray(state?.staking?.providers) && state.staking.providers.map((provider: any) => (
+                {Array.isArray(staking?.providers) && staking.providers.map((provider: any) => (
                   <div key={provider.apiId} className="p-4 rounded-lg border border-white/5 bg-black/40">
                     <div className="flex justify-between gap-3">
                       <div>
