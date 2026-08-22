@@ -42,6 +42,7 @@ export async function GET() {
         })),
         lastMeasured: s.lastMeasured,
         measurementCount: s.measurementCount,
+        telemetrySampleCount: s.telemetrySampleCount,
       })),
     });
   } catch (err) {

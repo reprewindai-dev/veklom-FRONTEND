@@ -108,7 +108,7 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
           region: "VNP",
           apiName: score.apiName,
           type: "SCORE_UPDATE",
-          message: `[VNP] ${score.apiName} — ${score.composite === null ? "Needs proof" : `${score.grade} ${score.composite.toFixed(1)}`}, ${score.measurementCount.toLocaleString()} measurements`,
+          message: `[VNP] ${score.apiName} — ${score.composite === null ? "Needs proof" : `${score.grade} ${score.composite.toFixed(1)}`}, ${score.telemetrySampleCount.toLocaleString()} telemetry samples`,
           timestamp: new Date().toISOString(),
         };
       } else {

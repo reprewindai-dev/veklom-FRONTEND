@@ -329,7 +329,8 @@ export default function NexusProtocol() {
                         scriptHash: "Needs proof"
                       },
                       lastMeasured: selectedApi.lastUpdated,
-                      measurementCount: selectedApi.measurementCount,
+                      measurementCount: 0,
+                      telemetrySampleCount: selectedApi.measurementCount,
                       status: selectedApi.status === "healthy" ? "active" : "provisional"
                     }} 
                   />

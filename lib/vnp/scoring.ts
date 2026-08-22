@@ -13,6 +13,9 @@ import { CONFIDENCE_THRESHOLDS } from "./constants";
 /**
  * Leaderboard metadata is not measurement evidence. Until the backend returns
  * signed observations and provenance, the control plane must remain blocked.
+ *
+ * The backend input that would change this is a signed observation set with a
+ * named harness, operators, epoch bounds, and a verifiable Merkle root.
  */
 export function computeVNPScore(api: BenchmarkApiEntry): VNPScore {
   return {
@@ -25,7 +28,7 @@ export function computeVNPScore(api: BenchmarkApiEntry): VNPScore {
     dimensions: [],
     confidence: {
       level: "unmeasured",
-      sampleCount: api.sampleCount,
+      sampleCount: 0,
       marginOfError: 0,
       minForHigh: CONFIDENCE_THRESHOLDS.high,
     },
@@ -37,13 +40,14 @@ export function computeVNPScore(api: BenchmarkApiEntry): VNPScore {
       merkleRoot: "Needs proof",
       chainAnchorTx: null,
       chainAnchorBlock: null,
-      measurementCount: api.sampleCount,
+      measurementCount: 0,
       nodeOperators: [],
       harnessVersion: "Needs proof",
       scriptHash: "Needs proof",
     },
     lastMeasured: "",
-    measurementCount: api.sampleCount,
+    measurementCount: 0,
+    telemetrySampleCount: api.sampleCount,
     status: "unmeasured",
   };
 }
@@ -51,8 +55,7 @@ export function computeVNPScore(api: BenchmarkApiEntry): VNPScore {
 // ---------------------------------------------------------------------------
 // Batch scoring for leaderboard
 // ---------------------------------------------------------------------------
-export function computeLeaderboard(apis: BenchmarkApiEntry[]): VNPScore[] {
-  return apis
-    .map(computeVNPScore)
-    .filter((score) => score.status === "active");
+export function computeLeaderboard(_apis: BenchmarkApiEntry[]): VNPScore[] {
+  // No signed observations are available yet, so no score can be produced.
+  return [];
 }

@@ -60,6 +60,7 @@ export async function GET(
         },
         lastMeasured: score.lastMeasured,
         measurementCount: score.measurementCount,
+        telemetrySampleCount: score.telemetrySampleCount,
       },
       _links: {
         badge: `/api/vnp/badge/${apiId}`,
