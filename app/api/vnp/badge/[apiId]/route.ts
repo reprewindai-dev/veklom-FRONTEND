@@ -81,10 +81,9 @@ export async function GET(
     });
 
     if (res.ok) {
-      const data: Array<{ id: string; name: string; composite?: number | null }> = await res.json();
+      const data: Array<{ id: string; name: string; sampleCount: number }> = await res.json();
       const entry = data.find(d => d.id === cleanId);
       if (entry) {
-        score = entry.composite ?? null;
         apiName = entry.name;
       }
     }
@@ -101,7 +100,7 @@ export async function GET(
       'Content-Type': 'image/svg+xml',
       'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
       'X-VNP-Api-Id': cleanId,
-      'X-VNP-Score': score === null ? 'Needs proof' : score.toString(),
+      'X-VNP-Score': 'Needs proof',
       'Access-Control-Allow-Origin': '*',
     },
   });

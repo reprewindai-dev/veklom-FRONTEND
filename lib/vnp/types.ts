@@ -227,8 +227,10 @@ export interface VNPScore {
   provenance: VNPProvenance;
   /** Measurement freshness */
   lastMeasured: string;
-  /** Total measurement count across all epochs */
+  /** Number of signed VNP observations across all epochs */
   measurementCount: number;
+  /** Aggregate governed-run telemetry count; not cryptographic evidence */
+  telemetrySampleCount: number;
   /** Status: active, provisional, disputed, suspended */
   status: VNPStatus;
 }
@@ -241,7 +243,7 @@ export type VNPStatus = "active" | "provisional" | "disputed" | "suspended" | "u
 // ---------------------------------------------------------------------------
 export interface VNPConfidence {
   level: "high" | "medium" | "low" | "provisional" | "unmeasured";
-  /** Number of measurements in scoring window */
+  /** Number of signed observations in the scoring window */
   sampleCount: number;
   /** 95% CI half-width on composite score */
   marginOfError: number;

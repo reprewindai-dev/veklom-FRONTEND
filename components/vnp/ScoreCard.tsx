@@ -45,8 +45,8 @@ export default function ScoreCard({ score }: ScoreCardProps) {
   const dataSources = score.provenance.nodeOperators.length > 0
     ? String(score.provenance.nodeOperators.length)
     : "Needs proof";
-  const telemetryPoints = score.measurementCount > 0
-    ? score.measurementCount.toLocaleString()
+  const telemetryPoints = score.telemetrySampleCount > 0
+    ? score.telemetrySampleCount.toLocaleString()
     : "Needs proof";
 
   const width = 400;

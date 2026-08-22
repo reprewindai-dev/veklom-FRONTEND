@@ -19,7 +19,9 @@ describe("VNP score evidence gates", () => {
     expect(score.status).toBe("unmeasured");
     expect(score.grade).toBe("N/A");
     expect(score.composite).toBeNull();
-    expect(score.measurementCount).toBe(3);
+    expect(score.measurementCount).toBe(0);
+    expect(score.provenance.measurementCount).toBe(0);
+    expect(score.telemetrySampleCount).toBe(3);
     expect(score.regions).toEqual([]);
     expect(score.provenance.merkleRoot).toBe("Needs proof");
     expect(score.provenance.nodeOperators).toEqual([]);
