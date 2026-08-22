@@ -42,6 +42,9 @@ export function resolveStageTransportPath(
   if (isCappoProxyPath(path)) {
     return `/api/cappo${path}`;
   }
+  if (path.startsWith("/lockerphycer/")) {
+    return `/api${path}`;
+  }
   return path;
 }
 
@@ -55,7 +58,11 @@ export function resolveStageBaseUrl(
   // CAPPO calls must always traverse the same-origin /api/cappo boundary. That
   // route validates the caller against BYOS and injects the server-held CAPPO
   // credential/workspace scope. An external base URL would bypass that boundary.
-  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
+  if (
+    stageId === "mount"
+    || (endpointPath && isCappoProxyPath(endpointPath))
+    || endpointPath?.startsWith("/lockerphycer/")
+  ) {
     return undefined;
   }
   return sandbox ? (sandboxBaseUrl || endpointBaseUrl) : endpointBaseUrl;

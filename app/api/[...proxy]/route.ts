@@ -134,7 +134,18 @@ async function proxyRequest(req: NextRequest) {
   } else if (path.startsWith("/api/ledger/")) {
     targetBase = PGL_URL;
     forwardPath = path.replace(/^\/api\/ledger/, "/api/v1/ledger");
+  } else if (path.startsWith("/api/lockerphycer/")) {
+    if (!LOCKERPHYCER_URL) {
+      return NextResponse.json(
+        { error: "Lockerphycer backend is not configured" },
+        { status: 503 },
+      );
+    }
+    targetBase = LOCKERPHYCER_URL;
+    forwardPath = path.replace(/^\/api\/lockerphycer/, "");
   } else if (path.startsWith("/api/v1/locker")) {
+    // Retained only for compatibility with older callers. Lockerphycer's
+    // canonical routes live at /health, /protocol.json, and /api/v1/*.
     if (!LOCKERPHYCER_URL) {
       return NextResponse.json(
         { error: "Lockerphycer backend is not configured" },

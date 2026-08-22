@@ -37,6 +37,15 @@ describe("Capability OS stage transport", () => {
       .toBe("/api/cappo/v1/vnp/metrics");
   });
 
+  it("sends Lockerphycer authority reads through its same-origin security boundary", () => {
+    expect(resolveStageTransportPath("authority", "/lockerphycer/health")).toBe(
+      "/api/lockerphycer/health",
+    );
+    expect(resolveStageTransportPath("authority", "/lockerphycer/health/dependencies")).toBe(
+      "/api/lockerphycer/health/dependencies",
+    );
+  });
+
   it("rewrites every declared CAPPO endpoint across all stages", () => {
     for (const stage of stages) {
       for (const endpoint of stage.endpoints) {

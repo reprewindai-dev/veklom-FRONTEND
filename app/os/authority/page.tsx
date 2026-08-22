@@ -18,6 +18,19 @@ export default function AuthorityPage() {
   const data = useStageData("authority", { autoGet: true });
 
   const getRecord = (path: string) => data.records.find((r) => r.path === path);
+
+  const lockerHealthRecord = getRecord("/lockerphycer/health");
+  const lockerHealth = asRecord(data.payloads["GET /lockerphycer/health"]);
+  const lockerDependenciesRecord = getRecord("/lockerphycer/health/dependencies");
+  const lockerDependencies = asRecord(data.payloads["GET /lockerphycer/health/dependencies"]);
+  const lockerManifestRecord = getRecord("/lockerphycer/protocol.json");
+  const lockerManifest = asRecord(data.payloads["GET /lockerphycer/protocol.json"]);
+  const dependencyRows = Array.isArray(lockerDependencies?.dependencies)
+    ? lockerDependencies.dependencies.map(asRecord).filter(Boolean)
+    : [];
+  const capabilityRows = Array.isArray(lockerManifest?.capabilities)
+    ? lockerManifest.capabilities.filter((value): value is string => typeof value === "string")
+    : [];
   
   const certRecord = getRecord("/api/v1/agents/{id}/certificate");
   const certProof = certRecord?.proof ?? "Needs proof";
@@ -43,7 +56,14 @@ export default function AuthorityPage() {
     <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
       <div className="space-y-4">
         <Pillar title="Work" proof={certProof}>
-          {keyId ? (
+          {lockerHealth ? (
+            <KeyAuthorityCard
+              title={String(lockerHealth.service ?? "Lockerphycer Security Core")}
+              keyId={String(lockerHealth.version ?? "version not returned")}
+              role="Security control plane"
+              status={lockerHealthRecord?.proof ?? "Needs proof"}
+            />
+          ) : keyId ? (
             <KeyAuthorityCard
               title="Observed authority"
               keyId={String(keyId)}
@@ -54,9 +74,29 @@ export default function AuthorityPage() {
             <HonestEmpty title="No authority identity returned" route="GET /api/v1/agents/{id}/certificate" detail="The route has not returned a key identifier for this workspace." />
           )}
         </Pillar>
-        <Pillar title="Telemetry" proof={lifecycleProof}><AlertList alerts={[]} /></Pillar>
-        <Pillar title="Authority" proof={agentsProof}>
-          <HonestEmpty title="Authority details unavailable" route="GET /api/v1/agents" detail="No additional authority fields were observed." />
+        <Pillar title="Telemetry" proof={lockerDependenciesRecord?.proof ?? lifecycleProof}>
+          <AlertList alerts={dependencyRows.map((dependency, index) => {
+            const state = String(dependency?.state ?? "unknown");
+            return {
+              id: String(dependency?.name ?? index),
+              type: state === "healthy" ? "info" : state === "unconfigured" ? "warning" : "critical",
+              message: `${String(dependency?.name ?? "dependency")}: ${state}`,
+              time: String(dependency?.verification_scope ?? "dependency state returned by Lockerphycer"),
+            };
+          })} />
+        </Pillar>
+        <Pillar title="Authority" proof={lockerManifestRecord?.proof ?? agentsProof}>
+          {capabilityRows.length ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {capabilityRows.map((capability) => (
+                <div key={capability} className="rounded-lg border border-cos-border bg-cos-surface2 px-3 py-2 font-mono text-xs text-cos-text">
+                  {capability}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <HonestEmpty title="Lockerphycer capability manifest unavailable" route="GET /lockerphycer/protocol.json" detail="No security capabilities are displayed until Lockerphycer returns its live manifest." />
+          )}
         </Pillar>
       </div>
       <div className="space-y-4">

@@ -155,6 +155,9 @@ export const stages: StageDefinition[] = [
     purpose: "Inspect grants, leases, revocations, and authorization context.",
     owner: "LockerPhycer",
     endpoints: [
+      { method: "GET", path: "/lockerphycer/health", classification: "live", response: "Lockerphycer process health" },
+      { method: "GET", path: "/lockerphycer/health/dependencies", classification: "live", response: "Lockerphycer dependency health" },
+      { method: "GET", path: "/lockerphycer/protocol.json", classification: "live", response: "Lockerphycer capability manifest" },
       { method: "GET", path: "/api/v1/agents/{id}/certificate", classification: "live", response: "certificate metadata", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
       { method: "GET", path: "/api/v1/agents/{id}/lifecycle", classification: "live", response: "lifecycle state", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
       { method: "GET", path: "/api/v1/agents", classification: "live", response: "public agent certificate summaries", baseUrl: canonicalBackends().find((backend) => backend.id === "cappo")?.baseUrl },
