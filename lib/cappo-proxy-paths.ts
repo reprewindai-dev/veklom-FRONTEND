@@ -1,12 +1,8 @@
 const CAPPO_PUBLIC_PATHS = [
-  "/",
-  "/health",
-  "/docs",
   "/.well-known/x402",
   "/.well-known/capability-beacon-keys",
   "/api/v1/pricing",
   "/v1/vnp/metrics",
-  "/x402/bazaar",
 ] as const;
 
 const CAPPO_EXEC_PATH = "/v1/exec";
@@ -30,9 +26,7 @@ function matchesLedgerRoute(path: string, suffix: string) {
 }
 
 export function isCappoPublicPath(path: string) {
-  return CAPPO_PUBLIC_PATHS.some((candidate) => path === candidate) ||
-    path === "/v1/license" ||
-    path.startsWith("/v1/license/");
+  return CAPPO_PUBLIC_PATHS.some((candidate) => path === candidate);
 }
 
 export function isCappoExecPath(path: string) {

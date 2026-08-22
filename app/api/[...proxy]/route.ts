@@ -3,7 +3,6 @@ import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue } from "@/lib/
 import {
   isCappoExecPath,
   isCappoIdentityPath,
-  isCappoPublicPath,
   isCappoProxyPath,
 } from "@/lib/cappo-proxy-paths";
 
@@ -36,40 +35,13 @@ function stripHopByHopHeaders(headers: Headers) {
   }
 }
 
-type RequesterIdentity = {
-  id?: string;
-  workspace_id?: string;
-  role?: string;
-};
+type CappoAssertionExchangeResult =
+  | { kind: "success"; token: string }
+  | { kind: "unauthenticated" }
+  | { kind: "missing-workspace"; body: unknown }
+  | { kind: "unavailable" };
 
-async function resolveRequesterIdentity(req: NextRequest): Promise<RequesterIdentity | null> {
-  const authHeaders = new Headers();
-  const authorization = req.headers.get("authorization");
-  const cookie = req.headers.get("cookie");
-  if (authorization) authHeaders.set("authorization", authorization);
-  if (cookie) authHeaders.set("cookie", cookie);
-  authHeaders.set("accept", "application/json");
-
-  try {
-    const response = await fetch(
-      `${VBB_BACKEND_URL.replace(/\/+$/, "")}/api/v1/auth/me`,
-      {
-        method: "GET",
-        headers: authHeaders,
-        redirect: "manual",
-        cache: "no-store",
-      },
-    );
-    if (!response.ok) return null;
-    const body = (await response.json()) as RequesterIdentity;
-    if (!body.workspace_id || !body.id) return null;
-    return body;
-  } catch {
-    return null;
-  }
-}
-
-async function exchangeCappoAssertion(req: NextRequest): Promise<string | null> {
+async function exchangeCappoAssertion(req: NextRequest): Promise<CappoAssertionExchangeResult> {
   const authHeaders = new Headers();
   const authorization = req.headers.get("authorization");
   const cookie = req.headers.get("cookie");
@@ -87,13 +59,25 @@ async function exchangeCappoAssertion(req: NextRequest): Promise<string | null> 
         cache: "no-store",
       },
     );
-    if (!response.ok) return null;
+    if (response.status === 401) {
+      return { kind: "unauthenticated" };
+    }
+    if (response.status === 403) {
+      let body: unknown = { detail: { error: "WORKSPACE_CONTEXT_MISSING" } };
+      try {
+        body = await response.json();
+      } catch {
+        // Preserve the endpoint's documented error shape if its body is unreadable.
+      }
+      return { kind: "missing-workspace", body };
+    }
+    if (!response.ok) return { kind: "unavailable" };
     const body = (await response.json()) as { access_token?: unknown };
     return typeof body.access_token === "string" && body.access_token
-      ? body.access_token
-      : null;
+      ? { kind: "success", token: body.access_token }
+      : { kind: "unavailable" };
   } catch {
-    return null;
+    return { kind: "unavailable" };
   }
 }
 
@@ -129,22 +113,25 @@ async function proxyRequest(req: NextRequest) {
     headers.delete("x-veklom-requester-id");
 
     if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
-      // The browser's BYOS/Firebase bearer is not a CAPPO token. Validate it
-      // first, then exchange it for a short-lived CAPPO audience assertion.
-      if (!(await resolveRequesterIdentity(req))) {
+      // The BYOS exchange authenticates the browser session and mints a
+      // short-lived CAPPO audience assertion for the authenticated workspace.
+      const exchange = await exchangeCappoAssertion(req);
+      if (exchange.kind === "unauthenticated") {
         return NextResponse.json(
           { error: "AUTHENTICATION_REQUIRED" },
           { status: 401 },
         );
       }
-      const assertion = await exchangeCappoAssertion(req);
-      if (!assertion) {
+      if (exchange.kind === "missing-workspace") {
+        return NextResponse.json(exchange.body, { status: 403 });
+      }
+      if (exchange.kind === "unavailable") {
         return NextResponse.json(
           { error: "CAPPO_ASSERTION_UNAVAILABLE" },
           { status: 502 },
         );
       }
-      headers.set("authorization", `Bearer ${assertion}`);
+      headers.set("authorization", `Bearer ${exchange.token}`);
     }
   } else if (path.startsWith("/api/capi/")) {
     targetBase = CAPI_RUNTIME_URL;
