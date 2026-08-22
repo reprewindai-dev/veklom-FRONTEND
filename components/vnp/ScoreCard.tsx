@@ -28,19 +28,10 @@ function isIsoDate(value: string | null | undefined): value is string {
 }
 
 export default function ScoreCard({ score }: ScoreCardProps) {
-  const measured = score.status !== "unmeasured" && score.grade !== "N/A";
-  const band = measured ? gradeForScore(score.composite) : { grade: "N/A", color: "#A1A1A6", bgColor: "rgba(161,161,166,0.1)", borderColor: "rgba(161,161,166,0.25)" };
+  const composite = score.composite;
+  const measured = score.status !== "unmeasured" && score.grade !== "N/A" && composite !== null;
+  const band = measured ? gradeForScore(composite) : { grade: "N/A", color: "#A1A1A6", bgColor: "rgba(161,161,166,0.1)", borderColor: "rgba(161,161,166,0.25)" };
   const axes = score.dimensions.slice(0, 5);
-  while (axes.length < 5) {
-    axes.push({
-      id: "documentation",
-      label: "Needs proof",
-      raw: 0,
-      normalized: 0,
-      weight: 0,
-      weighted: 0,
-    });
-  }
   const polygonDimensions = axes.map((dimension) => dimension.normalized);
   const assessedOn = isIsoDate(score.provenance.epochEnd)
     ? new Date(score.provenance.epochEnd).toLocaleString("en-US", { timeZone: "UTC" }) + " UTC"
@@ -93,7 +84,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-5xl font-bold text-[#3EE7A2] tracking-tighter">
-              {measured ? score.composite.toFixed(1) : "N/A"}
+              {measured ? composite.toFixed(1) : "N/A"}
             </span>
             {measured && <span className="text-lg text-[#3EE7A2]/60">/100</span>}
           </div>

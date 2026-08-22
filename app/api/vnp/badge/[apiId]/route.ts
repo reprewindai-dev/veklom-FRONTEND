@@ -7,16 +7,17 @@ const GOLD_MIN   = 85;
 const SILVER_MIN = 75;
 const BRONZE_MIN = 60;
 
-function tierFor(score: number) {
+function tierFor(score: number | null) {
+  if (score === null) return { label: 'NEEDS PROOF', color: '#333333', text: '#FFFFFF' };
   if (score >= GOLD_MIN)   return { label: 'GOLD',   color: '#FFB800', text: '#000000' };
   if (score >= SILVER_MIN) return { label: 'SILVER', color: '#A1A1A6', text: '#000000' };
   if (score >= BRONZE_MIN) return { label: 'BRONZE', color: '#CD7F32', text: '#000000' };
   return                          { label: 'VNP',    color: '#333333', text: '#FFFFFF' };
 }
 
-function buildSVG(apiName: string, score: number): string {
+function buildSVG(apiName: string, score: number | null): string {
   const tier = tierFor(score);
-  const scoreText = score.toFixed(1);
+  const scoreText = score === null ? 'Needs proof' : score.toFixed(1);
   const leftWidth = 68;
   const rightWidth = 110;
   const totalWidth = leftWidth + rightWidth;
@@ -54,7 +55,7 @@ function buildSVG(apiName: string, score: number): string {
     <!-- Score arc indicator (right edge) -->
     <circle cx="${totalWidth - 12}" cy="12" r="8" fill="none" stroke="#1F1F1F" stroke-width="1.5"/>
     <circle cx="${totalWidth - 12}" cy="12" r="8" fill="none" stroke="${tier.color}" stroke-width="1.5"
-      stroke-dasharray="${(score / 100) * 50.3} 50.3"
+      stroke-dasharray="${score === null ? 0 : (score / 100) * 50.3} 50.3"
       transform="rotate(-90 ${totalWidth - 12} 12)"/>
   </g>
 </svg>`;
@@ -70,7 +71,7 @@ export async function GET(
   // Strip .svg extension if present
   const cleanId = apiId.replace(/\.svg$/, '');
 
-  let score = 0;
+  let score: number | null = null;
   let apiName = cleanId;
 
   try {
@@ -80,16 +81,16 @@ export async function GET(
     });
 
     if (res.ok) {
-      const data: Array<{ id: string; name: string; govScore?: number }> = await res.json();
+      const data: Array<{ id: string; name: string; composite?: number | null }> = await res.json();
       const entry = data.find(d => d.id === cleanId);
       if (entry) {
-        score = entry.govScore ?? 0;
+        score = entry.composite ?? null;
         apiName = entry.name;
       }
     }
   } catch {
     // Fallback: return a badge showing "measuring…"
-    score = 0;
+    score = null;
     apiName = cleanId;
   }
 
@@ -100,7 +101,7 @@ export async function GET(
       'Content-Type': 'image/svg+xml',
       'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
       'X-VNP-Api-Id': cleanId,
-      'X-VNP-Score': score.toString(),
+      'X-VNP-Score': score === null ? 'Needs proof' : score.toString(),
       'Access-Control-Allow-Origin': '*',
     },
   });

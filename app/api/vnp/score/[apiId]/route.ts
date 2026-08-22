@@ -42,7 +42,6 @@ export async function GET(
         apiId: score.apiId,
         apiName: score.apiName,
         provider: score.provider,
-        category: score.category,
         composite: score.composite,
         grade: score.grade,
         status: score.status,
