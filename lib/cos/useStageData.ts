@@ -90,6 +90,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     body?: unknown,
   ): Promise<StageCallResult<T>> => {
     const key = keyFor(endpoint);
+    const isDeclaredEndpoint = stage.endpoints.some((candidate) => keyFor(candidate) === key);
     if (endpoint.classification === "absent") {
       const record = initialRecord(endpoint, sandbox);
       setRecords((current) => ({ ...current, [key]: record }));
@@ -131,6 +132,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
       };
       setRecords((current) => ({ ...current, [key]: record }));
       setAdditionalRecords((current) => {
+        if (!isDeclaredEndpoint) return { ...current, [key]: record };
         if (!(key in current)) return current;
         const next = { ...current };
         delete next[key];
@@ -155,6 +157,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
           paymentRequired: true,
         };
         setRecords((current) => ({ ...current, [key]: record }));
+        if (!isDeclaredEndpoint) setAdditionalRecords((current) => ({ ...current, [key]: record }));
         setPayloads((current) => ({ ...current, [key]: error.body }));
         return { data: error.body as T, record };
       }
@@ -171,6 +174,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
       };
       setRecords((current) => ({ ...current, [key]: record }));
       setAdditionalRecords((current) => {
+        if (!isDeclaredEndpoint) return { ...current, [key]: record };
         if (!(key in current)) return current;
         const next = { ...current };
         delete next[key];
@@ -180,7 +184,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     } finally {
       setLoading((current) => ({ ...current, [key]: false }));
     }
-  }, [sandbox, stageId]);
+  }, [sandbox, stage.endpoints, stageId]);
 
   useEffect(() => {
     if (!options.autoGet) return;

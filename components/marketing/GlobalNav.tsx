@@ -6,10 +6,12 @@ import { useUIStore } from "@/lib/store/ui-store";
 
 interface GlobalNavProps {
   rightSlot?: React.ReactNode;
+  isMachineOverride?: boolean;
 }
 
-export function GlobalNav({ rightSlot }: GlobalNavProps) {
-  const { isMachine, toggleMachine, setIsRawOpen } = useUIStore();
+export function GlobalNav({ rightSlot, isMachineOverride }: GlobalNavProps) {
+  const { isMachine: storedIsMachine, toggleMachine, setIsRawOpen } = useUIStore();
+  const isMachine = isMachineOverride ?? storedIsMachine;
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -41,10 +43,10 @@ export function GlobalNav({ rightSlot }: GlobalNavProps) {
             <button onClick={() => setIsRawOpen(true)} className="hover:opacity-70 transition-opacity hidden sm:flex items-center gap-2 text-xs font-mono border border-wire px-3 py-1.5 rounded-full text-cos-accent-dim hover:text-cos-accent hover:border-cos-accent">
               <span className="opacity-50">&lt;/&gt;</span> View as an agent would fetch it
             </button>
-            <button onClick={toggleMachine} className="hover:opacity-70 transition-opacity flex items-center gap-2 text-xs font-mono border border-cos-text px-4 py-2 rounded-full text-cos-text hover:bg-cos-text hover:text-paper data-[machine=true]:border-cos-accent data-[machine=true]:text-cos-accent data-[machine=true]:hover:bg-cos-accent data-[machine=true]:hover:text-void" data-machine={isMachine}>
+            {isMachineOverride === undefined && <button onClick={toggleMachine} className="hover:opacity-70 transition-opacity flex items-center gap-2 text-xs font-mono border border-cos-text px-4 py-2 rounded-full text-cos-text hover:bg-cos-text hover:text-paper data-[machine=true]:border-cos-accent data-[machine=true]:text-cos-accent data-[machine=true]:hover:bg-cos-accent data-[machine=true]:hover:text-void" data-machine={isMachine}>
               <span className="w-1.5 h-1.5 rounded-full bg-cos-accent flex-shrink-0 shadow-[0_0_8px_var(--cyan)]"></span>
               Switch to {isMachine ? 'human view' : 'machine view'}
-            </button>
+            </button>}
           </div>
         )}
       </div>
