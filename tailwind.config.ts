@@ -24,27 +24,45 @@ const config: Config = {
           info: "var(--theme-info)",
           unknown: "var(--theme-unknown)",
           black: "var(--theme-black, #000)",
-          raised: "var(--theme-raised)",
-          midGray: "var(--theme-mid-gray)",
+          raised: "var(--theme-raised, var(--theme-surface-2))",
+          midGray: "var(--theme-mid-gray, var(--theme-text-muted))",
           white: "var(--theme-white, #FFF)",
         },
-        // Veklom brand — Sovereign AI Hub. Navy Sovereign Palette.
+        // Canonical Capability OS human palette. These aliases intentionally read
+        // from the shared theme tokens so the existing shell can render DAY or
+        // NIGHT without a parallel frontend or component fork.
+        cos: {
+          bg: "var(--theme-bg)",
+          surface: "var(--theme-surface)",
+          surface2: "var(--theme-surface-2)",
+          border: "var(--theme-border)",
+          accent: "var(--theme-accent)",
+          steel: "var(--theme-accent-steel)",
+          text: "var(--theme-text)",
+          muted: "var(--theme-text-muted)",
+          verified: "var(--theme-verified)",
+          warn: "var(--theme-warn)",
+          danger: "var(--theme-danger)",
+          info: "var(--theme-info)",
+          unknown: "var(--theme-unknown)",
+        },
+        // Legacy/static aliases retained for compatibility outside Capability OS.
         bg: {
-          900: "#0A0E1A", // --bg (app canvas)
-          800: "#111827", // --surface (cards, panels)
-          700: "#0D1220", // --surface-2 (nested/inset)
+          900: "#0A0E1A",
+          800: "#111827",
+          700: "#0D1220",
           600: "#1F2937",
         },
         ink: {
-          50: "rgba(255,255,255,0.92)",  // --text (primary text)
+          50: "rgba(255,255,255,0.92)",
           200: "rgba(255,255,255,0.75)",
-          400: "rgba(255,255,255,0.55)", // --text-muted (secondary text)
+          400: "rgba(255,255,255,0.55)",
           600: "rgba(255,255,255,0.30)",
         },
         brand: {
-          400: "#33EAFF", // Lighter cyan for hover
-          500: "#00E5FF", // --accent (Cyan)
-          600: "#00B8CC", // Darker cyan
+          400: "#33EAFF",
+          500: "#00E5FF",
+          600: "#00B8CC",
           700: "#008B99",
         },
         accent: {
@@ -64,33 +82,10 @@ const config: Config = {
           charcoal: "#0a0a0c",
           metal: "#121215",
         },
-        electric: {
-          cyan: "#00E5FF",
-        },
-        matrix: {
-          emerald: "#00FF66",
-        },
-        hazard: {
-          amber: "#FFAB00",
-        },
-        laser: {
-          red: "#FF003C",
-        },
-        cos: {
-          bg: "#0A0E1A",
-          surface: "#111827",
-          surface2: "#0D1220",
-          border: "rgba(255,255,255,0.08)",
-          accent: "#00E5FF",
-          steel: "#8A9BB0",
-          text: "rgba(255,255,255,0.92)",
-          muted: "rgba(255,255,255,0.55)",
-          verified: "#00FF66",
-          warn: "#FFAB00",
-          danger: "#FF4D4D",
-          info: "#00E5FF",
-          unknown: "#6B7280",
-        },
+        electric: { cyan: "#00E5FF" },
+        matrix: { emerald: "#00FF66" },
+        hazard: { amber: "#FFAB00" },
+        laser: { red: "#FF003C" },
       },
       fontFamily: {
         sans: ["ui-sans-serif", "system-ui", "Inter", "sans-serif"],
@@ -108,40 +103,34 @@ const config: Config = {
       },
       keyframes: {
         scanline: {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100vh)' }
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100vh)" },
         },
-        'pulse-glow': {
-          '0%, 100%': {
-            boxShadow: '0 0 12px rgba(0, 229, 255, 0.15)',
-            borderColor: 'rgba(0, 229, 255, 0.2)'
-          },
-          '50%': {
-            boxShadow: '0 0 24px rgba(0, 229, 255, 0.35)',
-            borderColor: 'rgba(0, 229, 255, 0.5)'
-          }
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 12px rgba(0, 229, 255, 0.15)", borderColor: "rgba(0, 229, 255, 0.2)" },
+          "50%": { boxShadow: "0 0 24px rgba(0, 229, 255, 0.35)", borderColor: "rgba(0, 229, 255, 0.5)" },
         },
-        'fast-pulse': {
-          '0%, 100%': { opacity: '0.3' },
-          '50%': { opacity: '1' }
+        "fast-pulse": {
+          "0%, 100%": { opacity: "0.3" },
+          "50%": { opacity: "1" },
         },
-        'liquid-fill': {
-          '0%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-          '100%': { backgroundPosition: '0% 50%' }
+        "liquid-fill": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
         },
-        'matrix-green': {
-          '0%': { backgroundPosition: '0% 0%' },
-          '100%': { backgroundPosition: '0% 100%' }
-        }
+        "matrix-green": {
+          "0%": { backgroundPosition: "0% 0%" },
+          "100%": { backgroundPosition: "0% 100%" },
+        },
       },
       animation: {
-        scanline: 'scanline 8s linear infinite',
-        'pulse-glow': 'pulse-glow 2.5s ease-in-out infinite',
-        'fast-pulse': 'fast-pulse 1s ease-in-out infinite',
-        'liquid-fill': 'liquid-fill 2s ease-in-out infinite',
-        'matrix-green': 'matrix-green 20s linear infinite'
-      }
+        scanline: "scanline 8s linear infinite",
+        "pulse-glow": "pulse-glow 2.5s ease-in-out infinite",
+        "fast-pulse": "fast-pulse 1s ease-in-out infinite",
+        "liquid-fill": "liquid-fill 2s ease-in-out infinite",
+        "matrix-green": "matrix-green 20s linear infinite",
+      },
     },
   },
   plugins: [],
