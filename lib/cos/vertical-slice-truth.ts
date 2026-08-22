@@ -46,3 +46,7 @@ export function requestStillCurrent(
 ): boolean {
   return requestedExecutionId === currentExecutionId && requestSequence === currentSequence;
 }
+
+export function formatObservedCount(observations: unknown[] | undefined): string {
+  return observations === undefined ? "unavailable" : String(observations.length);
+}

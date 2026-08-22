@@ -1,5 +1,6 @@
 import {
   executionProofStatus,
+  formatObservedCount,
   proofRecordStatus,
   requestStillCurrent,
 } from "@/lib/cos/vertical-slice-truth";
@@ -43,5 +44,11 @@ describe("truthful vertical slice state", () => {
     expect(requestStillCurrent("exec-a", "exec-b", 4, 4)).toBe(false);
     expect(requestStillCurrent("exec-a", "exec-a", 3, 4)).toBe(false);
     expect(requestStillCurrent("exec-a", "exec-a", 4, 4)).toBe(true);
+  });
+
+  it("does not turn a missing observation collection into a zero count", () => {
+    expect(formatObservedCount(undefined)).toBe("unavailable");
+    expect(formatObservedCount([])).toBe("0");
+    expect(formatObservedCount([{}, {}])).toBe("2");
   });
 });

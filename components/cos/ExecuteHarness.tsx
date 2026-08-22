@@ -90,6 +90,9 @@ export function ExecuteHarness() {
       if (data.execution_id) {
         sessionStorage.setItem('veklom_execution_id', data.execution_id);
         clearSessionCapabilityLease();
+        setMountId('');
+        setTokenId('');
+        setNonce('');
       }
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 402) setError(null);
