@@ -13,7 +13,9 @@ if (process.env.NODE_ENV === "production" && !BACKEND_URL) {
 }
 
 const nextConfig = {
-  output: "standalone",
+  // Vercel owns its Build Output tracing. Docker/Coolify still consume the
+  // standalone server bundle directly.
+  output: process.env.VERCEL ? undefined : "standalone",
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: true },
   trailingSlash: true,
