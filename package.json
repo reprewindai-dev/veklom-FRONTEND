@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 3002",
     "test": "jest lib/__tests__ --runInBand",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:vnp-copy": "node scripts/check-vnp-public-copy.mjs",
     "audit:cos-runtime": "node scripts/audit-cos-runtime.mjs"
@@ -55,7 +55,7 @@
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
-    "eslint": "8.57.0",
+    "eslint": "^9.39.1",
     "eslint-config-next": "^16.3.1",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",

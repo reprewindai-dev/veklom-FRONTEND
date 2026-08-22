@@ -3,20 +3,29 @@
 import React, { useState } from 'react';
 import { Play, Database, Activity, Terminal as TerminalIcon, Shield, Clock } from 'lucide-react';
 import { ProofBadge } from './ProofBadge';
+import { executeGovernedConsequence } from '@/lib/cos/verticalSlice';
 
 interface ExecutionTrace {
   response: string;
-  provider: string;
-  model: string;
-  log_id: string;
-  total_tokens: number;
-  latency_ms: number;
+  provider?: string;
+  model?: string;
+  execution_id?: string;
+  tokens?: number;
+  latency_ms?: number;
+  capability_lease?: { mount_id: string; decision: 'allow'; reason: string; anchor_id?: string | null };
 }
 
 export function ExecuteHarness() {
-  const [apiKey, setApiKey] = useState('');
+  const [mountId, setMountId] = useState('');
+  const [tokenId, setTokenId] = useState('');
+  const [nonce, setNonce] = useState('');
+  const [operation, setOperation] = useState('llm.exec');
+  const [targetId, setTargetId] = useState('');
+  const [expectedStateHash, setExpectedStateHash] = useState('');
+  const [observedStateHash, setObservedStateHash] = useState('');
+  const [observedAt, setObservedAt] = useState('');
+  const [observerSignature, setObserverSignature] = useState('');
   const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState('qwen2.5:3b');
   const [isExecuting, setIsExecuting] = useState(false);
   const [trace, setTrace] = useState<ExecutionTrace | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,27 +38,21 @@ export function ExecuteHarness() {
     setTrace(null);
 
     try {
-      const res = await fetch('/v1/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-        },
-        body: JSON.stringify({
-          prompt,
-          model,
-          use_memory: false
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error(`API Error: ${res.status} ${res.statusText}`);
-      }
-
-      const data = await res.json();
+      const data = await executeGovernedConsequence({
+        capabilityLease: { mountId, tokenId, nonce },
+        operation,
+        prompt,
+        targetPrecondition: targetId && expectedStateHash && observedStateHash && observedAt && observerSignature ? {
+          targetId,
+          expectedStateHash,
+          observedStateHash,
+          observedAt,
+          signature: observerSignature,
+        } : undefined,
+      }) as ExecutionTrace;
       setTrace(data);
-      if (data.log_id) {
-        sessionStorage.setItem('veklom_execution_id', data.log_id);
+      if (data.execution_id) {
+        sessionStorage.setItem('veklom_execution_id', data.execution_id);
       }
     } catch (err: any) {
       setError(err.message || 'Execution failed');
@@ -72,7 +75,7 @@ export function ExecuteHarness() {
             Run a mounted capability through the governed runtime and observe the replayable trace.
           </p>
         </div>
-        <ProofBadge status={trace ? "Verified" : "Needs proof"} />
+        <ProofBadge status={error ? "Degraded" : trace?.capability_lease?.decision === "allow" && trace.execution_id ? "Verified" : "Needs proof"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -84,16 +87,9 @@ export function ExecuteHarness() {
               Authority
             </h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-cos-steel mb-1.5">Execution Key (API Key)</label>
-                <input 
-                  type="password" 
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="byos_..."
-                  className="w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none"
-                />
-              </div>
+              <label className="block text-[10px] uppercase tracking-wider text-cos-steel">CapabilityLease mount<input value={mountId} onChange={(e) => setMountId(e.target.value)} placeholder="mnt_..." className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
+              <label className="block text-[10px] uppercase tracking-wider text-cos-steel">Single-use token<input type="password" value={tokenId} onChange={(e) => setTokenId(e.target.value)} placeholder="token id" className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
+              <label className="block text-[10px] uppercase tracking-wider text-cos-steel">Nonce<input type="password" value={nonce} onChange={(e) => setNonce(e.target.value)} placeholder="single-use nonce" className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
             </div>
           </div>
 
@@ -104,16 +100,19 @@ export function ExecuteHarness() {
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-cos-steel mb-1.5">Model Target</label>
-                <select 
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none"
-                >
-                  <option value="qwen2.5:3b">qwen2.5:3b (Local Ollama)</option>
-                  <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Groq Fallback)</option>
-                </select>
+                <label className="block text-[10px] uppercase tracking-wider text-cos-steel mb-1.5">Authorized operation</label>
+                <input value={operation} onChange={(e) => setOperation(e.target.value)} className="w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" />
               </div>
+              <details className="rounded border border-cos-border bg-cos-surface2/40 p-3">
+                <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wider text-cos-steel">Observed target precondition (required for writes)</summary>
+                <div className="mt-3 space-y-3">
+                  <input value={targetId} onChange={(e) => setTargetId(e.target.value)} placeholder="Target ID" className="w-full rounded border border-cos-border bg-cos-surface2 p-2 font-mono text-xs text-cos-text" />
+                  <input value={expectedStateHash} onChange={(e) => setExpectedStateHash(e.target.value)} placeholder="Expected state hash" className="w-full rounded border border-cos-border bg-cos-surface2 p-2 font-mono text-xs text-cos-text" />
+                  <input value={observedStateHash} onChange={(e) => setObservedStateHash(e.target.value)} placeholder="Observer state hash" className="w-full rounded border border-cos-border bg-cos-surface2 p-2 font-mono text-xs text-cos-text" />
+                  <input value={observedAt} onChange={(e) => setObservedAt(e.target.value)} placeholder="Observed at (RFC3339)" className="w-full rounded border border-cos-border bg-cos-surface2 p-2 font-mono text-xs text-cos-text" />
+                  <input type="password" value={observerSignature} onChange={(e) => setObserverSignature(e.target.value)} placeholder="Observer signature" className="w-full rounded border border-cos-border bg-cos-surface2 p-2 font-mono text-xs text-cos-text" />
+                </div>
+              </details>
               <div>
                 <label className="block text-[10px] uppercase tracking-wider text-cos-steel mb-1.5">Input Payload (Intent)</label>
                 <textarea 
@@ -126,7 +125,7 @@ export function ExecuteHarness() {
               </div>
               <button 
                 onClick={handleExecute}
-                disabled={isExecuting || !prompt}
+                disabled={isExecuting || !prompt || !mountId || !tokenId || !nonce || !operation}
                 className="w-full flex items-center justify-center gap-2 bg-cos-accent text-black font-semibold uppercase tracking-wider text-[11px] py-2.5 rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isExecuting ? <Activity size={14} className="animate-spin" /> : <Play size={14} />}
@@ -150,7 +149,7 @@ export function ExecuteHarness() {
                     <Clock size={12} /> {trace.latency_ms}ms
                   </span>
                   <span className="flex items-center gap-1.5 font-mono text-[10px] text-cos-accent">
-                    <Activity size={12} /> {trace.total_tokens} tkns
+                    <Activity size={12} /> {trace.tokens ?? 0} tkns
                   </span>
                 </div>
               )}
@@ -191,7 +190,7 @@ export function ExecuteHarness() {
                     </div>
                     <div>
                       <div className="text-[#555] mb-1">Audit Hash (PGL)</div>
-                      <div className="text-cos-accent font-bold truncate" title={trace.log_id}>{trace.log_id}</div>
+                      <div className="text-cos-accent font-bold truncate" title={trace.execution_id}>{trace.execution_id}</div>
                     </div>
                   </div>
                 </div>

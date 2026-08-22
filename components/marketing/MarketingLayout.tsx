@@ -7,12 +7,15 @@ import { useUIStore } from "@/lib/store/ui-store";
 
 interface MarketingLayoutProps {
   children: React.ReactNode;
+  isMachine?: boolean;
 }
 
 export function MarketingLayout({ 
-  children, 
+  children,
+  isMachine: isMachineOverride,
 }: MarketingLayoutProps) {
-  const { isMachine } = useUIStore();
+  const { isMachine: storedIsMachine } = useUIStore();
+  const isMachine = isMachineOverride ?? storedIsMachine;
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 ${isMachine ? 'bg-[#0D1114] text-[#CFEFE9]' : 'bg-[#E8E5E1] text-[#1C1917]'}`}>
       <style jsx global>{`
