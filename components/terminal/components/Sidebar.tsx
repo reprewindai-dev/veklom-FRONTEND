@@ -42,12 +42,20 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 interface SidebarProps {
-  mcpHeartbeat: string;
-  throughput: number;
+  mcpHeartbeat: SidebarProbeState;
+  throughput: number | null;
   agentsCount: number;
-  proofPercent?: number;
-  sourceStates?: Record<string, "online" | "degraded" | "needs_proof">;
+  proofPercent?: number | null;
+  sourceStates?: Record<string, SidebarProbeState>;
 }
+
+export type SidebarProbeState =
+  | "online"
+  | "degraded"
+  | "unavailable"
+  | "failed"
+  | "unknown"
+  | "needs_proof";
 
 interface MenuItem {
   id: string;
@@ -66,7 +74,7 @@ export default function Sidebar({
   mcpHeartbeat,
   throughput,
   agentsCount,
-  proofPercent = 0,
+  proofPercent = null,
   sourceStates = {},
 }: SidebarProps) {
   const pathname = usePathname();
@@ -136,7 +144,7 @@ export default function Sidebar({
     });
   }
 
-  const itemProbeState = (item: MenuItem): "online" | "degraded" | "needs_proof" => {
+  const itemProbeState = (item: MenuItem): SidebarProbeState => {
     if (item.id === "overview") return sourceStates.overview || (mcpHeartbeat === "online" ? "online" : "needs_proof");
     if (["runtime", "interlink"].includes(item.id)) return sourceStates.capi || sourceStates.cappo || "needs_proof";
     if (["swarm-map", "spine", "repo-risk", "playground", "nexus", "runs", "staking", "duel", "id", "veklom-discovery", "bingo", "committee", "treasury", "api-keys", "webhooks", "integrations"].includes(item.id)) {
@@ -145,11 +153,31 @@ export default function Sidebar({
     return "needs_proof";
   };
 
-  const probeLabel = (state: "online" | "degraded" | "needs_proof") =>
-    state === "online" ? "LIVE" : state === "degraded" ? "DEGRADED" : "NEEDS PROOF";
+  const probeLabel = (state: SidebarProbeState) =>
+    state === "online"
+      ? "LIVE"
+      : state === "degraded"
+        ? "DEGRADED"
+        : state === "unavailable"
+          ? "UNAVAILABLE"
+          : state === "failed"
+            ? "FAILED"
+            : state === "unknown"
+              ? "UNKNOWN"
+              : "NEEDS PROOF";
 
-  const probeClass = (state: "online" | "degraded" | "needs_proof") =>
-    state === "online" ? "text-matrix-emerald" : state === "degraded" ? "text-[#FFAB00]" : "text-laser-red";
+  const probeClass = (state: SidebarProbeState) =>
+    state === "online"
+      ? "text-matrix-emerald"
+      : state === "degraded"
+        ? "text-[#FFAB00]"
+        : state === "needs_proof"
+          ? "text-laser-red"
+          : "text-red-300";
+  const heartbeatLabel = probeLabel(mcpHeartbeat);
+  const heartbeatClass = probeClass(mcpHeartbeat);
+  const throughputLabel = throughput === null ? "UNKNOWN" : `${throughput} KB/S`;
+  const sourceLabel = proofPercent === null ? "UNKNOWN" : `${proofPercent}%`;
 
   return (
     <aside className="w-64 h-full border-r border-[#ffffff0a] bg-void-black flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto scrollbar-hide">
@@ -205,7 +233,7 @@ export default function Sidebar({
 
                     {(item.isLive || probeState !== "needs_proof") && (
                       <div className={`flex items-center gap-1 text-[8px] font-bold ${probeClass(probeState)}`}>
-                        <div className={`w-1 h-1 rounded-full ${probeState === "online" ? "bg-matrix-emerald animate-pulse" : probeState === "degraded" ? "bg-[#FFAB00]" : "bg-laser-red"}`} />
+                        <div className={`w-1 h-1 rounded-full ${probeState === "online" ? "bg-matrix-emerald animate-pulse" : probeState === "degraded" ? "bg-[#FFAB00]" : "bg-red-300"}`} />
                         {probeLabel(probeState)}
                       </div>
                     )}
@@ -242,21 +270,21 @@ export default function Sidebar({
             <span className="text-white/40 flex items-center gap-1 uppercase">
               <Database className="w-3 h-3 text-white/30" /> MCP-IO STATUS:
             </span>
-            <span className={`flex items-center gap-1.5 font-bold ${mcpHeartbeat === 'online' ? 'text-matrix-emerald' : 'text-laser-red'}`}>
-              <span className={`w-1.5 h-1.5 ${mcpHeartbeat === 'online' ? 'bg-matrix-emerald animate-fast-pulse' : 'bg-laser-red'} `} />
-              {mcpHeartbeat === 'online' ? 'ONLINE' : mcpHeartbeat === 'degraded' ? 'DEGRADED' : 'NEEDS PROOF'}
+            <span className={`flex items-center gap-1.5 font-bold ${heartbeatClass}`}>
+              <span className={`w-1.5 h-1.5 ${mcpHeartbeat === 'online' ? 'bg-matrix-emerald animate-fast-pulse' : mcpHeartbeat === 'degraded' ? 'bg-[#FFAB00]' : 'bg-red-300'} `} />
+              {heartbeatLabel}
             </span>
           </div>
 
           {/* Core Telemetry Speed throughput */}
           <div className="flex items-center justify-between text-[10px]">
             <span className="text-white/40 uppercase">THROUGHPUT:</span>
-            <span className="text-electric-cyan font-bold">{throughput} KB/S</span>
+            <span className="text-electric-cyan font-bold">{throughputLabel}</span>
           </div>
 
           <div className="flex items-center justify-between text-[10px]">
             <span className="text-white/40 uppercase">Proof Sources:</span>
-            <span className="text-white/80 font-bold">{proofPercent}%</span>
+            <span className="text-white/80 font-bold">{sourceLabel}</span>
           </div>
         </div>
       </div>
