@@ -29,7 +29,10 @@ export default function CapabilityHome() {
     let timer: ReturnType<typeof setInterval> | undefined;
 
     import("@/lib/api").then(({ api }) => {
+      if (cancelled) return;
+
       const fetchPulse = async () => {
+        if (cancelled) return;
         try {
           const nextPulse = await api.get("/api/v1/platform/pulse");
           if (cancelled) return;
@@ -43,6 +46,7 @@ export default function CapabilityHome() {
       };
 
       void fetchPulse();
+      if (cancelled) return;
       timer = setInterval(fetchPulse, 15000);
     });
 
@@ -92,7 +96,7 @@ export default function CapabilityHome() {
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-cos-steel">
-          <ProofBadge status="Live" /> <span>Catalog metadata</span>
+          <ProofBadge status="Needs proof" /> <span>Catalog metadata</span>
         </div>
       </motion.div>
 
