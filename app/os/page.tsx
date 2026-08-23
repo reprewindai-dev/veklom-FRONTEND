@@ -14,18 +14,42 @@ export default function CapabilityHome() {
   const [query, setQuery] = useState("");
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [pulse, setPulse] = useState<any>(null);
+  const [pulseError, setPulseError] = useState<string | null>(null);
 
   useEffect(() => {
-    try { setRecentIds(JSON.parse(localStorage.getItem("veklom.cos.recent-capabilities") || "[]")); } catch { setRecentIds([]); }
+    try {
+      setRecentIds(JSON.parse(localStorage.getItem("veklom.cos.recent-capabilities") || "[]"));
+    } catch {
+      setRecentIds([]);
+    }
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
     import("@/lib/api").then(({ api }) => {
-      const fetchPulse = () => api.get("/v1/platform/pulse").then(setPulse).catch(() => setPulse(null));
-      fetchPulse();
-      const pTimer = setInterval(fetchPulse, 15000);
-      return () => clearInterval(pTimer);
+      const fetchPulse = async () => {
+        try {
+          const nextPulse = await api.get("/api/v1/platform/pulse");
+          if (cancelled) return;
+          setPulse(nextPulse);
+          setPulseError(null);
+        } catch (error) {
+          if (cancelled) return;
+          setPulse(null);
+          setPulseError(error instanceof Error ? error.message : "Platform pulse unavailable");
+        }
+      };
+
+      void fetchPulse();
+      timer = setInterval(fetchPulse, 15000);
     });
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   const openCapability = (capability: Capability) => {
@@ -33,40 +57,73 @@ export default function CapabilityHome() {
     setRecentIds(next);
     localStorage.setItem("veklom.cos.recent-capabilities", JSON.stringify(next));
   };
-  const filtered = useMemo(() => capabilities.filter((capability) => `${capability.name} ${capability.description} ${capability.kind}`.toLowerCase().includes(query.toLowerCase())), [query]);
+
+  const filtered = useMemo(
+    () => capabilities.filter((capability) => `${capability.name} ${capability.description} ${capability.kind}`.toLowerCase().includes(query.toLowerCase())),
+    [query],
+  );
   const recent = recentIds.map((id) => capabilities.find((capability) => capability.id === id)).filter(Boolean) as Capability[];
   const mounted = filtered.filter((capability) => capability.mountState === "Mounted");
+
   const trustSpine = [
-    { name: "Identity", sub1: "Sovereign ID Verification", sub2: "Workspace Mount State" },
-    { name: "Capability (cAPI)", sub1: "Action Discovery & Routing", sub2: "Contract Enveloping" },
-    { name: "Govern (CAPPO)", sub1: "Jurisdiction & Context Shaping", sub2: "PII Scrubbing & Filtering" },
-    { name: "Execute (BYOS)", sub1: "Sovereign Inference", sub2: "Isolated Execution" },
-    { name: "Evidence (PGL)", sub1: "GnomLedger Smart Ledger", sub2: "Cryptographic Hashing" },
-    { name: "Settle (x402)", sub1: "Void Compute Splitting", sub2: "Ledger Finalization" }
+    { name: "Identity", sub1: "Requester and workspace identity", sub2: "Authentication is not consequence authority" },
+    { name: "Connection (cAPI)", sub1: "Capability discovery and negotiation", sub2: "Discoverable does not mean invocable" },
+    { name: "Authority (CAPPO)", sub1: "Operation-specific consequence authority", sub2: "CapabilityLease, scope, target state and expiry" },
+    { name: "Governed Compute", sub1: "Bounded execution environment", sub2: "Minimum sufficient compute and trust" },
+    { name: "Evidence (EEE / PGL)", sub1: "Execution receipt and durable provenance", sub2: "Past evidence never grants permission" },
+    { name: "Measure (VNP)", sub1: "Performance, reliability and route evidence", sub2: "Measurement informs; it never authorizes" },
   ];
+
   return (
     <section className="mx-auto max-w-7xl px-5 py-8 lg:px-10 lg:py-12">
-      <motion.div initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-        <div><div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-cos-accent"><Sparkles size={13} />VEKLOM · MACHINE-TO-MACHINE TRUST INFRASTRUCTURE</div><h1 className="text-4xl font-semibold tracking-tight text-cos-text md:text-5xl">What do you need to do?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">The trust layer machines pass through — prove identity, capability, governance, execution, evidence, and settlement.</p></div>
-        <div className="flex items-center gap-2 text-xs text-cos-steel"><ProofBadge status="Present" /> <span>Catalog metadata</span></div>
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end"
+      >
+        <div>
+          <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-cos-accent">
+            <Sparkles size={13} />VEKLOM · CONSEQUENCE AUTHORITY INFRASTRUCTURE
+          </div>
+          <h1 className="text-4xl font-semibold tracking-tight text-cos-text md:text-5xl">What do you need to do?</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">
+            Discover capabilities, compose work, request bounded authority, execute, and preserve evidence without confusing presence with proof.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-cos-steel">
+          <ProofBadge status="Live" /> <span>Catalog metadata</span>
+        </div>
       </motion.div>
+
       <CapabilitySearch value={query} onChange={setQuery} />
       <BeaconDiscovery />
-      
-      {pulse && (
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-xl border border-cos-border bg-cos-surface2/55 p-5 flex flex-col justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel mb-2 flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-[#00FF41] shadow-[0_0_10px_rgba(0,255,65,0.7)]" />Global Latency</span>
-            <span className="text-3xl text-cos-text font-semibold">{pulse.latency_ms || pulse.latency || 0} <span className="text-sm text-cos-muted">ms</span></span>
+
+      {pulse ? (
+        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="flex flex-col justify-between rounded-xl border border-cos-border bg-cos-surface2/55 p-5">
+            <span className="mb-2 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel">
+              <span className="h-1.5 w-1.5 rounded-full bg-cos-info" />Global Latency
+            </span>
+            <span className="text-3xl font-semibold text-cos-text">{pulse.latency_ms ?? pulse.latency ?? "—"} <span className="text-sm text-cos-muted">ms</span></span>
           </div>
-          <div className="rounded-xl border border-cos-border bg-cos-surface2/55 p-5 flex flex-col justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel mb-2">Throughput</span>
-            <span className="text-3xl text-cos-text font-semibold">{pulse.throughput_req_sec || pulse.throughput || 0} <span className="text-sm text-cos-muted">req/s</span></span>
+          <div className="flex flex-col justify-between rounded-xl border border-cos-border bg-cos-surface2/55 p-5">
+            <span className="mb-2 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel">Throughput</span>
+            <span className="text-3xl font-semibold text-cos-text">{pulse.throughput_req_sec ?? pulse.throughput ?? "—"} <span className="text-sm text-cos-muted">req/s</span></span>
           </div>
-          <div className="rounded-xl border border-cos-border bg-cos-surface2/55 p-5 flex flex-col justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel mb-2">Error Rate</span>
-            <span className="text-3xl text-cos-text font-semibold">{pulse.error_rate_pct || pulse.error_rate || 0} <span className="text-sm text-cos-muted">%</span></span>
+          <div className="flex flex-col justify-between rounded-xl border border-cos-border bg-cos-surface2/55 p-5">
+            <span className="mb-2 font-mono text-[9px] uppercase tracking-[0.2em] text-cos-steel">Error Rate</span>
+            <span className="text-3xl font-semibold text-cos-text">{pulse.error_rate_pct ?? pulse.error_rate ?? "—"} <span className="text-sm text-cos-muted">%</span></span>
           </div>
+        </div>
+      ) : pulseError ? (
+        <div className="mt-10 rounded-xl border border-cos-warn/30 bg-cos-warn/5 p-5">
+          <div className="flex items-center gap-2"><ProofBadge status="Degraded" /><span className="text-sm font-medium text-cos-text">Platform pulse unavailable</span></div>
+          <p className="mt-2 text-xs leading-5 text-cos-muted">{pulseError}. No telemetry values are being synthesized.</p>
+        </div>
+      ) : (
+        <div className="mt-10 rounded-xl border border-cos-border bg-cos-surface2/40 p-5">
+          <div className="flex items-center gap-2"><ProofBadge status="Needs proof" /><span className="text-sm text-cos-muted">Loading platform pulse.</span></div>
         </div>
       )}
 
@@ -74,17 +131,17 @@ export default function CapabilityHome() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-cos-accent">One machine action</div>
-            <h2 className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Veklom Trust Spine</h2>
+            <h2 className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Veklom consequence spine</h2>
           </div>
-          <span className="font-mono text-[10px] text-cos-steel">IDENTITY → SETTLEMENT</span>
+          <span className="font-mono text-[10px] text-cos-steel">IDENTITY → MEASURE</span>
         </div>
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 lg:gap-2">
+        <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-center lg:gap-2">
           {trustSpine.map((stage, index) => (
-            <div key={stage.name} className="flex flex-col lg:flex-row items-center flex-1">
-              <div className="flex flex-col gap-3 rounded-lg border border-cos-border bg-cos-bg/50 p-4 w-full h-full relative">
+            <div key={stage.name} className="flex flex-1 flex-col items-center lg:flex-row">
+              <div className="relative flex h-full w-full flex-col gap-3 rounded-lg border border-cos-border bg-cos-bg/50 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cos-unknown shadow-[0_0_10px_rgba(107,114,128,0.7)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-cos-unknown" />
                     <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-steel">{index + 1}. {stage.name}</span>
                   </div>
                 </div>
@@ -92,23 +149,49 @@ export default function CapabilityHome() {
                   <span className="text-xs text-cos-muted">{stage.sub1}</span>
                   <span className="text-xs text-cos-muted">{stage.sub2}</span>
                 </div>
-                <div className="mt-2">
-                  <ProofBadge status="Needs proof" />
-                </div>
+                <div className="mt-2"><ProofBadge status="Needs proof" /></div>
               </div>
               {index < trustSpine.length - 1 && (
-                <div className="hidden lg:flex items-center justify-center w-6 shrink-0 mx-2">
-                  <ArrowUpRight className="text-cos-accent/50 rotate-45" size={16} />
+                <div className="mx-2 hidden w-6 shrink-0 items-center justify-center lg:flex">
+                  <ArrowUpRight className="rotate-45 text-cos-accent/50" size={16} />
                 </div>
               )}
             </div>
           ))}
         </div>
       </div>
-      <div className="mt-12"><div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-2"><Clock3 size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Recently used</h2></div><span className="font-mono text-[10px] text-cos-steel">LOCAL HISTORY</span></div>{recent.length ? <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.05 } } }} className="grid gap-4 md:grid-cols-3">{recent.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}</motion.div> : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">Your recently used capabilities will appear here.</div>}</div>
-      <div className="mt-12"><div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Mounted capabilities</h2></div>{mounted.length ? <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{mounted.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}</motion.div> : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">No mounted capabilities match this search.</div>}</div>
-      <div className="mt-12"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Capability catalog</h2><span className="font-mono text-[10px] text-cos-steel">{filtered.length} entries</span></div><motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.035 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}</motion.div></div>
-      <div className="mt-10 flex items-center gap-2 border-t border-cos-border pt-5 font-mono text-[10px] text-cos-steel"><ArrowUpRight size={13} className="text-cos-accent" />Backend routes are shown on capability detail surfaces; no route response is treated as proof here.</div>
+
+      <div className="mt-12">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2"><Clock3 size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Recently used</h2></div>
+          <span className="font-mono text-[10px] text-cos-steel">LOCAL HISTORY</span>
+        </div>
+        {recent.length ? (
+          <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.05 } } }} className="grid gap-4 md:grid-cols-3">
+            {recent.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
+          </motion.div>
+        ) : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">Your recently used capabilities will appear here.</div>}
+      </div>
+
+      <div className="mt-12">
+        <div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Mounted capabilities</h2></div>
+        {mounted.length ? (
+          <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {mounted.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
+          </motion.div>
+        ) : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">No mounted capabilities match this search.</div>}
+      </div>
+
+      <div className="mt-12">
+        <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Capability catalog</h2><span className="font-mono text-[10px] text-cos-steel">{filtered.length} entries</span></div>
+        <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.035 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
+        </motion.div>
+      </div>
+
+      <div className="mt-10 flex items-center gap-2 border-t border-cos-border pt-5 font-mono text-[10px] text-cos-steel">
+        <ArrowUpRight size={13} className="text-cos-accent" />Backend routes are shown on capability detail surfaces; no route response is treated as proof here.
+      </div>
     </section>
   );
 }
