@@ -52,9 +52,6 @@ export function resolveStageBaseUrl(
   sandboxBaseUrl?: string,
   endpointPath?: string,
 ): string | undefined {
-  // CAPPO calls must always traverse the same-origin /api/cappo boundary. That
-  // route validates the caller against BYOS and injects the server-held CAPPO
-  // credential/workspace scope. An external base URL would bypass that boundary.
   if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
     return undefined;
   }
@@ -214,7 +211,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     if (called.length > 0) {
       if (called.some((record) => record.proof === "Needs proof")) return "Needs proof";
       if (called.every((record) => record.proof === "Verified")) return "Verified";
-      if (called.every((record) => record.proof === "Verified" || record.proof === "Present")) return "Present";
+      if (called.every((record) => record.proof === "Verified" || record.proof === "Live")) return "Live";
     }
 
     return "Needs proof";
