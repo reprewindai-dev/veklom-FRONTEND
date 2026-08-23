@@ -35,7 +35,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     let bTimer: ReturnType<typeof setInterval> | undefined;
 
     import("@/lib/api").then(({ api }) => {
+      if (cancelled) return;
+
       const fetchHealth = async () => {
+        if (cancelled) return;
         try {
           const nextHealth = await api.get("/health/");
           if (cancelled) return;
@@ -49,6 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       };
 
       const fetchBalance = async () => {
+        if (cancelled) return;
         try {
           const nextBalance = await api.get("/api/v1/wallet/balance");
           if (cancelled) return;
@@ -63,6 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       void fetchHealth();
       void fetchBalance();
+      if (cancelled) return;
       hTimer = setInterval(fetchHealth, 30000);
       bTimer = setInterval(fetchBalance, 60000);
     });
