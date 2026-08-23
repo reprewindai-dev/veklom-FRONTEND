@@ -14,7 +14,7 @@ describe("Capability OS proof derivation", () => {
   });
 
   it("does not treat reachability as verification", () => {
-    expect(deriveProofStatus({ kind: "reachability-only", status: 200 })).toBe("Present");
+    expect(deriveProofStatus({ kind: "reachability-only", status: 200 })).toBe("Live");
   });
 
   it("requires source truth or a signed handshake for Verified", () => {
