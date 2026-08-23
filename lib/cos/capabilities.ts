@@ -1,7 +1,7 @@
 export type ProofStatus =
   | "Verified"
+  | "Live"
   | "Needs proof"
-  | "Present"
   | "Degraded"
   | "Not started"
   | "Manual step"
@@ -171,7 +171,7 @@ export const capabilities: CapabilityContract[] = [
     auth: "none",
     authority: { mount: "Workspace identity", execute: "Workspace identity", settle: "None" },
     trustRequirement: "Workspace identity",
-    evidence: { proofState: "Present", pglRequired: false },
+    evidence: { proofState: "Live", pglRequired: false },
     inputs: {},
     outputs: {},
     mountState: "Mounted",
@@ -189,7 +189,7 @@ export const capabilities: CapabilityContract[] = [
     auth: "none",
     authority: { mount: "Mount authority", execute: "Mount authority", settle: "None" },
     trustRequirement: "Mount authority",
-    evidence: { proofState: "Present", pglRequired: false },
+    evidence: { proofState: "Live", pglRequired: false },
     inputs: {},
     outputs: {},
     mountState: "Mounted",
@@ -207,7 +207,7 @@ export const capabilities: CapabilityContract[] = [
     auth: "jwt",
     authority: { mount: "Evidence access", execute: "Evidence access", settle: "Evidence access" },
     trustRequirement: "Evidence access",
-    evidence: { proofState: "Present", pglRequired: true },
+    evidence: { proofState: "Live", pglRequired: true },
     inputs: { filter: "object" },
     outputs: { events: "array" },
     mountState: "Mounted",
@@ -225,7 +225,7 @@ export const capabilities: CapabilityContract[] = [
     auth: "jwt",
     authority: { mount: "Settlement authority", execute: "Settlement authority", settle: "Settlement authority" },
     trustRequirement: "Settlement authority",
-    evidence: { proofState: "Present", pglRequired: true },
+    evidence: { proofState: "Live", pglRequired: true },
     inputs: {},
     outputs: { required: "boolean", options: "array" },
     mountState: "Mounted",
@@ -243,7 +243,7 @@ export const capabilities: CapabilityContract[] = [
     auth: "jwt",
     authority: { mount: "Audit access", execute: "Audit access", settle: "None" },
     trustRequirement: "Audit access",
-    evidence: { proofState: "Present", pglRequired: true },
+    evidence: { proofState: "Live", pglRequired: true },
     inputs: {},
     outputs: { driftReport: "object" },
     mountState: "Mounted",
