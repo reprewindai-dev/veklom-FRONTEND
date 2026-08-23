@@ -2,12 +2,12 @@ import { Key } from "lucide-react";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 import { ProofBadge } from "./ProofBadge";
 
-export function KeyAuthorityCard({ 
-  title, 
-  keyId, 
+export function KeyAuthorityCard({
+  title,
+  keyId,
   role,
-  status = "Live"
-}: { 
+  status = "Needs proof",
+}: {
   title: string;
   keyId: string;
   role: string;
