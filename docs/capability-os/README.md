@@ -10,11 +10,12 @@ This directory exists so nobody has to reconstruct Capability OS architecture fr
 
 1. [`CANONICAL_HANDOFF.md`](./CANONICAL_HANDOFF.md) — frozen product, ownership, routing, truth-state, UX and backend responsibility contract.
 2. [`CHANGELOG_2026-08-22.md`](./CHANGELOG_2026-08-22.md) — what changed, what was discovered to be stale, what is merged, what is still open, and why.
-3. [`HANDOFF_CHECKLIST.md`](./HANDOFF_CHECKLIST.md) — required reconciliation report before a developer continues Capability OS work.
+3. [`API_PATH_AUDIT_2026-08-23.md`](./API_PATH_AUDIT_2026-08-23.md) — point-in-time frontend route audit, phantom-route remediation taxonomy, SEKED classification and the rule that missing endpoints must never look like empty success.
+4. [`HANDOFF_CHECKLIST.md`](./HANDOFF_CHECKLIST.md) — required reconciliation report before a developer continues Capability OS work.
 
 ## Documentation rule
 
-When architecture, route ownership, environment naming, authority semantics, product navigation, or truth-state behavior changes, the implementation change is not complete until this documentation is updated in the same PR or an explicitly linked follow-up PR.
+When architecture, route ownership, environment naming, authority semantics, product navigation, truth-state behavior, or a material API-path contract changes, the implementation change is not complete until this documentation is updated in the same PR or an explicitly linked follow-up PR.
 
 Do not assume another developer knows which of several historical Veklom branches or backend contracts was intended.
 
