@@ -55,7 +55,7 @@ export function deriveProofStatus(
     case "not-called":
       return "Needs proof";
     case "reachability-only":
-      return "Present";
+      return "Live";
     case "source-of-truth":
       return "Verified";
   }
