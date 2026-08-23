@@ -150,7 +150,11 @@ export function useWebMCP() {
       console.error('[WebMCP] Governance Error:', err);
       const errMessage = err.message || 'Execution unavailable';
       setError(errMessage);
-      const receipt: ExecutionReceipt = { status: 'rejected', error: errMessage };
+      const receipt: ExecutionReceipt = {
+        status: 'rejected',
+        error: errMessage,
+        reason: errMessage,
+      };
       setLastReceipt(receipt);
       return receipt;
     } finally {
