@@ -51,7 +51,7 @@ function ProofPill({ state, className = "" }: { state: ProofState; className?: s
 
 function nodeColor(state: ProofState): { fill: string; stroke: string; led: string } {
   switch (state) {
-    case "Present":
+    case "Live":
     case "Verified":
       return { fill: "#022c22", stroke: "rgba(16,185,129,0.8)", led: "#10b981" };
     case "Needs proof":
@@ -95,18 +95,18 @@ export default function NetworkTopologyPanel() {
   const meshState: ProofState = !sourceReachable
     ? "Needs proof"
     : connected >= expected && expected > 0
-    ? "Present"
+    ? "Live"
     : "Needs proof";
   const meshLabel = !sourceReachable
     ? "TOPOLOGY SOURCE UNAVAILABLE"
     : `${connected}/${expected} CONNECTED · ${registered}/${expected} REGISTERED`;
 
-  const x402State: ProofState = x402Config?.enabled ? "Present" : "Needs proof";
+  const x402State: ProofState = x402Config?.enabled ? "Live" : "Needs proof";
   const x402Label = x402Config?.enabled
     ? `x402 protocol configured (${x402Config?.network ?? "base"})`
     : "x402 protocol config unavailable";
 
-  const settlementState: ProofState = totalSettledUsd > 0 ? "Present" : "Needs proof";
+  const settlementState: ProofState = totalSettledUsd > 0 ? "Live" : "Needs proof";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-[11px] font-mono">

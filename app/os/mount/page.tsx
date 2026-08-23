@@ -128,7 +128,7 @@ function TokenDescriptor({
   proof:
     | "Verified"
     | "Needs proof"
-    | "Present"
+    | "Live"
     | "Degraded"
     | "Not started"
     | "Manual step"
@@ -488,7 +488,7 @@ export default function MountPage() {
           mountResponse
             ? lifecycleState === "mounted"
               ? "Verified"
-              : "Present"
+              : "Live"
             : "Needs proof"
         }
       >
@@ -527,7 +527,7 @@ export default function MountPage() {
           token && isLive
             ? "Verified"
             : mountResponse
-              ? "Present"
+              ? "Live"
               : "Needs proof"
         }
       >
@@ -553,7 +553,7 @@ export default function MountPage() {
         proof={
           actionResponse
             ? actionResponse.decision === "allow"
-              ? "Present"
+              ? "Live"
               : "Degraded"
             : "Needs proof"
         }
@@ -563,7 +563,7 @@ export default function MountPage() {
             <div className="flex items-center gap-2">
               <ProofBadge
                 status={
-                  actionResponse.decision === "allow" ? "Present" : "Degraded"
+                  actionResponse.decision === "allow" ? "Live" : "Degraded"
                 }
               />
               <span className="font-mono text-xs uppercase text-cos-text">
@@ -605,7 +605,7 @@ export default function MountPage() {
           </form>
         )}
       </Pillar>
-      <Pillar title="Drift" proof={mountResponse ? "Present" : "Needs proof"}>
+      <Pillar title="Drift" proof={mountResponse ? "Live" : "Needs proof"}>
         {mountResponse ? (
           <div className="space-y-4">
             <ScopeList

@@ -6,7 +6,7 @@ import { useApi } from "@/hooks/useApi";
 interface VeklomIdState {
   source: { identity_app: string; byos: string };
   proof: {
-    state: "verified" | "partial" | "error";
+    state: "verified" | "degraded" | "error";
     reason: string;
     probes: Array<{ route: string; state: "verified" | "needs_proof" | "error"; status: number; detail?: string; count?: number }>;
   };

@@ -13,10 +13,10 @@ function truncHash(hash: string, len = 12): string {
   return hash.substring(0, len) + "..." + hash.substring(hash.length - 6);
 }
 
-function ProofState({ state, label }: { state: "verified" | "present" | "needs_proof" | "not_started"; label: string }) {
+function ProofState({ state, label }: { state: "verified" | "live" | "needs_proof" | "not_started"; label: string }) {
   const styles = {
     verified: { color: "#3EE7A2", bg: "rgba(62,231,162,0.1)", border: "rgba(62,231,162,0.25)", icon: CheckCircle2 },
-    present: { color: "#FFB800", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)", icon: CheckCircle2 },
+    live: { color: "#FFB800", bg: "rgba(255,184,0,0.1)", border: "rgba(255,184,0,0.25)", icon: CheckCircle2 },
     needs_proof: { color: "#FF9F43", bg: "rgba(255,159,67,0.1)", border: "rgba(255,159,67,0.25)", icon: AlertCircle },
     not_started: { color: "#6E6E73", bg: "rgba(110,110,115,0.1)", border: "rgba(110,110,115,0.25)", icon: AlertCircle },
   };
@@ -72,9 +72,9 @@ export default function ProvenanceChain({ provenance, compact = false }: Provena
       {/* Proof-state summary */}
       <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg border border-[#1A1A1A] bg-[#0D0D0D]">
         <span className="text-[10px] text-[#6E6E73] mr-1">Proof States:</span>
-        <ProofState state="present" label="Merkle Root" />
-        <ProofState state="present" label="Epoch Window" />
-        <ProofState state="present" label="Node Operators" />
+        <ProofState state="live" label="Merkle Root" />
+        <ProofState state="live" label="Epoch Window" />
+        <ProofState state="live" label="Node Operators" />
         <ProofState state={hasAnchor ? "verified" : "not_started"} label="Base L2 Anchor" />
         <ProofState state="needs_proof" label="Independent k6 Nodes" />
       </div>

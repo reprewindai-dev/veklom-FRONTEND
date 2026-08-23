@@ -13,10 +13,11 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
+import { getTransportState } from "@/lib/api";
 
 interface Probe {
   route: string;
-  state: "verified" | "needs_proof" | "error";
+  state: "verified" | "degraded" | "failed" | "unknown";
   status: number;
   detail?: string;
 }
@@ -43,7 +44,7 @@ interface IncidentsState {
   generated_at: string;
   source: string;
   proof: {
-    state: "verified" | "partial" | "error";
+    state: "verified" | "degraded" | "failed" | "unknown" | "error";
     reason: string;
     probes: Probe[];
   };
@@ -131,7 +132,11 @@ export default function IncidentsSlashing() {
 
   const exposure = data?.exposure || [];
   const selected = exposure.find((row) => row.id === selectedId) || exposure[0] || null;
-  const proofState = error ? "error" : data?.proof.state || "needs_proof";
+  const proofState = error
+    ? "failed"
+    : data?.proof.state === "error"
+      ? "failed"
+      : data?.proof.state || "unknown";
   const verifiedRoutes = data?.proof.probes.filter((probe) => probe.state === "verified").length || 0;
 
   useEffect(() => {
@@ -142,6 +147,28 @@ export default function IncidentsSlashing() {
     const riskRows = exposure.filter((row) => row.severity === "breach_risk" || row.severity === "slashed");
     return riskRows.length;
   }, [exposure]);
+
+  if (error) {
+    const transportState = getTransportState(error);
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#030303] text-white/80 p-6">
+        <div className="max-w-xl w-full rounded-xl border border-red-400/25 bg-red-500/5 p-6 font-mono">
+          <div className="text-red-300 text-xs font-bold uppercase tracking-widest">
+            INCIDENT DATA SOURCE {transportState}
+          </div>
+          <div className="mt-3 text-sm text-white/80">
+            The route-backed incident state could not be read. No empty incident ledger is shown.
+          </div>
+          <div className="mt-4 text-[10px] text-white/50 break-all">
+            GET /incidents-slashing/state
+          </div>
+          <div className="mt-2 text-[11px] text-red-200/80 break-words">
+            {error instanceof Error ? error.message : "The transport result is unknown."}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col bg-[#030303] text-white/90 overflow-hidden font-sans border-l border-white/5 relative">
@@ -155,7 +182,7 @@ export default function IncidentsSlashing() {
         <div className={`text-[10px] font-mono uppercase px-3 py-1 rounded border ${proofTone(proofState)}`}>
           Routes: <span className="text-white">{verifiedRoutes}/{data?.proof.probes.length || 0}</span>
           <span className="mx-2 text-white/25">|</span>
-          {proofState === "verified" ? "Live proof" : proofState === "error" ? "Source error" : "Partial proof"}
+          {proofState === "verified" ? "LIVE" : proofState === "failed" ? "FAILED" : proofState === "degraded" ? "DEGRADED" : "UNKNOWN"}
         </div>
       </div>
 

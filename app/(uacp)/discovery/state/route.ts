@@ -110,7 +110,7 @@ export async function GET() {
       byos: trimSlash(BYOS_API_BASE),
     },
     proof: {
-      state: hardFailures > 0 ? "error" : gatedRoutes > 0 ? "partial" : "verified",
+      state: hardFailures > 0 ? "error" : gatedRoutes > 0 ? "degraded" : "verified",
       reason:
         hardFailures > 0
           ? "One or more Veklom Discovery sources failed."

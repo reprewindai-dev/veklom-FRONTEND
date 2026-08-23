@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 const BYOS_BACKEND_URL =
   process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 
-type SourceState = "verified" | "partial" | "empty" | "needs_proof" | "error";
+type SourceState = "verified" | "degraded" | "empty" | "needs_proof" | "error";
 
 interface SourceProbe<T = unknown> {
   ok: boolean;
@@ -213,7 +213,7 @@ function summarizeProof(
       publicOverviewOk ? "; public workspace overview is verified" : ""
     }.`;
   } else if (hardErrors.length > 0) {
-    state = runs.length > 0 ? "partial" : "error";
+    state = runs.length > 0 ? "degraded" : "error";
     reason = hardErrors.map((probe) => `${probe.route}: ${probe.error}`).join("; ");
   } else if (runs.length === 0) {
     state = "empty";

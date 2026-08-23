@@ -1476,7 +1476,7 @@ export default function Dashboard({
                         </td>
                         <td className="p-2 text-right">
                           <span className="text-[10px] text-gray-500 font-bold uppercase text-amber-500">
-                            {agentA.status === 'active' && agentB.status === 'active' ? 'HIGH PEER CONCURRENCY' : 'MUTED STATE PRESENT'}
+                            {agentA.status === 'active' && agentB.status === 'active' ? 'HIGH PEER CONCURRENCY' : 'MUTED STATE LIVE'}
                           </span>
                         </td>
                       </tr>

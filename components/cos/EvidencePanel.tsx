@@ -10,7 +10,7 @@ export function EvidencePanel({
   title: string;
   evidenceId?: string;
   timestamp?: string;
-  status?: "Verified" | "Needs proof" | "Present" | "Degraded" | "Not started" | "Manual step" | "Simulated";
+  status?: "Verified" | "Needs proof" | "Live" | "Degraded" | "Not started" | "Manual step" | "Simulated";
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-cos-border bg-cos-surface p-4">

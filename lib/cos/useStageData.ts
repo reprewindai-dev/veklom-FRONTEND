@@ -214,7 +214,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     if (called.length > 0) {
       if (called.some((record) => record.proof === "Needs proof")) return "Needs proof";
       if (called.every((record) => record.proof === "Verified")) return "Verified";
-      if (called.every((record) => record.proof === "Verified" || record.proof === "Present")) return "Present";
+      if (called.every((record) => record.proof === "Verified" || record.proof === "Live")) return "Live";
     }
 
     return "Needs proof";

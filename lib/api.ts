@@ -63,10 +63,28 @@ export function clearTokens() {
   writeSessionMarker(false);
 }
 
+export type ApiErrorKind = "http" | "html" | "invalid_json" | "network" | "configuration";
+export type TransportState = "UNAVAILABLE" | "FAILED" | "UNKNOWN";
+
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public body?: unknown) {
+  constructor(
+    public status: number | undefined,
+    message: string,
+    public body?: unknown,
+    public kind: ApiErrorKind = "http",
+    public path?: string,
+  ) {
     super(message);
   }
+}
+
+export function getTransportState(error: unknown): TransportState {
+  if (!(error instanceof ApiError)) return "UNKNOWN";
+  if (error.kind === "configuration" || error.kind === "html" || error.status === 404) {
+    return "UNAVAILABLE";
+  }
+  if (error.kind === "network") return "UNKNOWN";
+  return "FAILED";
 }
 
 export interface RequestOpts {
@@ -114,11 +132,31 @@ const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 function buildUrl(path: string, query?: RequestOpts["query"], requestedBase?: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const base = requestedBase || apiBaseUrl() || origin;
+  if (!base && !path.startsWith("http")) {
+    throw new ApiError(
+      undefined,
+      "API base URL is not configured for this request",
+      undefined,
+      "configuration",
+      path,
+    );
+  }
   // If we are calling our own Next.js server, we must include the basePath so the rewrite rules apply
   const isSameOrigin = base === origin && !path.startsWith("http");
   const fullPath = isSameOrigin ? `${BASE_PATH}${path}` : path;
   
-  const url = new URL(fullPath.startsWith("http") ? fullPath : `${base}${fullPath}`);
+  let url: URL;
+  try {
+    url = new URL(fullPath.startsWith("http") ? fullPath : `${base}${fullPath}`);
+  } catch {
+    throw new ApiError(
+      undefined,
+      "API base URL is invalid or unresolved",
+      undefined,
+      "configuration",
+      path,
+    );
+  }
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined && v !== null) {
@@ -162,16 +200,59 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     if (tok) headers["Authorization"] = `Bearer ${tok}`;
   }
 
-  const res = await fetch(buildUrl(path, opts.query, opts.baseUrl), {
-    method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, opts.query, opts.baseUrl), {
+      method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
+      headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      signal: opts.signal,
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      undefined,
+      error instanceof Error ? error.message : "API request failed before receiving a response",
+      undefined,
+      "network",
+      path,
+    );
+  }
 
-  const text = await res.text();
+  let text: string;
+  try {
+    text = await res.text();
+  } catch (error) {
+    throw new ApiError(
+      res.status,
+      error instanceof Error ? error.message : "API response could not be read",
+      undefined,
+      "network",
+      path,
+    );
+  }
   const json = text ? safeJson(text) : undefined;
+  const contentType = res.headers.get("content-type") || "";
+  const isHtml = contentType.toLowerCase().includes("text/html") || /^\s*<(?:!doctype|html|head|body)\b/i.test(text);
+  if (isHtml) {
+    throw new ApiError(
+      res.status,
+      res.ok ? "Expected JSON response but received HTML" : `Expected JSON error response but received HTML (HTTP ${res.status})`,
+      undefined,
+      "html",
+      path,
+    );
+  }
+  if (res.ok && res.status !== 204 && (!text.trim() || typeof json === "string")) {
+    throw new ApiError(
+      res.status,
+      "Expected a JSON response but received an invalid payload",
+      undefined,
+      "invalid_json",
+      path,
+    );
+  }
   
   // Expose Runtime Authority metadata from headers
   const runtimeMeta = {
@@ -231,13 +312,13 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
           detail: { type: "PRECONDITION_FAILED", message: msg }
         });
         window.dispatchEvent(event);
-        throw new ApiError(res.status, "State-Bound Authority Violation: " + String(msg), json);
+        throw new ApiError(res.status, "State-Bound Authority Violation: " + String(msg), json, "http", path);
       } else if (res.status === 428) {
         const event = new CustomEvent("VeklomFencingTokenRequired", {
           detail: { type: "PRECONDITION_REQUIRED", message: msg }
         });
         window.dispatchEvent(event);
-        throw new ApiError(res.status, "Fencing Token Required: " + String(msg), json);
+        throw new ApiError(res.status, "Fencing Token Required: " + String(msg), json, "http", path);
       } else if (res.status === 402 && opts.handlePaymentRequired !== false) {
         if (!isPublicPage) {
           const paymentRequiredHeader = res.headers.get("payment-required");
@@ -254,7 +335,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
           window.dispatchEvent(event);
           
           // Throw a silent error so the UI doesn't crash, allowing the modal to handle the payment flow
-          throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json);
+          throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json, "http", path);
         }
       } else if (res.status === 403 || res.status === 401) {
         const isAuthTokenError = msg.toLowerCase().includes("invalid or expired token") || 
@@ -275,12 +356,12 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
           window.dispatchEvent(event);
           
           // We throw a silent error here so the UI doesn't crash, but we do NOT redirect.
-          throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json);
+          throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json, "http", path);
         }
         
         // Governance lock - redirect to Trust / Security center or login
         if (isPublicPage) {
-          throw new ApiError(res.status, String(msg), json);
+          throw new ApiError(res.status, String(msg), json, "http", path);
         }
 
         if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {
@@ -295,7 +376,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       }
     }
 
-    throw new ApiError(res.status, String(msg), json);
+    throw new ApiError(res.status, String(msg), json, "http", path);
   }
   return json as T;
 }
@@ -335,22 +416,64 @@ export async function duelApi<T>(path: string, opts: RequestOpts = {}): Promise<
     }
   }
 
-  const res = await fetch(url.toString(), {
-    method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url.toString(), {
+      method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
+      headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      signal: opts.signal,
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new ApiError(
+      undefined,
+      error instanceof Error ? error.message : "Duel API request failed before receiving a response",
+      undefined,
+      "network",
+      path,
+    );
+  }
 
-  const text = await res.text();
+  let text: string;
+  try {
+    text = await res.text();
+  } catch (error) {
+    throw new ApiError(
+      res.status,
+      error instanceof Error ? error.message : "Duel API response could not be read",
+      undefined,
+      "network",
+      path,
+    );
+  }
   const json = text ? safeJson(text) : undefined;
+  const contentType = res.headers.get("content-type") || "";
+  const isHtml = contentType.toLowerCase().includes("text/html") || /^\s*<(?:!doctype|html|head|body)\b/i.test(text);
+  if (isHtml) {
+    throw new ApiError(
+      res.status,
+      res.ok ? "Expected JSON response but received HTML" : `Expected JSON error response but received HTML (HTTP ${res.status})`,
+      undefined,
+      "html",
+      path,
+    );
+  }
   if (!res.ok) {
     const msg =
       (json && (json.detail || json.message || json.error)) ||
       res.statusText ||
       `HTTP ${res.status}`;
-    throw new ApiError(res.status, String(msg), json);
+    throw new ApiError(res.status, String(msg), json, "http", path);
+  }
+  if (res.status !== 204 && (!text.trim() || typeof json === "string")) {
+    throw new ApiError(
+      res.status,
+      "Expected a JSON response but received an invalid payload",
+      undefined,
+      "invalid_json",
+      path,
+    );
   }
   return json as T;
 }

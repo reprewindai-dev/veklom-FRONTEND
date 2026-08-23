@@ -6,7 +6,7 @@ import { useApi } from "@/hooks/useApi";
 interface DiscoveryState {
   source: { discovery_app: string; byos: string };
   proof: {
-    state: "verified" | "partial" | "error";
+    state: "verified" | "degraded" | "error";
     reason: string;
     probes: Array<{
       route: string;
@@ -31,7 +31,7 @@ function badgeClass(state: DiscoveryState["proof"]["probes"][number]["state"]) {
 export default function VeklomDiscoveryPage() {
   const { data } = useApi<DiscoveryState>("/discovery/state", { refreshInterval: 30000 });
   const paidSearch = data?.paidSearch;
-  const proofState = data?.proof.state || "partial";
+  const proofState = data?.proof.state || "degraded";
   const discoveryUrl = data?.source.discovery_app || "https://discovery.veklom.com";
   const originProbe = data?.proof.probes.find((probe) => probe.route.startsWith("https://"));
   const originDown = originProbe?.state === "error";

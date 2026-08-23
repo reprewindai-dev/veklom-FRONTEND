@@ -118,7 +118,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">ASSESSMENT TYPE</span>
-            <span className="text-[#A1A1A6]">{score.confidence.level === "unmeasured" ? "Unmeasured" : score.confidence.level === "high" ? "Route-backed evaluation" : "Partial proof evaluation"}</span>
+            <span className="text-[#A1A1A6]">{score.confidence.level === "unmeasured" ? "Unmeasured" : score.confidence.level === "high" ? "Route-backed evaluation" : "Needs proof"}</span>
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[#6E6E73] mb-0.5">FRAMEWORK</span>
