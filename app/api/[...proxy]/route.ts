@@ -113,8 +113,9 @@ async function proxyRequest(req: NextRequest) {
     headers.delete("x-veklom-requester-id");
 
     if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
-      // The BYOS exchange authenticates the browser session and mints a
-      // short-lived CAPPO audience assertion for the authenticated workspace.
+      // Authenticate the browser session against BYOS and mint a short-lived,
+      // workspace-bound CAPPO audience assertion. The browser never receives
+      // or forwards a standing CAPPO operator credential.
       const exchange = await exchangeCappoAssertion(req);
       if (exchange.kind === "unauthenticated") {
         return NextResponse.json(

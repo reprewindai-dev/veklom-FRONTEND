@@ -2,8 +2,8 @@ import type { ProofStatus } from "@/lib/cos/capabilities";
 
 const styles: Record<ProofStatus, string> = {
   Verified: "border-cos-verified/30 bg-cos-verified/10 text-cos-verified",
+  Live: "border-cos-info/30 bg-cos-info/10 text-cos-info",
   "Needs proof": "border-cos-unknown/30 bg-cos-unknown/10 text-cos-unknown",
-  Present: "border-cos-info/30 bg-cos-info/10 text-cos-info",
   Degraded: "border-cos-warn/30 bg-cos-warn/10 text-cos-warn",
   "Not started": "border-cos-unknown/30 bg-cos-unknown/10 text-cos-unknown",
   "Manual step": "border-cos-warn/30 bg-cos-warn/10 text-cos-warn",

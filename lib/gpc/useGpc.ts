@@ -1,19 +1,17 @@
 /**
  * useGpc Hook
- * High-level API for all GPC operations: compile, execute, generate
- * Manages error handling, SSE streaming, and state updates
- * 
- * Generated for: veklom-control-plane/lib/gpc/useGpc.ts
+ * High-level API for GPC compile/generate/component discovery.
+ * Consequential execution is intentionally fail-closed until the workflow is
+ * bound to the canonical CAPPO CapabilityLease execution contract.
  */
 
 import { useCallback, useState } from 'react';
+import { api } from '@/lib/api';
 import { useCanvasStore, useExecutionStore, usePreviewStore } from '@/lib/gpc/stores';
 import {
-  GPCPipelineGraph,
   NLToGraphRequest,
   NLToGraphResult,
   PipelineCompilationResult,
-  ExecutionEvent,
 } from '@/types/gpc';
 
 interface UseGpcOptions {
@@ -31,48 +29,25 @@ export function useGpc(options: UseGpcOptions = {}) {
   const executionStore = useExecutionStore();
   const previewStore = usePreviewStore();
 
-  // ========================================================================
-  // COMPILE: Graph → Python
-  // ========================================================================
-
   const compile = useCallback(
     async (pipelineId?: string): Promise<PipelineCompilationResult | null> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Use provided pipeline_id or generate a new one
         const graph = canvasStore.exportGraph();
         const actualPipelineId = pipelineId || graph.pipeline_id;
-
-        const response = await fetch(`${baseUrl}/compile`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
-          },
-          body: JSON.stringify({
-            pipeline_id: actualPipelineId,
-            tenant_id: graph.tenant_id,
-          }),
+        const result = await api.post<PipelineCompilationResult>(`${baseUrl}/compile`, {
+          pipeline_id: actualPipelineId,
+          tenant_id: graph.tenant_id,
         });
-
-        if (!response.ok) {
-          throw new Error(
-            `Compilation failed: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const result: PipelineCompilationResult = await response.json();
 
         if (!result.success) {
           throw new Error(result.warnings?.join(', ') || 'Compilation failed');
         }
 
-        // Store compilation result in session (optional: show in modal)
         sessionStorage.setItem('gpc_last_compilation', JSON.stringify(result));
         options.onSuccess?.('Pipeline compiled successfully');
-
         return result;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -87,10 +62,6 @@ export function useGpc(options: UseGpcOptions = {}) {
     [baseUrl, canvasStore, options]
   );
 
-  // ========================================================================
-  // EXECUTE: Run pipeline with SSE streaming
-  // ========================================================================
-
   const execute = useCallback(
     async (pipelineId?: string): Promise<void> => {
       setIsLoading(true);
@@ -99,113 +70,18 @@ export function useGpc(options: UseGpcOptions = {}) {
       try {
         const graph = canvasStore.exportGraph();
         const actualPipelineId = pipelineId || graph.pipeline_id;
-
-        // Start execution
-        executionStore.startExecution(actualPipelineId, [], []);
-
-        // Fetch and compile first
         const compilationResult = await compile(actualPipelineId);
-        if (!compilationResult) {
-          throw new Error('Failed to compile pipeline');
-        }
+        if (!compilationResult) throw new Error('Failed to compile pipeline');
 
-        // Update execution store with execution order
         executionStore.startExecution(
           actualPipelineId,
           compilationResult.execution_order,
           compilationResult.parallel_levels
         );
 
-        const response = await fetch(`/api/v1/capi/execute`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'text/event-stream',
-            Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
-          },
-          body: JSON.stringify({
-            agent_id: "gpc-pipeline",
-            instruction: "Execute visual pipeline",
-            target_protocol: "gpc",
-            action: "execute",
-            payload: {
-              pipeline_id: actualPipelineId,
-              graph: graph
-            }
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`cAPI execution failed: ${response.statusText}`);
-        }
-
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error("No response body");
-
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || "";
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const dataStr = line.substring(6).trim();
-              if (!dataStr) continue;
-              
-              try {
-                const data: ExecutionEvent = JSON.parse(dataStr);
-
-                switch (data.event) {
-                  case 'start':
-                    executionStore.startExecution(
-                      actualPipelineId,
-                      compilationResult.execution_order,
-                      compilationResult.parallel_levels
-                    );
-                    break;
-
-                  case 'node_start':
-                    if (data.node_id) {
-                      executionStore.setCurrentNode(data.node_id);
-                      executionStore.updateNodeStatus(data.node_id, {
-                        status: 'running',
-                        progress: (data.index || 0) * 20,
-                      });
-                    }
-                    break;
-
-                  case 'node_complete':
-                    if (data.node_id) {
-                      executionStore.updateNodeStatus(data.node_id, {
-                        status: 'success',
-                        progress: 100,
-                      });
-                      if (data.preview) {
-                        previewStore.setPreview(data.node_id, data.preview);
-                      }
-                    }
-                    break;
-
-                  case 'complete':
-                    executionStore.completeExecution();
-                    options.onSuccess?.('Pipeline executed successfully');
-                    break;
-
-                  case 'error':
-                    throw new Error(data.error || data.message || 'Execution error');
-                }
-              } catch (err) {
-                console.error('Error parsing SSE event:', err);
-              }
-            }
-          }
-        }
+        throw new Error(
+          'Workflow execution is not yet bound to the canonical CAPPO CapabilityLease contract. The legacy cAPI execution path is retired fail-closed.'
+        );
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Execution failed';
         setError(errorMsg);
@@ -216,12 +92,8 @@ export function useGpc(options: UseGpcOptions = {}) {
         setIsLoading(false);
       }
     },
-    [baseUrl, canvasStore, executionStore, previewStore, compile, options]
+    [canvasStore, executionStore, compile, options]
   );
-
-  // ========================================================================
-  // GENERATE: NL → Graph
-  // ========================================================================
 
   const generateFromIntent = useCallback(
     async (
@@ -232,32 +104,16 @@ export function useGpc(options: UseGpcOptions = {}) {
       setError(null);
 
       try {
-        const response = await fetch(`${baseUrl}/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
-          },
-          body: JSON.stringify({
-            tenant_id: 'default',
-            user_intent: intent,
-            data_residency_region: dataResidencyRegion,
-          } as NLToGraphRequest),
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Generation failed: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const result: NLToGraphResult = await response.json();
+        const result = await api.post<NLToGraphResult>(`${baseUrl}/generate`, {
+          tenant_id: 'default',
+          user_intent: intent,
+          data_residency_region: dataResidencyRegion,
+        } as NLToGraphRequest);
 
         if (!result.success || !result.pipeline_graph) {
           throw new Error(result.errors?.join(', ') || 'Generation failed');
         }
 
-        // Load generated graph into canvas
         canvasStore.loadGraph(result.pipeline_graph);
         options.onSuccess?.(
           `Pipeline generated (confidence: ${(result.confidence_score! * 100).toFixed(0)}%)`
@@ -274,32 +130,17 @@ export function useGpc(options: UseGpcOptions = {}) {
     [baseUrl, canvasStore, options]
   );
 
-  // ========================================================================
-  // LOAD COMPONENTS (for sidebar palette)
-  // ========================================================================
-
   const loadComponents = useCallback(async () => {
     try {
-      const response = await fetch(`${baseUrl}/components`, {
-        headers: {
-          Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load components');
-      }
-
-      return await response.json();
+      return await api.get<unknown[]>(`${baseUrl}/components`);
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load components';
+      setError(errorMsg);
+      options.onError?.(errorMsg);
       console.error('Failed to load components:', err);
-      return [];
+      throw err;
     }
-  }, [baseUrl]);
-
-  // ========================================================================
-  // CLEAR STATE
-  // ========================================================================
+  }, [baseUrl, options]);
 
   const reset = useCallback(() => {
     canvasStore.loadGraph({
@@ -316,14 +157,11 @@ export function useGpc(options: UseGpcOptions = {}) {
   }, [canvasStore, executionStore, previewStore]);
 
   return {
-    // Actions
     compile,
     execute,
     generateFromIntent,
     loadComponents,
     reset,
-
-    // State
     isLoading,
     error,
   };

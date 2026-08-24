@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-// Standalone Next.js deployment configuration
+// Standard Next.js server deployment configuration for Coolify/Nixpacks.
 
 // BACKEND_URL  — server-side env var set in Coolify / Docker.
 //   In prod, point this at the backend service URL (e.g. http://veklom-api:8088)
@@ -13,9 +13,8 @@ if (process.env.NODE_ENV === "production" && !BACKEND_URL) {
 }
 
 const nextConfig = {
-  // Vercel owns its Build Output tracing. Docker/Coolify still consume the
-  // standalone server bundle directly.
-  output: process.env.VERCEL ? undefined : "standalone",
+  // Coolify/Nixpacks starts the production server with `next start`, so do not
+  // emit a standalone-only bundle here. Vercel also manages its own output.
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: true },
   trailingSlash: true,

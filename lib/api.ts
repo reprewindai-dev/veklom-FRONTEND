@@ -117,7 +117,7 @@ function buildUrl(path: string, query?: RequestOpts["query"], requestedBase?: st
   // If we are calling our own Next.js server, we must include the basePath so the rewrite rules apply
   const isSameOrigin = base === origin && !path.startsWith("http");
   const fullPath = isSameOrigin ? `${BASE_PATH}${path}` : path;
-  
+
   const url = new URL(fullPath.startsWith("http") ? fullPath : `${base}${fullPath}`);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
@@ -133,13 +133,49 @@ export function apiUrl(path: string, query?: RequestOpts["query"]): string {
   return buildUrl(path, query);
 }
 
+function parseResponseBody(res: Response, text: string): unknown {
+  if (!text) return undefined;
+
+  const contentType = (res.headers.get("content-type") || "").toLowerCase();
+  const looksJson = contentType.includes("application/json") || contentType.includes("+json");
+
+  if (looksJson) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new ApiError(
+        502,
+        "Expected valid JSON response but received malformed JSON",
+        { upstreamStatus: res.status, contentType },
+      );
+    }
+  }
+
+  // For failed upstream calls, keep the HTTP status authoritative and let the
+  // normal error path report it. For a successful API response, HTML/text is
+  // never valid typed API data: this is the phantom-route/redirect failure mode.
+  if (res.ok) {
+    throw new ApiError(
+      502,
+      `Expected JSON response but received ${contentType || "unknown content type"}`,
+      {
+        upstreamStatus: res.status,
+        contentType: contentType || null,
+        bodyPreview: text.slice(0, 200),
+      },
+    );
+  }
+
+  return undefined;
+}
+
 export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Accept": "application/json",
     ...(opts.headers || {}),
   };
   if (typeof window !== "undefined") {
-    const env = window.localStorage.getItem("veklom.environment") || "sandbox";
+    const env = window.localStorage.getItem("veklom.environment") || "production";
     headers["X-Veklom-Environment"] = env;
   }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
@@ -171,8 +207,8 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   });
 
   const text = await res.text();
-  const json = text ? safeJson(text) : undefined;
-  
+  const json = parseResponseBody(res, text) as any;
+
   // Expose Runtime Authority metadata from headers
   const runtimeMeta = {
     execution: {
@@ -208,11 +244,11 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
 
   if (typeof window !== "undefined") {
     if (res.status === 503 || (json && ((json as any).status === "degraded" || (json as any)._stale === true))) {
-      window.dispatchEvent(new CustomEvent("VeklomDegradedState", { 
-        detail: { 
-          isDegraded: true, 
-          message: (json as any)?.error || "Veklom Core Services are currently experiencing instability. Control Plane is in Read-Only Mode." 
-        } 
+      window.dispatchEvent(new CustomEvent("VeklomDegradedState", {
+        detail: {
+          isDegraded: true,
+          message: (json as any)?.error || "Veklom Core Services are currently experiencing instability. Control Plane is in Read-Only Mode."
+        }
       }));
     }
   }
@@ -222,10 +258,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       (json && (json.detail || json.message || json.error)) ||
       res.statusText ||
       `HTTP ${res.status}`;
-      
+
     if (typeof window !== "undefined") {
       const isPublicPage = isPublicRoute(window.location.pathname);
-      
+
       if (res.status === 412) {
         const event = new CustomEvent("VeklomStateBoundAuthorityViolation", {
           detail: { type: "PRECONDITION_FAILED", message: msg }
@@ -242,48 +278,44 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
         if (!isPublicPage) {
           const paymentRequiredHeader = res.headers.get("payment-required");
           const facilitatorUrl = res.headers.get("x-402-facilitator-url");
-          
+
           const event = new CustomEvent("X402PaymentIntervention", {
-            detail: { 
-                type: "PAYMENT_REQUIRED", 
-                message: msg,
-                paymentRequiredHeader,
-                facilitatorUrl
+            detail: {
+              type: "PAYMENT_REQUIRED",
+              message: msg,
+              paymentRequiredHeader,
+              facilitatorUrl
             }
           });
           window.dispatchEvent(event);
-          
-          // Throw a silent error so the UI doesn't crash, allowing the modal to handle the payment flow
+
           throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json);
         }
       } else if (res.status === 403 || res.status === 401) {
-        const isAuthTokenError = msg.toLowerCase().includes("invalid or expired token") || 
-                                 msg.toLowerCase().includes("invalid token") || 
-                                 msg.toLowerCase().includes("token expired") || 
-                                 msg.toLowerCase().includes("not authenticated") ||
-                                 msg.toLowerCase().includes("signature has expired") ||
-                                 msg.toLowerCase().includes("credentials") ||
-                                 msg.toLowerCase().includes("unauthorized");
+        const normalizedMessage = String(msg).toLowerCase();
+        const isAuthTokenError = normalizedMessage.includes("invalid or expired token") ||
+                                 normalizedMessage.includes("invalid token") ||
+                                 normalizedMessage.includes("token expired") ||
+                                 normalizedMessage.includes("not authenticated") ||
+                                 normalizedMessage.includes("signature has expired") ||
+                                 normalizedMessage.includes("credentials") ||
+                                 normalizedMessage.includes("unauthorized");
 
         const code = (json as any)?.code || "";
-        if (!isAuthTokenError && (code.includes("LAW0") || msg.toLowerCase().includes("key") || msg.toLowerCase().includes("token"))) {
-          // If the error specifically mentions an LLM or API key (or general execution identity missing), 
-          // intercept it with the glassmorphic prompt.
+        if (!isAuthTokenError && (code.includes("LAW0") || normalizedMessage.includes("key") || normalizedMessage.includes("token"))) {
           const event = new CustomEvent("AmbientIntervention", {
             detail: { type: "MISSING_KEY", message: msg, code }
           });
           window.dispatchEvent(event);
-          
-          // We throw a silent error here so the UI doesn't crash, but we do NOT redirect.
+
           throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json);
         }
-        
-        // Governance lock - redirect to Trust / Security center or login
+
         if (isPublicPage) {
           throw new ApiError(res.status, String(msg), json);
         }
 
-        if (msg.toLowerCase().includes("token") || msg.toLowerCase().includes("auth")) {
+        if (normalizedMessage.includes("token") || normalizedMessage.includes("auth")) {
           if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login";
           }
@@ -300,13 +332,9 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   return json as T;
 }
 
-function safeJson(t: string) {
-  try { return JSON.parse(t); } catch { return t; }
-}
-
 api.get = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'GET' });
 api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, {
-  ...opts, 
+  ...opts,
   method: 'POST',
   body,
   headers: {
@@ -314,7 +342,6 @@ api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, {
   }
 });
 api.delete = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'DELETE' });
-
 
 // SWR fetcher
 export const fetcher = <T,>(path: string) => api<T>(path);
@@ -344,7 +371,7 @@ export async function duelApi<T>(path: string, opts: RequestOpts = {}): Promise<
   });
 
   const text = await res.text();
-  const json = text ? safeJson(text) : undefined;
+  const json = parseResponseBody(res, text) as any;
   if (!res.ok) {
     const msg =
       (json && (json.detail || json.message || json.error)) ||
