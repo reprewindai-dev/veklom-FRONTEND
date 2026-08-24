@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue, cappoAuthHeaderValue } from "@/lib/capi-runtime";
+import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue } from "@/lib/capi-runtime";
 import {
   isCappoExecPath,
   isCappoIdentityPath,
@@ -7,7 +7,6 @@ import {
 } from "@/lib/cappo-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
-const CAPPO_ADMIN_KEY = cappoAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
 const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, "");
@@ -36,13 +35,13 @@ function stripHopByHopHeaders(headers: Headers) {
   }
 }
 
-type RequesterIdentity = {
-  id?: string;
-  workspace_id?: string;
-  role?: string;
-};
+type CappoAssertionExchangeResult =
+  | { kind: "success"; token: string }
+  | { kind: "unauthenticated" }
+  | { kind: "missing-workspace"; body: unknown }
+  | { kind: "unavailable" };
 
-async function resolveRequesterIdentity(req: NextRequest): Promise<RequesterIdentity | null> {
+async function exchangeCappoAssertion(req: NextRequest): Promise<CappoAssertionExchangeResult> {
   const authHeaders = new Headers();
   const authorization = req.headers.get("authorization");
   const cookie = req.headers.get("cookie");
@@ -52,20 +51,33 @@ async function resolveRequesterIdentity(req: NextRequest): Promise<RequesterIden
 
   try {
     const response = await fetch(
-      `${VBB_BACKEND_URL.replace(/\/+$/, "")}/api/v1/auth/me`,
+      `${VBB_BACKEND_URL.replace(/\/+$/, "")}/api/v1/auth/cappo-token`,
       {
-        method: "GET",
+        method: "POST",
         headers: authHeaders,
         redirect: "manual",
         cache: "no-store",
       },
     );
-    if (!response.ok) return null;
-    const body = (await response.json()) as RequesterIdentity;
-    if (!body.workspace_id || !body.id) return null;
-    return body;
+    if (response.status === 401) {
+      return { kind: "unauthenticated" };
+    }
+    if (response.status === 403) {
+      let body: unknown = { detail: { error: "WORKSPACE_CONTEXT_MISSING" } };
+      try {
+        body = await response.json();
+      } catch {
+        // Preserve the endpoint's documented error shape if its body is unreadable.
+      }
+      return { kind: "missing-workspace", body };
+    }
+    if (!response.ok) return { kind: "unavailable" };
+    const body = (await response.json()) as { access_token?: unknown };
+    return typeof body.access_token === "string" && body.access_token
+      ? { kind: "success", token: body.access_token }
+      : { kind: "unavailable" };
   } catch {
-    return null;
+    return { kind: "unavailable" };
   }
 }
 
@@ -80,7 +92,6 @@ async function proxyRequest(req: NextRequest) {
 
   let targetBase = "";
   let forwardPath = path;
-  let cappoRequest = false;
 
   if (path.startsWith("/api/cappo/")) {
     if (!CAPPO_BACKEND_URL) {
@@ -96,37 +107,32 @@ async function proxyRequest(req: NextRequest) {
     }
 
     targetBase = CAPPO_BACKEND_URL;
-    cappoRequest = true;
-    if (isCappoExecPath(forwardPath)) {
-      // Execution admission remains with CAPPO's x402 layer. Never attach
-      // the internal operator key or replace the browser's own authority.
-    } else {
-      if (!CAPPO_ADMIN_KEY) {
-        return NextResponse.json(
-          { error: "CAPPO capability proxy is not configured" },
-          { status: 503 },
-        );
-      }
-      headers.delete("authorization");
-      headers.delete("cookie");
-      headers.delete("x-workspace-id");
-      headers.delete("x-veklom-requester-id");
-      headers.set("x-api-key", CAPPO_ADMIN_KEY);
-    }
+    headers.delete("authorization");
+    headers.delete("cookie");
+    headers.delete("x-workspace-id");
+    headers.delete("x-veklom-requester-id");
 
-    if (isCappoIdentityPath(forwardPath)) {
-      // The browser's BYOS/Firebase bearer is not a CAPPO token.
-      // Validate it against the canonical BYOS identity endpoint first, then
-      // use the server-held CAPPO credential with the validated workspace scope.
-      const requester = await resolveRequesterIdentity(req);
-      if (!requester) {
+    if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
+      // Authenticate the browser session against BYOS and mint a short-lived,
+      // workspace-bound CAPPO audience assertion. The browser never receives
+      // or forwards a standing CAPPO operator credential.
+      const exchange = await exchangeCappoAssertion(req);
+      if (exchange.kind === "unauthenticated") {
         return NextResponse.json(
           { error: "AUTHENTICATION_REQUIRED" },
           { status: 401 },
         );
       }
-      headers.set("x-workspace-id", requester.workspace_id!);
-      headers.set("x-veklom-requester-id", requester.id!);
+      if (exchange.kind === "missing-workspace") {
+        return NextResponse.json(exchange.body, { status: 403 });
+      }
+      if (exchange.kind === "unavailable") {
+        return NextResponse.json(
+          { error: "CAPPO_ASSERTION_UNAVAILABLE" },
+          { status: 502 },
+        );
+      }
+      headers.set("authorization", `Bearer ${exchange.token}`);
     }
   } else if (path.startsWith("/api/capi/")) {
     targetBase = CAPI_RUNTIME_URL;
@@ -170,9 +176,7 @@ async function proxyRequest(req: NextRequest) {
     .toLowerCase()
     .startsWith("bearer ");
 
-  if (targetBase === CAPPO_BACKEND_URL && !cappoRequest && !hasBearerIdentity && CAPPO_ADMIN_KEY && CAPPO_ADMIN_KEY !== "dev-admin-key-do-not-use-in-prod") {
-    headers.set("x-api-key", CAPPO_ADMIN_KEY);
-  } else if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET) {
+  if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET) {
     headers.set("Authorization", `Bearer ${LOCKERPHYCER_SECRET}`);
   } else if (targetBase === CAPI_RUNTIME_URL && !hasBearerIdentity && CAPI_ADMIN_KEY) {
     headers.set("x-api-key", CAPI_ADMIN_KEY);

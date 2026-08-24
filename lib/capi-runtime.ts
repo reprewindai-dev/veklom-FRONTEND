@@ -30,9 +30,3 @@ export function capiAuthHeaderValue(): string | null {
     process.env.INTERLINK_CAPI_API_KEY ||
     null;
 }
-
-export function cappoAuthHeaderValue(): string | null {
-  return process.env.CAPPO_API_KEY ||
-    process.env.CAPPO_BACKEND_API_KEY ||
-    null;
-}
