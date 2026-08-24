@@ -63,10 +63,28 @@ export function clearTokens() {
   writeSessionMarker(false);
 }
 
+export type ApiErrorKind = "http" | "html" | "invalid_json" | "network" | "configuration";
+export type TransportState = "UNAVAILABLE" | "FAILED" | "UNKNOWN";
+
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public body?: unknown) {
+  constructor(
+    public status: number | undefined,
+    message: string,
+    public body?: unknown,
+    public kind: ApiErrorKind = "http",
+    public path?: string,
+  ) {
     super(message);
   }
+}
+
+export function getTransportState(error: unknown): TransportState {
+  if (!(error instanceof ApiError)) return "UNKNOWN";
+  if (error.kind === "configuration" || error.kind === "html" || error.status === 404) {
+    return "UNAVAILABLE";
+  }
+  if (error.kind === "network") return "UNKNOWN";
+  return "FAILED";
 }
 
 export interface RequestOpts {
