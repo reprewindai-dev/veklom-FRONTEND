@@ -85,6 +85,6 @@ Opening Veklom = searching, launching, and managing capabilities. It should feel
 The prototypes repeatedly present simulation/aspiration as verified fact. The new build must **not**:
  
 - Show QPU / Quantum Zeno / fidelity ("99.91%"), uptime, or uplink telemetry as real. Every such signal carries a permanent chip: `SIMULATED` · `EMULATED` · `PHYSICAL HARDWARE VERIFIED`.
-- Claim "100% TAMPER-PROOF-VERIFIED", "100% SHIELD-ENGAGED", "0.02MS latency", "GnomLedger Active / 100% First-Class" without live evidence. Use honest proof states: `Verified` / `Needs proof` / `Present` / `Degraded` / `Not started` / `Manual step` / `Simulated`.
+- Claim "100% TAMPER-PROOF-VERIFIED", "100% SHIELD-ENGAGED", "0.02MS latency", "GnomLedger Active / 100% First-Class" without live evidence. Use honest proof states: `Verified` / `Live` / `Needs proof` / `Degraded` / `Not started` / `Manual step` / `Simulated`.
 - **Ever render a raw private key** (the Quantum wallet card does — never repeat this). Show key identifiers, permissions, caps, and leases only.
 - Present a configured URL, a manifest, or a `/health` ping as operational proof. Only a real source-of-truth response or a passing contract handshake is `operationally_verified`.

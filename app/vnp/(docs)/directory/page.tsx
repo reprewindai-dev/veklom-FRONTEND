@@ -100,7 +100,7 @@ export default function DirectoryPage() {
   }, [query]);
 
   const sourceState: ProofState =
-    sourceOk === null ? "Unknown" : sourceOk ? "Present" : "Needs proof";
+    sourceOk === null ? "Unknown" : sourceOk ? "Live" : "Needs proof";
 
   return (
     <div className="space-y-12 pb-24">
@@ -152,7 +152,7 @@ export default function DirectoryPage() {
 
                   const availability: ProofState = hasProbe
                     ? live?.is_up
-                      ? "Present"
+                      ? "Live"
                       : "Needs proof"
                     : "Needs proof";
                   const latencyDisplay = hasProbe ? `${live?.latency_ms}ms` : "Needs proof";

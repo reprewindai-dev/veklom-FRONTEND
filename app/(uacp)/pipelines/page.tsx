@@ -7,7 +7,7 @@ import { useApi } from "@/hooks/useApi";
 import { VeklomRun } from "@/components/terminal/types";
 import { useSearchParams } from 'next/navigation';
 
-type ProofState = "verified" | "partial" | "empty" | "needs_proof" | "error";
+type ProofState = "verified" | "degraded" | "empty" | "needs_proof" | "error";
 
 interface PipelinesGpcData {
   runs: VeklomRun[];

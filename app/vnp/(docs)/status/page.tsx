@@ -152,7 +152,7 @@ export default function StatusPage() {
 
   // ── Row: Service health ────────────────────────────────────────────────────
   const healthState: ProofState =
-    healthOk === null ? "Unknown" : healthOk && health?.status ? "Present" : "Needs proof";
+    healthOk === null ? "Unknown" : healthOk && health?.status ? "Live" : "Needs proof";
   const healthValue =
     healthOk && health?.status ? String(health.status) : healthOk === false ? "Unreachable" : "…";
   const healthDetail =
@@ -169,7 +169,7 @@ export default function StatusPage() {
       : topologyOk === false
       ? "Needs proof"
       : connected >= expected && expected > 0
-      ? "Present"
+      ? "Live"
       : "Needs proof";
   const telemetryValue =
     topologyOk === false
@@ -183,7 +183,7 @@ export default function StatusPage() {
       : "Connectivity is derived from each node's returned status and heartbeat freshness, not from the presence of historical observations.";
 
   // ── Row: API uptime window ─────────────────────────────────────────────────
-  const uptimeState: ProofState = uptime?.available ? "Present" : "Needs proof";
+  const uptimeState: ProofState = uptime?.available ? "Live" : "Needs proof";
   const uptimeValue = uptime?.available ? JSON.stringify(uptime.data) : "No public-safe evidence";
   const uptimeBasis = `${uptime?.source ?? "GET /api/v1/platform/uptime"} (read server-side via /api/vnp/status-uptime)`;
   const uptimeDetail = uptime?.available
@@ -346,7 +346,7 @@ export default function StatusPage() {
           <h3 className="text-xl font-bold">How to read this page</h3>
         </div>
         <p className="text-gray-400 leading-relaxed">
-          A badge is not proof. <span className="text-emerald-300 font-semibold">Present</span> means
+          A badge is not proof. <span className="text-emerald-300 font-semibold">Live</span> means
           the backend returned the stated evidence at fetch time;{" "}
           <span className="text-amber-300 font-semibold">Needs proof</span> means the required
           evidence was absent or the source was unreachable. Node connectivity is derived from each

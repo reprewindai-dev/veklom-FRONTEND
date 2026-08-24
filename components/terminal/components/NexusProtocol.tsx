@@ -14,6 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
+import { getTransportState } from "@/lib/api";
 import { VNP_METHODOLOGY_VERSION, VNP_VERIFICATION_STACK_TITLE } from "@/lib/vnp/methodology";
 import ScoreCard from "@/components/vnp/ScoreCard";
 import type { VNPScore, VNPDimensionScore, VNPConfidence, VNPProvenance, VNPGrade, VNPRegionalScore, VNPDimensionId } from "@/lib/vnp/types";
@@ -57,7 +58,7 @@ interface NexusNode {
 
 interface NexusProbe {
   route: string;
-  state: "verified" | "needs_proof" | "error";
+  state: string;
   status: number;
   detail?: string;
 }
@@ -66,7 +67,7 @@ interface NexusState {
   generated_at: string;
   sources: { byos: string; capi: string };
   proof: {
-    state: "verified" | "partial" | "error";
+    state: string;
     reason: string;
     probes: NexusProbe[];
   };
@@ -108,14 +109,20 @@ function shortHash(value?: string | null): string {
 
 function proofTone(state?: string): string {
   if (state === "verified") return "text-[#00FF66] border-[#00FF66]/25 bg-[#00FF66]/10";
-  if (state === "error") return "text-red-300 border-red-400/25 bg-red-500/10";
+  if (state === "failed") return "text-red-300 border-red-400/25 bg-red-500/10";
   return "text-[#FFB800] border-[#FFB800]/25 bg-[#FFB800]/10";
 }
 
 function dotTone(state?: string): string {
   if (state === "verified") return "bg-[#00FF66]";
-  if (state === "error") return "bg-red-400";
+  if (state === "failed") return "bg-red-400";
   return "bg-[#FFB800]";
+}
+
+function normalizeProofState(state: NexusState["proof"]["state"]): "verified" | "degraded" | "failed" | "unknown" {
+  if (state === "verified" || state === "degraded" || state === "failed") return state;
+  if (state === "error") return "failed";
+  return "unknown";
 }
 
 function ProofPanel({ title, value, subtitle, state }: { title: string; value: string; subtitle: string; state: string }) {
@@ -158,11 +165,11 @@ export default function NexusProtocol() {
     refreshInterval: 15000,
   });
 
-  const apiCards = state?.cards || [];
-  const nodes = state?.nodes || [];
+  const apiCards = state?.cards ?? [];
+  const nodes = state?.nodes ?? [];
   const selectedApi = apiCards.find((api) => api.id === selectedApiId) || apiCards[0] || null;
   const verifiedProbeCount = state?.proof.probes.filter((probe) => probe.state === "verified").length || 0;
-  const proofState = error ? "error" : state?.proof.state || "needs_proof";
+  const proofState = state ? normalizeProofState(state.proof.state) : "unknown";
   const activeApis = Number(state?.metrics?.active_apis || apiCards.length || 0);
   const physicalProbes = Number(state?.metrics?.total_physical_probes_recorded || 0);
   const anchorState = state?.anchoring.block_anchored ? "verified" : "needs_proof";
@@ -180,6 +187,28 @@ export default function NexusProtocol() {
     return (
       <div className="w-full h-full flex items-center justify-center bg-[#030303] text-white/40 font-mono text-xs">
         LOADING ROUTE-BACKED NEXUS STATE...
+      </div>
+    );
+  }
+
+  if (error) {
+    const transportState = getTransportState(error);
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#030303] text-white/80 p-6">
+        <div className="max-w-xl w-full rounded-xl border border-red-400/25 bg-red-500/5 p-6 font-mono">
+          <div className="text-red-300 text-xs font-bold uppercase tracking-widest">
+            NEXUS DATA SOURCE {transportState}
+          </div>
+          <div className="mt-3 text-sm text-white/80">
+            The route-backed Nexus state could not be read. No empty or cached panel is shown.
+          </div>
+          <div className="mt-4 text-[10px] text-white/50 break-all">
+            GET /nexus-protocol/state
+          </div>
+          <div className="mt-2 text-[11px] text-red-200/80 break-words">
+            {error instanceof Error ? error.message : "The transport result is unknown."}
+          </div>
+        </div>
       </div>
     );
   }
@@ -213,7 +242,7 @@ export default function NexusProtocol() {
         <div className={`flex items-center gap-4 font-mono text-[10px] px-3 py-1 rounded border ${proofTone(proofState)}`}>
           <div className="flex items-center gap-1.5">
             <span className={`w-1.5 h-1.5 rounded-full ${dotTone(proofState)} ${proofState === "verified" ? "animate-pulse" : ""}`} />
-            <span className="uppercase">{proofState === "verified" ? "LIVE PROOF" : proofState === "error" ? "SOURCE ERROR" : "PARTIAL PROOF"}</span>
+            <span className="uppercase">{proofState === "verified" ? "LIVE" : proofState === "failed" ? "FAILED" : proofState === "degraded" ? "DEGRADED" : "UNKNOWN"}</span>
           </div>
           <div className="w-px h-3 bg-white/20" />
           <div>ROUTES: <span className="text-white">{verifiedProbeCount}/{state?.proof.probes.length || 0}</span></div>

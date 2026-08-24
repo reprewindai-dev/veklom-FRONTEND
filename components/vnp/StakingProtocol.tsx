@@ -84,7 +84,7 @@ interface StakingRouteState {
   generated_at: string;
   source: string;
   proof: {
-    state: "verified" | "partial" | "error";
+    state: "verified" | "degraded" | "error";
     reason: string;
     probes: Array<{ route: string; state: "verified" | "needs_proof" | "error"; status: number; detail?: string }>;
   };

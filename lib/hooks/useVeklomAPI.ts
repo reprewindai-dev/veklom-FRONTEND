@@ -1,11 +1,14 @@
 // lib/hooks/useVeklomAPI.ts
 import { useState, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { api, ApiError, getTransportState, type ApiErrorKind, type TransportState } from '@/lib/api';
 
 export interface APIError {
   message: string;
   status?: number;
   code?: string;
+  kind: ApiErrorKind;
+  state: TransportState;
+  path?: string;
 }
 
 export function useVeklomAPI() {
@@ -21,7 +24,7 @@ export function useVeklomAPI() {
         headers?: Record<string, string>;
         useAuth?: boolean;
       }
-    ): Promise<T | null> => {
+    ): Promise<T> => {
       setLoading(true);
       setError(null);
 
@@ -36,10 +39,13 @@ export function useVeklomAPI() {
       } catch (err) {
         const apiError: APIError = {
           message: err instanceof Error ? err.message : 'Unknown error',
-          status: err instanceof Error ? undefined : undefined,
+          status: err instanceof ApiError ? err.status : undefined,
+          kind: err instanceof ApiError ? err.kind : 'network',
+          state: getTransportState(err),
+          path: err instanceof ApiError ? err.path : endpoint,
         };
         setError(apiError);
-        return null;
+        throw err;
       } finally {
         setLoading(false);
       }

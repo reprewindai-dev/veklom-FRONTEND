@@ -17,7 +17,7 @@ The Asset Spine surface is the canonical operating surface for that journey. Pre
 - Do not expose, edit, or commit secrets. Never modify `.env` or `.env.local` unless explicitly instructed.
 - Protect auth, tier gates, billing, marketplace, deployment, and audit/evidence behavior as high-risk surfaces.
 - Never claim the full repo-to-runtime chain is proven unless every stage has trace evidence.
-- Use exact proof-state language: `Verified`, `Needs proof`, `Present`, `Not started`, `Manual step`, or `Simulated` only when the data truly indicates simulation.
+- Use exact proof-state language: `Verified`, `Live`, `Needs proof`, `Degraded`, `Not started`, `Manual step`, or `Simulated` only when the data truly indicates simulation.
 - Keep UI premium, dense but readable, and aligned to the proactive, self-healing sovereign control plane positioning.
 
 ## Critical Files

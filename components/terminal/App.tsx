@@ -27,6 +27,7 @@ interface TerminalAppProps {
   defaultTab?: string;
 }
 
+
 export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
   // Primary Navigation State
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
@@ -59,7 +60,7 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
   const [runs, setRuns] = useState<any[]>([]);
   const [delegates, setDelegates] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
-  const [liveMetrics, setLiveMetrics] = useState<any>({ globalThroughput: 0, complianceScore: 100, slaMisses: 0, activeYieldTokens: 0, totalPglRequests: 0, autoRoutedExecutions: 0, mcpIOHeartbeat: 0, throughput: 0, attestationRate: 0, gasSaved: 0, activeQueue: 0, uptime: '0h', totalExecutions: 0 });
+  const [liveMetrics, setLiveMetrics] = useState<any>({ globalThroughput: null, complianceScore: null, slaMisses: null, activeYieldTokens: null, totalPglRequests: null, autoRoutedExecutions: null, mcpIOHeartbeat: 'unknown', throughput: null, attestationRate: null, gasSaved: null, activeQueue: null, uptime: null, totalExecutions: null });
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   // Future integration point:
@@ -321,4 +322,3 @@ export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
     </div>
   );
 }
-

@@ -3,17 +3,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/terminal/components/Sidebar';
-import { api } from '@/lib/api';
+import type { SidebarProbeState } from '@/components/terminal/components/Sidebar';
+import { api, getTransportState } from '@/lib/api';
 
 // Clean layout — no prototype terminal state, no controlStore, no simulation imports.
 // The Sidebar is the nav component. Live metrics come from the real API.
 
-type ProbeState = "online" | "degraded" | "needs_proof";
-
 interface CanonicalSource {
-  id: "byos" | "capi";
+  id: string;
   legacy_id?: string;
   state: "healthy" | "degraded" | "needs_proof";
+  health?: ProbeResult;
+  overview?: ProbeResult;
 }
 
 interface CanonicalProbe {
@@ -24,19 +25,63 @@ interface CanonicalProbe {
   sources: CanonicalSource[];
 }
 
-function toProbeState(state: CanonicalProbe["state"] | CanonicalSource["state"] | undefined): ProbeState {
-  if (state === "healthy") return "online";
-  if (state === "degraded") return "degraded";
+interface ProbeResult {
+  ok: boolean;
+  status: number | null;
+  error?: string;
+}
+
+function transportStateToProbeState(state: ReturnType<typeof getTransportState>): SidebarProbeState {
+  if (state === "UNAVAILABLE") return "unavailable";
+  if (state === "FAILED") return "failed";
+  return "unknown";
+}
+
+function probeResultState(probe: ProbeResult | undefined): SidebarProbeState {
+  if (!probe) return "unknown";
+  if (probe.ok) return "online";
+  if (
+    probe.status === 404 ||
+    /not configured|failed to parse url|invalid.*url|unresolved/i.test(probe.error || "")
+  ) {
+    return "unavailable";
+  }
+  if (probe.status === null) return "unknown";
+  return "failed";
+}
+
+function toProbeState(source: CanonicalSource): SidebarProbeState {
+  if (source.state === "healthy") return "online";
+  const failedProbe = source.health?.ok ? source.overview : source.health;
+  return probeResultState(failedProbe);
+}
+
+function aggregateProbeState(states: SidebarProbeState[]): SidebarProbeState {
+  if (states.length === 0) return "unknown";
+  if (states.every((state) => state === "online")) return "online";
+  if (states.includes("degraded")) return "degraded";
+  if (states.includes("failed")) return "failed";
+  if (states.includes("unavailable")) return "unavailable";
+  if (states.includes("unknown")) return "unknown";
   return "needs_proof";
+}
+
+function probeLabel(state: SidebarProbeState): string {
+  if (state === "online") return "LIVE";
+  if (state === "degraded") return "DEGRADED";
+  if (state === "unavailable") return "UNAVAILABLE";
+  if (state === "failed") return "FAILED";
+  if (state === "unknown") return "UNKNOWN";
+  return "NEEDS PROOF";
 }
 
 export default function UACPLayout({ children }: { children: React.ReactNode }) {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [isLandingPage, setIsLandingPage] = useState<boolean>(false);
-  const [mcpHeartbeat, setMcpHeartbeat] = useState<ProbeState>('needs_proof');
-  const [throughput, setThroughput] = useState<number>(0);
-  const [proofPercent, setProofPercent] = useState<number>(0);
-  const [sourceStates, setSourceStates] = useState<Record<string, ProbeState>>({});
+  const [mcpHeartbeat, setMcpHeartbeat] = useState<SidebarProbeState>('needs_proof');
+  const [throughput, setThroughput] = useState<number | null>(null);
+  const [proofPercent, setProofPercent] = useState<number | null>(null);
+  const [sourceStates, setSourceStates] = useState<Record<string, SidebarProbeState>>({});
 
   useEffect(() => {
     const updateTime = () => {
@@ -57,35 +102,50 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
     const poll = async () => {
       try {
         const data = await api<CanonicalProbe>("/api/control-node/canonical-backends");
-        const states: Record<string, ProbeState> = {
-          overview: toProbeState(data.state),
+        const states: Record<string, SidebarProbeState> = {
+          overview: aggregateProbeState((data.sources || []).map(toProbeState)),
         };
         for (const source of data.sources || []) {
-          states[source.id] = toProbeState(source.state);
+          const state = toProbeState(source);
+          states[source.id] = state;
           if (source.legacy_id) {
-            states[source.legacy_id] = toProbeState(source.state);
+            states[source.legacy_id] = state;
           }
         }
 
         setSourceStates(states);
-        setMcpHeartbeat(toProbeState(data.state));
+        setMcpHeartbeat(states.overview);
         setProofPercent(
           data.canonical_source_count > 0
             ? Math.round((data.healthy_source_count / data.canonical_source_count) * 100)
-            : 0,
+            : null,
         );
-        setThroughput(0);
-      } catch {
-        setMcpHeartbeat('needs_proof');
-        setSourceStates({});
-        setProofPercent(0);
-        setThroughput(0);
+        setThroughput(null);
+      } catch (error) {
+        const transportState = transportStateToProbeState(getTransportState(error));
+        setMcpHeartbeat(transportState);
+        setSourceStates({
+          overview: transportState,
+          byos: transportState,
+          capi: transportState,
+          cappo: transportState,
+        });
+        setProofPercent(null);
+        setThroughput(null);
       }
     };
     poll();
     const interval = setInterval(poll, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const heartbeatLabel = probeLabel(mcpHeartbeat);
+  const heartbeatTone =
+    mcpHeartbeat === "online"
+      ? "text-[#00FF66]"
+      : mcpHeartbeat === "degraded"
+        ? "text-[#FFAB00]"
+        : "text-red-400";
 
   return (
     <div className="w-screen h-screen border-4 border-[#0A0A0C] bg-[#030303] text-white/90 overflow-hidden flex flex-col font-sans relative">
@@ -105,8 +165,8 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
             <span className="text-white/30">API:</span>
             <span className="text-electric-cyan">api.veklom.com</span>
             <div className="w-px h-3 bg-white/20" />
-            <span className={mcpHeartbeat === 'online' ? 'text-[#00FF66]' : mcpHeartbeat === 'degraded' ? 'text-[#FFAB00]' : 'text-red-400'}>
-              {mcpHeartbeat === 'online' ? '● LIVE' : mcpHeartbeat === 'degraded' ? '◐ DEGRADED' : '○ NEEDS PROOF'}
+            <span className={heartbeatTone}>
+              {mcpHeartbeat === 'online' ? '● LIVE' : mcpHeartbeat === 'degraded' ? '◐ DEGRADED' : `○ ${heartbeatLabel}`}
             </span>
           </div>
         </div>
@@ -115,15 +175,17 @@ export default function UACPLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-[9px] text-white/40 leading-none uppercase">ZERO-TRUST ENFORCEMENT</div>
-                <div className={`text-[10px] font-mono uppercase ${mcpHeartbeat === 'online' ? 'text-[#00FF66]' : 'text-[#FFAB00]'}`}>
-                  {mcpHeartbeat === 'online' ? 'ACTIVE / MODE_01' : 'NEEDS PROOF / MODE_01'}
+                <div className={`text-[10px] font-mono uppercase ${heartbeatTone}`}>
+                  {mcpHeartbeat === 'online' ? 'ACTIVE / MODE_01' : `${heartbeatLabel} / MODE_01`}
                 </div>
               </div>
               <div className="w-24 h-1.5 bg-white/10 overflow-hidden">
-                <div
-                  className={`h-full ${mcpHeartbeat === 'online' ? 'bg-[#00FF66] shadow-[0_0_4px_#00FF66]' : 'bg-[#FFAB00] shadow-[0_0_4px_#FFAB00]'}`}
-                  style={{ width: `${proofPercent}%` }}
-                />
+                {proofPercent !== null && (
+                  <div
+                    className={`h-full ${mcpHeartbeat === 'online' ? 'bg-[#00FF66] shadow-[0_0_4px_#00FF66]' : 'bg-[#FFAB00] shadow-[0_0_4px_#FFAB00]'}`}
+                    style={{ width: `${proofPercent}%` }}
+                  />
+                )}
               </div>
             </div>
           )}

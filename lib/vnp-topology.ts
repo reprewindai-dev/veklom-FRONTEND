@@ -66,7 +66,7 @@ export interface VnpTopologyResponse {
 // The only allowed status vocabulary where evidence is absent or partial.
 export type ProofState =
   | "Verified"
-  | "Present"
+  | "Live"
   | "Needs proof"
   | "Insufficient Evidence"
   | "Not started"
@@ -99,7 +99,7 @@ export function nodeConnectivityState(node: VnpTopologyNode): {
 
   if (connected && fresh) {
     return {
-      state: "Present",
+      state: "Live",
       reason: `Backend reports "${backendStatus}"; heartbeat ${freshnessLabel}.`,
     };
   }
@@ -139,7 +139,7 @@ export function formatTimestamp(ts?: string | null): string {
 // Tailwind classes for a proof-state pill. Color is reserved for status only.
 export function proofStateClasses(state: ProofState): string {
   switch (state) {
-    case "Present":
+    case "Live":
     case "Verified":
       return "text-emerald-300 bg-emerald-500/10 border-emerald-500/30";
     case "Needs proof":
