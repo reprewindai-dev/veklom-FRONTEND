@@ -1,127 +1,178 @@
 ﻿"use client";
 
-import Link from "next/link";
-import { ShieldCheck, Activity, FileText, Lock, Database, XCircle } from "lucide-react";
-import { FourSplitDemo } from "@/components/demo/FourSplitDemo";
+import React, { useState, useEffect } from "react";
+import { Moon, Sun, Lock, Shield, Server, Activity, Database, CheckCircle, FileText, Zap } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 
 export default function LandingPage() {
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
   return (
-    <MarketingLayout>
-      {/* Hero Section */}
-      <section className="relative w-full pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center z-10 relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-theme-surface2 border border-theme-border text-theme-text-muted text-[11px] font-semibold uppercase tracking-widest mb-8">
-            <span className="w-2 h-2 rounded-full bg-theme-verified animate-pulse-glow"></span>
-            Enterprise Agent Governance
+    <div className={min-h-screen transition-colors duration-300 }>
+      
+      {/* Theme Toggle Navbar */}
+      <nav className={ixed top-0 w-full z-50 px-6 py-4 border-b transition-colors }>
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#00E5FF] flex items-center justify-center">
+              <Zap className="w-5 h-5 text-black" />
+            </div>
+            <span className="font-bold tracking-widest uppercase text-sm">Veklom</span>
           </div>
-          <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-sans font-semibold tracking-tight text-theme-text mb-8 leading-[1.05] max-w-5xl">
-            Deterministic control for autonomous systems.
+          <button 
+            onClick={toggleTheme}
+            className={p-2 rounded-md border transition-colors }
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+      </nav>
+
+      <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-6 text-xs font-mono font-semibold uppercase tracking-widest shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-colors
+            ">
+            Sovereign Consequence Authority
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+            I ∧ P ∧ A ∧ S ∧ X ∧ E
           </h1>
-          <p className="text-lg md:text-xl text-theme-text-muted max-w-3xl mb-16 leading-relaxed font-light">
-            Veklom intercepts, governs, and anchors every machine-to-machine action in cryptographic proof. Deploy agents with absolute confidence, backed by a sovereign failstop substrate.
+          <p className={max-w-2xl mx-auto text-lg }>
+            The unbreakable six-part invariant flow. Zero-trust architecture anchoring agentic execution in cryptographically verified proof.
           </p>
         </div>
-        
-        {/* The 4-Split Demo - Hero Integration */}
-        <div className="w-full max-w-7xl mx-auto relative z-20">
-          <FourSplitDemo />
-        </div>
-      </section>
 
-      {/* Feature / Architecture Section */}
-      <section className="py-32 px-6 border-t border-theme-border bg-theme-surface">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-20 max-w-3xl">
-            <div className="text-theme-accent text-sm font-bold tracking-widest uppercase mb-4">Architecture</div>
-            <h2 className="text-4xl md:text-5xl font-semibold text-theme-text mb-6 tracking-tight">
-              The Absolute Standard for M2M Governance.
-            </h2>
-            <p className="text-lg text-theme-text-muted leading-relaxed">
-              We don't orchestrate agents. We provide the unbreakable substrate that proves who they are, verifies what they can do, and instantly halts them if they breach protocol.
-            </p>
+        {/* Interactive Architecture Flow */}
+        <div className="relative">
+          {/* Connection Line */}
+          <div className="absolute top-1/2 left-0 w-full h-1 -translate-y-1/2 z-0 hidden lg:block overflow-hidden rounded-full">
+            <div className={w-full h-full }></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent opacity-50 animate-[liquid-fill_3s_ease-in-out_infinite]"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-theme-border border border-theme-border rounded-xl overflow-hidden shadow-2xl">
-            {/* VNP */}
-            <div className="bg-theme-bg p-10 hover:bg-theme-surface transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-theme-surface2 border border-theme-border flex items-center justify-center mb-8 text-theme-accent">
-                <Activity className="w-6 h-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 relative z-10">
+            
+            {/* I - Identity */}
+            <div className={p-6 rounded-xl border relative group transition-all duration-300 hover:-translate-y-2
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-black font-mono text-[#00E5FF]">I</span>
+                <Lock className={w-5 h-5 } />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-theme-text">VNP</h3>
-              <div className="text-xs font-mono text-theme-text-muted mb-4 uppercase tracking-wider">Veklom Nexus Protocol</div>
-              <p className="text-sm text-theme-text-muted leading-relaxed">
-                Measures physical network reality: P99 Latency, Uptime, and Settlement. The foundational layer of observability for autonomous agents.
-              </p>
+              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide">Identity</h3>
+              <p className={	ext-xs }>SPIFFE / OIDC</p>
+              <div className={mt-4 pt-4 border-t text-[10px] font-mono flex justify-between }>
+                <span>Protocol</span>
+                <span className="text-[#00E5FF] font-bold">mTLS+JWT</span>
+              </div>
             </div>
 
-            {/* VCGB */}
-            <div className="bg-theme-bg p-10 hover:bg-theme-surface transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-theme-surface2 border border-theme-border flex items-center justify-center mb-8 text-theme-accent">
-                <ShieldCheck className="w-6 h-6" />
+            {/* P - Policy */}
+            <div className={p-6 rounded-xl border relative group transition-all duration-300 hover:-translate-y-2
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-black font-mono text-[#00E5FF]">P</span>
+                <Shield className={w-5 h-5 } />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-theme-text">VCGB</h3>
-              <div className="text-xs font-mono text-theme-text-muted mb-4 uppercase tracking-wider">Capability Governance Benchmark</div>
-              <p className="text-sm text-theme-text-muted leading-relaxed">
-                Evaluates enforcement boundaries. Tests systems for the correct decision, real-world effect boundary, and policy compliance.
-              </p>
+              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide">Policy</h3>
+              <p className={	ext-xs }>SEKED Engine</p>
+              <div className={mt-4 pt-4 border-t text-[10px] font-mono flex justify-between }>
+                <span>Type</span>
+                <span className="text-[#00E5FF] font-bold">Middleware</span>
+              </div>
             </div>
 
-            {/* EEE */}
-            <div className="bg-theme-bg p-10 hover:bg-theme-surface transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-theme-surface2 border border-theme-border flex items-center justify-center mb-8 text-theme-accent">
-                <FileText className="w-6 h-6" />
+            {/* A - Authority */}
+            <div className={p-6 rounded-xl border relative group transition-all duration-300 hover:-translate-y-2
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-black font-mono text-[#00E5FF]">A</span>
+                <Server className={w-5 h-5 } />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-theme-text">EEE</h3>
-              <div className="text-xs font-mono text-theme-text-muted mb-4 uppercase tracking-wider">Execution Evidence Envelope</div>
-              <p className="text-sm text-theme-text-muted leading-relaxed">
-                Standardizes the evidence. A tamper-evident cryptographic record binding capability, authority, policy, and exact execution effects.
-              </p>
+              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide">Authority</h3>
+              <p className={	ext-xs }>CAPPO-BACKEND</p>
+              <div className={mt-4 pt-4 border-t text-[10px] font-mono flex justify-between }>
+                <span>Port</span>
+                <span className="font-bold">8002</span>
+              </div>
+            </div>
+
+            {/* S - State */}
+            <div className={p-6 rounded-xl border relative group transition-all duration-300 hover:-translate-y-2
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-black font-mono text-[#00FF66]">S</span>
+                <Activity className={w-5 h-5 } />
+              </div>
+              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide">State</h3>
+              <p className={	ext-xs }>Live Target Check (TOCTOU)</p>
+              <div className={mt-4 pt-4 border-t text-[10px] font-mono flex justify-between }>
+                <span>Execution</span>
+                <span className="font-bold">Pre-Flight</span>
+              </div>
+            </div>
+
+            {/* X - Execution */}
+            <div className={p-6 rounded-xl border relative group transition-all duration-300 hover:-translate-y-2
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-black font-mono text-[#FF003C]">X</span>
+                <Database className={w-5 h-5 } />
+              </div>
+              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide">Execution</h3>
+              <p className={	ext-xs }>LOCKERPHYCER</p>
+              <div className={mt-4 pt-4 border-t text-[10px] font-mono flex justify-between }>
+                <span>Port</span>
+                <span className="text-[#FF003C] font-bold">8001</span>
+              </div>
+            </div>
+
+            {/* E - Evidence */}
+            <div className={p-6 rounded-xl border relative group transition-all duration-300 hover:-translate-y-2
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-black font-mono text-[#00E5FF]">E</span>
+                <FileText className={w-5 h-5 } />
+              </div>
+              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide">Evidence</h3>
+              <p className={	ext-xs }>GnomLedger / PGL</p>
+              <div className={mt-4 pt-4 border-t text-[10px] font-mono flex justify-between }>
+                <span>Port</span>
+                <span className="text-[#00E5FF] font-bold">8092</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Secondary Sub-Systems */}
+        <div className="mt-16 flex flex-col items-center">
+          <div className="w-px h-16 bg-gradient-to-b from-[#00E5FF] to-transparent opacity-50"></div>
+          <div className={px-6 py-4 rounded-xl border flex items-center gap-4 shadow-lg
+            }>
+            <CheckCircle className="w-6 h-6 text-[#00FF66]" />
+            <div>
+              <h4 className="font-bold text-sm">x402 Settlement Engine</h4>
+              <div className={	ext-xs font-mono mt-1 flex justify-between }>
+                <span>Port</span>
+                <span className="text-[#00E5FF] font-bold ml-2">9002</span>
+              </div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Core Protocol Layers */}
-      <section className="py-32 px-6 border-t border-theme-border bg-theme-bg">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
-            <div className="max-w-2xl">
-              <h2 className="text-4xl md:text-5xl font-semibold text-theme-text mb-6 tracking-tight">
-                Execution, governed from intent to settlement.
-              </h2>
-            </div>
-            <div className="max-w-md">
-              <p className="text-theme-text-muted leading-relaxed">
-                "The AI did it" is not an acceptable answer for enterprise compliance. Veklom wraps every tool call in identity, policy, and cryptographic proof before the action reaches production.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { title: "Intent Verification", desc: "No agent acts until intent is proven and authorized.", icon: Lock },
-              { title: "Deterministic Runtime", desc: "Execution inside a secure, vendor-neutral harness.", icon: Database },
-              { title: "Revocation & Refusal", desc: "Unsafe actions are refused and halted instantly.", icon: XCircle },
-              { title: "Proof Anchoring", desc: "Every action anchors cryptographic evidence globally.", icon: ShieldCheck }
-            ].map((layer, i) => {
-              const Icon = layer.icon;
-              return (
-                <div key={i} className="pt-8 border-t border-theme-border">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Icon className="w-5 h-5 text-theme-accent" />
-                    <div className="font-mono text-[10px] tracking-widest uppercase text-theme-text-muted">Layer 0{i + 1}</div>
-                  </div>
-                  <h4 className="text-lg font-bold mb-3 text-theme-text">{layer.title}</h4>
-                  <p className="text-sm text-theme-text-muted leading-relaxed">
-                    {layer.desc}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-    </MarketingLayout>
+      </main>
+    </div>
   );
 }
