@@ -213,8 +213,8 @@ export interface VNPScore {
   apiName: string;
   provider: string;
   category: string;
-  /** 0-100 composite score */
-  composite: number;
+  /** Composite score is unavailable without trace evidence. */
+  composite: number | null;
   /** Letter grade: AAA, AA, A, BBB, BB, B, CCC, CC, C, D */
   grade: VNPGrade;
   /** Dimensional breakdown */
@@ -227,8 +227,10 @@ export interface VNPScore {
   provenance: VNPProvenance;
   /** Measurement freshness */
   lastMeasured: string;
-  /** Total measurement count across all epochs */
+  /** Number of signed VNP observations across all epochs */
   measurementCount: number;
+  /** Aggregate governed-run telemetry count; not cryptographic evidence */
+  telemetrySampleCount: number;
   /** Status: active, provisional, disputed, suspended */
   status: VNPStatus;
 }
@@ -241,7 +243,7 @@ export type VNPStatus = "active" | "provisional" | "disputed" | "suspended" | "u
 // ---------------------------------------------------------------------------
 export interface VNPConfidence {
   level: "high" | "medium" | "low" | "provisional" | "unmeasured";
-  /** Number of measurements in scoring window */
+  /** Number of signed observations in the scoring window */
   sampleCount: number;
   /** 95% CI half-width on composite score */
   marginOfError: number;
@@ -343,33 +345,11 @@ export interface VNPDispute {
 export interface BenchmarkApiEntry {
   id: string;
   name: string;
-  category: string;
-  p50: number;
-  p95: number;
-  p99: number;
-  sla: number;
-  drift: number;
-  sovereignTier: number;
-  complianceLabels: string[];
-  govScore: number;
-  devScore: number;
-  endpointUrl?: string | null;
-  description?: string | null;
-  mcpSchema?: Record<string, unknown> | null;
   provider?: string | null;
-  throughput: number;
-  uptime24h: number;
-  totalStaked: number;
-  status: string;
-  measurementEvidence?: {
-    measurementCount: number;
-    merkleRoot: string;
-    nodeOperators: string[];
-    harnessVersion: string;
-    scriptHash: string;
-    epochStart: string;
-    epochEnd: string;
-    chainAnchorTx?: string | null;
-    chainAnchorBlock?: number | null;
-  } | null;
+  p50: number | null;
+  p95: number | null;
+  p99: number | null;
+  successRatePercent: number;
+  measuredFrom: "governed_runs";
+  sampleCount: number;
 }

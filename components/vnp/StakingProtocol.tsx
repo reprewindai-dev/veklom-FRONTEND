@@ -44,15 +44,15 @@ import type {
 // ============ Helpers ============
 
 const fmtUSD = (n: number | undefined | null) => {
-  if (n === undefined || n === null || isNaN(n)) return "$0";
+  if (n === undefined || n === null || isNaN(n)) return "Needs proof";
   return "$" + Math.round(n).toLocaleString("en-US");
 };
 const fmtMs = (n: number | undefined | null) => {
-  if (n === undefined || n === null || isNaN(n)) return "no data";
+  if (n === undefined || n === null || isNaN(n)) return "Needs proof";
   return `${n.toFixed(1)}ms`;
 };
 const fmtPct = (n: number | undefined | null) => {
-  if (n === undefined || n === null) return "no data yet";
+  if (n === undefined || n === null) return "Needs proof";
   return `${n}%`;
 };
 
@@ -185,7 +185,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           <div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-[#A1A1A6]">Staking Proof State</div>
-            <div className="text-sm text-white mt-1">{stakingRoute?.proof.reason || "Loading BYOS staking proof..."}</div>
+            <div className="text-sm text-white mt-1">{stakingRoute?.proof?.reason || "Loading BYOS staking proof..."}</div>
           </div>
           <div className="lg:ml-auto flex flex-wrap gap-2">
             {(stakingRoute?.proof?.probes || []).map((probe) => (
@@ -206,7 +206,7 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
         </div>
         {stakingRoute?.marketProof?.state !== "verified" && (
           <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-            {stakingRoute?.marketProof.reason || "Verified staking markets are not available yet."}
+            {stakingRoute?.marketProof?.reason || "Verified staking markets are not available yet."}
           </div>
         )}
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
@@ -228,8 +228,8 @@ export default function StakingProtocol({ apis = [] }: StakingProtocolProps) {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: "Total Value Bonded", value: fmtUSD(protocolStats.totalValueBonded), icon: Wallet, color: "text-[#FFB800]", sub: protocolStats.totalValueBonded === 0 ? "No validators staked" : undefined },
-          { label: "Active APIs", value: protocolStats.activeApis != null ? String(protocolStats.activeApis) : "0", icon: Server, color: "text-cyan-400" },
-          { label: "Active Verifiers", value: protocolStats.activeVerifiers != null ? String(protocolStats.activeVerifiers) : "0", icon: Users, color: "text-[#FFB800]", sub: protocolStats.activeVerifiers === 0 ? "None registered" : undefined },
+          { label: "Active APIs", value: protocolStats.activeApis != null ? String(protocolStats.activeApis) : "Needs proof", icon: Server, color: "text-cyan-400" },
+          { label: "Active Verifiers", value: protocolStats.activeVerifiers != null ? String(protocolStats.activeVerifiers) : "Needs proof", icon: Users, color: "text-[#FFB800]", sub: protocolStats.activeVerifiers === 0 ? "None registered" : undefined },
           { label: "Settlement Rate", value: fmtPct(protocolStats.settlementRate), icon: CheckCircle, color: protocolStats.settlementRate == null ? "text-[#A1A1A6]" : "text-emerald-400" },
           { label: "Total Penalties", value: fmtUSD(protocolStats.totalPenalties), icon: AlertTriangle, color: "text-rose-400" },
         ].map((stat) => (

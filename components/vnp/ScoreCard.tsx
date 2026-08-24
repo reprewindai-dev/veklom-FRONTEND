@@ -28,20 +28,12 @@ function isIsoDate(value: string | null | undefined): value is string {
 }
 
 export default function ScoreCard({ score }: ScoreCardProps) {
-  const measured = score.status !== "unmeasured" && score.grade !== "N/A";
-  const band = measured ? gradeForScore(score.composite) : { grade: "N/A", color: "#A1A1A6", bgColor: "rgba(161,161,166,0.1)", borderColor: "rgba(161,161,166,0.25)" };
-  const axes = score.dimensions.slice(0, 5);
-  while (axes.length < 5) {
-    axes.push({
-      id: "documentation",
-      label: "Needs proof",
-      raw: 0,
-      normalized: 0,
-      weight: 0,
-      weighted: 0,
-    });
-  }
+  const composite = score.composite;
+  const measured = score.status !== "unmeasured" && score.grade !== "N/A" && composite !== null;
+  const band = measured ? gradeForScore(composite) : { grade: "N/A", color: "#A1A1A6", bgColor: "rgba(161,161,166,0.1)", borderColor: "rgba(161,161,166,0.25)" };
+  const axes = Array.isArray(score.dimensions) ? score.dimensions.slice(0, 5) : [];
   const polygonDimensions = axes.map((dimension) => dimension.normalized);
+  const axisLabel = (index: number) => axes[index]?.label || "Needs proof";
   const assessedOn = isIsoDate(score.provenance.epochEnd)
     ? new Date(score.provenance.epochEnd).toLocaleString("en-US", { timeZone: "UTC" }) + " UTC"
     : "Needs proof";
@@ -54,8 +46,8 @@ export default function ScoreCard({ score }: ScoreCardProps) {
   const dataSources = score.provenance.nodeOperators.length > 0
     ? String(score.provenance.nodeOperators.length)
     : "Needs proof";
-  const telemetryPoints = score.measurementCount > 0
-    ? score.measurementCount.toLocaleString()
+  const telemetryPoints = score.telemetrySampleCount > 0
+    ? score.telemetrySampleCount.toLocaleString()
     : "Needs proof";
 
   const width = 400;
@@ -93,7 +85,7 @@ export default function ScoreCard({ score }: ScoreCardProps) {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-5xl font-bold text-[#3EE7A2] tracking-tighter">
-              {measured ? score.composite.toFixed(1) : "N/A"}
+              {measured ? composite.toFixed(1) : "N/A"}
             </span>
             {measured && <span className="text-lg text-[#3EE7A2]/60">/100</span>}
           </div>
@@ -209,35 +201,35 @@ export default function ScoreCard({ score }: ScoreCardProps) {
         {/* Absolute positioned labels for dimensions */}
         <div className="absolute top-[8%] left-[50%] -translate-x-1/2 flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Shield className="w-3 h-3 text-[#3EE7A2]" /> {axes[0].label}
+            <Shield className="w-3 h-3 text-[#3EE7A2]" /> {axisLabel(0)}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[0]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute top-[35%] right-[5%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <CheckCircle2 className="w-3 h-3 text-[#3EE7A2]" /> {axes[1].label}
+            <CheckCircle2 className="w-3 h-3 text-[#3EE7A2]" /> {axisLabel(1)}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[1]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute bottom-[5%] right-[15%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Zap className="w-3 h-3 text-[#3EE7A2]" /> {axes[2].label}
+            <Zap className="w-3 h-3 text-[#3EE7A2]" /> {axisLabel(2)}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[2]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute bottom-[5%] left-[15%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Activity className="w-3 h-3 text-[#3EE7A2]" /> {axes[3].label}
+            <Activity className="w-3 h-3 text-[#3EE7A2]" /> {axisLabel(3)}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[3]?.toFixed(0)}</div>
         </div>
 
         <div className="absolute top-[35%] left-[5%] flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-[10px] text-white tracking-wider mb-1">
-            <Shield className="w-3 h-3 text-[#3EE7A2]" /> {axes[4].label}
+            <Shield className="w-3 h-3 text-[#3EE7A2]" /> {axisLabel(4)}
           </div>
           <div className="text-[#3EE7A2] font-mono text-sm leading-none">{polygonDimensions[4]?.toFixed(0)}</div>
         </div>

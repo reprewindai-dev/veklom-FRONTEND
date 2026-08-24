@@ -48,7 +48,8 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
 
   // Build consensus rounds from real score data — deterministic per-epoch
   const rounds = useMemo<ConsensusRound[]>(() => {
-    if (scores.length === 0) return [];
+    const measuredScores = scores.filter((score) => score.composite !== null);
+    if (measuredScores.length === 0) return [];
 
     const now = new Date();
     const epochHour = new Date(now);
@@ -57,7 +58,7 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
     return Array.from({ length: 6 }, (_, i) => {
       const epochTime = new Date(epochHour.getTime() - i * 3600000);
       const epochKey = epochTime.toISOString();
-      const totalMeasurements = scores.reduce((s, sc) => s + sc.measurementCount, 0);
+      const totalMeasurements = measuredScores.reduce((s, sc) => s + sc.measurementCount, 0);
 
       return {
         id: `round-${i}`,
@@ -96,19 +97,20 @@ export default function ConsensusVisualization({ scores }: ConsensusVisualizatio
     },
   ];
 
-  const totalMeasurements = scores.reduce((s, sc) => s + sc.measurementCount, 0);
-  const avgConfidence = scores.length > 0
-    ? scores.reduce((s, sc) => s + sc.confidence.marginOfError, 0) / scores.length
-    : 0;
+  const totalTelemetrySamples = scores.reduce((s, sc) => s + sc.telemetrySampleCount, 0);
+  const measuredScores = scores.filter((score) => score.composite !== null);
+  const avgConfidence = measuredScores.length > 0
+    ? measuredScores.reduce((s, sc) => s + sc.confidence.marginOfError, 0) / measuredScores.length
+    : null;
 
   return (
     <div className="max-w-5xl space-y-8">
       {/* Aggregate stats */}
       <div className="grid grid-cols-4 gap-4">
-        <AggStat label="Total Measurements" value={totalMeasurements.toLocaleString()} color="#FFB800" />
+        <AggStat label="Telemetry Samples" value={totalTelemetrySamples.toLocaleString()} color="#FFB800" />
         <AggStat label="Active Regions" value={`${VNP_REGIONS.length}`} color="#37C9EC" />
         <AggStat label="APIs Scored" value={`${scores.length}`} color="#3EE7A2" />
-        <AggStat label="Avg Margin ±" value={avgConfidence.toFixed(1)} color="#A78BFA" />
+        <AggStat label="Avg Margin ±" value={avgConfidence === null ? "Needs proof" : avgConfidence.toFixed(1)} color="#A78BFA" />
       </div>
 
       {/* Phase pipeline */}

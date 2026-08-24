@@ -64,7 +64,10 @@ function truncHash(hash: string, len = 10): string {
 }
 
 function deterministicGenomes(scores: VNPScore[]): AgentGenome[] {
-  return scores.slice(0, 12).map((score, i) => {
+  const measuredScores = scores.filter(
+    (score): score is VNPScore & { composite: number } => score.composite !== null,
+  );
+  return measuredScores.slice(0, 12).map((score, i) => {
     let h = 0;
     for (let c = 0; c < score.apiId.length; c++) {
       h = ((h << 5) - h + score.apiId.charCodeAt(c)) | 0;

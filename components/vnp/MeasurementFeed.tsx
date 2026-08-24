@@ -65,7 +65,7 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
           region: "VNP",
           apiName: score.apiName,
           type: "SCORE_UPDATE",
-          message: `[VNP] ${score.apiName} composite: ${score.composite.toFixed(1)} (${score.grade}) — ${score.confidence.level} confidence`,
+          message: `[VNP] ${score.apiName} composite: ${score.composite === null ? "Needs proof" : score.composite.toFixed(1)} (${score.grade}) — ${score.confidence.level} confidence`,
           timestamp: score.lastMeasured,
         });
       }
@@ -108,7 +108,7 @@ export default function MeasurementFeed({ scores }: MeasurementFeedProps) {
           region: "VNP",
           apiName: score.apiName,
           type: "SCORE_UPDATE",
-          message: `[VNP] ${score.apiName} — ${score.grade} ${score.composite.toFixed(1)}, ${score.measurementCount.toLocaleString()} measurements, ±${score.confidence.marginOfError.toFixed(1)}`,
+          message: `[VNP] ${score.apiName} — ${score.composite === null ? "Needs proof" : `${score.grade} ${score.composite.toFixed(1)}`}, ${score.telemetrySampleCount.toLocaleString()} telemetry samples`,
           timestamp: new Date().toISOString(),
         };
       } else {

@@ -42,7 +42,6 @@ export async function GET(
         apiId: score.apiId,
         apiName: score.apiName,
         provider: score.provider,
-        category: score.category,
         composite: score.composite,
         grade: score.grade,
         status: score.status,
@@ -61,6 +60,7 @@ export async function GET(
         },
         lastMeasured: score.lastMeasured,
         measurementCount: score.measurementCount,
+        telemetrySampleCount: score.telemetrySampleCount,
       },
       _links: {
         badge: `/api/vnp/badge/${apiId}`,
