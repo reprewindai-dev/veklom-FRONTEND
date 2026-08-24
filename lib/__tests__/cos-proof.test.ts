@@ -14,12 +14,19 @@ describe("Capability OS proof derivation", () => {
   });
 
   it("does not treat reachability as verification", () => {
-    expect(deriveProofStatus({ kind: "reachability-only", status: 200 })).toBe("Present");
+    expect(deriveProofStatus({ kind: "reachability-only", status: 200 })).toBe("Live");
   });
 
-  it("requires source truth or a signed handshake for Verified", () => {
-    expect(deriveProofStatus({ kind: "source-of-truth", status: 200 })).toBe("Verified");
+  it("keeps unsigned source truth Live and requires explicit proof for Verified", () => {
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200 })).toBe("Live");
     expect(deriveProofStatus({ kind: "source-of-truth", status: 200, signed: true })).toBe("Verified");
+  });
+
+  it("only classifies a declared verified payload as signed when a signature is present", () => {
+    const unsigned = classifyPayload({ truth_state: "VERIFIED", result: "ok" });
+    const signed = classifyPayload({ truth_state: "VERIFIED", result: "ok", signature: "sig-123" });
+    expect(deriveProofStatus(unsigned.observation)).toBe("Live");
+    expect(deriveProofStatus(signed.observation)).toBe("Verified");
   });
 
   it("marks sandbox source observations as Simulated but preserves failures", () => {
