@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/lib/auth-context";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
 import AmbientIntervention from "@/components/ambient/AmbientIntervention";
@@ -114,7 +115,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={`min-h-screen bg-bg-900 text-ink-50 antialiased ${inter.variable} ${fraunces.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
+      <body className={`min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] antialiased ${inter.variable} ${fraunces.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
+        <ThemeProvider>
         <WebMCPProvider>
           <AuthProvider>
             <DegradedBanner />
@@ -123,6 +125,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <GoogleAnalyticsUserSync />
           </AuthProvider>
         </WebMCPProvider>
+        </ThemeProvider>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-KCZM27WWX7"} />
         <CookieBanner />
       </body>
