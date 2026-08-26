@@ -1,8 +1,8 @@
-import { ShieldCheck, Radio, KeyRound, FileCheck2, GitCompareArrows } from "lucide-react";
+import { ShieldCheck, Radio, KeyRound, FileCheck2, GitCompareArrows, Server, Cpu, Network, Link, Settings } from "lucide-react";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 import { ProofBadge } from "./ProofBadge";
 
-const icons = { Work: Radio, Telemetry: Radio, Authority: KeyRound, Evidence: FileCheck2, Drift: GitCompareArrows };
+const icons = { Work: Radio, Telemetry: Radio, Authority: KeyRound, Evidence: FileCheck2, Drift: GitCompareArrows, Host: Server, Runtime: Cpu, Topology: Network, Connectivity: Link, Configuration: Settings };
 
 export interface PillarProps {
   proof: ProofStatus;

@@ -8,6 +8,7 @@ const styles: Record<ProofStatus, string> = {
   "Not started": "border-cos-unknown/30 bg-cos-unknown/10 text-cos-unknown",
   "Manual step": "border-cos-warn/30 bg-cos-warn/10 text-cos-warn",
   Simulated: "border-cos-danger/30 bg-cos-danger/10 text-cos-danger",
+  Initializing: "border-cos-accent/30 bg-cos-accent/10 text-cos-accent animate-pulse",
 };
 
 export function ProofBadge({ status }: { status: ProofStatus }) {

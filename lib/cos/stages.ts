@@ -3,6 +3,7 @@ import { canonicalBackends } from "@/lib/canonical-backends";
 export type StageEndpointClass = "live" | "proxy" | "absent";
 export type StageId =
   | "computeless"
+  | "infrastructure"
   | "capabilities"
   | "mount"
   | "blueprint"
@@ -13,7 +14,8 @@ export type StageId =
   | "settle"
   | "authority"
   | "tracker"
-  | "terminal";
+  | "terminal"
+  | "settings";
 
 export interface StageEndpoint {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -38,13 +40,26 @@ const backend = (id: string) => canonicalBackends().find((item) => item.id === i
 export const stages: StageDefinition[] = [
   {
     id: "computeless",
-    label: "Infrastructure",
+    label: "Compute-less",
     route: "/os/computeless",
     purpose: "Inspect connected compute supply and the bounded environments available for governed execution.",
     owner: "Governed Compute / connected providers",
     endpoints: [
       { method: "GET", path: "/api/v1/computeless/telemetry", classification: "live", response: "compute telemetry" },
       { method: "GET", path: "/api/v1/computeless/evidence", classification: "live", response: "compute evidence payload" },
+    ],
+  },
+  {
+    id: "infrastructure",
+    label: "Infrastructure",
+    route: "/os/infrastructure",
+    purpose: "Inspect the physical hosts, networking topologies, and core runtimes backing the operating system.",
+    owner: "Governed Compute / Core Infrastructure",
+    endpoints: [
+      { method: "GET", path: "/api/v1/infrastructure/host", classification: "absent", response: "host metrics" },
+      { method: "GET", path: "/api/v1/infrastructure/runtime", classification: "absent", response: "runtime metrics" },
+      { method: "GET", path: "/api/v1/infrastructure/topology", classification: "absent", response: "network topology" },
+      { method: "GET", path: "/api/v1/infrastructure/connectivity", classification: "absent", response: "connectivity status" },
     ],
   },
   {
@@ -199,6 +214,7 @@ const navOrder: StageId[] = [
   "evidence",
   "measure",
   "computeless",
+  "infrastructure",
 ];
 
 export const spineStages = navOrder.map((id) => stages.find((stage) => stage.id === id)!).filter(Boolean);

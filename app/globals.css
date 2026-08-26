@@ -3,61 +3,92 @@
 @tailwind utilities;
 
 @layer base {
+  /* ═══════════════════════════════════════════════════════
+     HUMAN-FACING LIGHT (Light Sovereign)
+     Canonical source: Veklom Human-Facing UI Color System
+     ═══════════════════════════════════════════════════════ */
   :root, [data-theme="day"], [data-theme="light"] {
-    --theme-bg: #F7F8FB;
+    --theme-black: #000000;
+    --theme-bg: #F6F8FC;
     --theme-surface: #FFFFFF;
-    --theme-border: #E1E5EE;
-    --theme-ink: #10162B;
-    --theme-ink-dim: #545F7A;
-    --theme-accent: #2547D0;
-    --theme-accent-soft: #E8ECFB;
-    
+    --theme-surface-2: #F0F3F8;
+    --theme-raised: #FFFFFF;
+    --theme-border: rgba(15, 23, 42, 0.08);
+    --theme-mid-gray: #94A3B8;
+    --theme-accent: #00E5FF;
+    --theme-accent-steel: #8A9BB0;
+    --theme-accent-soft: #E0F7FA;
+    --theme-ink: rgba(15, 23, 42, 0.92);
+    --theme-ink-dim: rgba(71, 85, 105, 0.65);
+    --theme-white: #0F172A;
+
     --theme-text: var(--theme-ink);
     --theme-text-muted: var(--theme-ink-dim);
-    
-    --theme-verified: #1D9E75;
-    --theme-warn: #BA7517;
-    --theme-danger: #D24C4C;
-    --theme-info: #2547D0;
-    --theme-unknown: var(--theme-ink-dim);
+
+    --theme-verified: #00FF66;
+    --theme-warn: #FFAB00;
+    --theme-danger: #FF4D4D;
+    --theme-info: #00E5FF;
+    --theme-unknown: #6B7280;
   }
 
+  /* ═══════════════════════════════════════════════════════
+     SOVEREIGN DARK (Navy Sovereign)
+     Canonical source: Veklom Sovereign UI Color System
+     ═══════════════════════════════════════════════════════ */
   [data-theme="dark"], [data-theme="night"] {
-    --theme-bg: #0A0E1F;
-    --theme-surface: #10162B;
-    --theme-border: #232B4A;
-    --theme-ink: #F3F5FC;
-    --theme-ink-dim: #8792B5;
-    --theme-accent: #5B7FFF;
-    --theme-accent-soft: #1A2247;
-    
+    --theme-black: #000000;
+    --theme-bg: #0A0E1A;
+    --theme-surface: #111827;
+    --theme-surface-2: #0D1220;
+    --theme-raised: #1F2937;
+    --theme-border: rgba(255, 255, 255, 0.08);
+    --theme-mid-gray: #374151;
+    --theme-accent: #00E5FF;
+    --theme-accent-steel: #8A9BB0;
+    --theme-accent-soft: #0D2B30;
+    --theme-ink: rgba(255, 255, 255, 0.92);
+    --theme-ink-dim: rgba(255, 255, 255, 0.55);
+    --theme-white: #F5F5F5;
+
     --theme-text: var(--theme-ink);
     --theme-text-muted: var(--theme-ink-dim);
-    
-    --theme-verified: #1D9E75;
-    --theme-warn: #BA7517;
-    --theme-danger: #D24C4C;
-    --theme-info: #5B7FFF;
-    --theme-unknown: var(--theme-ink-dim);
+
+    --theme-verified: #00FF66;
+    --theme-warn: #FFAB00;
+    --theme-danger: #FF4D4D;
+    --theme-info: #00E5FF;
+    --theme-unknown: #6B7280;
   }
 
+  /* ═══════════════════════════════════════════════════════
+     MACHINE MODE (True Grayscale)
+     Canonical source: Veklom Machine-Machine UI Color System
+     No persuasive hue. Status by contrast, weight, border.
+     ═══════════════════════════════════════════════════════ */
   [data-theme="machine"] {
-    --theme-bg: #0B0B0B;
-    --theme-surface: #171717;
-    --theme-border: #2E2E2E;
-    --theme-ink: #EDEDED;
-    --theme-ink-dim: #8A8A8A;
-    --theme-accent: #8A8A8A;
-    --theme-accent-soft: #1F1F1F;
-    
+    --theme-black: #000000;
+    --theme-bg: #080808;
+    --theme-surface: #111111;
+    --theme-surface-2: #181818;
+    --theme-raised: #222222;
+    --theme-border: rgba(255, 255, 255, 0.10);
+    --theme-mid-gray: #666666;
+    --theme-accent: #D0D0D0;
+    --theme-accent-steel: #666666;
+    --theme-accent-soft: #1A1A1A;
+    --theme-ink: rgba(255, 255, 255, 0.86);
+    --theme-ink-dim: rgba(255, 255, 255, 0.55);
+    --theme-white: #F5F5F5;
+
     --theme-text: var(--theme-ink);
     --theme-text-muted: var(--theme-ink-dim);
-    
-    --theme-verified: var(--theme-ink);
-    --theme-warn: var(--theme-ink);
-    --theme-danger: var(--theme-ink);
-    --theme-info: var(--theme-ink);
-    --theme-unknown: rgba(237,237,237,0.55);
+
+    --theme-verified: #F2F2F2;
+    --theme-warn: #B8B8B8;
+    --theme-danger: #7A7A7A;
+    --theme-info: #D0D0D0;
+    --theme-unknown: #555555;
   }
 }
 

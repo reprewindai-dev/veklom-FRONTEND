@@ -5,7 +5,8 @@ export type ProofStatus =
   | "Degraded"
   | "Not started"
   | "Manual step"
-  | "Simulated";
+  | "Simulated"
+  | "Initializing";
 
 export type AuthRequirement = "jwt" | "api-key" | "none";
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";

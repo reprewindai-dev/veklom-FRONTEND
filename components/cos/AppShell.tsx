@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Clock3, Command, Cpu, ShieldCheck } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { LeftNav } from "./LeftNav";
 import { VeklomLogo } from "./VeklomLogo";
@@ -94,8 +95,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  const pathname = usePathname();
   const identity = loading ? "Loading identity" : me?.email || me?.name || "Requester identity unavailable";
-  const healthProof = health ? "Live" : healthError ? "Degraded" : "Needs proof";
+  
+  const isInitializing = pathname === "/os/onboarding";
+  const healthProof = isInitializing 
+    ? "Initializing" 
+    : health ? "Live" : healthError ? "Degraded" : "Needs proof";
 
   return (
     <SandboxProvider value={sandbox}>
@@ -113,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2 text-xs">
               <ProdSandboxToggle sandbox={sandbox} onChange={setSandbox} />
               <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex" title={healthError || undefined}>
-                <Cpu size={14} className={health ? "text-cos-info" : healthError ? "text-cos-warn" : "text-cos-steel"} />Runtime <ProofBadge status={healthProof} />
+                <Cpu size={14} className={health ? "text-cos-info" : healthError ? "text-cos-warn" : "text-cos-steel"} />Runtime: <ProofBadge status={healthProof} />
               </div>
               <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
               {balance ? (

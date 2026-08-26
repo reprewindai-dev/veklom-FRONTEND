@@ -26,7 +26,7 @@ export default function GenomeLedgerOnboarding() {
               <span className="text-hazard-amber font-bold">Gnomledger</span>
             </h1>
             <p className="text-white/40 text-sm leading-relaxed max-w-sm">
-              Provisioning Sovereign Authority node. Establishing secure telemetry and immutable operational chains.
+              Provisioning Veklom Authority Node. Establishing secure telemetry and immutable operational chains.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export default function GenomeLedgerOnboarding() {
                 <div className="space-y-2">
                    <h3 className="text-sm font-bold text-hazard-amber uppercase">Why this matters</h3>
                    <p className="text-[11px] text-white/40 leading-relaxed">
-                      Establishing a cryptographically bound Operator Identity ensures that all autonomous actions trace back to an authorized human. This prevents unauthorized usage and guarantees compliance with enterprise security models.
+                      Establishing an Operator Identity creates the root human reference for governed actions, allowing execution evidence and delegated authority to be associated with an accountable operator.
                    </p>
                 </div>
              </div>

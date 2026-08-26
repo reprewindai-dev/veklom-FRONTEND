@@ -383,7 +383,7 @@ export default function PGLOnboardingPage() {
               <span className="font-semibold text-cos-accent">Gnomledger</span>
             </h1>
             <p className="text-cos-muted text-sm max-w-sm leading-relaxed">
-              Provisioning Sovereign Authority node. Establishing secure telemetry
+              Provisioning Veklom Authority Node. Establishing secure telemetry
               and immutable operational chains.
             </p>
           </div>
@@ -483,7 +483,7 @@ export default function PGLOnboardingPage() {
                     <div className="mb-6 p-4 rounded-xl bg-cos-accent/10 border border-cos-accent/20">
                       <h4 className="text-sm font-semibold text-cos-accent mb-1">Why this matters</h4>
                       <p className="text-xs text-cos-accent/80 leading-relaxed">
-                        Establishing a cryptographically bound Operator Identity ensures that all autonomous actions trace back to an authorized human. This prevents unauthorized usage and guarantees compliance with enterprise security models.
+                        Establishing an Operator Identity creates the root human reference for governed actions, allowing execution evidence and delegated authority to be associated with an accountable operator.
                       </p>
                     </div>
                     <Field

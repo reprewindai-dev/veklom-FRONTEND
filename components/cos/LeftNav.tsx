@@ -18,11 +18,14 @@ import {
   Scale,
   Settings,
   Shield,
+  Server,
 } from "lucide-react";
 import { spineStages, type StageDefinition } from "@/lib/cos/stages";
 
 const icons = {
   computeless: Cloud,
+  infrastructure: Server,
+  settings: Settings,
   capabilities: LayoutGrid,
   mount: Boxes,
   blueprint: BookOpenCheck,
@@ -51,7 +54,7 @@ export function LeftNav({ onTerminal }: { onTerminal: () => void }) {
     );
   };
 
-  const settingsActive = pathname === "/workspace-admin" || pathname.startsWith("/workspace-admin/");
+  const settingsActive = pathname === "/os/settings" || pathname.startsWith("/os/settings/");
 
   return (
     <aside className="hidden w-60 shrink-0 border-r border-cos-border bg-cos-bg/90 px-3 py-5 lg:block">
@@ -59,7 +62,7 @@ export function LeftNav({ onTerminal }: { onTerminal: () => void }) {
       <nav className="space-y-1">{spineStages.map(renderItem)}</nav>
       <div className="my-5 border-t border-cos-border" />
       <nav className="space-y-1">
-        <Link href="/workspace-admin" className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${settingsActive ? "bg-cos-accent/10 text-cos-accent" : "text-cos-muted hover:bg-cos-surface2 hover:text-cos-text"}`}>
+        <Link href="/os/settings" className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${settingsActive ? "bg-cos-accent/10 text-cos-accent" : "text-cos-muted hover:bg-cos-surface2 hover:text-cos-text"}`}>
           <Settings size={16} strokeWidth={settingsActive ? 2.4 : 1.8} />
           <span>Settings</span>
           {settingsActive && <motion.span layoutId="cos-nav-active" className="ml-auto h-1.5 w-1.5 rounded-full bg-cos-accent shadow-[0_0_10px_#00E5FF]" transition={{ type: "spring", stiffness: 500, damping: 35 }} />}
