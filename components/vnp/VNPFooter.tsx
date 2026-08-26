@@ -18,7 +18,7 @@ export default function VNPFooter() {
               <span className="font-bold font-mono tracking-wider text-white text-lg">VEKLOM NEXUS PROTOCOL</span>
             </div>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              The global standard for autonomous API performance benchmarking and zero-trust SLA settlement. Governing the autonomous web with mathematical certainty.
+              The conformance framework for autonomous API performance benchmarking and zero-trust SLA settlement. Governing the autonomous web with tamper-evident certainty.
             </p>
             <div className="flex flex-col gap-2 text-xs text-[#FFB800] bg-[#FFB800]/10 border border-[#FFB800]/20 px-3 py-2 rounded">
               <div className="flex items-center gap-2">

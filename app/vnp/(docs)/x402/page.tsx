@@ -55,7 +55,7 @@ export default function x402Page() {
             <Zap className="w-8 h-8 text-[#FFB800] mb-4" />
             <h3 className="font-bold text-lg mb-2 text-white">zk-SNARK Instant Settlement</h3>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Despite the 30-second VDF lock, settlement must occur instantly. VNP nodes generate a zk-SNARK proof demonstrating that their encrypted commitment constitutes a genuine SLA failure based on local TTFB timings. The smart contract validates this mathematical proof instantly without seeing the raw data, allowing immediate micro-slashing of the provider's bond.
+              Despite the 30-second VDF lock, settlement must occur instantly. VNP nodes generate a zk-SNARK proof demonstrating that their encrypted commitment constitutes a genuine SLA failure based on local TTFB timings. The smart contract validates this cryptographic evidence instantly without seeing the raw data, allowing immediate micro-slashing of the provider's bond.
             </p>
           </div>
         </section>

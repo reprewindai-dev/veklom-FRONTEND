@@ -101,7 +101,7 @@ export default function VNPLandingPage() {
           </motion.h1>
           
           <motion.p variants={fadeUpVariants} className="text-xl text-cos-text/70 mb-10 max-w-3xl mx-auto leading-relaxed">
-            Autonomous AI agents require absolute deterministic reliability. Standard status pages are marketing tools. The Veklom Nexus Protocol provides mathematical proof of API uptime, latency, and compliance across a decentralized global mesh.
+            Autonomous AI agents require absolute deterministic reliability. Standard status pages are marketing tools. The Veklom Nexus Protocol provides cryptographic evidence of API uptime, latency, and compliance across a decentralized global mesh.
           </motion.p>
           
           <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -124,7 +124,7 @@ export default function VNPLandingPage() {
             </span>
             <h2 className="text-4xl font-extrabold tracking-tight mb-6">VNP does not measure claims. It measures observable reality.</h2>
             <p className="text-cos-text/70 max-w-2xl mx-auto text-lg leading-relaxed">
-              A provider says "99.99% uptime." That's a claim. VNP measures multiple dimensions of trust from independent regions, delivering mathematical proof of network health, compliance, and settlement.
+              A provider says "99.99% uptime." That's a claim. VNP measures multiple dimensions of trust from independent regions, delivering cryptographic evidence of network health, compliance, and settlement.
             </p>
           </div>
 

@@ -679,7 +679,7 @@ export default function PGLOnboardingPage() {
                       <h4 className="text-sm font-semibold text-cos-accent mb-1">Your Mathematical Truth</h4>
                       <p className="text-xs text-cos-accent/80 leading-relaxed">
                         The ledger root forms the unalterable foundation of your evidence chain. 
-                        Every subsequent action, proof, and execution by this agent will be cryptographically hashed to this block. You now have mathematical proof of what your agents do, eliminating liability and enabling trust.
+                        Every subsequent action, proof, and execution by this agent will be cryptographically hashed to this block. You now have cryptographic evidence of what your agents do, eliminating liability and enabling trust.
                       </p>
                     </div>
                     <div className="p-6 rounded-xl bg-cos-surface2/55 border border-cos-border relative overflow-hidden group">
