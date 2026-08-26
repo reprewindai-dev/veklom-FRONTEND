@@ -31,7 +31,7 @@ trap - EXIT
 
 sed -i "s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/" docker-compose.yaml
 
-python3 -c 'import re; from pathlib import Path; p=Path("docker-compose.yaml"); s=p.read_text(); t=chr(96); control=f"Host({t}control.veklom.com{t}) && PathPrefix({t}/{t})"; expanded=f"(Host({t}control.veklom.com{t}) || Host({t}veklom.dev{t}) || Host({t}www.veklom.dev{t})) && PathPrefix({t}/{t})"; s=s.replace(control, expanded); s=re.sub(r"caddy_0=https://control\.veklom\.com(?:, https://veklom\.dev, https://www\.veklom\.dev)*", "caddy_0=https://control.veklom.com, https://veklom.dev, https://www.veklom.dev", s); p.write_text(s)'
+python3 -c 'import re; from pathlib import Path; p=Path("docker-compose.yaml"); s=p.read_text(); t=chr(96); control=f"Host({t}control.veklom.com{t}) && PathPrefix({t}/{t})"; expanded=f"(Host({t}control.veklom.com{t}) || Host({t}veklom.dev{t}) || Host({t}www.veklom.dev{t}) || Host({t}veklom.com{t}) || Host({t}www.veklom.com{t})) && PathPrefix({t}/{t})"; s=s.replace(control, expanded); s=re.sub(r"caddy_0=https://control\.veklom\.com(?:, https://(?:www\.)?veklom\.(?:dev|com))*", "caddy_0=https://control.veklom.com, https://veklom.dev, https://www.veklom.dev, https://veklom.com, https://www.veklom.com", s); p.write_text(s)'
 
 docker ps -aq --filter 'name=tvxcsezs2ypd8tjuj6ic9gih' | xargs -r docker rm -f
 docker compose -f docker-compose.yaml up -d --force-recreate
