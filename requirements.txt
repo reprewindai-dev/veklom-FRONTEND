@@ -7,5 +7,5 @@ openai==2.16.0
 praw
 pydantic==2.12.5
 redis==7.1.0
-requests==2.32.5
+requests==2.33.0
 schedule
