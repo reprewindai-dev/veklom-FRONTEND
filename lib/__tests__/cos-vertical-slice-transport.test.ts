@@ -4,7 +4,7 @@ import {
   fetchExecutionMeasurement,
 } from "@/lib/cos/verticalSlice";
 
-jest.mock("@/lib/firebase", () => ({ auth: null }));
+
 
 const response = (body: unknown) => ({
   ok: true,

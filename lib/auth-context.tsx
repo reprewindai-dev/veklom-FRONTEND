@@ -84,22 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadProfile();
   }, [loadProfile]);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const idToken = await user.getIdToken();
-          if (idToken) {
-            setTokens(idToken);
-            await loadProfile();
-          }
-        } catch (e) {
-          console.error("Failed to sync Firebase auth state to profile:", e);
-        }
-      }
-    });
-    return () => unsub();
-  }, [loadProfile]);
+
 
   const login = useCallback(async (email: string, password: string) => {
     setError(undefined);

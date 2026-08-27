@@ -52,7 +52,7 @@ export default function PublicLandingPage() {
               <span className="font-mono font-bold text-base tracking-[0.2em] text-theme-ink">VEKLOM</span>
             </Link>
             <span className="hidden sm:inline-block font-mono text-[10px] font-bold tracking-[0.15em] text-theme-inkDim uppercase">
-              M2M TRUST INFRASTRUCTURE
+              Capability OS
             </span>
           </div>
           <div className="flex items-center gap-6 font-mono text-[11px] font-bold uppercase tracking-wider text-theme-inkDim">
@@ -62,7 +62,7 @@ export default function PublicLandingPage() {
             <Link href="/machine" className="hover:text-theme-ink transition-colors hidden md:inline">Machine</Link>
             <Link
               href="/login"
-              className="px-4 py-2 rounded-lg bg-theme-accent text-white font-bold hover:brightness-110 transition-all shadow-sm shadow-theme-accent/20 data-[theme=machine]:text-black"
+              className="px-4 py-2 rounded-lg bg-theme-accent text-white font-bold hover:brightness-110 transition-all shadow-sm shadow-theme-accent/20"
             >
               Log in
             </Link>
@@ -72,6 +72,7 @@ export default function PublicLandingPage() {
         </div>
       </nav>
 
+      {/* -- Human Surface -- */}
       <main className="max-w-[1000px] mx-auto px-6">
 
         {/* -- Hero -- */}
@@ -95,7 +96,7 @@ export default function PublicLandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-2xl">
             <Link
               href="/demo/governed-machine"
-              className="flex-1 text-center px-6 py-4 rounded-xl bg-theme-accent text-white font-bold font-mono text-sm tracking-wide shadow-lg shadow-theme-accent/30 hover:brightness-110 hover:-translate-y-0.5 transition-all data-[theme=machine]:text-black"
+              className="flex-1 text-center px-6 py-4 rounded-xl bg-theme-accent text-white font-bold font-mono text-sm tracking-wide shadow-lg shadow-theme-accent/30 hover:brightness-110 hover:-translate-y-0.5 transition-all"
             >
               Run the Governed Machine Demo
             </Link>
@@ -190,4 +191,3 @@ export default function PublicLandingPage() {
     </div>
   );
 }
-
