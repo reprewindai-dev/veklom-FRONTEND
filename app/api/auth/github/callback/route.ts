@@ -46,7 +46,7 @@ function parseState(value: string | null): OAuthState | null {
   }
 }
 
-function stateMatches(expected: string | undefined, actual: string | undefined): boolean {
+function stateMatches(expected: string | undefined, actual: string | null): boolean {
   if (!expected || !actual) return false;
   const left = Buffer.from(expected, "utf-8");
   const right = Buffer.from(actual, "utf-8");
@@ -70,11 +70,22 @@ function redirectWithClearedState(url: URL): NextResponse {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-  const state = parseState(searchParams.get("state"));
+  const rawState = searchParams.get("state");
   const stateCookie = req.cookies.get(OAUTH_STATE_COOKIE)?.value;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://veklom.com";
 
-  if (!state || !stateMatches(stateCookie, state.nonce)) {
+  // Compare the exact opaque state returned by GitHub with the complete state
+  // stored in the HttpOnly browser cookie before decoding any field. This binds
+  // the nonce and redirect intent together; changing returnTo while preserving
+  // the nonce is therefore rejected.
+  if (!stateMatches(stateCookie, rawState)) {
+    return redirectWithClearedState(
+      new URL("/login?error=Invalid+OAuth+state", baseUrl),
+    );
+  }
+
+  const state = parseState(rawState);
+  if (!state) {
     return redirectWithClearedState(
       new URL("/login?error=Invalid+OAuth+state", baseUrl),
     );
