@@ -27,9 +27,10 @@ function safeReturnTo(value: string | null): string {
 /**
  * GET /api/auth/github/login
  *
- * Starts GitHub OAuth with a short-lived, browser-bound state nonce. The
+ * Starts GitHub OAuth with a short-lived, browser-bound state payload. The
  * caller-supplied return path is constrained to a same-origin application path
- * before it is embedded in state.
+ * before the complete state value is stored in an HttpOnly cookie and sent to
+ * GitHub. The callback must compare those complete values before parsing state.
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
   );
   response.cookies.set({
     name: OAUTH_STATE_COOKIE,
-    value: nonce,
+    value: state,
     httpOnly: true,
     secure: true,
     sameSite: "lax",
