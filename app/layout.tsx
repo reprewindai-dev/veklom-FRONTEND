@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -97,31 +98,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/*
-          GA consent defaults must run before any analytics tag loads.
-          In Next.js 16.3 App Router / Turbopack, the `next/script` component
-          with dangerouslySetInnerHTML triggers a React client-render warning
-          when placed anywhere in the tree. The correct pattern is a plain
-          <script> tag inside <head> — Next.js App Router supports this
-          natively and it executes before hydration without warnings.
-        */}
-        {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
-        <script
-          id="google-analytics-consent"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('consent', 'default', {
-                'ad_storage': 'denied',
-                'ad_user_data': 'denied',
-                'ad_personalization': 'denied',
-                'analytics_storage': 'denied'
-              });
-            `,
-          }}
-        />
       </head>
+
       <body className={`min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] antialiased ${inter.variable} ${fraunces.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
         <ThemeProvider>
         <WebMCPProvider>

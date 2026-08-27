@@ -132,7 +132,8 @@ function TokenDescriptor({
     | "Degraded"
     | "Not started"
     | "Manual step"
-    | "Simulated";
+    | "Simulated"
+    | "Initializing";
 }) {
   if (!token)
     return (
