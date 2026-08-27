@@ -1,0 +1,5 @@
+﻿name = "veklom-network-lease-worker"
+main = "index.js"
+compatibility_date = "2023-10-16"
+
+# CONCEPTUAL - Not actually deployed to production yet

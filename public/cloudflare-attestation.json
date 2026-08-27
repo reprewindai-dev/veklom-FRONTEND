@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-08-27T17:56:51.239Z",
+  "tunnel": {
+    "id": "0061f2f2-3eaf-4fb6-add3-5916f8cc651c",
+    "name": "veklom-local-edge",
+    "status": "active"
+  },
+  "routes": [
+    {
+      "hostname": "api.veklom.com",
+      "service": "http://localhost:8088"
+    },
+    {
+      "hostname": "cappo.veklom.com",
+      "service": "http://localhost:8002"
+    },
+    {
+      "hostname": "pgl.veklom.com",
+      "service": "http://localhost:8001"
+    },
+    {
+      "hostname": "capi.veklom.com",
+      "service": "http://localhost:3003"
+    },
+    {
+      "hostname": "veklom.com",
+      "service": "http://localhost:3002"
+    }
+  ],
+  "networkLeaseWorker": {
+    "deployed": false,
+    "status": "stubbed"
+  },
+  "sha256": "2dc4264e711545cd8a784be589fb70a214905cda792ddc1968837e9d39efd36a"
+}

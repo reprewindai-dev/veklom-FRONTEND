@@ -16,8 +16,8 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 const BASE = "";
-const TITLE = "Veklom — The Threshold";
-const DESC = "Two machines just agreed to trust each other. No one was watching. Identity → Authority → Policy → Execution → Proof.";
+const TITLE = "Veklom — Capability OS for Governed Machine Action";
+const DESC = "Mount a capability. Bind it to identity, policy, budget, and time. Execute through a governed boundary. Preserve evidence after the machine disappears.";
 // Official Veklom brand package (raster) served at the site root + /static/branding.
 // These are the exact assets the main veklom.com site uses for social cards.
 const OG_IMAGE = "/og/og-home.jpg";
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   applicationName: "Veklom",
   title: {
     default: TITLE,
-    template: "%s · Veklom",
+    template: "%s Â· Veklom",
   },
   description: DESC,
   keywords: ["Veklom", "Sovereign AI", "AI governance", "control plane", "private AI", "compliance", "AI routing", "Agentic Governance", "API benchmarking", "Runtime authority", "physics-based SLAs"],
@@ -50,11 +50,11 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
-    siteName: "Veklom · The Threshold",
+    siteName: "Veklom — Capability OS",
     title: TITLE,
     description: DESC,
     url: "/",
-    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — The Threshold" }],
+    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — Capability OS" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   // sends X-Robots-Tag: noindex for /control-plane-next, but we set the meta
   // tag too so the preview is never indexed.
   robots: { index: true, follow: true },
-  // Base Network App ID — domain ownership verification for veklom.com
+  // Base Network App ID â€” domain ownership verification for veklom.com
   other: {
     "base:app_id": "6a31ef5406f4fa4223585905",
     "fc:frame": JSON.stringify({
