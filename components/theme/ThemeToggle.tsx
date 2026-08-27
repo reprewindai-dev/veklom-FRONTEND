@@ -10,43 +10,30 @@ export function ThemeToggle() {
   const handleThemeChange = (newTheme: Theme) => {
     if (newTheme === theme || isTransitioning.current) return;
 
-    // Apply the dramatic "black hole" effect when entering or exiting Machine mode
     if (newTheme === "machine" || theme === "machine") {
       isTransitioning.current = true;
       document.body.classList.add("machine-transition-active");
       
-      // TODO: Plug in mechanical sound effect here for the "Cat Cut" / "Suck" effect
-      // const audio = new Audio('/sounds/machine-suck.mp3');
-      // audio.play();
-
-      // Wait until the screen is completely collapsed (400ms into the 800ms animation) 
-      // before actually swapping the CSS variables so the user doesn't see the flash
       setTimeout(() => {
         setTheme(newTheme);
       }, 400); 
 
-      // Remove the class after animation completes
       setTimeout(() => {
         document.body.classList.remove("machine-transition-active");
         isTransitioning.current = false;
       }, 800);
     } else {
-      // Normal soft transition between Light and Dark
       setTheme(newTheme);
     }
   };
 
   return (
-    <div className="flex bg-[var(--theme-surface-2)] p-1 rounded-lg border border-[var(--theme-border)]">
+    <div className="flex bg-theme-surface border border-theme-border p-1 rounded-md shadow-sm">
       {(["light", "dark", "machine"] as const).map((t) => (
         <button
           key={t}
           onClick={() => handleThemeChange(t)}
-          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-            theme === t
-              ? "bg-[var(--theme-surface)] text-[var(--theme-text)] shadow-sm border border-[var(--theme-border)]"
-              : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-          }`}
+          className={"px-3 py-1 text-xs font-mono font-bold rounded-sm transition-all " + (theme === t ? "bg-theme-bg text-theme-ink shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-theme-border" : "text-theme-inkDim hover:text-theme-ink")}
         >
           {t.charAt(0).toUpperCase() + t.slice(1)}
         </button>
