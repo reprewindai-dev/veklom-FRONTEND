@@ -147,9 +147,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGithub = useCallback(() => {
     if (typeof window === "undefined") return;
-    // Land back on the PGL onboarding route after the OAuth round-trip.
-    const next = `${BASE_PATH}/os/onboarding`;
-    window.location.href = apiUrl("/api/v1/auth/github/login", { next });
+    
+    // Determine where to return to after auth
+    let next = `${BASE_PATH}/os/onboarding`;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("returnTo")) {
+      next = urlParams.get("returnTo")!;
+    }
+    
+    // We direct the user to our Next.js API route that handles the OAuth sequence
+    // rather than relying on a direct backend URL so the cookie can be set here.
+    const state = btoa(JSON.stringify({ returnTo: next })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    window.location.href = `${BASE_PATH}/api/auth/github/login?state=${encodeURIComponent(state)}`;
   }, []);
 
   const logout = useCallback(() => {
