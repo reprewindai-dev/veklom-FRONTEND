@@ -1,57 +1,10 @@
-import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  githubOAuthStateMatches,
+  parseGitHubOAuthState,
+} from "@/lib/github-oauth-state";
 
 const OAUTH_STATE_COOKIE = "veklom_github_oauth_state";
-
-type OAuthState = {
-  nonce: string;
-  returnTo: string;
-};
-
-function safeReturnTo(value: unknown): string {
-  if (
-    typeof value !== "string" ||
-    !value.startsWith("/") ||
-    value.startsWith("//") ||
-    value.includes("\\")
-  ) {
-    return "/os";
-  }
-
-  try {
-    const base = new URL("https://veklom.invalid");
-    const resolved = new URL(value, base);
-    if (resolved.origin !== base.origin) return "/os";
-    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
-  } catch {
-    return "/os";
-  }
-}
-
-function parseState(value: string | null): OAuthState | null {
-  if (!value) return null;
-  try {
-    const decoded = JSON.parse(
-      Buffer.from(value, "base64url").toString("utf-8"),
-    ) as Record<string, unknown>;
-    if (typeof decoded.nonce !== "string" || decoded.nonce.length === 0) {
-      return null;
-    }
-    return {
-      nonce: decoded.nonce,
-      returnTo: safeReturnTo(decoded.returnTo),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function stateMatches(expected: string | undefined, actual: string | null): boolean {
-  if (!expected || !actual) return false;
-  const left = Buffer.from(expected, "utf-8");
-  const right = Buffer.from(actual, "utf-8");
-  return left.length === right.length && timingSafeEqual(left, right);
-}
 
 function redirectWithClearedState(url: URL): NextResponse {
   const response = NextResponse.redirect(url);
@@ -78,13 +31,13 @@ export async function GET(req: NextRequest) {
   // stored in the HttpOnly browser cookie before decoding any field. This binds
   // the nonce and redirect intent together; changing returnTo while preserving
   // the nonce is therefore rejected.
-  if (!stateMatches(stateCookie, rawState)) {
+  if (!githubOAuthStateMatches(stateCookie, rawState)) {
     return redirectWithClearedState(
       new URL("/login?error=Invalid+OAuth+state", baseUrl),
     );
   }
 
-  const state = parseState(rawState);
+  const state = parseGitHubOAuthState(rawState);
   if (!state) {
     return redirectWithClearedState(
       new URL("/login?error=Invalid+OAuth+state", baseUrl),
