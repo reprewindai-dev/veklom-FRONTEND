@@ -1,54 +1,79 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  githubOAuthStateMatches,
+  parseGitHubOAuthState,
+} from "@/lib/github-oauth-state";
 
-// We use the Next.js API route as a proxy to the core backend to keep
-// secrets out of the edge and centralized in BYOS backend, or we process
-// the OAuth exchange directly here and set the cookie. For Veklom, the 
-// standard pattern is passing the code to BYOS backend and receiving a JWT.
+const OAUTH_STATE_COOKIE = "veklom_github_oauth_state";
+
+function redirectWithClearedState(url: URL): NextResponse {
+  const response = NextResponse.redirect(url);
+  response.cookies.set({
+    name: OAUTH_STATE_COOKIE,
+    value: "",
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/api/auth/github",
+    maxAge: 0,
+  });
+  return response;
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-  const state = searchParams.get("state");
-  const error = searchParams.get("error");
-  const errorDescription = searchParams.get("error_description");
-
+  const rawState = searchParams.get("state");
+  const stateCookie = req.cookies.get(OAUTH_STATE_COOKIE)?.value;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://veklom.com";
-  
-  // Parse state to get returnTo
-  let returnTo = "/os";
-  if (state) {
-    try {
-      const decodedState = JSON.parse(Buffer.from(state, "base64url").toString("utf-8"));
-      if (decodedState.returnTo && decodedState.returnTo.startsWith("/")) {
-        returnTo = decodedState.returnTo;
-      }
-    } catch (e) {
-      console.warn("Failed to parse state param:", e);
-    }
+
+  // Compare the exact opaque state returned by GitHub with the complete state
+  // stored in the HttpOnly browser cookie before decoding any field. This binds
+  // the nonce and redirect intent together; changing returnTo while preserving
+  // the nonce is therefore rejected.
+  if (!githubOAuthStateMatches(stateCookie, rawState)) {
+    return redirectWithClearedState(
+      new URL("/login?error=Invalid+OAuth+state", baseUrl),
+    );
   }
 
-  if (error) {
-    console.error(`GitHub OAuth error: ${error} - ${errorDescription}`);
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(errorDescription || error)}`, baseUrl));
+  const state = parseGitHubOAuthState(rawState);
+  if (!state) {
+    return redirectWithClearedState(
+      new URL("/login?error=Invalid+OAuth+state", baseUrl),
+    );
+  }
+
+  const returnTo = state.returnTo;
+  const oauthError = searchParams.get("error");
+  if (oauthError) {
+    console.warn("GitHub OAuth authorization failed");
+    return redirectWithClearedState(
+      new URL("/login?error=GitHub+authentication+failed", baseUrl),
+    );
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL(`/login?error=No+code+provided`, baseUrl));
+    return redirectWithClearedState(
+      new URL("/login?error=GitHub+authentication+failed", baseUrl),
+    );
   }
 
   try {
-    // 1. Exchange code for access token via GitHub API directly
     const clientId = process.env.GITHUB_AUTH_CLIENT_ID;
     const clientSecret = process.env.GITHUB_AUTH_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      throw new Error("Missing GitHub client credentials in environment");
+      console.error("GitHub OAuth server credentials are not configured");
+      return redirectWithClearedState(
+        new URL("/login?error=Authentication+unavailable", baseUrl),
+      );
     }
 
     const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -56,50 +81,59 @@ export async function GET(req: NextRequest) {
         client_secret: clientSecret,
         code,
       }),
+      redirect: "error",
     });
 
     if (!tokenRes.ok) {
-      throw new Error(`GitHub token exchange failed: ${tokenRes.status}`);
+      console.error(`GitHub token exchange failed with status ${tokenRes.status}`);
+      return redirectWithClearedState(
+        new URL("/login?error=Authentication+failed", baseUrl),
+      );
     }
 
-    const tokenData = await tokenRes.json();
-    if (tokenData.error) {
-      throw new Error(`GitHub token error: ${tokenData.error_description}`);
+    const tokenData = (await tokenRes.json()) as Record<string, unknown>;
+    const accessToken =
+      typeof tokenData.access_token === "string" ? tokenData.access_token : null;
+    if (!accessToken) {
+      console.error("GitHub token exchange returned no access token");
+      return redirectWithClearedState(
+        new URL("/login?error=Authentication+failed", baseUrl),
+      );
     }
 
-    const accessToken = tokenData.access_token;
-
-    // 2. Pass the GitHub access token to the core backend to handle linking/creation
-    // This maintains the boundary: core backend owns the database and issues JWTs.
     const byosApiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.veklom.com";
-    
-    // Using unauthenticated fetch since this is the login flow
     const backendRes = await fetch(`${byosApiUrl}/api/v1/auth/github/callback`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        access_token: accessToken
-      }),
+      body: JSON.stringify({ access_token: accessToken }),
+      redirect: "error",
     });
 
     if (!backendRes.ok) {
-      const errText = await backendRes.text();
-      console.error("Backend auth failed:", errText);
-      return NextResponse.redirect(new URL(`/login?error=Authentication+failed`, baseUrl));
+      console.error(`Backend auth failed with status ${backendRes.status}`);
+      return redirectWithClearedState(
+        new URL("/login?error=Authentication+failed", baseUrl),
+      );
     }
 
-    const authData = await backendRes.json();
-    const jwt = authData.access_token || authData.token;
+    const authData = (await backendRes.json()) as Record<string, unknown>;
+    const jwt =
+      typeof authData.access_token === "string"
+        ? authData.access_token
+        : typeof authData.token === "string"
+          ? authData.token
+          : null;
 
     if (!jwt) {
-      throw new Error("No JWT returned from backend");
+      console.error("Backend auth response returned no session token");
+      return redirectWithClearedState(
+        new URL("/login?error=Authentication+failed", baseUrl),
+      );
     }
 
-    // 3. Set the JWT in a cookie and redirect to the requested page
-    const response = NextResponse.redirect(new URL(returnTo, baseUrl));
-    
+    const response = redirectWithClearedState(new URL(returnTo, baseUrl));
     response.cookies.set({
       name: "veklom_session",
       value: jwt,
@@ -107,13 +141,13 @@ export async function GET(req: NextRequest) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
     });
-
     return response;
-
-  } catch (err: any) {
-    console.error("OAuth callback processing error:", err);
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(err.message || "Unknown error")}`, baseUrl));
+  } catch {
+    console.error("OAuth callback processing failed");
+    return redirectWithClearedState(
+      new URL("/login?error=Authentication+failed", baseUrl),
+    );
   }
 }
