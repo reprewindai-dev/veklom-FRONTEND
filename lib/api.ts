@@ -198,21 +198,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (!opts.unauth) {
-    let tok = getToken();
-    if (typeof window !== "undefined") {
-      try {
-        const { auth } = require("./firebase");
-        if (auth && auth.currentUser) {
-          const fbToken = await auth.currentUser.getIdToken();
-          if (fbToken) {
-            tok = fbToken;
-            setTokens(fbToken);
-          }
-        }
-      } catch (err) {
-        console.warn("Failed to dynamically load Firebase auth token:", err);
-      }
-    }
+    const tok = getToken();
     if (tok) headers["Authorization"] = `Bearer ${tok}`;
   }
 

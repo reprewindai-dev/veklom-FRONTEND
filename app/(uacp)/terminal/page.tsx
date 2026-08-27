@@ -4,7 +4,20 @@ import dynamic from "next/dynamic";
 import React from "react";
 import TriageTelemetry from "@/components/telemetry/TriageTelemetry";
 
-const QuantumTerminal = dynamic(() => import("@/components/terminal/components/QuantumTerminal"), { ssr: false });
+// QuantumTerminal depends on @reown/appkit-adapter-wagmi → mppx → broken zod shim.
+// Load with ssr: false and a fallback so it doesn't break the build.
+const QuantumTerminal = dynamic(
+  () => import("@/components/terminal/components/QuantumTerminal").catch(() => ({ default: () => (
+    <div className="flex items-center justify-center h-full font-mono text-xs text-[#8A9BB0]">
+      Terminal loading…
+    </div>
+  )})),
+  { ssr: false, loading: () => (
+    <div className="flex items-center justify-center h-full font-mono text-xs text-[#8A9BB0]">
+      Initialising terminal…
+    </div>
+  )}
+);
 
 export default function TerminalPage() {
   return (

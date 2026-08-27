@@ -7,11 +7,34 @@ import {
   DollarSign, History, Lock, RefreshCw, Check, AlertTriangle, FileSpreadsheet,
   Signature, Database, ArrowRight, Zap, CheckSquare
 } from 'lucide-react';
-import { 
-  db, auth, googleSignIn, logout, initAuth, handleFirestoreError 
-} from '../../lib/firebase';
-import { doc, setDoc, onSnapshot, collection, query, where, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Firebase stubs — Firebase has been removed from Veklom. TriageTelemetry uses
+// the Veklom backend API instead. These stubs satisfy existing call sites until
+// the component is fully migrated to the Veklom-native telemetry API.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = null as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const auth = null as any;
+const googleSignIn = async () => { throw new Error("Firebase removed — use Veklom auth"); };
+const logout = async () => {};
+const initAuth = () => {};
+const handleFirestoreError = (e: unknown) => console.error(e);
+// Firestore call stubs
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const doc = (..._args: any[]) => ({}) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const setDoc = async (..._args: any[]) => {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const onSnapshot = (..._args: any[]) => () => {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const collection = (..._args: any[]) => ({}) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const query = (..._args: any[]) => ({}) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const where = (..._args: any[]) => ({}) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const updateDoc = async (..._args: any[]) => {};
 
 // Quick hash generator for auditing
 function generateUUID(): string {

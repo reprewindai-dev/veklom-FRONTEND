@@ -3,8 +3,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, apiUrl, clearTokens, getToken, setTokens, syncSessionMarker } from "./api";
 import { normalizeTier, Tier } from "./tiers";
-import { auth } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import type { Me, Subscription } from "@/types/api";
 
 interface AuthState {
@@ -53,15 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Ensure we clear out state if no token is present so the user gets redirected to /login
-      if (!getToken()) {
-        setLoading(false);
-        setMe(undefined);
-        setSub(undefined);
-        return;
-      }
-
-      clearTokens();
+      // No token — clear state so middleware redirects to /login
+      setLoading(false);
       setMe(undefined);
       setSub(undefined);
     } catch (e) {
@@ -79,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const url = new URL(window.location.href);
       const urlToken = url.searchParams.get("token") || url.searchParams.get("veklom_token");
       const urlRefresh = url.searchParams.get("refresh_token") || url.searchParams.get("veklom_refresh_token");
-      
+
       if (urlToken) {
         setTokens(urlToken, urlRefresh);
         url.searchParams.delete("token");
