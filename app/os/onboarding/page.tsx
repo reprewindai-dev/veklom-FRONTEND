@@ -122,6 +122,7 @@ export default function PGLOnboardingPage() {
 
   const [operatorId, setOperatorId] = useState<string>("");
   const [certificateId, setCertificateId] = useState<string>("");
+  const [profilePglId, setProfilePglId] = useState<string>("");
 
   const handleNext = async () => {
     setLoading(true);
@@ -141,7 +142,7 @@ export default function PGLOnboardingPage() {
           },
         });
       } else if (step === 2) {
-        const certRes = await api<{ certificate_id: string }>(
+        const certRes = await api<{ certificate_id: string; profile_pgl_id: string }>(
           "/api/v1/pgl/onboarding/agent-certificate",
           {
             body: {
@@ -159,6 +160,7 @@ export default function PGLOnboardingPage() {
           }
         );
         setCertificateId(certRes.certificate_id || "");
+        setProfilePglId(certRes.profile_pgl_id || "");
       } else if (step === 3) {
         // Genome Preview (already submitted in step 2 technically, or handled locally)
       } else if (step === 4) {
