@@ -1,4 +1,6 @@
-﻿import { MachineSurface } from "@/components/machine/MachineSurface";
+﻿import React from 'react';
+import { MachineAppShell } from "@/components/shell/MachineAppShell";
+import { MachineSurface } from "@/components/machine/MachineSurface";
 
 export const metadata = {
   title: "Veklom / Machine Protocol",
@@ -7,8 +9,8 @@ export const metadata = {
 
 export default function MachinePage() {
   return (
-    <div className="machine-wrapper" data-theme="machine">
+    <MachineAppShell>
       <MachineSurface />
-    </div>
+    </MachineAppShell>
   );
 }

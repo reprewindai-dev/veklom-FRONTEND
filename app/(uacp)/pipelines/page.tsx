@@ -1,143 +1,143 @@
 "use client";
 
 
-import dynamicImport from "next/dynamic";
+import dynamicImport from"next/dynamic";
 import React, { useState, useEffect, Suspense } from 'react';
-import { useApi } from "@/hooks/useApi";
-import { VeklomRun } from "@/components/terminal/types";
+import { useApi } from"@/hooks/useApi";
+import { VeklomRun } from"@/components/terminal/types";
 import { useSearchParams } from 'next/navigation';
 
-type ProofState = "verified" | "degraded" | "empty" | "needs_proof" | "error";
+type ProofState ="verified" |"degraded" |"empty" |"needs_proof" |"error";
 
 interface PipelinesGpcData {
-  runs: VeklomRun[];
-  proof: {
-    state: ProofState;
-    source: string;
-    reason: string;
-    generated_at: string;
-    routes: Record<string, string>;
-    probes: {
-      ok: boolean;
-      status: number;
-      route: string;
-      error?: string;
-    }[];
-  };
-  pipelines: unknown[];
-  gpc: {
-    events?: unknown;
-    signals?: unknown;
-    stats?: unknown;
-  };
+ runs: VeklomRun[];
+ proof: {
+ state: ProofState;
+ source: string;
+ reason: string;
+ generated_at: string;
+ routes: Record<string, string>;
+ probes: {
+ ok: boolean;
+ status: number;
+ route: string;
+ error?: string;
+ }[];
+ };
+ pipelines: unknown[];
+ gpc: {
+ events?: unknown;
+ signals?: unknown;
+ stats?: unknown;
+ };
 }
 
 const RunSpine = dynamicImport(
-  () => import("@/components/terminal/components/RunSpine"),
-  { ssr: false, loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#030303] font-mono text-white/30 text-[10px] uppercase tracking-widest">
-      <div className="w-4 h-4 rounded-full border-t-2 border-electric-cyan animate-spin mr-3" />
-      Connecting to Pipeline Ledger...
-    </div>
-  )}
+ () => import("@/components/terminal/components/RunSpine"),
+ { ssr: false, loading: () => (
+ <div className="w-full h-full flex items-center justify-center bg-[#030303] font-mono text-white/30 text-[10px] uppercase tracking-widest">
+ <div className="w-4 h-4 rounded-full border-t-2 border-electric-cyan animate-spin mr-3" />
+ Connecting to Pipeline Ledger...
+ </div>
+ )}
 );
 
 function PipelinesPageContent() {
-  const searchParams = useSearchParams();
-  const runIdParam = searchParams.get('run');
-  const fromTerminal = searchParams.get('from') === 'terminal';
+ const searchParams = useSearchParams();
+ const runIdParam = searchParams.get('run');
+ const fromTerminal = searchParams.get('from') === 'terminal';
 
-  const { data, error, isLoading } = useApi<PipelinesGpcData>("/api/pipelines-gpc/runs", {
-    refreshInterval: 15000,
-  });
-  const runs = data?.runs ?? [];
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(runIdParam || null);
+ const { data, error, isLoading } = useApi<PipelinesGpcData>("/api/pipelines-gpc/runs", {
+ refreshInterval: 15000,
+ });
+ const runs = data?.runs ?? [];
+ const [selectedRunId, setSelectedRunId] = useState<string | null>(runIdParam || null);
 
-  useEffect(() => {
-    if (runIdParam && runIdParam !== selectedRunId) {
-      setSelectedRunId(runIdParam);
-    }
-  }, [runIdParam]);
+ useEffect(() => {
+ if (runIdParam && runIdParam !== selectedRunId) {
+ setSelectedRunId(runIdParam);
+ }
+ }, [runIdParam]);
 
-  if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-[#030303] font-mono text-white/30 text-[10px] uppercase tracking-widest">
-        <div className="w-4 h-4 rounded-full border-t-2 border-electric-cyan animate-spin mr-3" />
-        Connecting to Pipeline Ledger...
-      </div>
-    );
-  }
+ if (isLoading) {
+ return (
+ <div className="w-full h-full flex items-center justify-center bg-[#030303] font-mono text-white/30 text-[10px] uppercase tracking-widest">
+ <div className="w-4 h-4 rounded-full border-t-2 border-electric-cyan animate-spin mr-3" />
+ Connecting to Pipeline Ledger...
+ </div>
+ );
+ }
 
-  const proof = data?.proof;
-  const degraded = Boolean(error) || proof?.state !== "verified";
+ const proof = data?.proof;
+ const degraded = Boolean(error) || proof?.state !=="verified";
 
-  return (
-    <div className="w-full h-full flex flex-col bg-[#030303]">
-      {degraded && (
-        <div className="border-b border-[#ffab00]/20 bg-[#ffab00]/5 px-4 py-2 font-mono text-[10px] text-[#ffab00]">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-black uppercase tracking-widest">
-              {proof?.state ? proof.state.replace("_", " ") : "needs proof"}
-            </span>
-            <span className="text-white/55">
-              {error ? "Pipeline proof adapter failed to load." : proof?.reason}
-            </span>
-          </div>
-          {proof?.probes?.length ? (
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-white/35">
-              {proof.probes.map((probe) => (
-                <span key={probe.route}>
-                  {probe.route}: {probe.ok ? "ok" : `${probe.status || "error"} ${probe.error ?? ""}`}
-                </span>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      )}
-      {runs.length === 0 ? (
-        <div className="flex min-h-0 flex-1 items-center justify-center bg-[#030303] p-6 font-mono">
-          <div className="max-w-xl border border-[#ffab00]/25 bg-[#ffab00]/5 p-5 text-[#ffab00]">
-            <div className="mb-2 text-xs font-black uppercase tracking-widest">
-              {proof?.state ? proof.state.replace("_", " ") : "Needs proof"}
-            </div>
-            <p className="text-xs leading-relaxed text-white/60">
-              {proof?.reason || "BYOS returned no governed pipeline runs for this workspace."}
-            </p>
-            {proof?.routes ? (
-              <div className="mt-3 grid gap-1 text-[10px] text-white/35">
-                {Object.entries(proof.routes).map(([name, route]) => (
-                  <div key={name} className="flex justify-between gap-4 border-t border-white/5 pt-1">
-                    <span className="uppercase">{name}</span>
-                    <span className="text-right text-white/55">{route}</span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : (
-      <div className="min-h-0 flex-1">
-        <RunSpine
-          runs={runs}
-          selectedRunId={selectedRunId}
-          onSelectRun={(id) => setSelectedRunId(id || null)}
-          isFocusedFromTerminal={fromTerminal && !!runIdParam}
-        />
-      </div>
-      )}
-    </div>
-  );
+ return (
+ <div className="w-full h-full flex flex-col bg-[#030303]">
+ {degraded && (
+ <div className="border-b border-[#ffab00]/20 bg-[#ffab00]/5 px-4 py-2 font-mono text-[10px] text-[#ffab00]">
+ <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+ <span className="font-black uppercase tracking-widest">
+ {proof?.state ? proof.state.replace("_","") :"needs proof"}
+ </span>
+ <span className="text-white/55">
+ {error ?"Pipeline proof adapter failed to load." : proof?.reason}
+ </span>
+ </div>
+ {proof?.probes?.length ? (
+ <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-white/35">
+ {proof.probes.map((probe) => (
+ <span key={probe.route}>
+ {probe.route}: {probe.ok ?"ok" : `${probe.status ||"error"} ${probe.error ??""}`}
+ </span>
+ ))}
+ </div>
+ ) : null}
+ </div>
+ )}
+ {runs.length === 0 ? (
+ <div className="flex min-h-0 flex-1 items-center justify-center bg-[#030303] p-6 font-mono">
+ <div className="max-w-xl border border-[#ffab00]/25 bg-[#ffab00]/5 p-5 text-[#ffab00]">
+ <div className="mb-2 text-xs font-black uppercase tracking-widest">
+ {proof?.state ? proof.state.replace("_","") :"Needs proof"}
+ </div>
+ <p className="text-xs leading-relaxed text-white/60">
+ {proof?.reason ||"BYOS returned no governed pipeline runs for this workspace."}
+ </p>
+ {proof?.routes ? (
+ <div className="mt-3 grid gap-1 text-[10px] text-white/35">
+ {Object.entries(proof.routes).map(([name, route]) => (
+ <div key={name} className="flex justify-between gap-4 border-t border-white/5 pt-1">
+ <span className="uppercase">{name}</span>
+ <span className="text-right text-white/55">{route}</span>
+ </div>
+ ))}
+ </div>
+ ) : null}
+ </div>
+ </div>
+ ) : (
+ <div className="min-h-0 flex-1">
+ <RunSpine
+ runs={runs}
+ selectedRunId={selectedRunId}
+ onSelectRun={(id) => setSelectedRunId(id || null)}
+ isFocusedFromTerminal={fromTerminal && !!runIdParam}
+ />
+ </div>
+ )}
+ </div>
+ );
 }
 
 export default function PipelinesPage() {
-  return (
-    <Suspense fallback={
-      <div className="w-full h-full flex items-center justify-center bg-[#030303] font-mono text-white/30 text-[10px] uppercase tracking-widest">
-        <div className="w-4 h-4 rounded-full border-t-2 border-electric-cyan animate-spin mr-3" />
-        Connecting to Pipeline Ledger...
-      </div>
-    }>
-      <PipelinesPageContent />
-    </Suspense>
-  );
+ return (
+ <Suspense fallback={
+ <div className="w-full h-full flex items-center justify-center bg-[#030303] font-mono text-white/30 text-[10px] uppercase tracking-widest">
+ <div className="w-4 h-4 rounded-full border-t-2 border-electric-cyan animate-spin mr-3" />
+ Connecting to Pipeline Ledger...
+ </div>
+ }>
+ <PipelinesPageContent />
+ </Suspense>
+ );
 }

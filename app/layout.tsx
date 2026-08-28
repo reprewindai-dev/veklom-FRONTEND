@@ -1,5 +1,4 @@
-import type { Metadata, Viewport } from "next";
-
+﻿import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -16,10 +15,9 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 const BASE = "";
-const TITLE = "Veklom — Capability OS for Governed Machine Action";
+const TITLE = "Veklom - Capability OS for Governed Machine Action";
 const DESC = "Mount a capability. Bind it to identity, policy, budget, and time. Execute through a governed boundary. Preserve evidence after the machine disappears.";
-// Official Veklom brand package (raster) served at the site root + /static/branding.
-// These are the exact assets the main veklom.com site uses for social cards.
+
 const OG_IMAGE = "/og/og-home.jpg";
 const TWITTER_IMAGE = "/og/og-home.jpg";
 
@@ -28,7 +26,7 @@ export const metadata: Metadata = {
   applicationName: "Veklom",
   title: {
     default: TITLE,
-    template: "%s Â· Veklom",
+    template: "%s | Veklom",
   },
   description: DESC,
   keywords: ["Veklom", "Sovereign AI", "AI governance", "control plane", "private AI", "compliance", "AI routing", "Agentic Governance", "API benchmarking", "Runtime authority", "physics-based SLAs"],
@@ -50,11 +48,11 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
-    siteName: "Veklom — Capability OS",
+    siteName: "Veklom - Capability OS",
     title: TITLE,
     description: DESC,
     url: "/",
-    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom — Capability OS" }],
+    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom - Capability OS" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -64,11 +62,7 @@ export const metadata: Metadata = {
     description: DESC,
     images: [TWITTER_IMAGE],
   },
-  // Belt-and-suspenders: this is a preview/staging surface. The backend also
-  // sends X-Robots-Tag: noindex for /control-plane-next, but we set the meta
-  // tag too so the preview is never indexed.
   robots: { index: true, follow: true },
-  // Base Network App ID â€” domain ownership verification for veklom.com
   other: {
     "base:app_id": "6a31ef5406f4fa4223585905",
     "fc:frame": JSON.stringify({
@@ -97,19 +91,19 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-      </head>
-
+      <head></head>
       <body className={`min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] antialiased ${inter.variable} ${fraunces.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
         <ThemeProvider>
-        <WebMCPProvider>
-          <AuthProvider>
-            <DegradedBanner />
-            {children}
-            <AmbientIntervention />
-            <GoogleAnalyticsUserSync />
-          </AuthProvider>
-        </WebMCPProvider>
+          <WebMCPProvider>
+            <AuthProvider>
+              <DegradedBanner />
+              <div className="flex-1 flex flex-col min-h-screen">
+                {children}
+              </div>
+              <AmbientIntervention />
+              <GoogleAnalyticsUserSync />
+            </AuthProvider>
+          </WebMCPProvider>
         </ThemeProvider>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-KCZM27WWX7"} />
         <CookieBanner />

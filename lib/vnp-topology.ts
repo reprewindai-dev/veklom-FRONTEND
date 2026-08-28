@@ -1,4 +1,4 @@
-// Shared, truth-locked helpers for the canonical VNP beacon topology.
+﻿// Shared, truth-locked helpers for the canonical VNP beacon topology.
 //
 // Source of truth: GET /api/v1/beacon/topology (same-origin proxy to the
 // canonical backend / vnp.veklom.com). The response is nested under a
@@ -130,7 +130,7 @@ export function formatFreshness(seconds?: number | null): string {
 }
 
 export function formatTimestamp(ts?: string | null): string {
-  if (!ts) return "—";
+  if (!ts) return "â€”";
   const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return String(ts);
   return d.toISOString().replace("T", " ").replace(/\.\d+Z$/, "Z");
@@ -146,7 +146,7 @@ export function proofStateClasses(state: ProofState): string {
     case "Insufficient Evidence":
       return "text-amber-300 bg-amber-500/10 border-amber-500/30";
     case "Simulated":
-      return "text-indigo-300 bg-indigo-500/10 border-indigo-500/30";
+      return "text-theme-info bg-theme-info/10 border-theme-info/30";
     case "Not started":
     case "Unknown":
     default:

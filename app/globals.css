@@ -1,46 +1,63 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root, [data-theme="day"], [data-theme="light"] {
-    --theme-bg: #F7F8FB;
-    --theme-surface: #FFFFFF;
-    --theme-surface-2: #F0F3F8;
-    --theme-border: #E1E5EE;
-    --theme-text: #10162B;
-    --theme-text-muted: #545F7A;
-    --theme-accent: 37 71 208;
-    --theme-verified: 0 200 83;
-    --theme-warn: 255 145 0;
-    --theme-danger: 255 61 0;
-  }
+:root {
+  /* Human Light */
+  --theme-bg: #F6F8FC;
+  --theme-surface: #FFFFFF;
+  --theme-surface-2: #F0F3F8;
+  --theme-border: rgba(15, 23, 42, 0.08);
+  --theme-accent: 0, 229, 255; /* #00E5FF */
+  --theme-accent-steel: 138, 155, 176; /* #8A9BB0 */
+  --theme-text: rgba(15, 23, 42, 0.92);
+  --theme-text-muted: rgba(71, 85, 105, 0.65);
+  --theme-verified: 0, 255, 102; /* #00FF66 */
+  --theme-warn: 255, 171, 0; /* #FFAB00 */
+  --theme-danger: 255, 77, 77; /* #FF4D4D */
+  --theme-info: 0, 229, 255; /* #00E5FF */
+  --theme-unknown: 107, 114, 128; /* #6B7280 */
+  --theme-raised: #FFFFFF;
+}
 
-  [data-theme="dark"], [data-theme="night"] {
-    --theme-bg: #0A0E1F;
-    --theme-surface: #10162B;
-    --theme-surface-2: #161D35;
-    --theme-border: #232B4A;
-    --theme-text: #F3F5FC;
-    --theme-text-muted: #8792B5;
-    --theme-accent: 91 127 255;
-    --theme-verified: 0 230 118;
-    --theme-warn: 255 171 0;
-    --theme-danger: 255 82 82;
-  }
+[data-theme="dark"] {
+  /* Human Dark */
+  --theme-bg: #0A0E1A;
+  --theme-surface: #111827;
+  --theme-surface-2: #0D1220;
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-accent: 0, 229, 255; /* #00E5FF */
+  --theme-accent-steel: 138, 155, 176; /* #8A9BB0 */
+  --theme-text: rgba(255, 255, 255, 0.92);
+  --theme-text-muted: rgba(255, 255, 255, 0.55);
+  --theme-verified: 0, 255, 102; /* #00FF66 */
+  --theme-warn: 255, 171, 0; /* #FFAB00 */
+  --theme-danger: 255, 77, 77; /* #FF4D4D */
+  --theme-info: 0, 229, 255; /* #00E5FF */
+  --theme-unknown: 107, 114, 128; /* #6B7280 */
+  --theme-raised: #1A2235;
+}
 
-  [data-theme="machine"] {
-    --theme-bg: #0B0B0B;
-    --theme-surface: #171717;
-    --theme-surface-2: #222222;
-    --theme-border: #2E2E2E;
-    --theme-text: #EDEDED;
-    --theme-text-muted: #8A8A8A;
-    --theme-accent: 138 138 138;
-    --theme-verified: 200 200 200;
-    --theme-warn: 160 160 160;
-    --theme-danger: 160 160 160;
-  }
+[data-theme="machine"] {
+  /* Machine */
+  --theme-black: #000000;
+  --theme-bg: #080808;
+  --theme-surface: #111111;
+  --theme-surface-2: #181818;
+  --theme-raised: #222222;
+  --theme-border: rgba(255, 255, 255, 0.10);
+  --theme-mid-gray: #666666;
+  --theme-text-muted: rgba(255, 255, 255, 0.55);
+  --theme-text: rgba(255, 255, 255, 0.86);
+  --theme-white: #F5F5F5;
+  --theme-verified: 0, 255, 102; /* #00FF66 */
+  --theme-warn: 255, 171, 0; /* #FFAB00 */
+  --theme-danger: 255, 77, 77; /* #FF4D4D */
+  --theme-info: 208, 208, 208; /* #D0D0D0 */
+  --theme-unknown: 85, 85, 85; /* #555555 */
+  
+  --theme-accent: 138, 138, 138; /* Machine uses grayscale accent */
+  --theme-accent-steel: 138, 138, 138;
 }
 
 body {
@@ -48,6 +65,3 @@ body {
   color: var(--theme-text);
 }
 
-[data-theme="machine"] body {
-  background-color: #0B0B0B !important;
-}

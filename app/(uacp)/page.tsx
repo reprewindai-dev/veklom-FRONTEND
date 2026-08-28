@@ -12,5 +12,5 @@
 import UacpEmbed from './uacp-embed';
 
 export default function UacpPage() {
-  return <UacpEmbed />;
+ return <UacpEmbed />;
 }

@@ -1,5 +1,5 @@
-import { MeasureHarness } from "@/components/cos/MeasureHarness";
+import { MeasureHarness } from"@/components/cos/MeasureHarness";
 
 export default function MeasurePage() {
-  return <MeasureHarness />;
+ return <MeasureHarness />;
 }

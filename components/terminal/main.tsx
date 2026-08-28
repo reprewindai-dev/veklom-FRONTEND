@@ -11,11 +11,11 @@ import './index.css';
 // Fetch requests should hit the real backend
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </WagmiProvider>
-  </StrictMode>,
+ <StrictMode>
+ <WagmiProvider config={config}>
+ <QueryClientProvider client={queryClient}>
+ <App />
+ </QueryClientProvider>
+ </WagmiProvider>
+ </StrictMode>,
 );

@@ -8,534 +8,534 @@ import { DuelSession, WalletState } from './types';
 import { Users, Copy, Plus, ArrowRight, Zap, CheckCircle2, Coins, RefreshCw, LogOut, Swords } from 'lucide-react';
 
 interface DuelInviteBlockProps {
-  wallet: WalletState;
-  activeDuel: DuelSession | null;
-  openLobbies: Array<{ id: string; host_wallet_address: string; player_count: number; max_players: number; created_at: string | null }>;
-  onRefreshLobbies: () => void;
-  onCreateDuel: () => void;
-  onJoinDuel: (id: string) => void;
-  onLeaveDuel: () => void;
-  onStartDuelCountdown: () => void;
-  liveGameplayEnabled: boolean;
-  multiplayerExecutionVerified?: boolean;
+ wallet: WalletState;
+ activeDuel: DuelSession | null;
+ openLobbies: Array<{ id: string; host_wallet_address: string; player_count: number; max_players: number; created_at: string | null }>;
+ onRefreshLobbies: () => void;
+ onCreateDuel: () => void;
+ onJoinDuel: (id: string) => void;
+ onLeaveDuel: () => void;
+ onStartDuelCountdown: () => void;
+ liveGameplayEnabled: boolean;
+ multiplayerExecutionVerified?: boolean;
 }
 
 export function DuelInviteBlock({
-  wallet,
-  activeDuel,
-  openLobbies,
-  onRefreshLobbies,
-  onCreateDuel,
-  onJoinDuel,
-  onLeaveDuel,
-  onStartDuelCountdown,
-  liveGameplayEnabled,
-  multiplayerExecutionVerified = false,
+ wallet,
+ activeDuel,
+ openLobbies,
+ onRefreshLobbies,
+ onCreateDuel,
+ onJoinDuel,
+ onLeaveDuel,
+ onStartDuelCountdown,
+ liveGameplayEnabled,
+ multiplayerExecutionVerified = false,
 }: DuelInviteBlockProps) {
-  const [joinInput, setJoinInput] = useState('');
-  const [copied, setCopied] = useState(false);
+ const [joinInput, setJoinInput] = useState('');
+ const [copied, setCopied] = useState(false);
 
-  const handleCopyLink = () => {
-    if (!activeDuel) return;
-    const inviteUrl = `${window.location.origin}${window.location.pathname}?duel=${activeDuel.id}`;
-    navigator.clipboard.writeText(inviteUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+ const handleCopyLink = () => {
+ if (!activeDuel) return;
+ const inviteUrl = `${window.location.origin}${window.location.pathname}?duel=${activeDuel.id}`;
+ navigator.clipboard.writeText(inviteUrl);
+ setCopied(true);
+ setTimeout(() => setCopied(false), 2000);
+ };
 
-  const handleJoinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!liveGameplayEnabled) return;
-    if (joinInput.trim()) {
-      onJoinDuel(joinInput.trim().toUpperCase());
-    }
-  };
+ const handleJoinSubmit = (e: React.FormEvent) => {
+ e.preventDefault();
+ if (!liveGameplayEnabled) return;
+ if (joinInput.trim()) {
+ onJoinDuel(joinInput.trim().toUpperCase());
+ }
+ };
 
-  const myAddress = wallet.address || "0xMyWalletAddressPlaceholder";
-  const myPlayer = activeDuel ? activeDuel.players[myAddress] : null;
+ const myAddress = wallet.address ||"0xMyWalletAddressPlaceholder";
+ const myPlayer = activeDuel ? activeDuel.players[myAddress] : null;
 
-  // Find the other player (the peer)
-  const peerPlayerEntry = activeDuel 
-    ? Object.entries(activeDuel.players).find(([addr]) => addr !== myAddress)
-    : null;
-  const peerAddress = peerPlayerEntry ? peerPlayerEntry[0] : null;
-  const peerPlayer = peerPlayerEntry ? peerPlayerEntry[1] : null;
+ // Find the other player (the peer)
+ const peerPlayerEntry = activeDuel 
+ ? Object.entries(activeDuel.players).find(([addr]) => addr !== myAddress)
+ : null;
+ const peerAddress = peerPlayerEntry ? peerPlayerEntry[0] : null;
+ const peerPlayer = peerPlayerEntry ? peerPlayerEntry[1] : null;
 
-  return (
-    <div id="duel-invite-terminal" className="bg-[#090b11] border border-white/10 rounded-lg p-5 font-sans relative overflow-hidden shadow-xl shadow-purple-900/5">
-      {/* Glow decorative effect */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
+ return (
+ <div id="duel-invite-terminal" className="bg-[#090b11] border border-white/10 rounded-lg p-5 font-sans relative overflow-hidden shadow-xl shadow-theme-accent/20">
+ {/* Glow decorative effect */}
+ <div className="absolute top-0 right-0 w-32 h-32 bg-theme-accent/5 blur-3xl pointer-events-none" />
+ <div className="absolute bottom-0 left-0 w-32 h-32 bg-theme-accent/5 blur-3xl pointer-events-none" />
 
-      {/* Header section */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
-        <div className="flex items-center gap-2">
-          <Swords className="w-4 h-4 text-purple-400 animate-pulse" />
-          <h2 className="text-sm font-bold font-mono tracking-wider text-white uppercase">
-            // Real-time Duel Routing Board
-          </h2>
-        </div>
-        {activeDuel && (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/30">
-            LOBBY SYNC: ROUTE BACKED
-          </span>
-        )}
-      </div>
+ {/* Header section */}
+ <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+ <div className="flex items-center gap-2">
+ <Swords className="w-4 h-4 text-theme-accent animate-pulse" />
+ <h2 className="text-sm font-bold font-mono tracking-wider text-white uppercase">
+ // Real-time Duel Routing Board
+ </h2>
+ </div>
+ {activeDuel && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-theme-accent/15 text-theme-accent border border-theme-border">
+ LOBBY SYNC: ROUTE BACKED
+ </span>
+ )}
+ </div>
 
-      {!activeDuel ? (
-        <div className="space-y-4">
-          <p className="text-xs text-slate-400 leading-relaxed">
-            BYOS lobby creation and peer discovery are route-backed. Synchronized PVP round execution stays locked until BYOS proves a real round-sync endpoint.
-          </p>
+ {!activeDuel ? (
+ <div className="space-y-4">
+ <p className="text-xs text-slate-400 leading-relaxed">
+ BYOS lobby creation and peer discovery are route-backed. Synchronized PVP round execution stays locked until BYOS proves a real round-sync endpoint.
+ </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Create Card */}
-            <div className="bg-[#050609] border border-white/5 rounded-lg p-4 flex flex-col justify-between hover:border-purple-500/20 transition-colors">
-              <div className="space-y-1 mb-4">
-                <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
-                  <Plus className="w-3.5 h-3.5 text-purple-400" /> Host Duel Lobby
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Generate a unique session ID and share the secure link with a peer.
-                </p>
-              </div>
-              <button
-                id="btn-create-duel-lobby"
-                onClick={onCreateDuel}
-                disabled={!liveGameplayEnabled}
-                className={`w-full font-bold uppercase tracking-wider text-[11px] py-2 rounded transition-all duration-150 flex items-center justify-center gap-1.5 ${
-                  liveGameplayEnabled ? 'bg-purple-600/90 text-white hover:bg-purple-600' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                }`}
-              >
-                <Plus className="w-3.5 h-3.5" /> {liveGameplayEnabled ? 'Initialize Lobby' : 'Needs Endpoint'}
-              </button>
-            </div>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+ {/* Create Card */}
+ <div className="bg-[#050609] border border-white/5 rounded-lg p-4 flex flex-col justify-between hover:border-theme-border transition-colors">
+ <div className="space-y-1 mb-4">
+ <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
+ <Plus className="w-3.5 h-3.5 text-theme-accent" /> Host Duel Lobby
+ </h3>
+ <p className="text-[11px] text-slate-500">
+ Generate a unique session ID and share the secure link with a peer.
+ </p>
+ </div>
+ <button
+ id="btn-create-duel-lobby"
+ onClick={onCreateDuel}
+ disabled={!liveGameplayEnabled}
+ className={`w-full font-bold uppercase tracking-wider text-[11px] py-2 rounded transition-all duration-150 flex items-center justify-center gap-1.5 ${
+ liveGameplayEnabled ? 'bg-theme-accent/90 text-white hover:bg-theme-accent' : 'bg-theme-surface text-slate-500 cursor-not-allowed'
+ }`}
+ >
+ <Plus className="w-3.5 h-3.5" /> {liveGameplayEnabled ? 'Initialize Lobby' : 'Needs Endpoint'}
+ </button>
+ </div>
 
-            {/* Join Card */}
-            <div className="bg-[#050609] border border-white/5 rounded-lg p-4 flex flex-col justify-between hover:border-purple-500/20 transition-colors">
-              <div className="space-y-1 mb-3">
-                <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-blue-400" /> Join Peer Session
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Enter a unique session ID or click an invite link to connect immediately.
-                </p>
-              </div>
-              <form onSubmit={handleJoinSubmit} className="space-y-2">
-                <div className="flex gap-1.5">
-                  <input
-                    id="duel-session-input"
-                    type="text"
-                    value={joinInput}
-                    onChange={(e) => setJoinInput(e.target.value)}
-                    disabled={!liveGameplayEnabled}
-                    placeholder="DUEL-XXXX"
-                    className="flex-1 bg-[#090b11] border border-white/10 rounded px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-purple-500 uppercase"
-                  />
-                  <button
-                    id="btn-join-duel-lobby"
-                    type="submit"
-                    disabled={!liveGameplayEnabled}
-                    className={`font-bold uppercase text-[11px] px-3.5 rounded transition-colors flex items-center justify-center ${
-                      liveGameplayEnabled ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+ {/* Join Card */}
+ <div className="bg-[#050609] border border-white/5 rounded-lg p-4 flex flex-col justify-between hover:border-theme-border transition-colors">
+ <div className="space-y-1 mb-3">
+ <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
+ <Users className="w-3.5 h-3.5 text-theme-accent" /> Join Peer Session
+ </h3>
+ <p className="text-[11px] text-slate-500">
+ Enter a unique session ID or click an invite link to connect immediately.
+ </p>
+ </div>
+ <form onSubmit={handleJoinSubmit} className="space-y-2">
+ <div className="flex gap-1.5">
+ <input
+ id="duel-session-input"
+ type="text"
+ value={joinInput}
+ onChange={(e) => setJoinInput(e.target.value)}
+ disabled={!liveGameplayEnabled}
+ placeholder="DUEL-XXXX"
+ className="flex-1 bg-[#090b11] border border-white/10 rounded px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-theme-border uppercase"
+ />
+ <button
+ id="btn-join-duel-lobby"
+ type="submit"
+ disabled={!liveGameplayEnabled}
+ className={`font-bold uppercase text-[11px] px-3.5 rounded transition-colors flex items-center justify-center ${
+ liveGameplayEnabled ? 'bg-theme-accent hover:bg-theme-accent text-white' : 'bg-theme-surface text-slate-500 cursor-not-allowed'
+ }`}
+ >
+ <ArrowRight className="w-3.5 h-3.5" />
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
 
-          <div className="bg-[#050609] border border-white/5 rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-emerald-400" /> Open BYOS Lobbies
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Join a real wallet lobby discovered from the BYOS lobby endpoint.
-                </p>
-              </div>
-              <button
-                id="btn-refresh-duel-lobbies"
-                onClick={onRefreshLobbies}
-                className="px-2.5 py-1 border border-white/10 hover:border-emerald-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-300"
-              >
-                <RefreshCw className="w-3 h-3 inline mr-1" /> Refresh
-              </button>
-            </div>
+ <div className="bg-[#050609] border border-white/5 rounded-lg p-4 space-y-3">
+ <div className="flex items-center justify-between gap-3">
+ <div>
+ <h3 className="text-xs font-bold font-mono text-white uppercase flex items-center gap-1.5">
+ <Users className="w-3.5 h-3.5 text-emerald-400" /> Open BYOS Lobbies
+ </h3>
+ <p className="text-[11px] text-slate-500">
+ Join a real wallet lobby discovered from the BYOS lobby endpoint.
+ </p>
+ </div>
+ <button
+ id="btn-refresh-duel-lobbies"
+ onClick={onRefreshLobbies}
+ className="px-2.5 py-1 border border-white/10 hover:border-emerald-500/30 rounded bg-white/5 hover:bg-white/10 transition-colors font-mono text-[9px] uppercase font-bold text-slate-300"
+ >
+ <RefreshCw className="w-3 h-3 inline mr-1" /> Refresh
+ </button>
+ </div>
 
-            {openLobbies.length === 0 ? (
-              <div className="border border-dashed border-white/10 rounded p-3 text-[11px] text-slate-500">
-                No open BYOS lobbies are available right now.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {openLobbies.map((lobby) => (
-                  <div key={lobby.id} className="flex items-center justify-between gap-3 border border-white/5 bg-[#090b11] rounded p-2.5">
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold font-mono text-emerald-400">{lobby.id}</div>
-                      <div className="text-[10px] text-slate-500 font-mono truncate">
-                        Host {lobby.host_wallet_address.slice(0, 6)}...{lobby.host_wallet_address.slice(-4)} · {lobby.player_count}/{lobby.max_players}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => onJoinDuel(lobby.id)}
-                      disabled={!liveGameplayEnabled || lobby.player_count >= lobby.max_players}
-                      className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-[10px] font-bold uppercase"
-                    >
-                      Join
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+ {openLobbies.length === 0 ? (
+ <div className="border border-dashed border-white/10 rounded p-3 text-[11px] text-slate-500">
+ No open BYOS lobbies are available right now.
+ </div>
+ ) : (
+ <div className="space-y-2">
+ {openLobbies.map((lobby) => (
+ <div key={lobby.id} className="flex items-center justify-between gap-3 border border-white/5 bg-[#090b11] rounded p-2.5">
+ <div className="min-w-0">
+ <div className="text-xs font-bold font-mono text-emerald-400">{lobby.id}</div>
+ <div className="text-[10px] text-slate-500 font-mono truncate">
+ Host {lobby.host_wallet_address.slice(0, 6)}...{lobby.host_wallet_address.slice(-4)} · {lobby.player_count}/{lobby.max_players}
+ </div>
+ </div>
+ <button
+ onClick={() => onJoinDuel(lobby.id)}
+ disabled={!liveGameplayEnabled || lobby.player_count >= lobby.max_players}
+ className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-theme-surface disabled:text-slate-500 text-white text-[10px] font-bold uppercase"
+ >
+ Join
+ </button>
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
 
-          <div className="bg-[#0c0d13]/50 border border-white/5 rounded-lg p-3.5">
-            <h4 className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <Coins className="w-3.5 h-3.5 text-purple-400" /> Duel PVP Staking Protocols:
-            </h4>
-            <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-500">
-              <li>Read routes are allowed to display BYOS leaderboard and history proof.</li>
-              <li>Write routes must prove session creation, wager lock, outcome settlement, and synchronized round execution before PVP gameplay unlocks.</li>
-              <li>No local peer result or local settlement is accepted as production proof.</li>
-            </ul>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {/* Active Lobby Status */}
-          <div className="bg-[#050609] border border-white/10 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-[9px] font-mono text-slate-500 uppercase block">Active Duel Session ID</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold font-mono text-purple-400 tracking-wider select-all">
-                  {activeDuel.id}
-                </span>
-                <button
-                  id="btn-copy-duel-link"
-                  onClick={handleCopyLink}
-                  title="Copy Invite Link"
-                  className="p-1 hover:bg-white/5 rounded text-slate-400 hover:text-white transition-colors"
-                >
-                  {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
+ <div className="bg-[#0c0d13]/50 border border-white/5 rounded-lg p-3.5">
+ <h4 className="text-[10px] font-mono text-theme-accent font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1">
+ <Coins className="w-3.5 h-3.5 text-theme-accent" /> Duel PVP Staking Protocols:
+ </h4>
+ <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-500">
+ <li>Read routes are allowed to display BYOS leaderboard and history proof.</li>
+ <li>Write routes must prove session creation, wager lock, outcome settlement, and synchronized round execution before PVP gameplay unlocks.</li>
+ <li>No local peer result or local settlement is accepted as production proof.</li>
+ </ul>
+ </div>
+ </div>
+ ) : (
+ <div className="space-y-5">
+ {/* Active Lobby Status */}
+ <div className="bg-[#050609] border border-white/10 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+ <div className="space-y-1">
+ <span className="text-[9px] font-mono text-slate-500 uppercase block">Active Duel Session ID</span>
+ <div className="flex items-center gap-2">
+ <span className="text-sm font-bold font-mono text-theme-accent tracking-wider select-all">
+ {activeDuel.id}
+ </span>
+ <button
+ id="btn-copy-duel-link"
+ onClick={handleCopyLink}
+ title="Copy Invite Link"
+ className="p-1 hover:bg-white/5 rounded text-slate-400 hover:text-white transition-colors"
+ >
+ {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+ </button>
+ </div>
+ </div>
 
-            <div className="flex flex-wrap gap-2">
-              <button
-                id="btn-leave-duel-lobby"
-                onClick={onLeaveDuel}
-                className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 font-bold uppercase text-[10px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5"
-              >
-                <LogOut className="w-3.5 h-3.5" /> Leave Lobby
-              </button>
-            </div>
-          </div>
+ <div className="flex flex-wrap gap-2">
+ <button
+ id="btn-leave-duel-lobby"
+ onClick={onLeaveDuel}
+ className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 font-bold uppercase text-[10px] px-3 py-1.5 rounded transition-all flex items-center gap-1.5"
+ >
+ <LogOut className="w-3.5 h-3.5" /> Leave Lobby
+ </button>
+ </div>
+ </div>
 
-          {/* Connected Players Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Player 1 (You) */}
-            <div className="bg-[#050609] border border-emerald-500/15 rounded-lg p-4 relative">
-              <div className="absolute top-2 right-2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span className="text-[8px] font-mono text-emerald-400 uppercase font-bold">You (Host)</span>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-[9px] font-mono text-slate-500 uppercase block">Wallet Connection</span>
-                  <span className="text-xs font-mono text-white block truncate">
-                    {wallet.address || "0xMyWalletAddressPlaceholder"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-950/40 p-2 rounded border border-white/5">
-                    <span className="text-[8px] font-mono text-slate-500 uppercase block">USDC Bankroll</span>
-                    <span className="text-xs font-bold font-mono text-emerald-400">
-                      ${myPlayer ? myPlayer.balanceUsdc.toFixed(2) : wallet.balanceUsdc.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="bg-slate-950/40 p-2 rounded border border-white/5">
-                    <span className="text-[8px] font-mono text-slate-500 uppercase block">Active Stake</span>
-                    <span className="text-xs font-bold font-mono text-purple-400">
-                      ${myPlayer ? myPlayer.wagerAmount.toFixed(2) : "0.00"}
-                    </span>
-                  </div>
-                </div>
+ {/* Connected Players Grid */}
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ {/* Player 1 (You) */}
+ <div className="bg-[#050609] border border-emerald-500/15 rounded-lg p-4 relative">
+ <div className="absolute top-2 right-2 flex items-center gap-1">
+ <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+ <span className="text-[8px] font-mono text-emerald-400 uppercase font-bold">You (Host)</span>
+ </div>
+ <div className="space-y-3">
+ <div>
+ <span className="text-[9px] font-mono text-slate-500 uppercase block">Wallet Connection</span>
+ <span className="text-xs font-mono text-white block truncate">
+ {wallet.address ||"0xMyWalletAddressPlaceholder"}
+ </span>
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ <div className="bg-theme-surface p-2 rounded border border-white/5">
+ <span className="text-[8px] font-mono text-slate-500 uppercase block">USDC Bankroll</span>
+ <span className="text-xs font-bold font-mono text-emerald-400">
+ ${myPlayer ? myPlayer.balanceUsdc.toFixed(2) : wallet.balanceUsdc.toFixed(2)}
+ </span>
+ </div>
+ <div className="bg-theme-surface p-2 rounded border border-white/5">
+ <span className="text-[8px] font-mono text-slate-500 uppercase block">Active Stake</span>
+ <span className="text-xs font-bold font-mono text-theme-accent">
+ ${myPlayer ? myPlayer.wagerAmount.toFixed(2) :"0.00"}
+ </span>
+ </div>
+ </div>
 
-                {/* Bets display */}
-                <div className="space-y-1">
-                  <span className="text-[8px] font-mono text-slate-500 uppercase block">My Prediction Stakes</span>
-                  <div className="flex gap-1.5">
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.player > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
-                      Agent A: ${myPlayer ? myPlayer.bets.player.toFixed(2) : "0.00"}
-                    </span>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.banker > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
-                      Agent B: ${myPlayer ? myPlayer.bets.banker.toFixed(2) : "0.00"}
-                    </span>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.tie > 0 ? 'bg-purple-500/15 border-purple-500/30 text-purple-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
-                      Tie: ${myPlayer ? myPlayer.bets.tie.toFixed(2) : "0.00"}
-                    </span>
-                  </div>
-                </div>
+ {/* Bets display */}
+ <div className="space-y-1">
+ <span className="text-[8px] font-mono text-slate-500 uppercase block">My Prediction Stakes</span>
+ <div className="flex gap-1.5">
+ <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.player > 0 ? 'bg-theme-accent/15 border-theme-border text-theme-accent' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+ Agent A: ${myPlayer ? myPlayer.bets.player.toFixed(2) :"0.00"}
+ </span>
+ <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.banker > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+ Agent B: ${myPlayer ? myPlayer.bets.banker.toFixed(2) :"0.00"}
+ </span>
+ <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${myPlayer && myPlayer.bets.tie > 0 ? 'bg-theme-accent/15 border-theme-border text-theme-accent' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+ Tie: ${myPlayer ? myPlayer.bets.tie.toFixed(2) :"0.00"}
+ </span>
+ </div>
+ </div>
 
-                {/* Action feedback */}
-                {myPlayer && (
-                  <div className="pt-1.5">
-                    {myPlayer.status === 'ready' && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 block text-center font-bold">
-                        ✓ Stakes Locked
-                      </span>
-                    )}
-                    {myPlayer.status === 'ejected' && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 block text-center font-bold">
-                        ⚡ Ejected at {myPlayer.ejectedMulti?.toFixed(2)}x (Payout: ${myPlayer.payout.toFixed(2)})
-                      </span>
-                    )}
-                    {myPlayer.status === 'crashed' && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 block text-center font-bold">
-                        ⚠️ Network Crashed (Stake Burned)
-                      </span>
-                    )}
-                    {myPlayer.status === 'pending' && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-500/10 text-slate-400 border border-slate-500/20 block text-center">
-                        Waiting for bet allocation...
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+ {/* Action feedback */}
+ {myPlayer && (
+ <div className="pt-1.5">
+ {myPlayer.status === 'ready' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-theme-accent/10 text-theme-accent border border-theme-border block text-center font-bold">
+ ✓ Stakes Locked
+ </span>
+ )}
+ {myPlayer.status === 'ejected' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 block text-center font-bold">
+ ⚡ Ejected at {myPlayer.ejectedMulti?.toFixed(2)}x (Payout: ${myPlayer.payout.toFixed(2)})
+ </span>
+ )}
+ {myPlayer.status === 'crashed' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 block text-center font-bold">
+ ⚠️ Network Crashed (Stake Burned)
+ </span>
+ )}
+ {myPlayer.status === 'pending' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-theme-surface text-slate-400 border border-theme-border block text-center">
+ Waiting for bet allocation...
+ </span>
+ )}
+ </div>
+ )}
+ </div>
+ </div>
 
-            {/* Player 2 (Peer) */}
-            <div className={`bg-[#050609] border rounded-lg p-4 relative ${peerPlayer ? 'border-purple-500/15' : 'border-dashed border-white/10'}`}>
-              {peerPlayer ? (
-                <>
-                  <div className="absolute top-2 right-2 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping" />
-                    <span className="text-[8px] font-mono text-purple-400 uppercase font-bold">
-                      Connected Peer
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-[9px] font-mono text-slate-500 uppercase block">Peer Address</span>
-                      <span className="text-xs font-mono text-white block truncate select-all">
-                        {peerAddress}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-slate-950/40 p-2 rounded border border-white/5">
-                        <span className="text-[8px] font-mono text-slate-500 uppercase block">USDC Bankroll</span>
-                        <span className="text-xs font-bold font-mono text-emerald-400">
-                          ${peerPlayer.balanceUsdc.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="bg-slate-950/40 p-2 rounded border border-white/5">
-                        <span className="text-[8px] font-mono text-slate-500 uppercase block">Active Stake</span>
-                        <span className="text-xs font-bold font-mono text-purple-400">
-                          ${peerPlayer.wagerAmount.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
+ {/* Player 2 (Peer) */}
+ <div className={`bg-[#050609] border rounded-lg p-4 relative ${peerPlayer ? 'border-theme-border' : 'border-dashed border-white/10'}`}>
+ {peerPlayer ? (
+ <>
+ <div className="absolute top-2 right-2 flex items-center gap-1">
+ <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-ping" />
+ <span className="text-[8px] font-mono text-theme-accent uppercase font-bold">
+ Connected Peer
+ </span>
+ </div>
+ <div className="space-y-3">
+ <div>
+ <span className="text-[9px] font-mono text-slate-500 uppercase block">Peer Address</span>
+ <span className="text-xs font-mono text-white block truncate select-all">
+ {peerAddress}
+ </span>
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ <div className="bg-theme-surface p-2 rounded border border-white/5">
+ <span className="text-[8px] font-mono text-slate-500 uppercase block">USDC Bankroll</span>
+ <span className="text-xs font-bold font-mono text-emerald-400">
+ ${peerPlayer.balanceUsdc.toFixed(2)}
+ </span>
+ </div>
+ <div className="bg-theme-surface p-2 rounded border border-white/5">
+ <span className="text-[8px] font-mono text-slate-500 uppercase block">Active Stake</span>
+ <span className="text-xs font-bold font-mono text-theme-accent">
+ ${peerPlayer.wagerAmount.toFixed(2)}
+ </span>
+ </div>
+ </div>
 
-                    {/* Bets display */}
-                    <div className="space-y-1">
-                      <span className="text-[8px] font-mono text-slate-500 uppercase block">Peer Prediction Stakes</span>
-                      <div className="flex gap-1.5">
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.player > 0 ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
-                          Agent A: ${peerPlayer.bets.player.toFixed(2)}
-                        </span>
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.banker > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
-                          Agent B: ${peerPlayer.bets.banker.toFixed(2)}
-                        </span>
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.tie > 0 ? 'bg-purple-500/15 border-purple-500/30 text-purple-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
-                          Tie: ${peerPlayer.bets.tie.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
+ {/* Bets display */}
+ <div className="space-y-1">
+ <span className="text-[8px] font-mono text-slate-500 uppercase block">Peer Prediction Stakes</span>
+ <div className="flex gap-1.5">
+ <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.player > 0 ? 'bg-theme-accent/15 border-theme-border text-theme-accent' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+ Agent A: ${peerPlayer.bets.player.toFixed(2)}
+ </span>
+ <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.banker > 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+ Agent B: ${peerPlayer.bets.banker.toFixed(2)}
+ </span>
+ <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex-1 text-center border ${peerPlayer.bets.tie > 0 ? 'bg-theme-accent/15 border-theme-border text-theme-accent' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+ Tie: ${peerPlayer.bets.tie.toFixed(2)}
+ </span>
+ </div>
+ </div>
 
-                    {/* Actions / Status */}
-                    <div className="pt-1.5">
-                      {peerPlayer.status === 'ready' && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 block text-center font-bold">
-                          ✓ Stakes Locked
-                        </span>
-                      )}
-                      {peerPlayer.status === 'ejected' && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 block text-center font-bold">
-                          ⚡ Ejected at {peerPlayer.ejectedMulti?.toFixed(2)}x (Payout: ${peerPlayer.payout.toFixed(2)})
-                        </span>
-                      )}
-                      {peerPlayer.status === 'crashed' && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 block text-center font-bold">
-                          ⚠️ Network Crashed (Stake Burned)
-                        </span>
-                      )}
-                      {peerPlayer.status === 'pending' && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-500/10 text-slate-400 border border-slate-500/20 block text-center">
-                          Waiting for bet allocation...
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center py-6 text-center text-slate-500 space-y-2">
-                  <Users className="w-6 h-6 text-slate-600 animate-pulse" />
-                  <div>
-                    <span className="text-xs font-bold block text-slate-400">Waiting for Peer</span>
-                    <span className="text-[10px] block leading-normal px-2">
-                      Share the Duel ID above or open a new browser tab/window to connect as Player 2.
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+ {/* Actions / Status */}
+ <div className="pt-1.5">
+ {peerPlayer.status === 'ready' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-theme-accent/10 text-theme-accent border border-theme-border block text-center font-bold">
+ ✓ Stakes Locked
+ </span>
+ )}
+ {peerPlayer.status === 'ejected' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 block text-center font-bold">
+ ⚡ Ejected at {peerPlayer.ejectedMulti?.toFixed(2)}x (Payout: ${peerPlayer.payout.toFixed(2)})
+ </span>
+ )}
+ {peerPlayer.status === 'crashed' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 block text-center font-bold">
+ ⚠️ Network Crashed (Stake Burned)
+ </span>
+ )}
+ {peerPlayer.status === 'pending' && (
+ <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-theme-surface text-slate-400 border border-theme-border block text-center">
+ Waiting for bet allocation...
+ </span>
+ )}
+ </div>
+ </div>
+ </>
+ ) : (
+ <div className="h-full flex flex-col items-center justify-center py-6 text-center text-slate-500 space-y-2">
+ <Users className="w-6 h-6 text-slate-600 animate-pulse" />
+ <div>
+ <span className="text-xs font-bold block text-slate-400">Waiting for Peer</span>
+ <span className="text-[10px] block leading-normal px-2">
+ Share the Duel ID above or open a new browser tab/window to connect as Player 2.
+ </span>
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
 
-          {/* Lobby Controller / Action Block */}
-          {activeDuel.status === 'lobby' && (
-            <div className="bg-slate-950/40 border border-white/5 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-xs font-bold text-white block">Stakes Commit Status</span>
-                  <p className="text-[11px] text-slate-500">
-                    {!peerPlayer 
-                      ? "Waiting for a second player to join the session ID..." 
-                      : myPlayer?.status !== 'ready' && peerPlayer?.status !== 'ready'
-                      ? "Place wagers on the board to lock in prediction stakes."
-                      : myPlayer?.status !== 'ready'
-                      ? "Lock in your prediction stake to complete prep phase."
-                      : peerPlayer?.status !== 'ready'
-                      ? "Waiting for connected peer to lock in stakes..."
-                      : multiplayerExecutionVerified
-                        ? "All stakes locked. BYOS synchronized round execution is verified."
-                        : "All stakes locked. BYOS round-sync endpoint still needs proof before PVP execution."}
-                  </p>
-                </div>
-              </div>
+ {/* Lobby Controller / Action Block */}
+ {activeDuel.status === 'lobby' && (
+ <div className="bg-theme-surface border border-white/5 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+ <div className="flex items-center gap-2.5">
+ <div className="p-2 rounded bg-theme-accent/10 border border-theme-border text-theme-accent">
+ <Zap className="w-4 h-4" />
+ </div>
+ <div className="space-y-0.5">
+ <span className="text-xs font-bold text-white block">Stakes Commit Status</span>
+ <p className="text-[11px] text-slate-500">
+ {!peerPlayer 
+ ?"Waiting for a second player to join the session ID..." 
+ : myPlayer?.status !== 'ready' && peerPlayer?.status !== 'ready'
+ ?"Place wagers on the board to lock in prediction stakes."
+ : myPlayer?.status !== 'ready'
+ ?"Lock in your prediction stake to complete prep phase."
+ : peerPlayer?.status !== 'ready'
+ ?"Waiting for connected peer to lock in stakes..."
+ : multiplayerExecutionVerified
+ ?"All stakes locked. BYOS synchronized round execution is verified."
+ :"All stakes locked. BYOS round-sync endpoint still needs proof before PVP execution."}
+ </p>
+ </div>
+ </div>
 
-              {peerPlayer && (
-                <button
-                  id="btn-initiate-duel-routing"
-                  onClick={onStartDuelCountdown}
-                  disabled={myPlayer?.status !== 'ready' || peerPlayer?.status !== 'ready' || !multiplayerExecutionVerified}
-                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 font-bold uppercase tracking-wider text-xs px-6 py-2.5 rounded transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20"
-                >
-                  <Swords className="w-4 h-4" /> {multiplayerExecutionVerified ? "Initiate Duel" : "Needs Round-Sync"}
-                </button>
-              )}
-            </div>
-          )}
+ {peerPlayer && (
+ <button
+ id="btn-initiate-duel-routing"
+ onClick={onStartDuelCountdown}
+ disabled={myPlayer?.status !== 'ready' || peerPlayer?.status !== 'ready' || !multiplayerExecutionVerified}
+ className="w-full sm:w-auto bg-theme-surface text-white hover: hover: disabled:opacity-40 font-bold uppercase tracking-wider text-xs px-6 py-2.5 rounded transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-theme-accent/20"
+ >
+ <Swords className="w-4 h-4" /> {multiplayerExecutionVerified ?"Initiate Duel" :"Needs Round-Sync"}
+ </button>
+ )}
+ </div>
+ )}
 
-          {/* countdown mode */}
-          {activeDuel.status === 'countdown' && (
-            <div className="bg-gradient-to-r from-purple-950/40 to-indigo-950/40 border border-purple-500/20 rounded-lg p-5 flex flex-col items-center justify-center text-center space-y-2">
-              <span className="text-[10px] font-mono text-purple-400 tracking-widest uppercase font-bold animate-pulse">
-                // Synchronizing Routing Buffers
-              </span>
-              <div className="text-4xl font-extrabold font-mono text-white animate-bounce">
-                {activeDuel.countdownSeconds}s
-              </div>
-              <p className="text-xs text-slate-400">
-                Opening synchronized consensus stream... Prepare independent ejection triggers.
-              </p>
-            </div>
-          )}
+ {/* countdown mode */}
+ {activeDuel.status === 'countdown' && (
+ <div className="bg-theme-surface border border-theme-border rounded-lg p-5 flex flex-col items-center justify-center text-center space-y-2">
+ <span className="text-[10px] font-mono text-theme-accent tracking-widest uppercase font-bold animate-pulse">
+ // Synchronizing Routing Buffers
+ </span>
+ <div className="text-4xl font-extrabold font-mono text-white animate-bounce">
+ {activeDuel.countdownSeconds}s
+ </div>
+ <p className="text-xs text-slate-400">
+ Opening synchronized consensus stream... Prepare independent ejection triggers.
+ </p>
+ </div>
+ )}
 
-          {/* running mode active */}
-          {activeDuel.status === 'running' && (
-            <div className="bg-gradient-to-r from-purple-950/20 to-blue-950/20 border border-purple-500/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-bold font-mono text-emerald-400 uppercase">Consensus Duel Live</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[9px] font-mono text-slate-500 block uppercase">Current Multiplier</span>
-                  <span className="text-lg font-bold font-mono text-purple-400">
-                    {activeDuel.multiplier.toFixed(2)}x
-                  </span>
-                </div>
-              </div>
+ {/* running mode active */}
+ {activeDuel.status === 'running' && (
+ <div className="bg-theme-surface border border-theme-border rounded-lg p-4 space-y-3">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+ <span className="text-xs font-bold font-mono text-emerald-400 uppercase">Consensus Duel Live</span>
+ </div>
+ <div className="text-right">
+ <span className="text-[9px] font-mono text-slate-500 block uppercase">Current Multiplier</span>
+ <span className="text-lg font-bold font-mono text-theme-accent">
+ {activeDuel.multiplier.toFixed(2)}x
+ </span>
+ </div>
+ </div>
 
-            </div>
-          )}
+ </div>
+ )}
 
-          {/* Duel Ended Results */}
-          {activeDuel.status === 'ended' && (
-            <div className="bg-slate-950 border border-purple-500/20 rounded-lg p-5 space-y-4">
-              <div className="text-center space-y-1">
-                <span className="text-[9px] font-mono text-purple-400 uppercase block tracking-widest font-bold">
-                  // Duel Settlement Summary
-                </span>
-                <h3 className="text-lg font-extrabold text-white uppercase flex items-center justify-center gap-1.5">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Duel Round Concluded
-                </h3>
-              </div>
+ {/* Duel Ended Results */}
+ {activeDuel.status === 'ended' && (
+ <div className="bg-theme-surface border border-theme-border rounded-lg p-5 space-y-4">
+ <div className="text-center space-y-1">
+ <span className="text-[9px] font-mono text-theme-accent uppercase block tracking-widest font-bold">
+ // Duel Settlement Summary
+ </span>
+ <h3 className="text-lg font-extrabold text-white uppercase flex items-center justify-center gap-1.5">
+ <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Duel Round Concluded
+ </h3>
+ </div>
 
-              <div className="bg-[#050609] p-4 rounded border border-white/5 space-y-3">
-                <div className="grid grid-cols-2 gap-4 divide-x divide-white/5">
-                  {/* Your Profit */}
-                  <div className="text-center space-y-1">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase block">Your Payout</span>
-                    <span className={`text-sm font-bold font-mono ${myPlayer && myPlayer.payout > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
-                      ${myPlayer ? myPlayer.payout.toFixed(2) : "0.00"} USDC
-                    </span>
-                    <span className="text-[9px] block text-slate-600">
-                      {myPlayer && myPlayer.ejectedMulti ? `Ejected at ${myPlayer.ejectedMulti.toFixed(2)}x` : 'Crashed'}
-                    </span>
-                  </div>
+ <div className="bg-[#050609] p-4 rounded border border-white/5 space-y-3">
+ <div className="grid grid-cols-2 gap-4 divide-x divide-white/5">
+ {/* Your Profit */}
+ <div className="text-center space-y-1">
+ <span className="text-[10px] font-mono text-slate-500 uppercase block">Your Payout</span>
+ <span className={`text-sm font-bold font-mono ${myPlayer && myPlayer.payout > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+ ${myPlayer ? myPlayer.payout.toFixed(2) :"0.00"} USDC
+ </span>
+ <span className="text-[9px] block text-slate-600">
+ {myPlayer && myPlayer.ejectedMulti ? `Ejected at ${myPlayer.ejectedMulti.toFixed(2)}x` : 'Crashed'}
+ </span>
+ </div>
 
-                  {/* Peer Profit */}
-                  <div className="text-center space-y-1 pl-4">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase block">Peer Payout</span>
-                    <span className={`text-sm font-bold font-mono ${peerPlayer && peerPlayer.payout > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
-                      ${peerPlayer ? peerPlayer.payout.toFixed(2) : "0.00"} USDC
-                    </span>
-                    <span className="text-[9px] block text-slate-600">
-                      {peerPlayer && peerPlayer.ejectedMulti ? `Ejected at ${peerPlayer.ejectedMulti.toFixed(2)}x` : 'Crashed'}
-                    </span>
-                  </div>
-                </div>
+ {/* Peer Profit */}
+ <div className="text-center space-y-1 pl-4">
+ <span className="text-[10px] font-mono text-slate-500 uppercase block">Peer Payout</span>
+ <span className={`text-sm font-bold font-mono ${peerPlayer && peerPlayer.payout > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+ ${peerPlayer ? peerPlayer.payout.toFixed(2) :"0.00"} USDC
+ </span>
+ <span className="text-[9px] block text-slate-600">
+ {peerPlayer && peerPlayer.ejectedMulti ? `Ejected at ${peerPlayer.ejectedMulti.toFixed(2)}x` : 'Crashed'}
+ </span>
+ </div>
+ </div>
 
-                <div className="border-t border-white/5 pt-3 mt-1 text-center">
-                  {activeDuel.winnerAddress === myAddress ? (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded text-xs text-emerald-400 font-bold font-mono">
-                      👑 VICTORY! You won the Head-to-Head Duel!
-                    </div>
-                  ) : activeDuel.winnerAddress === peerAddress ? (
-                    <div className="bg-purple-500/10 border border-purple-500/20 p-2 rounded text-xs text-purple-400 font-bold font-mono">
-                      🏆 Peer Secured the Winning Duel Ejection!
-                    </div>
-                  ) : (
-                    <div className="bg-slate-500/10 border border-slate-500/20 p-2 rounded text-xs text-slate-400 font-bold font-mono">
-                      🤝 DRAW! Both players settled or crashed equally.
-                    </div>
-                  )}
-                </div>
-              </div>
+ <div className="border-t border-white/5 pt-3 mt-1 text-center">
+ {activeDuel.winnerAddress === myAddress ? (
+ <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded text-xs text-emerald-400 font-bold font-mono">
+ 👑 VICTORY! You won the Head-to-Head Duel!
+ </div>
+ ) : activeDuel.winnerAddress === peerAddress ? (
+ <div className="bg-theme-accent/10 border border-theme-border p-2 rounded text-xs text-theme-accent font-bold font-mono">
+ 🏆 Peer Secured the Winning Duel Ejection!
+ </div>
+ ) : (
+ <div className="bg-theme-surface border border-theme-border p-2 rounded text-xs text-slate-400 font-bold font-mono">
+ 🤝 DRAW! Both players settled or crashed equally.
+ </div>
+ )}
+ </div>
+ </div>
 
-              <div className="flex gap-2.5">
-                <button
-                  id="btn-duel-reset"
-                  onClick={onLeaveDuel}
-                  className="bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase text-[10.5px] py-2 px-4 rounded flex-1 transition-all flex items-center justify-center gap-1.5"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" /> Return To Lobby List
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+ <div className="flex gap-2.5">
+ <button
+ id="btn-duel-reset"
+ onClick={onLeaveDuel}
+ className="bg-theme-accent hover:bg-theme-accent text-white font-bold uppercase text-[10.5px] py-2 px-4 rounded flex-1 transition-all flex items-center justify-center gap-1.5"
+ >
+ <RefreshCw className="w-3.5 h-3.5" /> Return To Lobby List
+ </button>
+ </div>
+ </div>
+ )}
+ </div>
+ )}
+ </div>
+ );
 }
