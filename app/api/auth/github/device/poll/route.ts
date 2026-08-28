@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const clientId = process.env.GITHUB_CLIENT_ID;
@@ -30,8 +30,20 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
 
     if (data.error) {
-      // Handles authorization_pending, slow_down, expired_token, access_denied, etc.
-      return NextResponse.json({ error: data.error, error_description: data.error_description }, { status: 400 });
+      const errType = data.error;
+      let status = 400;
+      
+      if (errType === "authorization_pending") {
+        status = 202;
+      } else if (errType === "slow_down") {
+        status = 429;
+      } else if (errType === "access_denied") {
+        status = 403;
+      } else if (errType === "expired_token" || errType === "incorrect_device_code") {
+        status = 400;
+      }
+
+      return NextResponse.json({ error: errType, error_description: data.error_description }, { status });
     }
 
     // Success - we have the token
@@ -52,7 +64,6 @@ export async function POST(req: NextRequest) {
       githubUsername = userData.login;
     }
 
-    // Return Veklom session result, NOT the raw GitHub token
     return NextResponse.json({
       success: true,
       message: "Linked to Veklom workspace once approved",

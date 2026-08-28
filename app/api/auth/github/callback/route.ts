@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   
   // For the Next.js app to be satisfied, we MUST set 'veklom_session' (wait, middleware looks for 'veklom.session').
   // The user prompt says: "sets secure HTTP-only veklom_session cookie".
-  const sessionCookieName = process.env.VEKLOM_SESSION_COOKIE_NAME || "veklom.session";
+  const sessionCookieName = process.env.VEKLOM_SESSION_COOKIE_NAME || "veklom_session";
   
   // We'll create a simple signed JWT or just base64 for now, as we don't have a private key for JWT signing here,
   // OR we can proxy the token to the backend.

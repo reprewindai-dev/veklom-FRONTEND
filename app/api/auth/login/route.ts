@@ -11,16 +11,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const byosApiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.veklom.com";
+    const byosApiUrl = process.env.VEKLOM_BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8088";
 
-    // Call the core backend
-    const backendRes = await fetch(`${byosApiUrl}/api/v1/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    let backendRes;
+    try {
+      backendRes = await fetch(`${byosApiUrl}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal
+      });
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutId);
+      console.error("Backend fetch error:", fetchErr);
+      if (fetchErr.name === 'AbortError') {
+         return NextResponse.json({ error: "Backend connection timed out" }, { status: 504 });
+      }
+      return NextResponse.json({ error: "Could not connect to core backend" }, { status: 502 });
+    }
+    
+    clearTimeout(timeoutId);
 
     if (!backendRes.ok) {
       const errText = await backendRes.text();
@@ -44,10 +57,10 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ success: true });
     response.cookies.set({
-      name: "veklom.session",
+      name: process.env.VEKLOM_SESSION_COOKIE_NAME || "veklom_session",
       value: jwt,
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: "lax",
       path: "/",
       maxAge: 7 * 24 * 60 * 60,
@@ -56,7 +69,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (err: any) {
     return NextResponse.json(
-      { error: "Internal server error", message: err.message, stack: err.stack },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
