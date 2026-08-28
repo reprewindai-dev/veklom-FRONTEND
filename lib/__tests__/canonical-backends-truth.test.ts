@@ -42,8 +42,8 @@ describe("canonical backend source truth", () => {
     expect(proxySource).not.toContain("lockerphycer-api:8000");
     expect(proxySource).not.toContain("process.env.SECRET_KEY || process.env.LOCKERPHYCER_SECRET_KEY");
     expect(proxySource).not.toContain('details: message');
-    expect(statusSource).toContain('state_basis: "HTTP_PROBE_ONLY"');
-    expect(statusSource).toContain('verification_state: "NOT_VERIFIED"');
+    expect(statusSource).toContain('state_basis:"HTTP_PROBE_ONLY"');
+    expect(statusSource).toContain('verification_state:"NOT_VERIFIED"');
     expect(statusSource).not.toContain('"health verified"');
     expect(statusSource).not.toContain('"workspace overview verified"');
     expect(statusSource).not.toContain('"source-of-truth snapshot verified"');

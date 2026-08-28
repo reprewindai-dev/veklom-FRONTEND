@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "phase": {
+      "type": "string"
+    },
+    "facts": {
+      "type": "array"
+    },
+    "unknowns": {
+      "type": "array"
+    },
+    "blocked_assumptions": {
+      "type": "array"
+    },
+    "evidence_refs": {
+      "type": "array"
+    }
+  }
+}

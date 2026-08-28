@@ -1,0 +1,3 @@
+name: unit
+blocking: true
+command: npm run test

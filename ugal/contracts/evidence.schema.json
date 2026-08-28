@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "loop_id": {
+      "type": "string"
+    },
+    "actor_identity": {
+      "type": "string"
+    },
+    "plan_hash": {
+      "type": "string"
+    },
+    "cappo_decision": {
+      "type": "string"
+    },
+    "signature": {
+      "type": "string"
+    }
+  }
+}

@@ -59,14 +59,14 @@ jobs:
           echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/veklom-deploy
           test -s ~/.ssh/veklom-deploy
           chmod 600 ~/.ssh/veklom-deploy
-          ssh-keyscan -H 5.78.135.11 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 87.99.154.166 >> ~/.ssh/known_hosts
 
       - name: Pull, Build, and Swap on Server
         run: |
           ssh -i ~/.ssh/veklom-deploy \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=20 \
-            root@5.78.135.11 "
+            root@87.99.154.166 "
             set -e
             APP=/data/coolify/applications/tvxcsezs2ypd8tjuj6ic9gih
             cd \$APP

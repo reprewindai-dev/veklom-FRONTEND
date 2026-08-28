@@ -1,0 +1,1 @@
+﻿export async function GET() { return new Response('Contact: mailto:security@veklom.com\nPreferred-Languages: en\nCanonical: https://veklom.com/.well-known/security.txt\nPolicy: https://veklom.com/security\n', { status: 200, headers: { 'Content-Type': 'text/plain' } }); }

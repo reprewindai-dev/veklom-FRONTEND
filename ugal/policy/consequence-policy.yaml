@@ -1,0 +1,6 @@
+name: consequence-policy
+rules:
+  - rule: deployment
+    requires_cappo: true
+  - rule: database_mutation
+    requires_cappo: true

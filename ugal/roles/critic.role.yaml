@@ -1,0 +1,3 @@
+name: Critic
+purpose: evaluate fitness, enforce rejection criteria, block unsafe output
+cannot: [override CAPPO, silently modify output, approve missing evidence]

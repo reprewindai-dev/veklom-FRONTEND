@@ -1,6 +1,9 @@
 {
+  "protocol_version": 1,
   "tree_size": 43,
-  "root_hash": "8e76080b297bfc4eba2268f920c27f728aa98cf20c91fef0eeac422c58e390b2",
-  "reconciliation_status": "pending",
-  "timestamp": "2026-08-26T12:05:00Z"
+  "root_hash_hex": "b2cef9efc83ee76cbee930afc8e4f2aa0d6af0f4fd7467637130acb6654a03a3",
+  "timestamp": "2026-08-28T13:47:36Z",
+  "key_id": "veklom-evidence-key-v1",
+  "checkpoint_sig_hex": "a6803dd9609b3b5a9c02cf280f6f513f3ec2cc8910611030eff295b5d1f49288fd293b91902eac17acac0aa726e7ebf89ab7976a3736215f2378ec8716f3bc0d",
+  "reconciliation_status": "NOT_YET_CLAIMED"
 }

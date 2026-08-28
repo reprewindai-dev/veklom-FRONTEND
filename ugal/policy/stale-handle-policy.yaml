@@ -1,0 +1,5 @@
+name: stale-handle-policy
+rules:
+  - rule: expired_lease_denial
+    action: DENY
+    expected_result: STALE_HANDLE_DENIED

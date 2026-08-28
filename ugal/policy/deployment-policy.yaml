@@ -1,0 +1,4 @@
+name: deployment-policy
+rules:
+  - rule: fallback_independence
+    description: Must support local deployment via PS1/SH fallback scripts.

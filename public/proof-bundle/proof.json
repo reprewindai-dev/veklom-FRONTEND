@@ -1,8 +1,15 @@
 {
-  "leaf_index": 42,
-  "leaf_hash": "99ae9a9aa0a0ad525cdf2e49cf1554339f77d61ac5851304da87a09fa460f0dc",
-  "siblings": [
-    "7d10de8554ed5ca40f9d0f0e0f4375b5b338af3fb96d33c9b2f53b5289b8f4fe"
+  "protocol_version": 1,
+  "leaf_index": 7,
+  "tree_size": 43,
+  "leaf_hash_hex": "6c2ccdbae7e9cdbb415bd06f5dcba8b78a394a8c1eb505f017490236c756480b",
+  "siblings_hex": [
+    "5ff5d2031a0cd57cd892a0d2c89763d8bf89b2fe859a2aad3e07c0880a70a877",
+    "6708275b02ac188f20907bd2f2f6ea0e7c6f6293dc6bac96932da7e527a77c4d",
+    "4aaac74f1801c3f3c3ea12ec6444b74f107da848e316049c5594300a905af4ee",
+    "210f6038819061db3f93b93cf318b16664c35fc6eaec0614c6a299476fa93720",
+    "f0630e81af1af541a1a636d49f370b99263411d124f752cb1bb98e5443a219a0",
+    "1452c8f907ebabad78155b57a163b0a26842e0bcd242a0925300746d16e74d25"
   ],
-  "tree_size": 43
+  "merkle_algorithm": "RFC-6962-SHA256"
 }

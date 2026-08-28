@@ -1,0 +1,2 @@
+# UGAL Mission
+The Universal Governed Automation Loop (UGAL) is the canonical automation heartbeat of the Veklom ecosystem. It converts unstructured agent activity into typed, bounded, policy-governed, cryptographically evidenced execution.
