@@ -1,0 +1,1 @@
+{"user_id":"test-123", "tenant_id":"tenant-456", "document_type":"terms", "document_version":"2026-08-28", "document_url":"test.com", "document_hash":"123", "accepted_at":"2026-08-28T00:00:00Z", "ip_address":"1.1.1.1", "user_agent":"curl", "acceptance_source":"test", "documents":[]}  

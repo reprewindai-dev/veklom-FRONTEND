@@ -81,6 +81,11 @@ const nextConfig = {
   // Setting it to https://api.veklom.com causes CORS errors on authenticated requests.
   async redirects() {
     return [
+      {
+        source: "/doc",
+        destination: "/docs",
+        permanent: true,
+      },
       // Legacy typo fix
       {
         source: "/terrrinal/:path*",
