@@ -1,0 +1,4 @@
+name: capability-policy
+rules:
+  - rule: strict_scoping
+    description: Agents only see explicitly mounted tools.

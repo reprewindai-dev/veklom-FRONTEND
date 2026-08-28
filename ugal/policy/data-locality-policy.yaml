@@ -1,0 +1,4 @@
+name: data-locality-policy
+rules:
+  - rule: pii_enforcement
+    description: PII detection forces routing to Server 5 (Local Ollama Node).

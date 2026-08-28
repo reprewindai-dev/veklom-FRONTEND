@@ -1,0 +1,3 @@
+name: typecheck
+blocking: true
+command: npm run typecheck

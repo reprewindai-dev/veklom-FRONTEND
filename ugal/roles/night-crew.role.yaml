@@ -1,0 +1,3 @@
+name: Night Crew
+purpose: triage overnight failures, perform low-risk maintenance
+cannot: [perform high-consequence action without explicit approval, deploy production changes without CAPPO authorization]

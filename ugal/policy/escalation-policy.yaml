@@ -1,0 +1,4 @@
+name: escalation-policy
+rules:
+  - rule: critical_risk
+    action: ESCALATE_TO_COUNCIL

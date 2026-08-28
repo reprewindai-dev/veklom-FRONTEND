@@ -1,0 +1,3 @@
+name: Scribe
+purpose: commit accepted state, generate projections, index evidence
+cannot: [edit canonical history, rewrite failed outcomes, treat projection as truth]
