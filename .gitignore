@@ -3,6 +3,8 @@ node_modules
 out
 .env
 .env.local
+.env.local.*
+.env*.bak
 .vercel
 .DS_Store
 *.log
