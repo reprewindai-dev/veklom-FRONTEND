@@ -7,6 +7,7 @@ import {
   ArrowRight,
   CheckCircle2,
   FileSearch,
+  Gauge,
   KeyRound,
   ShieldAlert,
   ShieldCheck,
@@ -19,14 +20,17 @@ import {
   discoverActivationPackage,
   executeActivationAllowed,
   inspectActivationEvidence,
+  inspectActivationMeasurements,
   proveActivationDenial,
   requestActivationLease,
   type ActivationAllowedExecution,
   type ActivationDenial,
   type ActivationEvidence,
   type ActivationLease,
+  type ActivationMeasurements,
   type ActivationPackage,
 } from "@/lib/cos/activation";
+import { useAuth } from "@/lib/auth-context";
 
 const DEFAULT_PROJECT = "activation-v1";
 
@@ -62,23 +66,29 @@ function StepItem({
       >
         {complete ? <CheckCircle2 className="h-4 w-4" /> : number}
       </div>
-      <span className={active || complete ? "font-medium" : "opacity-50"}>{title}</span>
+      <span className={active || complete ? "font-medium" : "opacity-50"}>
+        {title}
+      </span>
     </div>
   );
 }
 
 export default function ActivationPage() {
   const router = useRouter();
+  const { me, loading: authLoading } = useAuth();
+  const workspaceId =
+    typeof me?.workspace_id === "string" ? me.workspace_id.trim() : "";
+
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
-  const [workspaceId, setWorkspaceId] = useState("");
   const [projectId, setProjectId] = useState(DEFAULT_PROJECT);
   const [capability, setCapability] = useState<ActivationPackage>();
   const [lease, setLease] = useState<ActivationLease>();
   const [denial, setDenial] = useState<ActivationDenial>();
   const [execution, setExecution] = useState<ActivationAllowedExecution>();
   const [evidence, setEvidence] = useState<ActivationEvidence>();
+  const [measurements, setMeasurements] = useState<ActivationMeasurements>();
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -105,11 +115,11 @@ export default function ActivationPage() {
   }
 
   async function grant() {
-    if (!capability || !workspaceId.trim() || !projectId.trim()) return;
+    if (!capability || !workspaceId || !projectId.trim()) return;
     await run(async () => {
       const issued = await requestActivationLease(
         capability,
-        workspaceId.trim(),
+        workspaceId,
         projectId.trim(),
       );
       setLease(issued);
@@ -144,6 +154,15 @@ export default function ActivationPage() {
     });
   }
 
+  async function inspectMeasurements() {
+    if (!execution) return;
+    await run(async () => {
+      const proof = await inspectActivationMeasurements(execution);
+      setMeasurements(proof);
+      setStep(7);
+    });
+  }
+
   return (
     <main className="min-h-screen bg-[var(--theme-bg)] p-6 text-[var(--theme-text)]">
       <div className="mx-auto grid min-h-[640px] max-w-5xl overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg md:grid-cols-[280px_1fr]">
@@ -164,12 +183,13 @@ export default function ActivationPage() {
             <StepItem number={3} title="Prove denial" active={step === 3} complete={step > 3} />
             <StepItem number={4} title="Governed execution" active={step === 4} complete={step > 4} />
             <StepItem number={5} title="Inspect evidence" active={step === 5} complete={step > 5} />
+            <StepItem number={6} title="Verify outcome" active={step === 6} complete={step > 6} />
           </div>
 
           <div className="mt-8 rounded-lg border border-[var(--theme-border)] p-3 text-xs leading-5 opacity-70">
-            This page does not mint browser-only leases, fabricate hashes, simulate execution,
-            or mark activation complete with a client cookie. A step advances only after its
-            live CAPPO response satisfies the required contract.
+            No browser-only lease, browser-selected workspace authority, fabricated hash,
+            simulated completion, or completion cookie can advance this journey. Each step
+            requires a live backend contract to pass.
           </div>
         </aside>
 
@@ -181,7 +201,9 @@ export default function ActivationPage() {
                   <XCircle className="h-4 w-4" /> Live proof unavailable
                 </div>
                 <p>{error}</p>
-                <p className="mt-2 text-xs opacity-75">No proof-bearing state was advanced.</p>
+                <p className="mt-2 text-xs opacity-75">
+                  No proof-bearing UI state was advanced.
+                </p>
               </div>
             ) : null}
 
@@ -192,7 +214,7 @@ export default function ActivationPage() {
                 <p className="mt-4 max-w-xl leading-7 opacity-70">
                   Activation first asks CAPPO which capability packages actually exist. If no
                   package can demonstrate both a permitted operation and a blocked operation,
-                  the journey stops as unavailable instead of inventing a demo.
+                  the journey stops instead of manufacturing a demo state.
                 </p>
                 <button
                   type="button"
@@ -211,20 +233,17 @@ export default function ActivationPage() {
                 <KeyRound className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
                 <h2 className="text-2xl font-bold">Request bounded authority</h2>
                 <p className="mt-3 leading-7 opacity-70">
-                  CAPPO selected <strong>{capability.title}</strong> from its live package registry.
-                  The activation lease requests only one permitted read and one explicitly blocked
-                  action from that package.
+                  CAPPO selected <strong>{capability.title}</strong> from its live package
+                  registry. Workspace authority comes from your authenticated session; it is
+                  not an editable activation input.
                 </p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="text-sm">
-                    <span className="mb-2 block opacity-65">Workspace ID</span>
-                    <input
-                      value={workspaceId}
-                      onChange={(event) => setWorkspaceId(event.target.value)}
-                      className="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2"
-                      placeholder="Your authenticated workspace"
-                    />
-                  </label>
+                  <div className="text-sm">
+                    <span className="mb-2 block opacity-65">Authenticated workspace</span>
+                    <div className="min-h-10 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2">
+                      {authLoading ? "Resolving workspace..." : workspaceId || "Workspace unavailable"}
+                    </div>
+                  </div>
                   <label className="text-sm">
                     <span className="mb-2 block opacity-65">Activation project</span>
                     <input
@@ -242,7 +261,7 @@ export default function ActivationPage() {
                 <button
                   type="button"
                   onClick={grant}
-                  disabled={busy || !workspaceId.trim() || !projectId.trim()}
+                  disabled={busy || authLoading || !workspaceId || !projectId.trim()}
                   className="mt-7 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
                 >
                   {busy ? "Requesting lease..." : "Request CAPPO lease"}
@@ -255,13 +274,13 @@ export default function ActivationPage() {
                 <ShieldAlert className="mb-5 h-10 w-10 text-red-500" />
                 <h2 className="text-2xl font-bold">Prove the boundary before using it.</h2>
                 <p className="mt-3 leading-7 opacity-70">
-                  We deliberately ask the same backend-issued lease to perform
-                  <strong> {lease.deniedAction}</strong>. The journey advances only if CAPPO returns
-                  a real denial. This check is performed before the permitted operation so a
-                  single-use lease remains available for the allowed execution.
+                  The same backend-issued lease is asked to perform
+                  <strong> {lease.deniedAction}</strong>. The journey advances only on a real
+                  CAPPO denial, before the single-use permitted action consumes the lease.
                 </p>
                 <JsonProof value={{
                   mount_id: lease.mountId,
+                  execution_id: lease.executionId,
                   package_ref: lease.packageRef,
                   challenge_action: lease.deniedAction,
                   mount_anchor_id: lease.anchorId ?? null,
@@ -284,8 +303,8 @@ export default function ActivationPage() {
                 </div>
                 <h2 className="text-2xl font-bold">The forbidden action was denied.</h2>
                 <p className="mt-3 leading-7 opacity-70">
-                  CAPPO returned <strong>{denial.reason}</strong>. Now the still-bounded lease is
-                  used once through the canonical governed execution path for
+                  CAPPO returned <strong>{denial.reason}</strong>. The still-bounded lease is now
+                  consumed once through the canonical governed execution path for
                   <strong> {lease.allowedAction}</strong>.
                 </p>
                 <JsonProof value={denial} />
@@ -306,9 +325,9 @@ export default function ActivationPage() {
                 <FileSearch className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
                 <h2 className="text-2xl font-bold">Execution exists. Verify its evidence.</h2>
                 <p className="mt-3 leading-7 opacity-70">
-                  CAPPO returned execution ID <strong>{execution.executionId}</strong>. Activation
-                  still does not call that proof. The next step retrieves the persisted evidence
-                  for this exact execution and requires the backend verifier to accept it.
+                  CAPPO returned the lease-bound execution ID
+                  <strong> {execution.executionId}</strong>. The next step retrieves persisted
+                  authorization, Execution Identity, PGL, and signed EEE proof for that exact ID.
                 </p>
                 <JsonProof value={{
                   execution_id: execution.executionId,
@@ -327,16 +346,45 @@ export default function ActivationPage() {
               </div>
             ) : null}
 
-            {step === 6 && evidence && denial ? (
+            {step === 6 && execution && evidence ? (
+              <div>
+                <Gauge className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
+                <h2 className="text-2xl font-bold">Evidence exists. Verify what happened.</h2>
+                <p className="mt-3 leading-7 opacity-70">
+                  Authorization alone is not completion. Activation now requires the append-only
+                  consequence lifecycle for this execution to contain exactly one
+                  <strong> AUTHORIZED → STARTED → SUCCEEDED</strong> operation, with no failed or
+                  unknown outcome.
+                </p>
+                <JsonProof value={{
+                  execution_id: evidence.execution_id,
+                  proof_state: evidence.proof_state,
+                  authorization: evidence.authorization,
+                  pgl: evidence.pgl,
+                  eee_envelope_hash: evidence.eee.envelope_hash,
+                }} />
+                <button
+                  type="button"
+                  onClick={inspectMeasurements}
+                  disabled={busy}
+                  className="mt-7 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
+                >
+                  {busy ? "Verifying outcome..." : "Verify consequence measurements"}
+                </button>
+              </div>
+            ) : null}
+
+            {step === 7 && evidence && measurements && denial ? (
               <div>
                 <CheckCircle2 className="mb-5 h-11 w-11 text-emerald-500" />
                 <h2 className="text-3xl font-bold">Activation proof complete.</h2>
                 <p className="mt-3 leading-7 opacity-70">
-                  This browser observed a backend-issued bounded lease, an anchored denial, a
-                  governed execution, and verified persisted evidence. No completion cookie is
-                  written; the proof objects below are the basis for the claim.
+                  This session observed a backend-issued bounded lease, a CAPPO denial, a
+                  lease-bound governed execution, verified persisted evidence, and exactly one
+                  measured successful consequence lifecycle. Completion is derived from those
+                  backend proof objects, not local browser state.
                 </p>
-                <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                <div className="mt-6 grid gap-4 lg:grid-cols-3">
                   <div>
                     <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Denied boundary</div>
                     <JsonProof value={denial} />
@@ -347,9 +395,14 @@ export default function ActivationPage() {
                       execution_id: evidence.execution_id,
                       proof_state: evidence.proof_state,
                       verification_reasons: evidence.verification_reasons,
+                      authorization: evidence.authorization,
                       pgl: evidence.pgl,
-                      eee: evidence.eee,
+                      eee_envelope_hash: evidence.eee.envelope_hash,
                     }} />
+                  </div>
+                  <div>
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Measured outcome</div>
+                    <JsonProof value={measurements} />
                   </div>
                 </div>
                 <button
