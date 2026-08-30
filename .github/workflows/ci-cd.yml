@@ -1,4 +1,4 @@
-name: veklom-FRONTEND CI/CD
+name: veklom-FRONTEND CI
 
 on:
   push:
@@ -11,7 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── 1. TypeScript + Build Check ─────────────────────────────────────────────
   build:
     name: Next.js Build Check
     runs-on: ubuntu-latest
@@ -22,7 +21,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -40,87 +39,11 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Report build size
+      - name: Report build result
         if: success()
         run: echo "Build passed for ${{ github.sha }}"
 
-  # ── 2. Deploy to Production (main only) ─────────────────────────────────────
-  deploy:
-    name: Deploy to control.veklom.com and veklom.dev
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    timeout-minutes: 20
-
-    steps:
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/veklom-deploy
-          test -s ~/.ssh/veklom-deploy
-          chmod 600 ~/.ssh/veklom-deploy
-          ssh-keyscan -H 87.99.154.166 >> ~/.ssh/known_hosts
-
-      - name: Pull, Build, and Swap on Server
-        run: |
-          ssh -i ~/.ssh/veklom-deploy \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=20 \
-            root@87.99.154.166 "
-            set -e
-            APP=/data/coolify/applications/tvxcsezs2ypd8tjuj6ic9gih
-            cd \$APP
-            git pull origin main
-            COMMIT=\$(git rev-parse HEAD)
-            test "\$COMMIT" = "${{ github.sha }}"
-            OLLAMA_WAS_RUNNING=0
-            if docker ps --format '{{.Names}}' | grep -qx 'veklom-ollama'; then
-              OLLAMA_WAS_RUNNING=1
-              docker stop veklom-ollama
-            fi
-            cleanup() {
-              if [ \"\$OLLAMA_WAS_RUNNING\" = \"1\" ]; then
-                docker start veklom-ollama || true
-              fi
-            }
-            trap cleanup EXIT
-            if grep -q '^SOURCE_COMMIT=' .env; then
-              sed -i \"s/^SOURCE_COMMIT=.*/SOURCE_COMMIT=\$COMMIT/\" .env
-            else
-              printf '\\nSOURCE_COMMIT=%s\\n' \"\$COMMIT\" >> .env
-            fi
-            docker builder prune -af --filter until=24h || true
-            docker build --progress=plain \
-              --build-arg NEXT_PUBLIC_API_BASE_URL= \
-              -t tvxcsezs2ypd8tjuj6ic9gih:latest .
-            cleanup
-            trap - EXIT
-            sed -i \"s/image: .*/image: 'tvxcsezs2ypd8tjuj6ic9gih:latest'/\" docker-compose.yaml
-            python3 -c 'import re; from pathlib import Path; p=Path(\"docker-compose.yaml\"); s=p.read_text(); t=chr(96); control=f\"Host({t}control.veklom.com{t}) && PathPrefix({t}/{t})\"; expanded=f\"(Host({t}control.veklom.com{t}) || Host({t}veklom.dev{t}) || Host({t}www.veklom.dev{t})) && PathPrefix({t}/{t})\"; s=s.replace(control, expanded); s=re.sub(r\"caddy_0=https://control\\.veklom\\.com(?:, https://veklom\\.dev, https://www\\.veklom\\.dev)*\", \"caddy_0=https://control.veklom.com, https://veklom.dev, https://www.veklom.dev\", s); p.write_text(s)'
-            docker ps -aq --filter 'name=tvxcsezs2ypd8tjuj6ic9gih' | xargs -r docker rm -f
-            docker compose -f docker-compose.yaml up -d --force-recreate
-            echo 'Frontend deployment complete: ${{ github.sha }}'
-          "
-
-      - name: Verify Production Health
-        run: |
-          sleep 15
-          HTTP=$(curl -sk https://control.veklom.com -o /dev/null -w '%{http_code}')
-          if [ "$HTTP" != "200" ]; then
-            echo "HEALTH CHECK FAILED: control.veklom.com returned $HTTP"
-            exit 1
-          fi
-          DEPENDENCY_JSON=$(curl -sk -w '\n%{http_code}' https://control.veklom.com/api/health/dependencies)
-          DEPENDENCY_HTTP=$(printf '%s\n' "$DEPENDENCY_JSON" | tail -n 1)
-          DEPENDENCY_BODY=$(printf '%s\n' "$DEPENDENCY_JSON" | sed '$d')
-          if [ "$DEPENDENCY_HTTP" != "200" ] || ! printf '%s' "$DEPENDENCY_BODY" | grep -q '"status":"healthy"'; then
-            echo "HEALTH CHECK FAILED: dependency proof is not healthy"
-            printf '%s\n' "$DEPENDENCY_BODY"
-            exit 1
-          fi
-          DEV_HTTP=$(curl -sk https://veklom.dev -o /dev/null -w '%{http_code}')
-          if [ "$DEV_HTTP" != "200" ]; then
-            echo "HEALTH CHECK FAILED: veklom.dev returned $DEV_HTTP"
-            exit 1
-          fi
-          echo "control.veklom.com, dependencies, and veklom.dev healthy — deployment successful"
+# Deployment is intentionally not performed here. The canonical public topology is
+# owned-hardware based; no stale Hetzner/Coolify SSH deployment is allowed to become
+# authoritative merely because a frontend PR reaches main. Deployment automation may
+# return only after the owned-hardware transport/runner is explicitly verified.
