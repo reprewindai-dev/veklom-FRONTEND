@@ -1,0 +1,66 @@
+name: Activation one-shot session lease repair
+
+on:
+  push:
+    branches: [activation-e2e-authority-binding]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: activation-session-repair
+  cancel-in-progress: true
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[auto-session-lease]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: activation-e2e-authority-binding
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Persist execution identity with mounted lease
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/os/mount/page.tsx')
+          text = path.read_text(encoding='utf-8')
+          if 'const issuedExecutionId = asString(issuedToken?.execution_id);' not in text:
+              anchor = ' const issuedNonce = asString(issuedToken?.nonce);\n'
+              if anchor not in text:
+                  raise SystemExit('mount execution-id anchor missing')
+              text = text.replace(
+                  anchor,
+                  anchor + ' const issuedExecutionId = asString(issuedToken?.execution_id);\n',
+                  1,
+              )
+          old = ' if (result.data.decision ==="allow" && issuedMountId && issuedTokenId && issuedNonce) {\n storeSessionCapabilityLease({ mountId: issuedMountId, tokenId: issuedTokenId, nonce: issuedNonce });\n }'
+          new = ' if (\n result.data.decision ==="allow" &&\n issuedMountId &&\n issuedTokenId &&\n issuedNonce &&\n issuedExecutionId\n ) {\n storeSessionCapabilityLease({\n mountId: issuedMountId,\n tokenId: issuedTokenId,\n nonce: issuedNonce,\n executionId: issuedExecutionId,\n });\n }'
+          if 'executionId: issuedExecutionId' not in text:
+              if old not in text:
+                  raise SystemExit('mount session-store anchor missing')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Verify lease binding callers
+        run: |
+          npx eslint lib/cos/lease-session.ts components/cos/ExecuteHarness.tsx app/os/mount/page.tsx
+          npm run typecheck
+      - name: Commit verified lease repair
+        run: |
+          if git diff --quiet; then
+            echo 'No lease-session changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/os/mount/page.tsx
+          git commit -m 'fix: persist lease execution identity across Capability OS [auto-session-lease]'
+          git push origin HEAD:activation-e2e-authority-binding
