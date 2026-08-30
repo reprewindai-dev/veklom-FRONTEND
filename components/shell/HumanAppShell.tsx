@@ -31,7 +31,7 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
             <Link href="/login" className="hidden sm:inline-flex px-3 py-2 text-xs font-mono uppercase font-bold text-theme-inkDim hover:text-theme-ink transition-colors">
               Log in
             </Link>
-            <Link href="/signup" className="group inline-flex items-center gap-3 px-4 py-2 bg-theme-ink text-theme-bg hover:opacity-90 transition-all text-xs font-mono uppercase font-bold rounded shadow-sm">
+            <Link href="/get" className="group inline-flex items-center gap-3 px-4 py-2 bg-theme-ink text-theme-bg hover:opacity-90 transition-all text-xs font-mono uppercase font-bold rounded shadow-sm">
               Get Veklom <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
           </div>
@@ -48,6 +48,7 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
             &copy; {new Date().getFullYear()} Veklom · Machine Authority Infrastructure
           </div>
           <div className="flex gap-4 font-mono text-[10px] uppercase text-theme-inkDim tracking-widest">
+            <Link href="/get" className="font-bold text-theme-accent hover:text-theme-ink">Get Veklom</Link>
             <Link href="/proof" className="hover:text-theme-ink">Proof</Link>
             <Link href="/architecture" className="hover:text-theme-ink">Architecture</Link>
             <Link href="/security" className="hover:text-theme-ink">Security</Link>
