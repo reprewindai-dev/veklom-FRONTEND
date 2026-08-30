@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
@@ -113,7 +113,7 @@ export function SecondaryButton({ href, children }: { href: string, children: Re
 
 // --- Specifics ---
 export function CapabilityLifecycle() {
-  const steps = ['Capability', 'Mount', 'Blueprint', 'Govern', 'Execute', 'Evidence', 'Settle'];
+  const steps = ['Capability', 'Bind', 'Govern', 'Execute', 'Prove', 'Reconcile'];
   return (
     <div className="w-full bg-theme-surface2 border-y border-theme-border py-8 overflow-x-auto">
       <div className="max-w-7xl mx-auto px-6">
@@ -129,5 +129,3 @@ export function CapabilityLifecycle() {
     </div>
   );
 }
-
-
