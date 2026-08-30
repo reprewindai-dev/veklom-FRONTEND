@@ -42,7 +42,7 @@ export default function LandingPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <Link
-                  href="/signup"
+                  href="/get"
                   className="group inline-flex min-h-14 items-center justify-between gap-8 rounded border border-theme-ink bg-theme-ink px-6 py-4 text-theme-bg font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <span>Get Veklom</span>
@@ -138,7 +138,7 @@ export default function LandingPage() {
                   The current product gate is a first-run path from bounded grant to allowed consequence, intentional denial, and inspectable evidence.
                 </p>
               </div>
-              <Link href="/signup" className="mt-10 inline-flex items-center justify-between border-t border-current/25 pt-5 font-bold">
+              <Link href="/get" className="mt-10 inline-flex items-center justify-between border-t border-current/25 pt-5 font-bold">
                 Start with Veklom <span aria-hidden="true">→</span>
               </Link>
             </div>
@@ -149,7 +149,7 @@ export default function LandingPage() {
 
         <div className="fixed z-40 bottom-5 right-5 hidden md:block">
           <Link
-            href="/signup"
+            href="/get"
             className="group flex items-center gap-5 rounded border border-theme-ink bg-theme-ink px-5 py-3.5 text-theme-bg shadow-xl transition-transform hover:-translate-y-1"
           >
             <span>
