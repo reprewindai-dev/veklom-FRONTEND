@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { VeklomLogoLockup } from "@/components/ui/SharedUI";
+import { AcquisitionPrompt } from "@/components/acquisition/AcquisitionPrompt";
 
 export function HumanAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "";
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-theme-bg text-theme-ink font-sans selection:bg-theme-accent/20">
+      <AcquisitionPrompt />
       <header className="border-b border-theme-border bg-theme-bg/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <VeklomLogoLockup />
