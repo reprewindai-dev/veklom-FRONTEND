@@ -23,7 +23,13 @@ interface ExecutionTrace {
  execution_id?: string;
  tokens?: number;
  latency_ms?: number;
- capability_lease?: { mount_id: string; decision: 'allow'; reason: string; anchor_id?: string | null };
+ capability_lease?: {
+ mount_id: string;
+ execution_id: string;
+ receipt_id: string;
+ decision: 'allow';
+ nonce_consumed: true;
+ };
 }
 
 export function ExecuteHarness() {
@@ -31,6 +37,7 @@ export function ExecuteHarness() {
  const [mountId, setMountId] = useState('');
  const [tokenId, setTokenId] = useState('');
  const [nonce, setNonce] = useState('');
+ const [executionId, setExecutionId] = useState('');
  const [operation, setOperation] = useState('llm.exec');
  const [targetId, setTargetId] = useState('');
  const [expectedStateHash, setExpectedStateHash] = useState('');
@@ -49,6 +56,7 @@ export function ExecuteHarness() {
  setMountId(lease.mountId);
  setTokenId(lease.tokenId);
  setNonce(lease.nonce);
+ setExecutionId(lease.executionId);
  }
  }, []);
 
@@ -62,6 +70,10 @@ export function ExecuteHarness() {
 
  const handleExecute = async () => {
  if (!prompt) return;
+ if (!mountId || !tokenId || !nonce || !executionId) {
+ setError('A complete CAPPO lease, including its bound execution ID, is required.');
+ return;
+ }
  const targetParts = [targetId, expectedStateHash, observedStateHash, observedAt, observerSignature];
  if (targetParts.some(Boolean) && !targetParts.every(Boolean)) {
  setError('Complete every target precondition field or clear all of them.');
@@ -75,7 +87,7 @@ export function ExecuteHarness() {
 
  try {
  const data = await executeGovernedConsequence({
- capabilityLease: { mountId, tokenId, nonce },
+ capabilityLease: { mountId, tokenId, nonce, executionId },
  operation,
  prompt,
  targetPrecondition: targetId && expectedStateHash && observedStateHash && observedAt && observerSignature ? {
@@ -88,11 +100,15 @@ export function ExecuteHarness() {
  }) as ExecutionTrace;
  setTrace(data);
  if (data.execution_id) {
+ if (data.execution_id !== executionId) {
+ throw new Error('CAPPO returned an execution ID that does not match the mounted lease.');
+ }
  sessionStorage.setItem('veklom_execution_id', data.execution_id);
  clearSessionCapabilityLease();
  setMountId('');
  setTokenId('');
  setNonce('');
+ setExecutionId('');
  }
  } catch (err: unknown) {
  if (err instanceof ApiError && err.status === 402) setError(null);
@@ -145,6 +161,7 @@ export function ExecuteHarness() {
  <label className="block text-[10px] uppercase tracking-wider text-cos-steel">CapabilityLease mount<input value={mountId} onChange={(e) => setMountId(e.target.value)} placeholder="mnt_..." className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
  <label className="block text-[10px] uppercase tracking-wider text-cos-steel">Single-use token<input type="password" value={tokenId} onChange={(e) => setTokenId(e.target.value)} placeholder="token id" className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
  <label className="block text-[10px] uppercase tracking-wider text-cos-steel">Nonce<input type="password" value={nonce} onChange={(e) => setNonce(e.target.value)} placeholder="single-use nonce" className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
+ <label className="block text-[10px] uppercase tracking-wider text-cos-steel">Execution ID<input value={executionId} onChange={(e) => setExecutionId(e.target.value)} placeholder="lease-bound execution id" className="mt-1.5 w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none" /></label>
  </div>
  </div>
 
@@ -180,7 +197,7 @@ export function ExecuteHarness() {
  </div>
  <button 
  onClick={handleExecute}
- disabled={isExecuting || !prompt || !mountId || !tokenId || !nonce || !operation}
+ disabled={isExecuting || !prompt || !mountId || !tokenId || !nonce || !executionId || !operation}
  className="w-full flex items-center justify-center gap-2 bg-cos-accent text-black font-semibold uppercase tracking-wider text-[11px] py-2.5 rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
  >
  {isExecuting ? <Activity size={14} className="animate-spin" /> : <Play size={14} />}
