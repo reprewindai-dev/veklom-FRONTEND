@@ -3,8 +3,13 @@ import {
   executeGovernedConsequence,
   fetchExecutionEvidence,
   fetchExecutionMeasurement,
+  fetchExecutionTargetObservation,
   type GovernedConsequenceResponse,
 } from "@/lib/cos/verticalSlice";
+
+export const ACTIVATION_PACKAGE_ID = "veklom.activation@v1";
+export const ACTIVATION_WRITE_ACTION = "activation.marker.write";
+export const ACTIVATION_BLOCKED_ACTION = "activation.marker.delete";
 
 export interface ActivationPackage {
   id: string;
@@ -38,11 +43,33 @@ export interface ActivationDenial {
   anchorId?: string | null;
 }
 
+export interface ActivationReplayDenial {
+  decision: "deny";
+  status: 403;
+  executionId: string;
+  reason: string;
+  body?: unknown;
+}
+
 export interface ActivationAllowedExecution {
   executionId: string;
   runId?: string;
   operation: string;
   response: GovernedConsequenceResponse;
+}
+
+export interface ActivationTargetObservation {
+  execution_id: string;
+  workspace_id: string;
+  consequence_count: number;
+  consequence_id?: string | null;
+  operation_id?: string | null;
+  mount_id?: string | null;
+  receipt_id?: string | null;
+  content_hash?: string | null;
+  created_at?: string | null;
+  observation_source: "activation_consequences";
+  persisted: boolean;
 }
 
 export interface ActivationEvidence {
@@ -110,6 +137,7 @@ export interface ActivationMeasurements {
       created_at: string;
     }>;
   };
+  target_observation?: ActivationTargetObservation | null;
   pgl_event_id: string;
   pgl_event_hash?: string | null;
   eee_envelope_hash: string;
@@ -154,12 +182,18 @@ export async function discoverActivationPackage(): Promise<ActivationPackage> {
     "/api/cappo/v1/capability/packages",
     { method: "GET" },
   );
-  const candidate = packages.find(
-    (item) => nonEmpty(item.reads).length > 0 && nonEmpty(item.blocked).length > 0,
-  );
+  const candidate = packages.find((item) => item.id === ACTIVATION_PACKAGE_ID);
   if (!candidate) {
     throw new ActivationUnavailableError(
-      "No live capability package currently exposes both an allowed read and a blocked action.",
+      `The built-in ${ACTIVATION_PACKAGE_ID} capability is not live in CAPPO.`,
+    );
+  }
+  if (
+    !nonEmpty(candidate.writes).includes(ACTIVATION_WRITE_ACTION) ||
+    !nonEmpty(candidate.blocked).includes(ACTIVATION_BLOCKED_ACTION)
+  ) {
+    throw new ActivationUnavailableError(
+      "The live Veklom Activation package does not expose its canonical governed-write and blocked challenge actions.",
     );
   }
   return candidate;
@@ -170,13 +204,13 @@ export async function requestActivationLease(
   workspaceId: string,
   projectId: string,
 ): Promise<ActivationLease> {
-  const allowedAction = nonEmpty(capability.reads)[0];
-  const deniedAction = nonEmpty(capability.blocked)[0];
-  if (!allowedAction || !deniedAction) {
+  if (capability.id !== ACTIVATION_PACKAGE_ID) {
     throw new ActivationUnavailableError(
-      "The selected capability is not suitable for Activation v1.",
+      "Activation v1 only accepts the reserved first-party Veklom Activation package.",
     );
   }
+  const allowedAction = ACTIVATION_WRITE_ACTION;
+  const deniedAction = ACTIVATION_BLOCKED_ACTION;
 
   const result = await api<MountResponse>("/api/cappo/v1/capability/mounts", {
     method: "POST",
@@ -184,8 +218,8 @@ export async function requestActivationLease(
       package_ref: capability.id,
       execution_scope: { workspace: workspaceId, project: projectId },
       requested_action_scope: {
-        reads: [allowedAction],
-        writes: [],
+        reads: [],
+        writes: [allowedAction],
         blocked: [deniedAction],
       },
       role: "ephemeral_executor",
@@ -222,6 +256,55 @@ export async function requestActivationLease(
     deniedAction,
     anchorId: result.anchoring?.anchor_id,
   };
+}
+
+export async function inspectActivationTarget(
+  lease: ActivationLease,
+  expectedCount: 0 | 1,
+  expectedReceiptId?: string,
+): Promise<ActivationTargetObservation> {
+  try {
+    const observation = (await fetchExecutionTargetObservation(
+      lease.executionId,
+    )) as ActivationTargetObservation;
+    if (
+      observation.execution_id !== lease.executionId ||
+      observation.workspace_id !== lease.workspaceId ||
+      observation.observation_source !== "activation_consequences" ||
+      observation.consequence_count !== expectedCount
+    ) {
+      throw new ActivationUnavailableError(
+        `Independent target observation did not prove consequence_count=${expectedCount}.`,
+      );
+    }
+    if (expectedCount === 0) {
+      if (observation.persisted || observation.consequence_id) {
+        throw new ActivationUnavailableError(
+          "Target observer reported a consequence while the expected count was zero.",
+        );
+      }
+    } else if (
+      observation.persisted !== true ||
+      !observation.consequence_id ||
+      !observation.content_hash ||
+      observation.mount_id !== lease.mountId ||
+      (expectedReceiptId != null && observation.receipt_id !== expectedReceiptId)
+    ) {
+      throw new ActivationUnavailableError(
+        "The independently observed consequence is not bound to this Activation lease and receipt.",
+      );
+    }
+    return observation;
+  } catch (error) {
+    if (error instanceof ActivationUnavailableError) throw error;
+    if (error instanceof ApiError) {
+      throw new ActivationUnavailableError(
+        `Activation target observation is unavailable (${error.status ?? error.kind}).`,
+        error,
+      );
+    }
+    throw error;
+  }
 }
 
 export async function proveActivationDenial(
@@ -275,6 +358,7 @@ export async function executeActivationAllowed(
   if (
     result.capability_lease?.receipt_id == null ||
     result.capability_lease.execution_id !== lease.executionId ||
+    result.capability_lease.mount_id !== lease.mountId ||
     result.capability_lease.decision !== "allow" ||
     result.capability_lease.nonce_consumed !== true
   ) {
@@ -288,6 +372,40 @@ export async function executeActivationAllowed(
     operation: lease.allowedAction,
     response: result,
   };
+}
+
+export async function proveActivationReplayDenied(
+  lease: ActivationLease,
+): Promise<ActivationReplayDenial> {
+  try {
+    await executeGovernedConsequence({
+      capabilityLease: {
+        mountId: lease.mountId,
+        tokenId: lease.tokenId,
+        nonce: lease.nonce,
+        executionId: lease.executionId,
+      },
+      operation: lease.allowedAction,
+      prompt: `Activation v1 replay challenge ${lease.allowedAction}`,
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return {
+        decision: "deny",
+        status: 403,
+        executionId: lease.executionId,
+        reason: error.message,
+        body: error.body,
+      };
+    }
+    throw new ActivationUnavailableError(
+      "The exact Activation replay did not fail with CAPPO's expected authority denial.",
+      error,
+    );
+  }
+  throw new ActivationUnavailableError(
+    "CAPPO accepted an already-consumed Activation lease replay.",
+  );
 }
 
 export async function inspectActivationEvidence(
@@ -306,7 +424,9 @@ export async function inspectActivationEvidence(
       evidence.execution_id !== execution.executionId ||
       evidence.execution_identity?.execution_id !== execution.executionId ||
       evidence.authorization?.decision !== "allow" ||
-      !evidence.authorization?.receipt_id ||
+      evidence.authorization?.receipt_id !== execution.response.capability_lease?.receipt_id ||
+      evidence.authorization?.mount_id !== execution.response.capability_lease?.mount_id ||
+      evidence.authorization?.action !== execution.operation ||
       !verifiedState ||
       evidence.pgl?.persisted !== true ||
       !evidence.pgl?.event_id ||
@@ -314,7 +434,7 @@ export async function inspectActivationEvidence(
       !evidence.eee?.envelope_hash
     ) {
       throw new ActivationUnavailableError(
-        "The evidence response is not a verified persisted proof for this execution.",
+        "The evidence response is not a verified persisted proof for this execution and authorization receipt.",
       );
     }
     return evidence;
@@ -338,6 +458,9 @@ export async function inspectActivationMeasurements(
       execution.executionId,
     )) as ActivationMeasurements;
     const consequence = measurements.consequence;
+    const target = measurements.target_observation;
+    const receiptId = execution.response.capability_lease?.receipt_id;
+    const mountId = execution.response.capability_lease?.mount_id;
     if (
       measurements.execution_id !== execution.executionId ||
       !["verified", "verified_with_unresolved_refs"].includes(
@@ -350,11 +473,18 @@ export async function inspectActivationMeasurements(
       consequence?.outcome_unknown_count !== 0 ||
       consequence?.events?.map((event) => event.state).join(",") !==
         "authorized,started,succeeded" ||
+      target?.execution_id !== execution.executionId ||
+      target?.consequence_count !== 1 ||
+      target?.persisted !== true ||
+      target?.mount_id !== mountId ||
+      target?.receipt_id !== receiptId ||
+      !target?.consequence_id ||
+      !target?.content_hash ||
       !measurements.eee_envelope_hash ||
       !measurements.pgl_event_id
     ) {
       throw new ActivationUnavailableError(
-        "Execution measurements do not prove exactly one completed consequence.",
+        "Execution measurements do not prove exactly one completed and independently observed consequence.",
       );
     }
     return measurements;
