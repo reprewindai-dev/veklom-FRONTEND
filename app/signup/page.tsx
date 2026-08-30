@@ -120,7 +120,7 @@ export default function SignupPage() {
  </div>
  </div>
 
- <GithubButton onClick={handleGithub} label="Sign up with GitHub" disabled={busy} className={!allAccepted ? "opacity-50" : ""} />
+ <GithubButton onClick={handleGithub} label="Sign up with GitHub" disabled={busy || !allAccepted} />
 
  <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-widest text-ink-600">
  <span className="h-px flex-1 bg-border" />
