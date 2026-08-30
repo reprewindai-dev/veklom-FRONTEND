@@ -11,6 +11,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  activation-truth-wire:
+    name: Activation Truth-Wire Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Activation transport tests
+        run: >-
+          npm test -- --ci --runInBand
+          lib/__tests__/cos-activation-transport.test.ts
+          lib/__tests__/cappo-proxy-authority-boundary.test.ts
+
   build:
     name: Next.js Build Check
     runs-on: ubuntu-latest
