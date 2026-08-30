@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const ip_address = req.headers.get("x-forwarded-for") || req.ip || "127.0.0.1";
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ip_address = forwardedFor?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
     const user_agent = req.headers.get("user-agent") || "unknown";
-    
-    // Enrich payload
+
+    // Enrich payload with request metadata observed by this server boundary.
     const payload = {
       ...body,
       ip_address,
@@ -22,8 +23,7 @@ export async function POST(req: NextRequest) {
     };
 
     const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8088";
-    
-    // Send to backend
+
     const backendRes = await fetch(`${backendUrl}/api/auth/acceptance`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
