@@ -48,7 +48,13 @@ jobs:
               *) continue ;;
             esac
             [ -f "$file" ] || continue
-            if grep -Eq '^[[:space:]]*["'"']use client["'"'];' "$file" && \
+            IS_CLIENT=false
+            if grep -Eq '^[[:space:]]*"use client";' "$file"; then
+              IS_CLIENT=true
+            elif grep -Eq "^[[:space:]]*'use client';" "$file"; then
+              IS_CLIENT=true
+            fi
+            if [ "$IS_CLIENT" = true ] && \
                git diff origin/main...HEAD -- "$file" | grep -q '^+.*fetch('; then
               VIOLATIONS="${VIOLATIONS}\n⚠️ **Raw client fetch() detected in ${file}.** Authenticated browser calls should use the canonical api.ts client."
             fi
