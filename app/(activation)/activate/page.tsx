@@ -21,7 +21,9 @@ import {
   executeActivationAllowed,
   inspectActivationEvidence,
   inspectActivationMeasurements,
+  inspectActivationTarget,
   proveActivationDenial,
+  proveActivationReplayDenied,
   requestActivationLease,
   type ActivationAllowedExecution,
   type ActivationDenial,
@@ -29,6 +31,8 @@ import {
   type ActivationLease,
   type ActivationMeasurements,
   type ActivationPackage,
+  type ActivationReplayDenial,
+  type ActivationTargetObservation,
 } from "@/lib/cos/activation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -89,6 +93,11 @@ export default function ActivationPage() {
   const [execution, setExecution] = useState<ActivationAllowedExecution>();
   const [evidence, setEvidence] = useState<ActivationEvidence>();
   const [measurements, setMeasurements] = useState<ActivationMeasurements>();
+  const [baselineObservation, setBaselineObservation] = useState<ActivationTargetObservation>();
+  const [deniedObservation, setDeniedObservation] = useState<ActivationTargetObservation>();
+  const [allowedObservation, setAllowedObservation] = useState<ActivationTargetObservation>();
+  const [replayDenial, setReplayDenial] = useState<ActivationReplayDenial>();
+  const [replayObservation, setReplayObservation] = useState<ActivationTargetObservation>();
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -122,7 +131,9 @@ export default function ActivationPage() {
         workspaceId,
         projectId.trim(),
       );
+      const observed = await inspectActivationTarget(issued, 0);
       setLease(issued);
+      setBaselineObservation(observed);
       setStep(3);
     });
   }
@@ -131,7 +142,9 @@ export default function ActivationPage() {
     if (!lease) return;
     await run(async () => {
       const rejected = await proveActivationDenial(lease);
+      const observed = await inspectActivationTarget(lease, 0);
       setDenial(rejected);
+      setDeniedObservation(observed);
       setStep(4);
     });
   }
@@ -140,7 +153,15 @@ export default function ActivationPage() {
     if (!lease) return;
     await run(async () => {
       const allowed = await executeActivationAllowed(lease);
+      const receiptId = allowed.response.capability_lease?.receipt_id;
+      if (!receiptId) {
+        throw new ActivationUnavailableError(
+          "CAPPO did not return the authorization receipt required for target observation.",
+        );
+      }
+      const observed = await inspectActivationTarget(lease, 1, receiptId);
       setExecution(allowed);
+      setAllowedObservation(observed);
       setStep(5);
     });
   }
@@ -163,6 +184,17 @@ export default function ActivationPage() {
     });
   }
 
+  async function proveReplayFinality() {
+    if (!lease) return;
+    await run(async () => {
+      const rejected = await proveActivationReplayDenied(lease);
+      const observed = await inspectActivationTarget(lease, 1);
+      setReplayDenial(rejected);
+      setReplayObservation(observed);
+      setStep(8);
+    });
+  }
+
   return (
     <main className="min-h-screen bg-[var(--theme-bg)] p-6 text-[var(--theme-text)]">
       <div className="mx-auto grid min-h-[640px] max-w-5xl overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg md:grid-cols-[280px_1fr]">
@@ -180,10 +212,11 @@ export default function ActivationPage() {
           <div className="space-y-1 text-sm">
             <StepItem number={1} title="Discover" active={step === 1} complete={step > 1} />
             <StepItem number={2} title="Bound authority" active={step === 2} complete={step > 2} />
-            <StepItem number={3} title="Prove denial" active={step === 3} complete={step > 3} />
-            <StepItem number={4} title="Governed execution" active={step === 4} complete={step > 4} />
+            <StepItem number={3} title="Prove zero on denial" active={step === 3} complete={step > 3} />
+            <StepItem number={4} title="Create one consequence" active={step === 4} complete={step > 4} />
             <StepItem number={5} title="Inspect evidence" active={step === 5} complete={step > 5} />
             <StepItem number={6} title="Verify outcome" active={step === 6} complete={step > 6} />
+            <StepItem number={7} title="Prove replay finality" active={step === 7} complete={step > 7} />
           </div>
 
           <div className="mt-8 rounded-lg border border-[var(--theme-border)] p-3 text-xs leading-5 opacity-70">
@@ -255,7 +288,7 @@ export default function ActivationPage() {
                 </div>
                 <div className="mt-5 rounded-lg border border-[var(--theme-border)] p-4 text-sm">
                   <div><span className="opacity-55">Package:</span> {capability.id}</div>
-                  <div className="mt-2"><span className="opacity-55">Permitted:</span> {capability.reads?.[0]}</div>
+                  <div className="mt-2"><span className="opacity-55">Permitted:</span> {capability.writes?.[0]}</div>
                   <div className="mt-2"><span className="opacity-55">Blocked:</span> {capability.blocked?.[0]}</div>
                 </div>
                 <button
@@ -276,9 +309,11 @@ export default function ActivationPage() {
                 <p className="mt-3 leading-7 opacity-70">
                   The same backend-issued lease is asked to perform
                   <strong> {lease.deniedAction}</strong>. The journey advances only on a real
-                  CAPPO denial, before the single-use permitted action consumes the lease.
+                  CAPPO denial, before the single-use permitted action consumes the lease. The
+                  independent target table has already been observed at exactly zero consequences.
                 </p>
                 <JsonProof value={{
+                  baseline_target_observation: baselineObservation ?? null,
                   mount_id: lease.mountId,
                   execution_id: lease.executionId,
                   package_ref: lease.packageRef,
@@ -307,7 +342,10 @@ export default function ActivationPage() {
                   consumed once through the canonical governed execution path for
                   <strong> {lease.allowedAction}</strong>.
                 </p>
-                <JsonProof value={denial} />
+                <JsonProof value={{
+                  denial,
+                  target_after_denial: deniedObservation ?? null,
+                }} />
                 <button
                   type="button"
                   onClick={execute}
@@ -328,8 +366,10 @@ export default function ActivationPage() {
                   CAPPO returned the lease-bound execution ID
                   <strong> {execution.executionId}</strong>. The next step retrieves persisted
                   authorization, Execution Identity, PGL, and signed EEE proof for that exact ID.
+                  The target table has independently observed exactly one durable consequence.
                 </p>
                 <JsonProof value={{
+                  target_observation: allowedObservation ?? null,
                   execution_id: execution.executionId,
                   run_id: execution.runId ?? null,
                   operation: execution.operation,
@@ -374,23 +414,55 @@ export default function ActivationPage() {
               </div>
             ) : null}
 
-            {step === 7 && evidence && measurements && denial ? (
+            {step === 7 && lease && evidence && measurements && denial && allowedObservation ? (
+              <div>
+                <ShieldAlert className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
+                <h2 className="text-2xl font-bold">One consequence exists. Now replay it.</h2>
+                <p className="mt-3 leading-7 opacity-70">
+                  The same already-consumed lease, token, nonce, execution ID, and permitted action
+                  are submitted again. Activation advances only if CAPPO rejects that replay and the
+                  independent target table still contains exactly one consequence.
+                </p>
+                <JsonProof value={{
+                  execution_id: lease.executionId,
+                  measured_lifecycle: measurements.consequence,
+                  target_before_replay: allowedObservation,
+                }} />
+                <button
+                  type="button"
+                  onClick={proveReplayFinality}
+                  disabled={busy}
+                  className="mt-7 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
+                >
+                  {busy ? "Replaying safely..." : "Attempt exact replay"}
+                </button>
+              </div>
+            ) : null}
+
+            {step === 8 && evidence && measurements && denial && replayDenial && replayObservation ? (
               <div>
                 <CheckCircle2 className="mb-5 h-11 w-11 text-emerald-500" />
                 <h2 className="text-3xl font-bold">Activation proof complete.</h2>
                 <p className="mt-3 leading-7 opacity-70">
-                  This session observed a backend-issued bounded lease, a CAPPO denial, a
-                  lease-bound governed execution, verified persisted evidence, and exactly one
-                  measured successful consequence lifecycle. Completion is derived from those
-                  backend proof objects, not local browser state.
+                  This session independently observed zero target consequences before execution,
+                  zero after the blocked action, exactly one after the governed action, and still
+                  exactly one after CAPPO rejected an exact replay. Evidence and P5 lifecycle state
+                  are bound to that same execution. Completion comes only from backend proof objects.
                 </p>
-                <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                <div className="mt-6 grid gap-4 lg:grid-cols-2">
                   <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Denied boundary</div>
-                    <JsonProof value={denial} />
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Boundary + target finality</div>
+                    <JsonProof value={{
+                      baseline: baselineObservation ?? null,
+                      denial,
+                      after_denial: deniedObservation ?? null,
+                      after_allow: allowedObservation ?? null,
+                      replay_denial: replayDenial,
+                      after_replay: replayObservation,
+                    }} />
                   </div>
                   <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Execution evidence</div>
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Evidence + measured outcome</div>
                     <JsonProof value={{
                       execution_id: evidence.execution_id,
                       proof_state: evidence.proof_state,
@@ -398,11 +470,8 @@ export default function ActivationPage() {
                       authorization: evidence.authorization,
                       pgl: evidence.pgl,
                       eee_envelope_hash: evidence.eee.envelope_hash,
+                      measurements,
                     }} />
-                  </div>
-                  <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Measured outcome</div>
-                    <JsonProof value={measurements} />
                   </div>
                 </div>
                 <button
