@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main]
   workflow_run:
-    workflows: ["veklom-FRONTEND CI/CD"]
+    workflows: ["veklom-FRONTEND CI"]
     types: [completed]
     branches: [main]
 
@@ -19,7 +19,7 @@ jobs:
     name: "👻 Poltergeist PR Guardian"
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout PR
         uses: actions/checkout@v4
@@ -28,38 +28,55 @@ jobs:
 
       - name: Analyze Diff for Violations
         id: diff_analysis
+        shell: bash
         run: |
-          set +e
+          set -u
           CHANGED=$(git diff --name-only origin/main...HEAD)
           VIOLATIONS=""
-          
-          # Anti-pattern 1: hardcoding generic SaaS dashboards
+
+          # Anti-pattern 1: hardcoding generic SaaS dashboard language in changed UI/code.
           if git diff origin/main...HEAD -- '*.tsx' '*.ts' | grep -q -i 'dashboard\|saas'; then
             VIOLATIONS="${VIOLATIONS}\n❌ **Generic SaaS language detected.** The VNP UI is a command center, not a standard B2B app."
           fi
-          
-          # Anti-pattern 2: unauthenticated endpoints (not using api.ts)
-          if git diff origin/main...HEAD -- '*.tsx' '*.ts' | grep -q 'fetch('; then
-            VIOLATIONS="${VIOLATIONS}\n⚠️ **Raw fetch() detected.** Always ensure the Authorization bearer token is attached via \`api.ts\`."
-          fi
 
-          echo "violations<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$VIOLATIONS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Anti-pattern 2: raw fetch() in browser/client modules. Server route handlers
+          # are expected to use fetch() for trusted service-to-service proxying and must
+          # not be forced through the browser api.ts client.
+          while IFS= read -r file; do
+            case "$file" in
+              *.ts|*.tsx) ;;
+              *) continue ;;
+            esac
+            [ -f "$file" ] || continue
+            if grep -Eq '^[[:space:]]*["'"']use client["'"'];' "$file" && \
+               git diff origin/main...HEAD -- "$file" | grep -q '^+.*fetch('; then
+              VIOLATIONS="${VIOLATIONS}\n⚠️ **Raw client fetch() detected in ${file}.** Authenticated browser calls should use the canonical api.ts client."
+            fi
+          done <<< "$CHANGED"
+
+          {
+            echo "violations<<EOF"
+            echo -e "$VIOLATIONS"
+            echo "EOF"
+            echo "changed_files<<EOF"
+            echo "$CHANGED"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Post PR Summary Comment
         uses: actions/github-script@v7
+        env:
+          POLTERGEIST_VIOLATIONS: ${{ steps.diff_analysis.outputs.violations }}
         with:
           script: |
-            const violations = `${{ steps.diff_analysis.outputs.violations }}`.trim();
+            const violations = (process.env.POLTERGEIST_VIOLATIONS ?? '').trim();
             const hasViolations = violations.length > 0;
             const status = hasViolations ? '⚠️ Issues Found' : '✅ Clean';
-            const body = `## 👻 Poltergeist PR Report (Frontend)\n\n**Status:** ${status}\n\n${hasViolations ? `### Canonicality Violations\n${violations}` : '### No canonicality violations detected.'}`;
-            
+            const detail = hasViolations
+              ? `### Canonicality Violations\n${violations}`
+              : '### No canonicality violations detected.';
+            const body = `## 👻 Poltergeist PR Report (Frontend)\n\n**Status:** ${status}\n\n${detail}`;
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -71,21 +88,20 @@ jobs:
     name: "👻 Poltergeist Deployment Verifier"
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
-    
+
     steps:
       - name: Verify control.veklom.com
         run: |
-          echo "Waiting for control.veklom.com..."
-          sleep 10
-          HTTP=$(curl -sk https://control.veklom.com -o /dev/null -w '%{http_code}')
+          echo "Checking control.veklom.com after canonical main CI..."
+          HTTP=$(curl -sk --max-time 20 https://control.veklom.com -o /dev/null -w '%{http_code}')
           if [ "$HTTP" = "200" ]; then
-            DEPENDENCY=$(curl -sk -w '%{http_code}' https://control.veklom.com/api/health/dependencies)
+            DEPENDENCY=$(curl -sk --max-time 20 -w '%{http_code}' https://control.veklom.com/api/health/dependencies)
             if ! printf '%s' "$DEPENDENCY" | grep -q '"status":"healthy".*200$'; then
               echo "Deployment proof unavailable: dependency health is not healthy"
               exit 1
             fi
-            echo "Deployment successful: root HTTP $HTTP and dependency proof healthy"
+            echo "Deployment observed: root HTTP $HTTP and dependency proof healthy"
           else
-            echo "Deployment failed: HTTP $HTTP"
+            echo "Deployment proof unavailable: HTTP $HTTP"
             exit 1
           fi
