@@ -5,6 +5,7 @@ export interface GovernedConsequenceRequest {
     mountId: string;
     tokenId: string;
     nonce: string;
+    executionId: string;
   };
   operation: string;
   prompt: string;
@@ -25,9 +26,10 @@ export interface GovernedConsequenceResponse {
   links?: Record<string, { href: string; method: string }>;
   capability_lease?: {
     mount_id: string;
+    execution_id: string;
+    receipt_id: string;
     decision: "allow";
-    reason: string;
-    anchor_id?: string | null;
+    nonce_consumed: true;
   };
   _runtimeMeta?: unknown;
 }
@@ -40,7 +42,6 @@ export function executeGovernedConsequence(
     body: {
       prompt: request.prompt,
       action: request.operation,
-      directive: "ALLOW",
       workspace_id: request.workspaceId,
       scope: {
         tools: [request.operation],
@@ -50,6 +51,7 @@ export function executeGovernedConsequence(
         mount_id: request.capabilityLease.mountId,
         token_id: request.capabilityLease.tokenId,
         nonce: request.capabilityLease.nonce,
+        execution_id: request.capabilityLease.executionId,
       },
       target_precondition: request.targetPrecondition ? {
         target_id: request.targetPrecondition.targetId,
