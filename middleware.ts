@@ -33,18 +33,10 @@ import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-c
  * Requiring a Bearer header on navigation is unsatisfiable: it locks every
  * operator out of the surface while appearing to protect it. Neither check is
  * authorization — both are presence checks, and the backend still decides.
+ *
+ * Activation completion is deliberately NOT gated by a browser-written cookie.
+ * The product must derive journey completion from server-observed state/evidence.
  */
-
-// ── Resource Security Map ────────────────────────────────────────────────────
-//
-//  /os              → authentication required
-//  /admin           → authentication + authority required (enforced by CAPPO)
-//  /api/private     → authentication required
-//  /mcp             → MCP auth + payment/governance requirements
-//  /evidence/private→ tenant + authority required (enforced by CAPPO)
-//  /internal        → authentication required
-//
-// ────────────────────────────────────────────────────────────────────────────
 
 const AUTH_REQUIRED_PREFIXES = [
   '/os',
@@ -58,11 +50,6 @@ const MCP_PREFIXES = ['/mcp/execute'];
 
 const SESSION_COOKIE = 'veklom.session';
 
-/**
- * A top-level document request, as opposed to a fetch/XHR from page code.
- * `sec-fetch-mode: navigate` is set by the browser and cannot be forged by
- * page script, so it is a safe discriminator here.
- */
 function isNavigation(request: NextRequest): boolean {
   if (request.headers.get('sec-fetch-mode') === 'navigate') return true;
   return (request.headers.get('accept') || '').includes('text/html');
@@ -88,14 +75,6 @@ export async function middleware(request: NextRequest) {
   if (requiresAuth(url.pathname)) {
     if (isNavigation(request)) {
       if (!request.cookies.get(SESSION_COOKIE)) {
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('returnTo', url.pathname + url.search);
-        return NextResponse.redirect(loginUrl);
-      }
-      if (url.pathname.startsWith('/os') && !request.cookies.get('veklom_activated')) {
-        return NextResponse.redirect(new URL('/activate', request.url));
-      }
-      if (false) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('returnTo', url.pathname + url.search);
         return NextResponse.redirect(loginUrl);
@@ -133,7 +112,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 🔹 Hostname-based routing 🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹
+  // 🔹 Hostname-based routing
   if (hostname === 'veklom.dev' || hostname === 'www.veklom.dev') {
     if (url.pathname === '/') {
       url.pathname = '/dev';
@@ -180,13 +159,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

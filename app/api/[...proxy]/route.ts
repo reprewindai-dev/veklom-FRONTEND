@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from"next/server";
 import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue } from"@/lib/capi-runtime";
+import { stripUntrustedMachineAuthority } from"@/lib/cappo-machine-authority-boundary";
 import {
  isCappoExecPath,
  isCappoIdentityPath,
@@ -102,6 +103,7 @@ async function proxyRequest(req: NextRequest) {
  headers.delete("cookie");
  headers.delete("x-workspace-id");
  headers.delete("x-veklom-requester-id");
+ stripUntrustedMachineAuthority(headers);
 
  if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
  // Authenticate the browser session against BYOS and mint a short-lived,

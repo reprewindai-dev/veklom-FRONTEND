@@ -84,7 +84,7 @@ describe("Capability OS stage transport", () => {
     ).toBeUndefined();
   });
 
-  it("preserves sandbox base behavior for unrelated stages", () => {
+  it("keeps production same-origin and preserves explicit sandbox bases for unrelated stages", () => {
     expect(
       resolveStageBaseUrl(
         "execute",
@@ -94,7 +94,7 @@ describe("Capability OS stage transport", () => {
       ),
     ).toBe("https://sandbox.example");
     expect(resolveStageBaseUrl("execute", false, "https://execute.example"))
-      .toBe("https://execute.example");
+      .toBeUndefined();
   });
 
   it("never assigns an external base URL to a CAPPO endpoint", () => {
@@ -104,6 +104,15 @@ describe("Capability OS stage transport", () => {
         false,
         "https://cappo.example",
         undefined,
+        "/v1/vnp/metrics",
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveStageBaseUrl(
+        "measure",
+        true,
+        "https://cappo.example",
+        "https://sandbox.example",
         "/v1/vnp/metrics",
       ),
     ).toBeUndefined();
