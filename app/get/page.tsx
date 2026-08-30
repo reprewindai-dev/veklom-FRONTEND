@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { useVeklomInstall } from "@/components/acquisition/PwaInstallBridge";
@@ -32,6 +33,7 @@ function markAcquisitionStarted() {
 }
 
 export default function GetVeklomPage() {
+  const router = useRouter();
   const { state, install } = useVeklomInstall();
   const [platform, setPlatform] = useState<Platform>("other");
   const [installing, setInstalling] = useState(false);
@@ -52,7 +54,7 @@ export default function GetVeklomPage() {
         const accepted = await install();
         if (accepted) {
           markAcquisitionStarted();
-          window.location.assign("/signup");
+          router.push("/signup");
         }
       } finally {
         setInstalling(false);
@@ -61,7 +63,7 @@ export default function GetVeklomPage() {
     }
 
     markAcquisitionStarted();
-    window.location.assign("/signup");
+    router.push("/signup");
   }
 
   return (
