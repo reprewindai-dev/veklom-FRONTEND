@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { useVeklomInstall } from "@/components/acquisition/PwaInstallBridge";
 
+const ACQUISITION_SESSION_KEY = "veklom_acquisition_prompt_v2";
+
 type Platform = "ios" | "android" | "windows" | "mac" | "other";
 
 function detectPlatform(): Platform {
@@ -18,6 +20,17 @@ function detectPlatform(): Platform {
   return "other";
 }
 
+function markAcquisitionStarted() {
+  try {
+    window.sessionStorage.setItem(
+      ACQUISITION_SESSION_KEY,
+      JSON.stringify({ dismissals: 0, lastDismissedAt: 0, completed: true }),
+    );
+  } catch {
+    // Acquisition state is convenience-only and must never block product access.
+  }
+}
+
 export default function GetVeklomPage() {
   const { state, install } = useVeklomInstall();
   const [platform, setPlatform] = useState<Platform>("other");
@@ -26,7 +39,7 @@ export default function GetVeklomPage() {
   useEffect(() => setPlatform(detectPlatform()), []);
 
   const label = useMemo(() => {
-    if (state === "installed") return "Veklom is installed";
+    if (state === "installed") return "Continue with Veklom";
     if (state === "installable") return "Install Veklom now";
     if (platform === "ios") return "Open Veklom now";
     return "Start using Veklom now";
@@ -37,12 +50,17 @@ export default function GetVeklomPage() {
       setInstalling(true);
       try {
         const accepted = await install();
-        if (accepted) window.location.assign("/signup");
+        if (accepted) {
+          markAcquisitionStarted();
+          window.location.assign("/signup");
+        }
       } finally {
         setInstalling(false);
       }
       return;
     }
+
+    markAcquisitionStarted();
     window.location.assign("/signup");
   }
 
@@ -71,7 +89,7 @@ export default function GetVeklomPage() {
             >
               <span>
                 <span className="block font-mono text-[9px] uppercase tracking-[0.2em] opacity-60">
-                  {state === "installable" ? "Native browser install available" : "Fastest available path detected"}
+                  {state === "installable" ? "Browser install available" : "Fastest available path detected"}
                 </span>
                 <span className="mt-1 block text-base font-bold">{installing ? "Waiting for approval…" : label}</span>
               </span>
