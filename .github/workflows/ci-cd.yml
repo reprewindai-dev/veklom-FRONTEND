@@ -29,7 +29,7 @@ jobs:
 
       - name: Activation transport tests
         run: >-
-          npm test -- --ci --runInBand
+          npx jest --runInBand --ci --runTestsByPath
           lib/__tests__/cos-activation-transport.test.ts
           lib/__tests__/cappo-proxy-authority-boundary.test.ts
 
