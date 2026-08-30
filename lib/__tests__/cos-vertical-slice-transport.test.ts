@@ -4,13 +4,11 @@ import {
   fetchExecutionMeasurement,
 } from "@/lib/cos/verticalSlice";
 
-
-
 const response = (body: unknown) => ({
   ok: true,
   status: 200,
   statusText: "OK",
-  headers: new Headers(),
+  headers: new Headers({ "content-type": "application/json" }),
   text: async () => JSON.stringify(body),
 }) as Response;
 
