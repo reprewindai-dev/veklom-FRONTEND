@@ -77,3 +77,10 @@ export function fetchExecutionMeasurement(executionId: string): Promise<unknown>
     { method: "GET" },
   );
 }
+
+export function fetchExecutionTargetObservation(executionId: string): Promise<unknown> {
+  return api(
+    `/api/cappo/v1/executions/${encodeURIComponent(executionId)}/target-observation`,
+    { method: "GET" },
+  );
+}
