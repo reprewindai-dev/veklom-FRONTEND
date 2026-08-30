@@ -97,12 +97,6 @@ export function AcquisitionPrompt() {
     setOpen(false);
   }
 
-  function markAccepted() {
-    const next = { ...state, completed: true };
-    setState(next);
-    writeState(next);
-  }
-
   if (!eligible || !open) return null;
 
   return (
@@ -128,7 +122,6 @@ export function AcquisitionPrompt() {
             <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
               <Link
                 href="/get"
-                onClick={markAccepted}
                 className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-xl bg-theme-ink px-5 text-sm font-bold text-theme-bg shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-2xl"
               >
                 Get Veklom now <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
@@ -143,7 +136,7 @@ export function AcquisitionPrompt() {
             </div>
 
             <p className="mt-4 font-mono text-[10px] leading-5 text-theme-inkDim">
-              We can surface the path aggressively; your browser or operating system still controls the final install approval. No hidden authority is granted.
+              We keep prompting until you actually take the acquisition path or dismiss the session limit. Your browser or operating system still controls final install approval. No hidden authority is granted.
             </p>
           </div>
 
