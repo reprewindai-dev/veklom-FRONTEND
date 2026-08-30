@@ -461,6 +461,7 @@ export async function inspectActivationMeasurements(
     const target = measurements.target_observation;
     const receiptId = execution.response.capability_lease?.receipt_id;
     const mountId = execution.response.capability_lease?.mount_id;
+    const terminalEvent = consequence?.events?.[consequence.events.length - 1];
     if (
       measurements.execution_id !== execution.executionId ||
       !["verified", "verified_with_unresolved_refs"].includes(
@@ -473,18 +474,26 @@ export async function inspectActivationMeasurements(
       consequence?.outcome_unknown_count !== 0 ||
       consequence?.events?.map((event) => event.state).join(",") !==
         "authorized,started,succeeded" ||
+      consequence?.events?.some(
+        (event) =>
+          event.receipt_id !== receiptId ||
+          event.action !== execution.operation,
+      ) ||
       target?.execution_id !== execution.executionId ||
+      target?.operation_id !== `exec:${execution.executionId}` ||
       target?.consequence_count !== 1 ||
       target?.persisted !== true ||
       target?.mount_id !== mountId ||
       target?.receipt_id !== receiptId ||
       !target?.consequence_id ||
       !target?.content_hash ||
+      terminalEvent?.completion_proof_type !== "durable_target_row" ||
+      terminalEvent?.completion_proof_ref !== target.content_hash ||
       !measurements.eee_envelope_hash ||
       !measurements.pgl_event_id
     ) {
       throw new ActivationUnavailableError(
-        "Execution measurements do not prove exactly one completed and independently observed consequence.",
+        "Execution measurements do not prove exactly one completed consequence whose P5 success proof is the independently observed durable target row.",
       );
     }
     return measurements;
