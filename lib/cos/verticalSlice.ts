@@ -9,7 +9,6 @@ export interface GovernedConsequenceRequest {
   };
   operation: string;
   prompt: string;
-  workspaceId?: string;
   targetPrecondition?: {
     targetId: string;
     expectedStateHash: string;
@@ -42,7 +41,6 @@ export function executeGovernedConsequence(
     body: {
       prompt: request.prompt,
       action: request.operation,
-      workspace_id: request.workspaceId,
       scope: {
         tools: [request.operation],
         allowed_effects: [request.operation],
@@ -53,25 +51,29 @@ export function executeGovernedConsequence(
         nonce: request.capabilityLease.nonce,
         execution_id: request.capabilityLease.executionId,
       },
-      target_precondition: request.targetPrecondition ? {
-        target_id: request.targetPrecondition.targetId,
-        expected_state_hash: request.targetPrecondition.expectedStateHash,
-        observed_state_hash: request.targetPrecondition.observedStateHash,
-        observed_at: request.targetPrecondition.observedAt,
-        signature: request.targetPrecondition.signature,
-      } : undefined,
+      target_precondition: request.targetPrecondition
+        ? {
+            target_id: request.targetPrecondition.targetId,
+            expected_state_hash: request.targetPrecondition.expectedStateHash,
+            observed_state_hash: request.targetPrecondition.observedStateHash,
+            observed_at: request.targetPrecondition.observedAt,
+            signature: request.targetPrecondition.signature,
+          }
+        : undefined,
     },
   });
 }
 
 export function fetchExecutionEvidence(executionId: string): Promise<unknown> {
-  return api(`/api/cappo/v1/executions/${encodeURIComponent(executionId)}/evidence`, {
-    method: "GET",
-  });
+  return api(
+    `/api/cappo/v1/executions/${encodeURIComponent(executionId)}/evidence`,
+    { method: "GET" },
+  );
 }
 
 export function fetchExecutionMeasurement(executionId: string): Promise<unknown> {
-  return api(`/api/cappo/v1/executions/${encodeURIComponent(executionId)}/measurements`, {
-    method: "GET",
-  });
+  return api(
+    `/api/cappo/v1/executions/${encodeURIComponent(executionId)}/measurements`,
+    { method: "GET" },
+  );
 }
