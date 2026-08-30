@@ -2,26 +2,13 @@
 // Auth: JWT in `Authorization: Bearer <token>` header.
 //
 // API_BASE is intentionally empty by default so the control plane calls the
-// SAME origin it is served from (e.g. https://veklom.com/api/v1/...). This
-// avoids cross-origin CORS preflight on authenticated requests — the bug that
-// caused the silent login loop when the app called https://api.veklom.com.
+// SAME origin it is served from. This avoids cross-origin CORS preflight on
+// authenticated requests and keeps service routing behind the server boundary.
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-// Two key conventions exist on the veklom.com domain:
-//  - the control plane's own keys (veklom.access_token / veklom.refresh_token)
-//  - the keys the backend GitHub OAuth bridge writes (veklom_token / veklom_refresh_token)
-// We read both and write both so email login and GitHub login share a session.
 const TOKEN_KEYS = ["veklom.access_token", "veklom_token"];
 const REFRESH_KEYS = ["veklom.refresh_token", "veklom_refresh_token"];
-
-// Session presence marker for edge middleware.
-//
-// Tokens live in localStorage, which middleware cannot read, and a browser cannot
-// attach an Authorization header to a top-level navigation. This cookie carries no
-// token material and grants nothing — it only tells middleware that a session
-// exists so navigation can be routed to /login instead of rejected. Authorization
-// is still decided by the backend on every API call.
 const SESSION_COOKIE = "veklom.session";
 
 function writeSessionMarker(present: boolean) {
@@ -32,10 +19,6 @@ function writeSessionMarker(present: boolean) {
     : `${SESSION_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0${secure}`;
 }
 
-/**
- * Reconciles the middleware marker with the stored token, so a session that predates
- * the marker is not treated as signed out on the next navigation.
- */
 export function syncSessionMarker() {
   if (typeof window === "undefined") return;
   writeSessionMarker(Boolean(getToken()));
@@ -49,12 +32,14 @@ export function getToken(): string | null {
   }
   return null;
 }
+
 export function setTokens(access: string, refresh?: string | null) {
   if (typeof window === "undefined") return;
   for (const k of TOKEN_KEYS) window.localStorage.setItem(k, access);
   if (refresh) for (const k of REFRESH_KEYS) window.localStorage.setItem(k, refresh);
   writeSessionMarker(true);
 }
+
 export function clearTokens() {
   if (typeof window === "undefined") return;
   for (const k of [...TOKEN_KEYS, ...REFRESH_KEYS, "veklom_user"]) {
@@ -130,28 +115,43 @@ export function apiBaseUrl(): string {
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 function buildUrl(path: string, query?: RequestOpts["query"], requestedBase?: string): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const base = requestedBase || apiBaseUrl() || origin;
-  // If we are calling our own Next.js server, we must include the basePath so the rewrite rules apply
-  const isSameOrigin = base === origin && !path.startsWith("http");
-  const fullPath = isSameOrigin ? `${BASE_PATH}${path}` : path;
+  try {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const base = requestedBase || apiBaseUrl() || origin;
+    const isSameOrigin = base === origin && !path.startsWith("http");
+    const fullPath = isSameOrigin ? `${BASE_PATH}${path}` : path;
+    const candidate = fullPath.startsWith("http") ? fullPath : `${base}${fullPath}`;
 
-  const url = new URL(fullPath.startsWith("http") ? fullPath : `${base}${fullPath}`);
-  if (query) {
-    for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== null) {
-        url.searchParams.set(k, String(v));
+    if (!candidate) {
+      throw new TypeError("API base URL is not configured");
+    }
+
+    const url = new URL(candidate);
+    if (query) {
+      for (const [k, v] of Object.entries(query)) {
+        if (v !== undefined && v !== null) {
+          url.searchParams.set(k, String(v));
+        }
       }
     }
+    return url.toString();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      undefined,
+      `Unable to resolve API URL for ${path}`,
+      { baseUrl: requestedBase ?? null },
+      "configuration",
+      path,
+    );
   }
-  return url.toString();
 }
 
 export function apiUrl(path: string, query?: RequestOpts["query"]): string {
   return buildUrl(path, query);
 }
 
-function parseResponseBody(res: Response, text: string): unknown {
+function parseResponseBody(res: Response, text: string, path?: string): unknown {
   if (!text) return undefined;
 
   const contentType = (res.headers.get("content-type") || "").toLowerCase();
@@ -162,29 +162,54 @@ function parseResponseBody(res: Response, text: string): unknown {
       return JSON.parse(text);
     } catch {
       throw new ApiError(
-        502,
+        res.status,
         "Expected valid JSON response but received malformed JSON",
-        { upstreamStatus: res.status, contentType },
+        { contentType, bodyPreview: text.slice(0, 200) },
+        "invalid_json",
+        path,
       );
     }
   }
 
-  // For failed upstream calls, keep the HTTP status authoritative and let the
-  // normal error path report it. For a successful API response, HTML/text is
-  // never valid typed API data: this is the phantom-route/redirect failure mode.
   if (res.ok) {
+    const looksHtml = contentType.includes("text/html") || /^\s*</.test(text);
     throw new ApiError(
-      502,
+      res.status,
       `Expected JSON response but received ${contentType || "unknown content type"}`,
       {
-        upstreamStatus: res.status,
         contentType: contentType || null,
         bodyPreview: text.slice(0, 200),
       },
+      looksHtml ? "html" : "invalid_json",
+      path,
     );
   }
 
   return undefined;
+}
+
+async function performFetch(path: string, opts: RequestOpts, headers: Record<string, string>): Promise<Response> {
+  let url: string;
+  try {
+    url = buildUrl(path, opts.query, opts.baseUrl);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(undefined, `Unable to resolve API URL for ${path}`, undefined, "configuration", path);
+  }
+
+  try {
+    return await fetch(url, {
+      method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
+      headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      signal: opts.signal,
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    const message = error instanceof Error ? error.message : "Network request failed";
+    throw new ApiError(undefined, message, undefined, "network", path);
+  }
 }
 
 export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
@@ -202,18 +227,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     if (tok) headers["Authorization"] = `Bearer ${tok}`;
   }
 
-  const res = await fetch(buildUrl(path, opts.query, opts.baseUrl), {
-    method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-    cache: "no-store",
-  });
-
+  const res = await performFetch(path, opts, headers);
   const text = await res.text();
-  const json = parseResponseBody(res, text) as any;
+  const json = parseResponseBody(res, text, path) as any;
 
-  // Expose Runtime Authority metadata from headers
   const runtimeMeta = {
     execution: {
       executionId: res.headers.get("x-execution-id"),
@@ -241,7 +258,6 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     window.dispatchEvent(new CustomEvent("VeklomRuntimeMetadata", { detail: runtimeMeta }));
   }
 
-  // Attach metadata to JSON response if it's an object (non-destructive extension)
   if (json && typeof json === "object" && !Array.isArray(json)) {
     (json as any)._runtimeMeta = runtimeMeta;
   }
@@ -267,33 +283,26 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       const isPublicPage = isPublicRoute(window.location.pathname);
 
       if (res.status === 412) {
-        const event = new CustomEvent("VeklomStateBoundAuthorityViolation", {
+        window.dispatchEvent(new CustomEvent("VeklomStateBoundAuthorityViolation", {
           detail: { type: "PRECONDITION_FAILED", message: msg }
-        });
-        window.dispatchEvent(event);
-        throw new ApiError(res.status, "State-Bound Authority Violation: " + String(msg), json);
+        }));
+        throw new ApiError(res.status, "State-Bound Authority Violation: " + String(msg), json, "http", path);
       } else if (res.status === 428) {
-        const event = new CustomEvent("VeklomFencingTokenRequired", {
+        window.dispatchEvent(new CustomEvent("VeklomFencingTokenRequired", {
           detail: { type: "PRECONDITION_REQUIRED", message: msg }
-        });
-        window.dispatchEvent(event);
-        throw new ApiError(res.status, "Fencing Token Required: " + String(msg), json);
+        }));
+        throw new ApiError(res.status, "Fencing Token Required: " + String(msg), json, "http", path);
       } else if (res.status === 402 && opts.handlePaymentRequired !== false) {
         if (!isPublicPage) {
-          const paymentRequiredHeader = res.headers.get("payment-required");
-          const facilitatorUrl = res.headers.get("x-402-facilitator-url");
-
-          const event = new CustomEvent("X402PaymentIntervention", {
+          window.dispatchEvent(new CustomEvent("X402PaymentIntervention", {
             detail: {
               type: "PAYMENT_REQUIRED",
               message: msg,
-              paymentRequiredHeader,
-              facilitatorUrl
+              paymentRequiredHeader: res.headers.get("payment-required"),
+              facilitatorUrl: res.headers.get("x-402-facilitator-url")
             }
-          });
-          window.dispatchEvent(event);
-
-          throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json);
+          }));
+          throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json, "http", path);
         }
       } else if (res.status === 403 || res.status === 401) {
         const normalizedMessage = String(msg).toLowerCase();
@@ -307,31 +316,27 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
 
         const code = (json as any)?.code || "";
         if (!isAuthTokenError && (code.includes("LAW0") || normalizedMessage.includes("key") || normalizedMessage.includes("token"))) {
-          const event = new CustomEvent("AmbientIntervention", {
+          window.dispatchEvent(new CustomEvent("AmbientIntervention", {
             detail: { type: "MISSING_KEY", message: msg, code }
-          });
-          window.dispatchEvent(event);
-
-          throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json);
+          }));
+          throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json, "http", path);
         }
 
         if (isPublicPage) {
-          throw new ApiError(res.status, String(msg), json);
+          throw new ApiError(res.status, String(msg), json, "http", path);
         }
 
         if (normalizedMessage.includes("token") || normalizedMessage.includes("auth")) {
           if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login";
           }
-        } else {
-          if (!window.location.pathname.startsWith("/governance")) {
-            window.location.href = "/governance";
-          }
+        } else if (!window.location.pathname.startsWith("/governance")) {
+          window.location.href = "/governance";
         }
       }
     }
 
-    throw new ApiError(res.status, String(msg), json);
+    throw new ApiError(res.status, String(msg), json, "http", path);
   }
   return json as T;
 }
@@ -347,7 +352,6 @@ api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, {
 });
 api.delete = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'DELETE' });
 
-// SWR fetcher
 export const fetcher = <T,>(path: string) => api<T>(path);
 
 export async function duelApi<T>(path: string, opts: RequestOpts = {}): Promise<T> {
@@ -366,22 +370,28 @@ export async function duelApi<T>(path: string, opts: RequestOpts = {}): Promise<
     }
   }
 
-  const res = await fetch(url.toString(), {
-    method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url.toString(), {
+      method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
+      headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      signal: opts.signal,
+      cache: "no-store",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Network request failed";
+    throw new ApiError(undefined, message, undefined, "network", path);
+  }
 
   const text = await res.text();
-  const json = parseResponseBody(res, text) as any;
+  const json = parseResponseBody(res, text, path) as any;
   if (!res.ok) {
     const msg =
       (json && (json.detail || json.message || json.error)) ||
       res.statusText ||
       `HTTP ${res.status}`;
-    throw new ApiError(res.status, String(msg), json);
+    throw new ApiError(res.status, String(msg), json, "http", path);
   }
   return json as T;
 }
