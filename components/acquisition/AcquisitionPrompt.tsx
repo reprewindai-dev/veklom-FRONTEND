@@ -100,36 +100,49 @@ export function AcquisitionPrompt() {
   if (!eligible || !open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 px-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="veklom-get-title">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-theme-border bg-theme-bg shadow-2xl">
-        <div className="flex items-center justify-between border-b border-theme-border bg-theme-surface px-6 py-4">
-          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-theme-accent">Machine Authority Infrastructure</div>
-          <div className="font-mono text-[9px] uppercase tracking-widest text-theme-inkDim">One scan · One approval</div>
+    <div
+      className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto bg-black/65 px-3 sm:px-4 py-3 sm:py-6 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="veklom-get-title"
+    >
+      <div className="relative w-full max-w-3xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain rounded-2xl border border-theme-border bg-theme-bg shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-theme-border bg-theme-surface px-4 sm:px-6 py-4">
+          <div className="font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] sm:tracking-[0.22em] text-theme-accent">Machine Authority Infrastructure</div>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="sm:hidden shrink-0 rounded border border-theme-border px-2.5 py-1.5 font-mono text-[10px] uppercase text-theme-inkDim"
+            aria-label="Close acquisition prompt"
+          >
+            Close
+          </button>
+          <div className="hidden sm:block font-mono text-[9px] uppercase tracking-widest text-theme-inkDim">One scan · One approval</div>
         </div>
 
         <div className="grid md:grid-cols-[1fr_220px]">
-          <div className="px-6 py-7 sm:px-8 sm:py-9">
+          <div className="px-5 py-6 sm:px-8 sm:py-9">
             <div className="mb-5 inline-flex items-center rounded-full border border-theme-border bg-theme-surface px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-theme-inkDim">
               You do not need to configure this manually.
             </div>
-            <h2 id="veklom-get-title" className="max-w-lg text-3xl font-semibold tracking-tight text-theme-ink sm:text-4xl">
+            <h2 id="veklom-get-title" className="max-w-lg text-2xl sm:text-4xl font-semibold tracking-tight text-theme-ink">
               Put Veklom on this device.
             </h2>
-            <p className="mt-4 max-w-lg text-base leading-7 text-theme-inkDim">
+            <p className="mt-4 max-w-lg text-sm sm:text-base leading-6 sm:leading-7 text-theme-inkDim">
               Veklom detects the shortest supported path for this device. If your browser can install the app, one approval is all that remains. Otherwise the web experience opens immediately.
             </p>
 
-            <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="mt-6 sm:mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
               <Link
                 href="/get"
-                className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-xl bg-theme-ink px-5 text-sm font-bold text-theme-bg shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-2xl"
+                className="group inline-flex min-h-12 sm:min-h-14 items-center justify-center gap-3 rounded-xl bg-theme-ink px-5 text-sm font-bold text-theme-bg shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-2xl"
               >
                 Get Veklom now <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
               <button
                 type="button"
                 onClick={dismiss}
-                className="min-h-14 rounded-xl border border-theme-border px-5 text-sm font-medium text-theme-inkDim transition-colors hover:bg-theme-surface hover:text-theme-ink"
+                className="min-h-12 sm:min-h-14 rounded-xl border border-theme-border px-5 text-sm font-medium text-theme-inkDim transition-colors hover:bg-theme-surface hover:text-theme-ink"
               >
                 Not now
               </button>
