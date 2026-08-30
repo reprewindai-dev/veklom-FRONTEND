@@ -31,8 +31,7 @@ export default function SignupPage() {
  
  const allAccepted = agreedTerms && agreedPrivacy && agreedAUP && agreedGithubLink && agreedGithubNoBlankCheck && agreedDeviceFlow;
 
- async function handleGithub(e: React.MouseEvent) {
- e.preventDefault();
+ function handleGithub() {
  if (!allAccepted) {
  setErr("Please accept all required agreements below.");
  return;
@@ -53,7 +52,6 @@ export default function SignupPage() {
  }
  setBusy(true);
  try {
- // Record acceptance logic ideally goes here (proxy to backend)
  await fetch("/api/auth/acceptance", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
