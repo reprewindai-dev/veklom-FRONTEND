@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from"next/server";
 import { CAPI_RUNTIME_URL, CAPPO_BACKEND_URL, capiAuthHeaderValue } from"@/lib/capi-runtime";
+import { stripUntrustedMachineAuthority } from"@/lib/cappo-machine-authority-boundary";
 import {
  isCappoExecPath,
  isCappoIdentityPath,
@@ -15,13 +16,6 @@ const LOCKERPHYCER_SECRET = process.env.LOCKERPHYCER_SECRET_KEY ||"";
 const HOP_BY_HOP_HEADERS = ["connection","content-length","keep-alive","proxy-authenticate","proxy-authorization","te","trailer","transfer-encoding","upgrade",
 ];
 
-const CAPPO_MACHINE_AUTHORITY_HEADERS = [
- "workload-identity",
- "execution-context",
- "workload-proof",
- "veklom-authority",
-] as const;
-
 function stripHopByHopHeaders(headers: Headers) {
  const nominated = (headers.get("connection") ||"")
  .split(",")
@@ -29,17 +23,6 @@ function stripHopByHopHeaders(headers: Headers) {
  .filter(Boolean);
 
  for (const header of [...HOP_BY_HOP_HEADERS, ...nominated]) {
- headers.delete(header);
- }
-}
-
-function stripUntrustedMachineAuthority(headers: Headers) {
- // Browser-controlled requests may authenticate a user session, but they may
- // never inject CAPPO's machine authority chain. Those artifacts must be minted
- // by a trusted server-side authority path. Until that path is present the
- // governed consequence call fails closed instead of accepting caller JSON as
- // Workload Identity / Execution Context / Workload Proof / Authority.
- for (const header of CAPPO_MACHINE_AUTHORITY_HEADERS) {
  headers.delete(header);
  }
 }
