@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-capi/edge';
 
@@ -16,7 +16,7 @@ import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-c
  *
  * This middleware does NOT duplicate Cloudflare bot detection. If a request
  * arrives here, Cloudflare has already made its admission decision. The
- * application enforces resource security regardless of the origin â€” if someone
+ * application enforces resource security regardless of the origin — if someone
  * bypasses Cloudflare entirely they still cannot access protected resources.
  *
  * Hard authorization (JWT validation, scope enforcement, LAW 0) is CAPPO's job.
@@ -32,19 +32,19 @@ import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-c
  *
  * Requiring a Bearer header on navigation is unsatisfiable: it locks every
  * operator out of the surface while appearing to protect it. Neither check is
- * authorization â€” both are presence checks, and the backend still decides.
+ * authorization — both are presence checks, and the backend still decides.
  */
 
-// â”€â”€ Resource Security Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Resource Security Map ────────────────────────────────────────────────────
 //
-//  /os              â†’ authentication required
-//  /admin           â†’ authentication + authority required (enforced by CAPPO)
-//  /api/private     â†’ authentication required
-//  /mcp             â†’ MCP auth + payment/governance requirements
-//  /evidence/privateâ†’ tenant + authority required (enforced by CAPPO)
-//  /internal        â†’ authentication required
+//  /os              → authentication required
+//  /admin           → authentication + authority required (enforced by CAPPO)
+//  /api/private     → authentication required
+//  /mcp             → MCP auth + payment/governance requirements
+//  /evidence/private→ tenant + authority required (enforced by CAPPO)
+//  /internal        → authentication required
 //
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────────
 
 const AUTH_REQUIRED_PREFIXES = [
   '/os',
@@ -82,12 +82,20 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
-  // â”€â”€ Auth-required surfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Auth-required surfaces ────────────────────────────────────────────────
   // We only check that a session is PRESENT here.
   // Validation and authorization are CAPPO's responsibility.
   if (requiresAuth(url.pathname)) {
     if (isNavigation(request)) {
       if (!request.cookies.get(SESSION_COOKIE)) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('returnTo', url.pathname + url.search);
+        return NextResponse.redirect(loginUrl);
+      }
+      if (url.pathname.startsWith('/os') && !request.cookies.get('veklom_activated')) {
+        return NextResponse.redirect(new URL('/activate', request.url));
+      }
+      if (false) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('returnTo', url.pathname + url.search);
         return NextResponse.redirect(loginUrl);
@@ -106,7 +114,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // â”€â”€ MCP surface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── MCP surface ───────────────────────────────────────────────────────────
   if (isMCPSurface(url.pathname)) {
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -125,7 +133,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ðŸ”¹ Hostname-based routing ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹ðŸ”¹
+  // 🔹 Hostname-based routing 🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹
   if (hostname === 'veklom.dev' || hostname === 'www.veklom.dev') {
     if (url.pathname === '/') {
       url.pathname = '/dev';
@@ -147,12 +155,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // â”€â”€ Legacy route redirects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Legacy route redirects ─────────────────────────────────────────────────
   if (url.pathname === '/workspace' || url.pathname === '/overview') {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // â”€â”€ interlink-cAPI: Edge capability check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── interlink-cAPI: Edge capability check ─────────────────────────────────
   if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
     const identity = await getExecutionIdentity(request);
 
