@@ -8,6 +8,9 @@ export interface Me {
   role?: string;
   org_id?: string;
   org_name?: string;
+  workspace_id?: string;
+  workspace_name?: string;
+  pgl_id?: string;
   is_superuser?: boolean;
   tier?: string;
   [k: string]: unknown;

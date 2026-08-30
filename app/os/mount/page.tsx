@@ -281,8 +281,20 @@ export default function MountPage() {
  const issuedMountId = asString(issuedMount?.id) ?? asString(issuedToken?.mount_id);
  const issuedTokenId = asString(issuedToken?.token_id);
  const issuedNonce = asString(issuedToken?.nonce);
- if (result.data.decision ==="allow" && issuedMountId && issuedTokenId && issuedNonce) {
- storeSessionCapabilityLease({ mountId: issuedMountId, tokenId: issuedTokenId, nonce: issuedNonce });
+ const issuedExecutionId = asString(issuedToken?.execution_id);
+ if (
+ result.data.decision ==="allow" &&
+ issuedMountId &&
+ issuedTokenId &&
+ issuedNonce &&
+ issuedExecutionId
+ ) {
+ storeSessionCapabilityLease({
+ mountId: issuedMountId,
+ tokenId: issuedTokenId,
+ nonce: issuedNonce,
+ executionId: issuedExecutionId,
+ });
  }
  }
  setBusy(false);

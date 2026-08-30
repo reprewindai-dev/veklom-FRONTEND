@@ -5,10 +5,10 @@ export interface GovernedConsequenceRequest {
     mountId: string;
     tokenId: string;
     nonce: string;
+    executionId: string;
   };
   operation: string;
   prompt: string;
-  workspaceId?: string;
   targetPrecondition?: {
     targetId: string;
     expectedStateHash: string;
@@ -25,9 +25,10 @@ export interface GovernedConsequenceResponse {
   links?: Record<string, { href: string; method: string }>;
   capability_lease?: {
     mount_id: string;
+    execution_id: string;
+    receipt_id: string;
     decision: "allow";
-    reason: string;
-    anchor_id?: string | null;
+    nonce_consumed: true;
   };
   _runtimeMeta?: unknown;
 }
@@ -40,8 +41,6 @@ export function executeGovernedConsequence(
     body: {
       prompt: request.prompt,
       action: request.operation,
-      directive: "ALLOW",
-      workspace_id: request.workspaceId,
       scope: {
         tools: [request.operation],
         allowed_effects: [request.operation],
@@ -50,26 +49,38 @@ export function executeGovernedConsequence(
         mount_id: request.capabilityLease.mountId,
         token_id: request.capabilityLease.tokenId,
         nonce: request.capabilityLease.nonce,
+        execution_id: request.capabilityLease.executionId,
       },
-      target_precondition: request.targetPrecondition ? {
-        target_id: request.targetPrecondition.targetId,
-        expected_state_hash: request.targetPrecondition.expectedStateHash,
-        observed_state_hash: request.targetPrecondition.observedStateHash,
-        observed_at: request.targetPrecondition.observedAt,
-        signature: request.targetPrecondition.signature,
-      } : undefined,
+      target_precondition: request.targetPrecondition
+        ? {
+            target_id: request.targetPrecondition.targetId,
+            expected_state_hash: request.targetPrecondition.expectedStateHash,
+            observed_state_hash: request.targetPrecondition.observedStateHash,
+            observed_at: request.targetPrecondition.observedAt,
+            signature: request.targetPrecondition.signature,
+          }
+        : undefined,
     },
   });
 }
 
 export function fetchExecutionEvidence(executionId: string): Promise<unknown> {
-  return api(`/api/cappo/v1/executions/${encodeURIComponent(executionId)}/evidence`, {
-    method: "GET",
-  });
+  return api(
+    `/api/cappo/v1/executions/${encodeURIComponent(executionId)}/evidence`,
+    { method: "GET" },
+  );
 }
 
 export function fetchExecutionMeasurement(executionId: string): Promise<unknown> {
-  return api(`/api/cappo/v1/executions/${encodeURIComponent(executionId)}/measurements`, {
-    method: "GET",
-  });
+  return api(
+    `/api/cappo/v1/executions/${encodeURIComponent(executionId)}/measurements`,
+    { method: "GET" },
+  );
+}
+
+export function fetchExecutionTargetObservation(executionId: string): Promise<unknown> {
+  return api(
+    `/api/cappo/v1/executions/${encodeURIComponent(executionId)}/target-observation`,
+    { method: "GET" },
+  );
 }
