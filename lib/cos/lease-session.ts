@@ -2,6 +2,7 @@ export type SessionCapabilityLease = {
   mountId: string;
   tokenId: string;
   nonce: string;
+  executionId: string;
 };
 
 const KEY = "veklom.capability_lease";
@@ -15,8 +16,13 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
   if (!raw) return null;
   try {
     const value = JSON.parse(raw) as Partial<SessionCapabilityLease>;
-    return value.mountId && value.tokenId && value.nonce
-      ? { mountId: value.mountId, tokenId: value.tokenId, nonce: value.nonce }
+    return value.mountId && value.tokenId && value.nonce && value.executionId
+      ? {
+          mountId: value.mountId,
+          tokenId: value.tokenId,
+          nonce: value.nonce,
+          executionId: value.executionId,
+        }
       : null;
   } catch {
     return null;
