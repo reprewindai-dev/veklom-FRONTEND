@@ -59,9 +59,7 @@ jobs:
         if: success()
         run: echo "Build passed for ${{ github.sha }}"
 
-# Public frontend availability and governed runtime sovereignty are separate concerns.
-# The linked Vercel project publishes the always-on Next.js frontend from GitHub and
-# provides the stable public fallback/origin. This workflow still performs no SSH
-# deployment and grants no runtime authority. Owned-hardware services remain the
-# governed execution substrate and should be exposed on runtime/API transport routes,
-# not used as the sole availability dependency for the public homepage.
+# This workflow is verification only. It does not make a third-party frontend host
+# authoritative for production. Canonical production remains the self-hosted Veklom
+# deployment path described in README.md: Coolify/owned infrastructure behind Veklom's
+# public routing. GitHub-hosted CI proves the build; it does not own production runtime.
