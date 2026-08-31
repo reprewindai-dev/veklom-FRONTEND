@@ -19,6 +19,7 @@ import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-c
 
 const AUTH_REQUIRED_PREFIXES = [
   '/os',
+  '/activate',
   '/admin',
   '/api/private',
   '/evidence/private',
