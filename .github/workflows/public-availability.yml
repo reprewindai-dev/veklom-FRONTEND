@@ -19,52 +19,34 @@ jobs:
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
-      CUSTOM_URL: https://veklom.com/api/health
-      VERCEL_URL: https://veklom-control-plane.vercel.app/api/health
+      PUBLIC_URL: https://veklom.com/api/health
     steps:
-      - name: Probe public origins
+      - name: Probe sovereign public origin
         id: probe
         shell: bash
         run: |
           set +e
 
-          probe() {
-            local url="$1"
-            for attempt in 1 2 3; do
-              code="$(curl --silent --show-error --location --max-time 12 --output /tmp/probe-body --write-out '%{http_code}' "$url")"
-              if [ "$code" = "200" ]; then
-                echo "UP $url on attempt $attempt"
-                return 0
-              fi
-              echo "DOWN $url attempt=$attempt http=$code"
-              sleep 4
-            done
-            return 1
-          }
+          for attempt in 1 2 3; do
+            code="$(curl --silent --show-error --location --max-time 12 --output /tmp/probe-body --write-out '%{http_code}' "$PUBLIC_URL")"
+            if [ "$code" = "200" ]; then
+              echo "UP $PUBLIC_URL on attempt $attempt"
+              echo "public_ok=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "DOWN $PUBLIC_URL attempt=$attempt http=$code"
+            sleep 4
+          done
 
-          if probe "$CUSTOM_URL"; then
-            echo "custom_ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "custom_ok=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if probe "$VERCEL_URL"; then
-            echo "vercel_ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "vercel_ok=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "public_ok=false" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Open or update outage issue
-        if: steps.probe.outputs.custom_ok != 'true'
+        if: steps.probe.outputs.public_ok != 'true'
         shell: bash
         run: |
-          if [ "${{ steps.probe.outputs.vercel_ok }}" = "true" ]; then
-            title="[Availability] veklom.com custom route degraded"
-            body="The custom domain health probe failed three times while the Vercel production origin remained healthy. This isolates the incident to DNS/Cloudflare/tunnel/custom-domain routing rather than the frontend build itself.\n\nCustom: $CUSTOM_URL\nVercel: $VERCEL_URL\nWorkflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          else
-            title="[Availability] Veklom public frontend degraded"
-            body="Both the custom domain and Vercel production health probes failed three times. Treat this as a frontend/deployment incident.\n\nCustom: $CUSTOM_URL\nVercel: $VERCEL_URL\nWorkflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          fi
+          title="[Availability] veklom.com sovereign origin degraded"
+          body="The public Veklom health probe failed three times. The canonical public origin is the self-hosted Veklom frontend behind the Cloudflare tunnel; no third-party frontend origin is treated as production authority.\n\nPublic: $PUBLIC_URL\nWorkflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
           number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)"
           if [ -n "$number" ]; then
@@ -73,20 +55,17 @@ jobs:
             gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
           fi
 
-      - name: Close recovered availability issues
-        if: steps.probe.outputs.custom_ok == 'true'
+      - name: Close recovered outage issue
+        if: steps.probe.outputs.public_ok == 'true'
         shell: bash
         run: |
-          for title in \
-            "[Availability] veklom.com custom route degraded" \
-            "[Availability] Veklom public frontend degraded"; do
-            number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)"
-            if [ -n "$number" ]; then
-              gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Recovered: the custom domain health probe is returning HTTP 200 again. Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-              gh issue close "$number" --repo "$GITHUB_REPOSITORY" --reason completed
-            fi
-          done
+          title="[Availability] veklom.com sovereign origin degraded"
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Recovered: the self-hosted public health probe is returning HTTP 200 again. Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            gh issue close "$number" --repo "$GITHUB_REPOSITORY" --reason completed
+          fi
 
-      - name: Fail when custom domain is unavailable
-        if: steps.probe.outputs.custom_ok != 'true'
+      - name: Fail when sovereign public origin is unavailable
+        if: steps.probe.outputs.public_ok != 'true'
         run: exit 1
