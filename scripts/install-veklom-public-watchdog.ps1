@@ -8,32 +8,39 @@ if (-not (Test-Path $Watchdog)) {
     throw "Watchdog not found at $Watchdog"
 }
 
-$action = New-ScheduledTaskAction \
-    -Execute "powershell.exe" \
-    -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$Watchdog`""
+$actionArgs = @{
+    Execute = "powershell.exe"
+    Argument = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$Watchdog`""
+}
+$action = New-ScheduledTaskAction @actionArgs
 
 $triggers = @(
-    New-ScheduledTaskTrigger -AtLogOn,
-    New-ScheduledTaskTrigger -AtStartup
+    (New-ScheduledTaskTrigger -AtLogOn),
+    (New-ScheduledTaskTrigger -AtStartup)
 )
 
-$settings = New-ScheduledTaskSettingsSet \
-    -AllowStartIfOnBatteries \
-    -DontStopIfGoingOnBatteries \
-    -StartWhenAvailable \
-    -RestartCount 999 \
-    -RestartInterval (New-TimeSpan -Minutes 1) \
-    -ExecutionTimeLimit (New-TimeSpan -Days 3650)
+$settingsArgs = @{
+    AllowStartIfOnBatteries = $true
+    DontStopIfGoingOnBatteries = $true
+    StartWhenAvailable = $true
+    RestartCount = 999
+    RestartInterval = (New-TimeSpan -Minutes 1)
+    ExecutionTimeLimit = (New-TimeSpan -Days 3650)
+}
+$settings = New-ScheduledTaskSettingsSet @settingsArgs
 
 try {
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
-    Register-ScheduledTask \
-        -TaskName $TaskName \
-        -Action $action \
-        -Trigger $triggers \
-        -Settings $settings \
-        -Description "Keeps the Veklom local frontend and Cloudflare transport healthy without killing unrelated Node processes." \
-        -RunLevel Highest | Out-Null
+
+    $registerArgs = @{
+        TaskName = $TaskName
+        Action = $action
+        Trigger = $triggers
+        Settings = $settings
+        Description = "Keeps the Veklom local frontend and Cloudflare transport healthy without killing unrelated Node processes."
+        RunLevel = "Highest"
+    }
+    Register-ScheduledTask @registerArgs | Out-Null
 
     Start-ScheduledTask -TaskName $TaskName
     Write-Host "Installed and started '$TaskName'."
