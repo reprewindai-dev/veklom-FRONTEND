@@ -4,7 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.veklom.com}
+        BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
+        LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
+        CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
+        CAPPO_URL: ${CAPPO_URL:-https://cappo.veklom.com}
+        PGL_URL: ${PGL_URL:-https://pgl.veklom.com}
+        NEXT_PUBLIC_API_BASE_URL: ""
     image: veklom/frontend:local
     container_name: veklom-frontend
     restart: unless-stopped
@@ -12,9 +17,15 @@ services:
       NODE_ENV: production
       PORT: "3002"
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.veklom.com}
-      VBB_BACKEND_URL: ${VBB_BACKEND_URL:-https://api.veklom.com}
-      CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-https://capi.veklom.com}
+      # Same-origin browser API. Server-side Next routes/proxies use these URLs.
+      NEXT_PUBLIC_API_BASE_URL: ""
+      BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
+      LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
+      CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
+      CAPPO_URL: ${CAPPO_URL:-https://cappo.veklom.com}
+      PGL_URL: ${PGL_URL:-https://pgl.veklom.com}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:3002:3002"
     healthcheck:
