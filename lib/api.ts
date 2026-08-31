@@ -1,5 +1,6 @@
 // Typed fetch client for the Veklom VCB API.
-// Auth: JWT in `Authorization: Bearer <token>` header.
+// Auth: JWT in `Authorization: Bearer <token>` header or backend-issued
+// HttpOnly access_token cookie for GitHub/browser sessions.
 //
 // API_BASE is intentionally empty by default so the control plane calls the
 // SAME origin it is served from. This avoids cross-origin CORS preflight on
@@ -96,6 +97,22 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/dev",
   "/login",
   "/signup",
+  "/forgot-password",
+  "/get",
+  "/proof",
+  "/architecture",
+  "/conformance",
+  "/docs",
+  "/security",
+  "/machine",
+  "/mcp",
+  "/privacy",
+  "/terms",
+  "/acceptable-use",
+  "/cookies",
+  "/dpa",
+  "/subprocessors",
+  "/status",
 ];
 
 function isPublicRoute(pathname: string): boolean {
@@ -204,6 +221,7 @@ async function performFetch(path: string, opts: RequestOpts, headers: Record<str
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
       signal: opts.signal,
       cache: "no-store",
+      credentials: "same-origin",
     });
   } catch (error) {
     if (error instanceof ApiError) throw error;
@@ -312,7 +330,8 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
                                  normalizedMessage.includes("not authenticated") ||
                                  normalizedMessage.includes("signature has expired") ||
                                  normalizedMessage.includes("credentials") ||
-                                 normalizedMessage.includes("unauthorized");
+                                 normalizedMessage.includes("unauthorized") ||
+                                 normalizedMessage.includes("missing authentication");
 
         const code = (json as any)?.code || "";
         if (!isAuthTokenError && (code.includes("LAW0") || normalizedMessage.includes("key") || normalizedMessage.includes("token"))) {
@@ -326,7 +345,7 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
           throw new ApiError(res.status, String(msg), json, "http", path);
         }
 
-        if (normalizedMessage.includes("token") || normalizedMessage.includes("auth")) {
+        if (normalizedMessage.includes("token") || normalizedMessage.includes("auth") || normalizedMessage.includes("credentials")) {
           if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login";
           }
@@ -341,16 +360,16 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   return json as T;
 }
 
-api.get = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'GET' });
+api.get = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: "GET" });
 api.post = <T,>(path: string, body?: any, opts?: RequestOpts) => api<T>(path, {
   ...opts,
-  method: 'POST',
+  method: "POST",
   body,
   headers: {
     ...(opts?.headers || {})
   }
 });
-api.delete = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: 'DELETE' });
+api.delete = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, method: "DELETE" });
 
 export const fetcher = <T,>(path: string) => api<T>(path);
 
