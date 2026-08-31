@@ -173,10 +173,11 @@ async function proxyRequest(req: NextRequest) {
  headers.set("x-api-key", CAPI_ADMIN_KEY);
  }
 
- const targetUrl = `${targetBase.replace(/\/+$/,"")}${forwardPath}${url.search}`;
+  const targetUrl = new URL(`${targetBase.replace(/\/+$/, "")}${forwardPath}${url.search}`);
+  headers.set("host", targetUrl.host);
 
- try {
- const response = await fetch(targetUrl, {
+  try {
+    const response = await fetch(targetUrl.toString(), {
  method: req.method,
  headers,
  body: req.method !=="GET" && req.method !=="HEAD" ? req.body : undefined,
