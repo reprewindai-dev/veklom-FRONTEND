@@ -5,37 +5,16 @@ import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-c
 /**
  * Application-layer resource security gate.
  *
- * Responsibility split:
- *   Cloudflare (AI Crawl Control + WAF + admission-worker)
- *     = WHO MAY APPROACH THE DOOR
- *     = crawler classification, bot blocking, rate limiting, x402 prerequisite
+ * This middleware performs only a navigation/session-presence check. The BYOS
+ * backend remains the authentication source of truth and CAPPO remains the
+ * hard consequence-authority boundary.
  *
- *   This middleware (Application layer)
- *     = WHO MAY ENTER
- *     = authentication presence, authority requirements, capability checks
+ * Browser login can arrive through either:
+ *   - local token login -> `veklom.session` navigation marker
+ *   - backend/GitHub OAuth -> HttpOnly `access_token` cookie
  *
- * This middleware does NOT duplicate Cloudflare bot detection. If a request
- * arrives here, Cloudflare has already made its admission decision. The
- * application enforces resource security regardless of the origin — if someone
- * bypasses Cloudflare entirely they still cannot access protected resources.
- *
- * Hard authorization (JWT validation, scope enforcement, LAW 0) is CAPPO's job.
- * This middleware handles soft gates: is an auth token present? Are required
- * capabilities declared? If not, redirect or reject early before reaching
- * the expensive backend round-trip.
- *
- * Navigations and API calls prove session presence differently, because the
- * browser cannot attach an Authorization header to a top-level navigation:
- *
- *   navigation (document request) -> `veklom.session` cookie -> redirect to /login
- *   API / fetch call              -> Authorization: Bearer   -> 401 JSON
- *
- * Requiring a Bearer header on navigation is unsatisfiable: it locks every
- * operator out of the surface while appearing to protect it. Neither check is
- * authorization — both are presence checks, and the backend still decides.
- *
- * Activation completion is deliberately NOT gated by a browser-written cookie.
- * The product must derive journey completion from server-observed state/evidence.
+ * Both are presence signals only. The backend still validates the actual token,
+ * server-side session, workspace binding and account status.
  */
 
 const AUTH_REQUIRED_PREFIXES = [
@@ -49,6 +28,7 @@ const AUTH_REQUIRED_PREFIXES = [
 const MCP_PREFIXES = ['/mcp/execute'];
 
 const SESSION_COOKIE = 'veklom.session';
+const BACKEND_SESSION_COOKIE = 'access_token';
 
 function isNavigation(request: NextRequest): boolean {
   if (request.headers.get('sec-fetch-mode') === 'navigate') return true;
@@ -65,23 +45,28 @@ function isMCPSurface(pathname: string): boolean {
   return MCP_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'));
 }
 
+function hasNavigationSession(request: NextRequest): boolean {
+  return Boolean(
+    request.cookies.get(SESSION_COOKIE)?.value ||
+    request.cookies.get(BACKEND_SESSION_COOKIE)?.value
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
-  // ── Auth-required surfaces ────────────────────────────────────────────────
-  // We only check that a session is PRESENT here.
-  // Validation and authorization are CAPPO's responsibility.
   if (requiresAuth(url.pathname)) {
     if (isNavigation(request)) {
-      if (!request.cookies.get(SESSION_COOKIE)) {
+      if (!hasNavigationSession(request)) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('returnTo', url.pathname + url.search);
         return NextResponse.redirect(loginUrl);
       }
     } else {
       const authHeader = request.headers.get('authorization');
-      if (!authHeader?.startsWith('Bearer ')) {
+      const cookieToken = request.cookies.get(BACKEND_SESSION_COOKIE)?.value;
+      if (!authHeader?.startsWith('Bearer ') && !cookieToken) {
         return NextResponse.json(
           { error: 'authentication_required', path: url.pathname },
           {
@@ -93,7 +78,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── MCP surface ───────────────────────────────────────────────────────────
   if (isMCPSurface(url.pathname)) {
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -102,7 +86,6 @@ export async function middleware(request: NextRequest) {
         { status: 401, headers: { 'WWW-Authenticate': 'Bearer' } }
       );
     }
-    // x402 prerequisite presence check (hard verification in CAPPO/admission worker)
     const x402Required = request.headers.get('x-veklom-x402-required');
     if (x402Required === 'true' && !request.headers.get('payment-signature')) {
       return NextResponse.json(
@@ -112,7 +95,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 🔹 Hostname-based routing
   if (hostname === 'veklom.dev' || hostname === 'www.veklom.dev') {
     if (url.pathname === '/') {
       url.pathname = '/dev';
@@ -134,15 +116,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── Legacy route redirects ─────────────────────────────────────────────────
   if (url.pathname === '/workspace' || url.pathname === '/overview') {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // ── interlink-cAPI: Edge capability check ─────────────────────────────────
   if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
     const identity = await getExecutionIdentity(request);
-
     const requiredCaps = ['openai_api_key'];
     const { missing } = hasRequiredCapabilities(identity, requiredCaps);
 
