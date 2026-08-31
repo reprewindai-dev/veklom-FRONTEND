@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -14,6 +14,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { PremiumLogo, StageLabel } from "@/components/brand/PremiumPrimitives";
+import { useAuth } from "@/lib/auth-context";
 import {
   ActivationUnavailableError,
   discoverActivationPackage,
@@ -29,46 +31,46 @@ import {
 } from "@/lib/cos/activation";
 
 const DEFAULT_PROJECT = "activation-v1";
+const steps = ["Discover", "Bind authority", "Prove denial", "Execute", "Inspect evidence"];
 
 function JsonProof({ value }: { value: unknown }) {
   return (
-    <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-[var(--theme-border)] bg-black/5 p-3 text-[11px] leading-5 dark:bg-white/5">
+    <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-2xl border border-white/10 bg-[#05070b] p-4 font-mono text-[10px] leading-5 text-white/62 shadow-inner">
       {JSON.stringify(value, null, 2)}
     </pre>
   );
 }
 
-function StepItem({
-  number,
-  title,
-  active,
-  complete,
-}: {
-  number: number;
-  title: string;
-  active: boolean;
-  complete: boolean;
-}) {
+function ProgressItem({ index, title, step }: { index: number; title: string; step: number }) {
+  const complete = step > index;
+  const active = step === index;
   return (
-    <div className="flex items-center gap-3 py-2">
-      <div
-        className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold ${
-          complete
-            ? "border-emerald-500 bg-emerald-500 text-white"
-            : active
-              ? "border-[var(--theme-accent)] text-[var(--theme-accent)]"
-              : "border-[var(--theme-border)] opacity-50"
-        }`}
-      >
-        {complete ? <CheckCircle2 className="h-4 w-4" /> : number}
-      </div>
-      <span className={active || complete ? "font-medium" : "opacity-50"}>{title}</span>
+    <div className="grid grid-cols-[34px_1fr] items-center gap-3 py-2.5">
+      <span className={`flex h-8 w-8 items-center justify-center rounded-full border text-[10px] font-semibold transition ${complete ? "border-theme-verified bg-theme-verified text-white" : active ? "border-theme-accent text-theme-accent shadow-[0_0_0_5px_rgb(var(--theme-accent)/.07)]" : "border-theme-border text-theme-inkDim"}`}>
+        {complete ? <CheckCircle2 className="h-4 w-4" /> : String(index).padStart(2, "0")}
+      </span>
+      <span className={`text-xs font-medium ${active || complete ? "text-theme-ink" : "text-theme-inkDim"}`}>{title}</span>
     </div>
+  );
+}
+
+function ActionButton({ children, onClick, busy, danger = false }: { children: React.ReactNode; onClick: () => void; busy: boolean; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className={`group mt-8 inline-flex min-h-13 items-center gap-4 rounded-full px-6 text-sm font-semibold shadow-[0_16px_42px_rgba(0,0,0,.12)] transition duration-300 hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-50 disabled:hover:translate-y-0 ${danger ? "bg-theme-danger text-white" : "bg-theme-ink text-theme-bg"}`}
+    >
+      {children}
+      {!busy && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+    </button>
   );
 }
 
 export default function ActivationPage() {
   const router = useRouter();
+  const { me } = useAuth();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -80,16 +82,20 @@ export default function ActivationPage() {
   const [execution, setExecution] = useState<ActivationAllowedExecution>();
   const [evidence, setEvidence] = useState<ActivationEvidence>();
 
+  useEffect(() => {
+    const scopedWorkspace = me?.workspace_id;
+    if (scopedWorkspace && !workspaceId) setWorkspaceId(scopedWorkspace);
+  }, [me?.workspace_id, workspaceId]);
+
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError(undefined);
     try {
       await action();
     } catch (cause) {
-      const message =
-        cause instanceof ActivationUnavailableError || cause instanceof Error
-          ? cause.message
-          : "Activation is unavailable because a required live proof step failed.";
+      const message = cause instanceof ActivationUnavailableError || cause instanceof Error
+        ? cause.message
+        : "Activation is unavailable because a required live proof step failed.";
       setError(message);
     } finally {
       setBusy(false);
@@ -107,11 +113,7 @@ export default function ActivationPage() {
   async function grant() {
     if (!capability || !workspaceId.trim() || !projectId.trim()) return;
     await run(async () => {
-      const issued = await requestActivationLease(
-        capability,
-        workspaceId.trim(),
-        projectId.trim(),
-      );
+      const issued = await requestActivationLease(capability, workspaceId.trim(), projectId.trim());
       setLease(issued);
       setStep(3);
     });
@@ -145,223 +147,129 @@ export default function ActivationPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--theme-bg)] p-6 text-[var(--theme-text)]">
-      <div className="mx-auto grid min-h-[640px] max-w-5xl overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg md:grid-cols-[280px_1fr]">
-        <aside className="border-b border-[var(--theme-border)] bg-black/[0.025] p-7 dark:bg-white/[0.025] md:border-b-0 md:border-r">
-          <div className="mb-9 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--theme-accent)] text-white">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="font-bold">Veklom Activation</div>
-              <div className="text-xs opacity-55">Live proof journey</div>
-            </div>
+    <main className="min-h-screen bg-theme-bg text-theme-ink">
+      <header className="border-b border-theme-border bg-theme-bg/82 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1480px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+          <PremiumLogo />
+          <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[.18em] text-theme-inkDim">
+            <span className="hidden sm:inline">Live Activation</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-theme-verified shadow-[0_0_0_5px_rgb(var(--theme-verified)/.08)]" />
+            Real backend only
           </div>
+        </div>
+      </header>
 
-          <div className="space-y-1 text-sm">
-            <StepItem number={1} title="Discover" active={step === 1} complete={step > 1} />
-            <StepItem number={2} title="Bound authority" active={step === 2} complete={step > 2} />
-            <StepItem number={3} title="Prove denial" active={step === 3} complete={step > 3} />
-            <StepItem number={4} title="Governed execution" active={step === 4} complete={step > 4} />
-            <StepItem number={5} title="Inspect evidence" active={step === 5} complete={step > 5} />
+      <div className="relative mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1480px] gap-8 px-5 py-8 sm:px-8 md:py-12 lg:grid-cols-[310px_1fr] lg:gap-10 lg:px-10">
+        <aside className="h-fit rounded-[28px] border border-theme-border bg-theme-surface p-6 lg:sticky lg:top-24 md:p-7">
+          <StageLabel>Proof sequence</StageLabel>
+          <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-.045em] text-theme-ink">One live journey from capability to evidence.</h1>
+          <div className="mt-7 border-t border-theme-border pt-5">
+            {steps.map((title, idx) => <ProgressItem key={title} index={idx + 1} title={title} step={step} />)}
           </div>
-
-          <div className="mt-8 rounded-lg border border-[var(--theme-border)] p-3 text-xs leading-5 opacity-70">
-            This page does not mint browser-only leases, fabricate hashes, simulate execution,
-            or mark activation complete with a client cookie. A step advances only after its
-            live CAPPO response satisfies the required contract.
+          <div className="mt-7 rounded-2xl border border-theme-border bg-theme-bg p-4 text-[11px] leading-6 text-theme-inkDim">
+            No browser-only lease. No fake hash. No canned ALLOW/DENY. A stage advances only after the real backend returns the required state.
           </div>
+          {me?.email && (
+            <div className="mt-4 border-t border-theme-border pt-4 text-[10px] text-theme-inkDim">
+              Session · <span className="font-medium text-theme-ink">{me.email}</span>
+            </div>
+          )}
         </aside>
 
-        <section className="flex items-center p-7 md:p-10">
-          <div className="mx-auto w-full max-w-2xl">
-            {error ? (
-              <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-700 dark:text-red-300">
-                <div className="mb-1 flex items-center gap-2 font-semibold">
-                  <XCircle className="h-4 w-4" /> Live proof unavailable
-                </div>
-                <p>{error}</p>
-                <p className="mt-2 text-xs opacity-75">No proof-bearing state was advanced.</p>
+        <section className="relative overflow-hidden rounded-[32px] border border-theme-border bg-theme-surface shadow-[0_40px_120px_rgba(2,8,23,.07)]">
+          <div className="absolute right-[-8rem] top-[-9rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgb(var(--theme-accent)/.13),transparent_68%)] blur-3xl" aria-hidden="true" />
+          <div className="relative min-h-[680px] p-6 sm:p-9 md:p-12 lg:p-14">
+            {error && (
+              <div className="mb-8 flex gap-3 rounded-2xl border border-theme-danger/20 bg-theme-danger/5 p-4 text-sm leading-6 text-theme-danger">
+                <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div><div className="font-semibold">Live proof stopped.</div><div className="mt-1">{error}</div><div className="mt-1 text-xs opacity-70">No proof-bearing state was advanced.</div></div>
               </div>
-            ) : null}
+            )}
 
-            {step === 1 ? (
-              <div>
-                <Activity className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
-                <h1 className="text-3xl font-bold tracking-tight">Start with something real.</h1>
-                <p className="mt-4 max-w-xl leading-7 opacity-70">
-                  Activation first asks CAPPO which capability packages actually exist. If no
-                  package can demonstrate both a permitted operation and a blocked operation,
-                  the journey stops as unavailable instead of inventing a demo.
-                </p>
-                <button
-                  type="button"
-                  onClick={connect}
-                  disabled={busy}
-                  className="mt-8 flex items-center gap-2 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  {busy ? "Discovering..." : "Discover live capability"}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+            {step === 1 && (
+              <div className="max-w-3xl">
+                <Activity className="h-9 w-9 text-theme-accent" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">01 · Discover</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Start with a capability that actually exists.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Activation asks CAPPO for its live capability-package registry and selects a package that exposes both an allowed read and a blocked action. If none exists, the experience stops instead of inventing one.</p>
+                <ActionButton onClick={connect} busy={busy}>{busy ? "Discovering live registry…" : "Discover live capability"}</ActionButton>
               </div>
-            ) : null}
+            )}
 
-            {step === 2 && capability ? (
-              <div>
-                <KeyRound className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
-                <h2 className="text-2xl font-bold">Request bounded authority</h2>
-                <p className="mt-3 leading-7 opacity-70">
-                  CAPPO selected <strong>{capability.title}</strong> from its live package registry.
-                  The activation lease requests only one permitted read and one explicitly blocked
-                  action from that package.
-                </p>
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="text-sm">
-                    <span className="mb-2 block opacity-65">Workspace ID</span>
-                    <input
-                      value={workspaceId}
-                      onChange={(event) => setWorkspaceId(event.target.value)}
-                      className="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2"
-                      placeholder="Your authenticated workspace"
-                    />
+            {step === 2 && capability && (
+              <div className="max-w-3xl">
+                <KeyRound className="h-9 w-9 text-theme-accent" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">02 · Bind authority</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Make the allowed action smaller than the machine.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO selected <strong className="text-theme-ink">{capability.title}</strong>. The lease requests one permitted operation and one explicit negative boundary for this workspace.</p>
+
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-theme-ink">
+                    <span className="mb-2.5 block">Workspace ID</span>
+                    <input value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="min-h-13 w-full rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm outline-none transition focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5" placeholder="Authenticated workspace" />
                   </label>
-                  <label className="text-sm">
-                    <span className="mb-2 block opacity-65">Activation project</span>
-                    <input
-                      value={projectId}
-                      onChange={(event) => setProjectId(event.target.value)}
-                      className="w-full rounded-lg border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2"
-                    />
+                  <label className="text-xs font-medium text-theme-ink">
+                    <span className="mb-2.5 block">Activation project</span>
+                    <input value={projectId} onChange={(e) => setProjectId(e.target.value)} className="min-h-13 w-full rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm outline-none transition focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5" />
                   </label>
                 </div>
-                <div className="mt-5 rounded-lg border border-[var(--theme-border)] p-4 text-sm">
-                  <div><span className="opacity-55">Package:</span> {capability.id}</div>
-                  <div className="mt-2"><span className="opacity-55">Permitted:</span> {capability.reads?.[0]}</div>
-                  <div className="mt-2"><span className="opacity-55">Blocked:</span> {capability.blocked?.[0]}</div>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-theme-border bg-theme-bg p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Package</div><div className="mt-2 break-all font-mono text-[11px] text-theme-ink">{capability.id}</div></div>
+                  <div className="rounded-2xl border border-theme-verified/20 bg-theme-verified/5 p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Permitted</div><div className="mt-2 break-all font-mono text-[11px] text-theme-verified">{capability.reads?.[0]}</div></div>
+                  <div className="rounded-2xl border border-theme-danger/20 bg-theme-danger/5 p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Blocked</div><div className="mt-2 break-all font-mono text-[11px] text-theme-danger">{capability.blocked?.[0]}</div></div>
                 </div>
-                <button
-                  type="button"
-                  onClick={grant}
-                  disabled={busy || !workspaceId.trim() || !projectId.trim()}
-                  className="mt-7 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  {busy ? "Requesting lease..." : "Request CAPPO lease"}
-                </button>
-              </div>
-            ) : null}
 
-            {step === 3 && lease ? (
-              <div>
-                <ShieldAlert className="mb-5 h-10 w-10 text-red-500" />
-                <h2 className="text-2xl font-bold">Prove the boundary before using it.</h2>
-                <p className="mt-3 leading-7 opacity-70">
-                  We deliberately ask the same backend-issued lease to perform
-                  <strong> {lease.deniedAction}</strong>. The journey advances only if CAPPO returns
-                  a real denial. This check is performed before the permitted operation so a
-                  single-use lease remains available for the allowed execution.
-                </p>
-                <JsonProof value={{
-                  mount_id: lease.mountId,
-                  package_ref: lease.packageRef,
-                  challenge_action: lease.deniedAction,
-                  mount_anchor_id: lease.anchorId ?? null,
-                }} />
-                <button
-                  type="button"
-                  onClick={challenge}
-                  disabled={busy}
-                  className="mt-7 rounded-lg bg-red-600 px-5 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  {busy ? "Testing boundary..." : "Attempt blocked action"}
-                </button>
+                <ActionButton onClick={grant} busy={busy}>{busy ? "Requesting bounded lease…" : "Request CAPPO lease"}</ActionButton>
               </div>
-            ) : null}
+            )}
 
-            {step === 4 && lease && denial ? (
-              <div>
-                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
-                  <ShieldCheck className="h-6 w-6" />
+            {step === 3 && lease && (
+              <div className="max-w-3xl">
+                <ShieldAlert className="h-9 w-9 text-theme-danger" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">03 · Prove denial</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Attack the boundary before trusting the allow.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">The same backend-issued lease is deliberately asked to perform <strong className="text-theme-danger">{lease.deniedAction}</strong>. The journey advances only if CAPPO itself returns a denial before consequence.</p>
+                <div className="mt-7"><JsonProof value={{ mount_id: lease.mountId, package_ref: lease.packageRef, challenge_action: lease.deniedAction, mount_anchor_id: lease.anchorId ?? null }} /></div>
+                <ActionButton onClick={challenge} busy={busy} danger>{busy ? "Testing negative boundary…" : "Attempt blocked action"}</ActionButton>
+              </div>
+            )}
+
+            {step === 4 && lease && denial && (
+              <div className="max-w-3xl">
+                <ShieldCheck className="h-10 w-10 text-theme-verified" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">04 · Governed execution</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">The forbidden action failed. Now use the authority once.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO returned <strong className="text-theme-ink">{denial.reason}</strong>. The still-bounded lease now executes the permitted operation <strong className="text-theme-verified">{lease.allowedAction}</strong> through the canonical governed path.</p>
+                <div className="mt-7"><JsonProof value={denial} /></div>
+                <ActionButton onClick={execute} busy={busy}>{busy ? "Executing governed operation…" : "Run permitted operation"}</ActionButton>
+              </div>
+            )}
+
+            {step === 5 && execution && (
+              <div className="max-w-3xl">
+                <FileSearch className="h-10 w-10 text-theme-accent" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">05 · Inspect evidence</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Execution exists. That still is not proof.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO returned execution ID <strong className="text-theme-ink">{execution.executionId}</strong>. Activation now retrieves the persisted evidence for that exact execution and requires the backend verifier to accept it.</p>
+                <div className="mt-7"><JsonProof value={{ execution_id: execution.executionId, run_id: execution.runId ?? null, operation: execution.operation, capability_lease: execution.response.capability_lease ?? null }} /></div>
+                <ActionButton onClick={inspectEvidence} busy={busy}>{busy ? "Verifying persisted evidence…" : "Inspect persisted evidence"}</ActionButton>
+              </div>
+            )}
+
+            {step === 6 && evidence && denial && (
+              <div className="max-w-4xl">
+                <CheckCircle2 className="h-11 w-11 text-theme-verified" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">Proof complete</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">The browser observed the whole boundary.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">A backend-issued lease, a real denial, a governed execution and persisted evidence are now tied to this journey. Completion is based on those proof objects—not a decorative success state.</p>
+                <div className="mt-8 grid gap-4 lg:grid-cols-2">
+                  <div><div className="mb-2 text-[9px] font-semibold uppercase tracking-[.2em] text-theme-inkDim">Denied boundary</div><JsonProof value={denial} /></div>
+                  <div><div className="mb-2 text-[9px] font-semibold uppercase tracking-[.2em] text-theme-inkDim">Execution evidence</div><JsonProof value={{ execution_id: evidence.execution_id, proof_state: evidence.proof_state, verification_reasons: evidence.verification_reasons, pgl: evidence.pgl, eee: evidence.eee }} /></div>
                 </div>
-                <h2 className="text-2xl font-bold">The forbidden action was denied.</h2>
-                <p className="mt-3 leading-7 opacity-70">
-                  CAPPO returned <strong>{denial.reason}</strong>. Now the still-bounded lease is
-                  used once through the canonical governed execution path for
-                  <strong> {lease.allowedAction}</strong>.
-                </p>
-                <JsonProof value={denial} />
-                <button
-                  type="button"
-                  onClick={execute}
-                  disabled={busy}
-                  className="mt-7 flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  {busy ? "Executing..." : "Run permitted operation"}
-                  <Zap className="h-4 w-4" />
-                </button>
+                <button type="button" onClick={() => router.push("/os")} className="group mt-8 inline-flex min-h-13 items-center gap-4 rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg">Enter Capability OS <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
               </div>
-            ) : null}
-
-            {step === 5 && execution ? (
-              <div>
-                <FileSearch className="mb-5 h-10 w-10 text-[var(--theme-accent)]" />
-                <h2 className="text-2xl font-bold">Execution exists. Verify its evidence.</h2>
-                <p className="mt-3 leading-7 opacity-70">
-                  CAPPO returned execution ID <strong>{execution.executionId}</strong>. Activation
-                  still does not call that proof. The next step retrieves the persisted evidence
-                  for this exact execution and requires the backend verifier to accept it.
-                </p>
-                <JsonProof value={{
-                  execution_id: execution.executionId,
-                  run_id: execution.runId ?? null,
-                  operation: execution.operation,
-                  capability_lease: execution.response.capability_lease ?? null,
-                }} />
-                <button
-                  type="button"
-                  onClick={inspectEvidence}
-                  disabled={busy}
-                  className="mt-7 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  {busy ? "Verifying evidence..." : "Inspect persisted evidence"}
-                </button>
-              </div>
-            ) : null}
-
-            {step === 6 && evidence && denial ? (
-              <div>
-                <CheckCircle2 className="mb-5 h-11 w-11 text-emerald-500" />
-                <h2 className="text-3xl font-bold">Activation proof complete.</h2>
-                <p className="mt-3 leading-7 opacity-70">
-                  This browser observed a backend-issued bounded lease, an anchored denial, a
-                  governed execution, and verified persisted evidence. No completion cookie is
-                  written; the proof objects below are the basis for the claim.
-                </p>
-                <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                  <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Denied boundary</div>
-                    <JsonProof value={denial} />
-                  </div>
-                  <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider opacity-50">Execution evidence</div>
-                    <JsonProof value={{
-                      execution_id: evidence.execution_id,
-                      proof_state: evidence.proof_state,
-                      verification_reasons: evidence.verification_reasons,
-                      pgl: evidence.pgl,
-                      eee: evidence.eee,
-                    }} />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => router.push("/os")}
-                  className="mt-7 flex items-center gap-2 rounded-lg bg-[var(--theme-accent)] px-5 py-3 font-medium text-white"
-                >
-                  Enter Capability OS
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
+            )}
           </div>
         </section>
       </div>
