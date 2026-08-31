@@ -42,14 +42,16 @@ if (-not (Test-Path (Join-Path $Repo ".next\BUILD_ID"))) {
 }
 
 Write-Host "Starting Veklom Next.js on port $Port from $Repo"
-$process = Start-Process \
-    -FilePath "npx.cmd" \
-    -ArgumentList @("next", "start", "-H", "0.0.0.0", "-p", "$Port") \
-    -WorkingDirectory $Repo \
-    -WindowStyle Hidden \
-    -RedirectStandardOutput $StdoutLog \
-    -RedirectStandardError $StderrLog \
-    -PassThru
+$startArgs = @{
+    FilePath = "npx.cmd"
+    ArgumentList = @("next", "start", "-H", "0.0.0.0", "-p", "$Port")
+    WorkingDirectory = $Repo
+    WindowStyle = "Hidden"
+    RedirectStandardOutput = $StdoutLog
+    RedirectStandardError = $StderrLog
+    PassThru = $true
+}
+$process = Start-Process @startArgs
 
 $process.Id | Set-Content -Path $PidFile -Encoding ascii
 Write-Host "Started managed Veklom frontend PID $($process.Id)."
