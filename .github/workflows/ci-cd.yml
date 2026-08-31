@@ -43,7 +43,9 @@ jobs:
         if: success()
         run: echo "Build passed for ${{ github.sha }}"
 
-# Deployment is intentionally not performed here. The canonical public topology is
-# owned-hardware based; no stale Hetzner/Coolify SSH deployment is allowed to become
-# authoritative merely because a frontend PR reaches main. Deployment automation may
-# return only after the owned-hardware transport/runner is explicitly verified.
+# Public frontend availability and governed runtime sovereignty are separate concerns.
+# The linked Vercel project publishes the always-on Next.js frontend from GitHub and
+# provides the stable public fallback/origin. This workflow still performs no SSH
+# deployment and grants no runtime authority. Owned-hardware services remain the
+# governed execution substrate and should be exposed on runtime/API transport routes,
+# not used as the sole availability dependency for the public homepage.
