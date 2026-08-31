@@ -20,7 +20,7 @@ type Jurisdiction = {
   note: string;
 };
 
-type PrivacyChoices = {
+export type PrivacyChoices = {
   version: string;
   analytics: boolean;
   marketing: false;
@@ -33,7 +33,7 @@ const VERSION = "2026-08-31.1";
 export const PRIVACY_STORAGE_KEY = "veklom_privacy_choices";
 export const PRIVACY_EVENT = "veklom:privacy-changed";
 
-function readChoices(): PrivacyChoices | null {
+export function readPrivacyChoices(): PrivacyChoices | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(PRIVACY_STORAGE_KEY);
@@ -90,7 +90,7 @@ export default function PrivacyRuntime({ gaId }: { gaId: string }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const saved = readChoices();
+    const saved = readPrivacyChoices();
     setChoices(saved);
 
     let cancelled = false;
@@ -103,8 +103,6 @@ export default function PrivacyRuntime({ gaId }: { gaId: string }) {
         if (cancelled) return;
         setJurisdiction(profile);
 
-        // A qualifying browser privacy signal always wins over a previously
-        // stored optional-analytics grant on this device/session.
         if (profile.globalPrivacyControl) {
           const denied: PrivacyChoices = {
             version: VERSION,
@@ -143,7 +141,7 @@ export default function PrivacyRuntime({ gaId }: { gaId: string }) {
 
     const handleChange = (event: Event) => {
       const detail = (event as CustomEvent<PrivacyChoices>).detail;
-      setChoices(detail || readChoices());
+      setChoices(detail || readPrivacyChoices());
     };
     window.addEventListener(PRIVACY_EVENT, handleChange);
 
