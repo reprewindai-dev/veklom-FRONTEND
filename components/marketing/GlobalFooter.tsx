@@ -1,61 +1,96 @@
 "use client";
 
-import Link from"next/link";
-import React from"react";
+import Link from "next/link";
+import React from "react";
 
 interface GlobalFooterProps {
- isMachine?: boolean;
+  isMachine?: boolean;
 }
 
+const groups = [
+  {
+    title: "Capability OS",
+    links: [
+      ["/byos", "BYOS Runtime"],
+      ["/lockerphycer", "LockerPhycer"],
+      ["/cappo", "CAPPO"],
+      ["/capi", "cAPI"],
+      ["/vlink", "VLink"],
+      ["/guardian", "Guardian"],
+    ],
+  },
+  {
+    title: "Evidence & Network",
+    links: [
+      ["/pgl", "PGL / Gnomledger"],
+      ["/eee", "EEE"],
+      ["/vnp", "VNP"],
+      ["/vcgb", "VCGB"],
+      ["/proof", "Live Proof"],
+      ["/conformance", "Conformance"],
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      ["/docs", "Documentation"],
+      ["/api", "API Directory"],
+      ["/architecture", "Architecture"],
+      ["/security", "Security"],
+      ["/status", "System Status"],
+      ["/support", "Support"],
+    ],
+  },
+  {
+    title: "Legal & Trust",
+    links: [
+      ["/privacy", "Privacy"],
+      ["/terms", "Terms"],
+      ["/acceptable-use", "Acceptable Use"],
+      ["/cookies", "Cookies"],
+      ["/dpa", "Data Processing Addendum"],
+      ["/subprocessors", "Subprocessors"],
+    ],
+  },
+] as const;
+
 export function GlobalFooter({ isMachine = true }: GlobalFooterProps) {
- return (
- <footer 
- className="mt-24 border-t border-rule data-[machine=true]:border-wire p-12 lg:px-24 text-sm transition-colors duration-500 text-cos-text/60 data-[machine=true]:text-cos-text/50 font-mono relative z-20" 
- data-machine={isMachine}
- >
- <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16 max-w-6xl mx-auto">
- <div className="col-span-2 md:col-span-1">
- <Link href="/">
- <img src="/veklom-wordmark.svg" alt="Veklom Wordmark" className="h-6 w-auto mb-6 opacity-70" />
- </Link>
- <div className="text-xs mb-1 italic">&quot;Anything is possible, if you&apos;re willing to build the wire first.&quot;</div>
- </div>
- 
- <div className="flex flex-col gap-3">
- <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Platform</h4>
- <Link href="/vnp" className="hover:text-cos-accent transition-colors">Veklom Nexus Protocol (VNP)</Link>
- <Link href="/eee" className="hover:text-cos-accent transition-colors">Enterprise Exchange (EEE)</Link>
- <Link href="/vcgb" className="hover:text-cos-accent transition-colors">Governed Boundaries (VCGB)</Link>
- <Link href="/402-settlement" className="hover:text-cos-accent transition-colors">Settlement (x402)</Link>
- </div>
+  return (
+    <footer
+      className="relative z-20 mt-24 border-t border-rule px-6 py-14 text-sm text-cos-text/60 transition-colors duration-500 data-[machine=true]:border-wire data-[machine=true]:text-cos-text/50 lg:px-12"
+      data-machine={isMachine}
+    >
+      <div className="mx-auto grid max-w-7xl gap-12 xl:grid-cols-[1fr_2fr]">
+        <div>
+          <Link href="/" className="inline-flex">
+            <img src="/veklom-wordmark.svg" alt="Veklom" className="h-6 w-auto opacity-75" />
+          </Link>
+          <p className="mt-6 max-w-sm font-sans text-sm leading-7 text-cos-text/55">
+            Governed machine action infrastructure. Authority before consequence. Evidence after execution. No residual agency after termination.
+          </p>
+        </div>
 
- <div className="flex flex-col gap-3">
- <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Resources</h4>
- <Link href="/docs" className="hover:text-cos-accent transition-colors">Documentation</Link>
- <Link href="/python-probe-sdk" className="hover:text-cos-accent transition-colors">Python Probe SDK</Link>
- <Link href="/fast-api-integration" className="hover:text-cos-accent transition-colors">Fast API Integration</Link>
- <Link href="/github-repository" className="hover:text-cos-accent transition-colors">GitHub Repository</Link>
- <Link href="/directory" className="hover:text-cos-accent transition-colors">API Directory</Link>
- <Link href="/node-operator-guide" className="hover:text-cos-accent transition-colors">Node Operator Guide</Link>
- </div>
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {groups.map((group) => (
+            <div key={group.title} className="flex flex-col gap-3">
+              <h4 className="mb-2 text-[10px] font-bold uppercase tracking-[.2em] text-cos-text/40">{group.title}</h4>
+              {group.links.map(([href, label]) => (
+                <Link key={href} href={href} className="transition-colors hover:text-cos-accent">{label}</Link>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
- <div className="flex flex-col gap-3">
- <h4 className="font-bold text-cos-text uppercase tracking-wider text-xs mb-2">Trust & Ops</h4>
- <Link href="/status" className="hover:text-cos-accent transition-colors">Status & Uptime</Link>
- <Link href="/protocol-mythology-v1" className="hover:text-cos-accent transition-colors">Protocol Mythology V1</Link>
- <Link href="/governance-charter" className="hover:text-cos-accent transition-colors">Governance Charter</Link>
- <Link href="/slashing-mechanics" className="hover:text-cos-accent transition-colors">Slashing Mechanics</Link>
- <Link href="/global-topology-map" className="hover:text-cos-accent transition-colors">Global Topology Map</Link>
- </div>
- </div>
- 
- <div className="border-t border-rule data-[machine=true]:border-wire pt-8 flex flex-col md:flex-row justify-between items-center gap-4 max-w-6xl mx-auto text-xs">
- <div>&copy; {new Date().getFullYear()} VEKLOM — the era is early.</div>
- <div className="flex gap-6">
- <Link href="#" className="hover:text-cos-text">Privacy</Link>
- <Link href="#" className="hover:text-cos-text">Terms</Link>
- </div>
- </div>
- </footer>
- );
+      <div className="mx-auto mt-14 flex max-w-7xl flex-col gap-4 border-t border-rule pt-7 text-xs data-[machine=true]:border-wire md:flex-row md:items-center md:justify-between">
+        <div>&copy; {new Date().getFullYear()} VEKLOM · governed machine infrastructure</div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/.well-known/security.txt" className="hover:text-cos-text">security.txt</Link>
+          <Link href="/privacy" className="hover:text-cos-text">Privacy</Link>
+          <Link href="/terms" className="hover:text-cos-text">Terms</Link>
+          <Link href="/support" className="hover:text-cos-text">Support</Link>
+        </div>
+      </div>
+    </footer>
+  );
 }
