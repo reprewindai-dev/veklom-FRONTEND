@@ -1,4 +1,4 @@
-# ─── Stage 1: deps ────────────────────────────────────────────────────────────
+# ─── Stage 1: dependencies ────────────────────────────────────────────────────
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -13,7 +13,20 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Browser API calls remain same-origin. These server-side URLs are compiled into
+# Next rewrites and used by server routes such as the live proof fabric.
+ARG BACKEND_URL="http://host.docker.internal:8088"
+ARG LOCKERPHYCER_URL="http://host.docker.internal:8092"
+ARG CAPI_URL="http://host.docker.internal:3003"
+ARG CAPPO_URL="https://cappo.veklom.com"
+ARG PGL_URL="https://pgl.veklom.com"
 ARG NEXT_PUBLIC_API_BASE_URL=""
+
+ENV BACKEND_URL=$BACKEND_URL
+ENV LOCKERPHYCER_URL=$LOCKERPHYCER_URL
+ENV CAPI_URL=$CAPI_URL
+ENV CAPPO_URL=$CAPPO_URL
+ENV PGL_URL=$PGL_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=--max-old-space-size=4096
@@ -27,6 +40,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
 
 LABEL org.opencontainers.image.source="veklom-control-plane"
 
