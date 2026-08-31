@@ -6,6 +6,7 @@ import Link from "next/link";
 type Service = {
   id: string;
   label: string;
+  role: string;
   endpoint: string;
   reachable: boolean;
   healthy: boolean;
@@ -92,14 +93,14 @@ export function LiveProofFabric({ compact = false }: { compact?: boolean }) {
             <div className="mb-7 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
               <div>
                 <div className={`text-4xl font-semibold tracking-[-0.05em] ${stateTone(data.summary.state)}`}>{data.summary.state}</div>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-theme-inkDim">{data.summary.healthy} of {data.summary.total} declared public service probes returned healthy at this observation. No canned scenario state is inserted into this result.</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-inkDim">{data.summary.healthy} of {data.summary.total} core runtime probes returned healthy at this observation. BYOS and LockerPhycer are treated as primary Veklom planes, not supporting footnotes.</p>
               </div>
               <div className="rounded-full border border-theme-border bg-theme-bg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-inkDim">Source · {data.source.replaceAll("_", " ")}</div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               {data.services.map((service) => (
-                <div key={service.id} className="group relative min-h-44 overflow-hidden rounded-2xl border border-theme-border bg-theme-bg p-5 transition duration-300 hover:-translate-y-0.5 hover:border-theme-ink/15 hover:shadow-lg">
+                <div key={service.id} className="group relative min-h-56 overflow-hidden rounded-2xl border border-theme-border bg-theme-bg p-5 transition duration-300 hover:-translate-y-0.5 hover:border-theme-ink/15 hover:shadow-lg">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">{service.id}</div>
@@ -107,6 +108,7 @@ export function LiveProofFabric({ compact = false }: { compact?: boolean }) {
                     </div>
                     <span className={`mt-1 h-2.5 w-2.5 rounded-full ${service.healthy ? "bg-theme-verified shadow-[0_0_0_6px_rgb(var(--theme-verified)/0.08)]" : "bg-theme-danger shadow-[0_0_0_6px_rgb(var(--theme-danger)/0.08)]"}`} />
                   </div>
+                  <p className="mt-4 text-xs leading-5 text-theme-inkDim">{service.role}</p>
                   <div className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-4">
                     <div>
                       <div className="text-[10px] uppercase tracking-[0.18em] text-theme-inkDim">HTTP</div>
