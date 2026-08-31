@@ -8,12 +8,19 @@ import { CapabilityCard } from "@/components/cos/CapabilityCard";
 import { CapabilitySearch } from "@/components/cos/CapabilitySearch";
 import { ProofBadge } from "@/components/cos/ProofBadge";
 import { BeaconDiscovery } from "@/components/cos/BeaconDiscovery";
+import { ConsequenceRing } from "@/components/cos/ConsequenceRing";
+import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
 
 export default function CapabilityHome() {
   const [query, setQuery] = useState("");
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [pulse, setPulse] = useState<any>(null);
   const [pulseError, setPulseError] = useState<string | null>(null);
+  const [holdingAuthority, setHoldingAuthority] = useState(0);
+
+  useEffect(() => {
+    setHoldingAuthority(readSessionCapabilityLease() ? 1 : 0);
+  }, []);
 
   useEffect(() => {
     try {
@@ -68,15 +75,6 @@ export default function CapabilityHome() {
   const recent = recentIds.map((id) => capabilities.find((capability) => capability.id === id)).filter(Boolean) as Capability[];
   const mounted = filtered.filter((capability) => capability.mountState === "Mounted");
 
-  const trustSpine = [
-    { name: "Identity", sub1: "Requester and workspace identity", sub2: "Authentication is not consequence authority" },
-    { name: "Connection (cAPI)", sub1: "Capability discovery and negotiation", sub2: "Discoverable does not mean invocable" },
-    { name: "Authority (CAPPO)", sub1: "Operation-specific consequence authority", sub2: "CapabilityLease, scope, target state and expiry" },
-    { name: "Governed Compute", sub1: "Bounded execution environment", sub2: "Minimum sufficient compute and trust" },
-    { name: "Evidence (EEE / PGL)", sub1: "Execution receipt and durable provenance", sub2: "Past evidence never grants permission" },
-    { name: "Measure (VNP)", sub1: "Performance, reliability and route evidence", sub2: "Measurement informs; it never authorizes" },
-  ];
-
   return (
     <section className="mx-auto max-w-7xl px-5 py-8 lg:px-10 lg:py-12">
       <motion.div
@@ -94,10 +92,13 @@ export default function CapabilityHome() {
             Discover capabilities, compose work, request bounded authority, execute, and preserve evidence without confusing presence with proof.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-cos-steel">
-          <ProofBadge status="Needs proof" /> <span>Catalog metadata</span>
-        </div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cos-steel">
+          {capabilities.length} in catalog · {capabilities.filter((capability) => capability.mountState === "Mounted").length} mounted ·{" "}
+          <span className={holdingAuthority ? "text-cos-warn" : undefined}>{holdingAuthority} holding authority</span>
+        </p>
       </motion.div>
+
+      <ConsequenceRing subject="What this workspace can currently prove" />
 
       <CapabilitySearch value={query} onChange={setQuery} />
       <BeaconDiscovery />
@@ -129,40 +130,6 @@ export default function CapabilityHome() {
           <div className="flex items-center gap-2"><ProofBadge status="Needs proof" /><span className="text-sm text-cos-muted">Loading platform pulse.</span></div>
         </div>
       )}
-
-      <div className="mt-10 rounded-2xl border border-cos-border bg-cos-surface2/55 p-6 shadow-cos-card lg:p-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-cos-accent">One machine action</div>
-            <h2 className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Veklom consequence spine</h2>
-          </div>
-          <span className="font-mono text-[10px] text-cos-steel">IDENTITY → MEASURE</span>
-        </div>
-        <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-center lg:gap-2">
-          {trustSpine.map((stage, index) => (
-            <div key={stage.name} className="flex flex-1 flex-col items-center lg:flex-row">
-              <div className="relative flex h-full w-full flex-col gap-3 rounded-lg border border-cos-border bg-cos-bg/50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cos-unknown" />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-steel">{index + 1}. {stage.name}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-cos-muted">{stage.sub1}</span>
-                  <span className="text-xs text-cos-muted">{stage.sub2}</span>
-                </div>
-                <div className="mt-2"><ProofBadge status="Needs proof" /></div>
-              </div>
-              {index < trustSpine.length - 1 && (
-                <div className="mx-2 hidden w-6 shrink-0 items-center justify-center lg:flex">
-                  <ArrowUpRight className="rotate-45 text-cos-accent/50" size={16} />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
       <div className="mt-12">
         <div className="mb-4 flex items-center justify-between">
