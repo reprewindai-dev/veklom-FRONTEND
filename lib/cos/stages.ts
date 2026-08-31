@@ -47,6 +47,7 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/api/v1/computeless/telemetry", classification: "live", response: "compute telemetry" },
       { method: "GET", path: "/api/v1/computeless/evidence", classification: "live", response: "compute evidence payload" },
+      { method: "POST", path: "/api/v1/computeless/execute", classification: "live", response: "execute action" },
     ],
   },
   {
@@ -56,10 +57,10 @@ export const stages: StageDefinition[] = [
     purpose: "Inspect the physical hosts, networking topologies, and core runtimes backing the operating system.",
     owner: "Governed Compute / Core Infrastructure",
     endpoints: [
-      { method: "GET", path: "/api/v1/infrastructure/host", classification: "absent", response: "host metrics" },
-      { method: "GET", path: "/api/v1/infrastructure/runtime", classification: "absent", response: "runtime metrics" },
-      { method: "GET", path: "/api/v1/infrastructure/topology", classification: "absent", response: "network topology" },
-      { method: "GET", path: "/api/v1/infrastructure/connectivity", classification: "absent", response: "connectivity status" },
+      { method: "GET", path: "/api/v1/infrastructure/host", classification: "live", response: "host metrics" },
+      { method: "GET", path: "/api/v1/infrastructure/runtime", classification: "live", response: "runtime metrics" },
+      { method: "GET", path: "/api/v1/infrastructure/topology", classification: "live", response: "network topology" },
+      { method: "GET", path: "/api/v1/infrastructure/connectivity", classification: "live", response: "connectivity status" },
     ],
   },
   {
