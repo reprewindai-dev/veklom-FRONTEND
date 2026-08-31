@@ -36,16 +36,16 @@ export default function ComputelessPage() {
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                </svg>
              </div>
-             <h3 className="text-theme-ink font-semibold mb-2">Initiate Secure Computeless Action</h3>
+             <h3 className="text-theme-ink font-semibold mb-2">Simulate Execution (Demo)</h3>
              <p className="text-theme-inkDim text-sm mb-6 max-w-sm">
-               Trigger a zero-trust governed execution through the cAPI enforcer.
+               Trigger a mock execution to inspect the unsigned LOCAL_RECEIPT response format.
              </p>
              <button
                onClick={handleExecute}
                disabled={executing}
-               className="px-6 py-2 rounded-lg bg-theme-accent text-[#030405] font-bold text-sm tracking-wider uppercase disabled:opacity-50 transition-opacity hover:opacity-90 shadow-[0_0_20px_rgba(103,232,249,0.3)]"
+               className="px-6 py-2 rounded-lg bg-theme-accent text-theme-bg font-bold text-sm tracking-wider uppercase disabled:opacity-50 transition-opacity hover:opacity-90"
              >
-               {executing ? "Executing..." : "Run Computeless Action"}
+               {executing ? "Dispatching..." : "Run Demo Simulation"}
              </button>
              
              {execResult && (
