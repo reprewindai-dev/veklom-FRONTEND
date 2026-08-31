@@ -1,61 +1,63 @@
-﻿"use client";
-import React, { useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+"use client";
+
+import React, { useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { VeklomMark } from "@/components/brand/PremiumPrimitives";
+
+const routes = [
+  ["/machine", "Runtime"],
+  ["/machine/claims.json", "Claims"],
+  ["/machine/conformance.json", "Conformance"],
+  ["/machine/evidence-index.json", "Evidence"],
+  ["/machine/openapi.json", "OpenAPI"],
+  ["/mcp", "MCP"],
+] as const;
 
 export function MachineAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "";
-  
-  // Force machine theme on this shell without touching localStorage
+
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'machine');
+    document.documentElement.setAttribute("data-theme", "machine");
     return () => {
-      // Re-evaluate human theme from localStorage when unmounting
-      const humanTheme = localStorage.getItem('veklom-theme') || 'dark';
-      document.documentElement.setAttribute('data-theme', humanTheme);
+      const humanTheme = localStorage.getItem("veklom-theme") || "dark";
+      document.documentElement.setAttribute("data-theme", humanTheme);
     };
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen font-mono selection:bg-theme-accent/20" data-theme="machine">
-      <header className="border-b border-theme-border bg-theme-bg py-4 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-4"><img src="/logo.jpg" alt="Veklom Machine Logo" className="w-8 h-8 rounded-sm grayscale border border-theme-border/50" /><div><h1 className="text-sm font-bold tracking-widest text-theme-ink uppercase">Veklom / Machine Protocol</h1>
-            <p className="text-theme-inkDim text-[10px] mt-1">v1.0.0 &middot; capability-os-governance-engine</p>
-          </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              <span className="px-2 py-0.5 bg-theme-surface border border-theme-border text-[10px] text-theme-info font-bold uppercase">STATUS: ONLINE</span>
-              <span className="px-2 py-0.5 bg-theme-surface border border-theme-border text-[10px] text-theme-verified font-bold uppercase">P5/C0 VERIFIED</span>
+    <div className="min-h-screen flex-1 bg-theme-bg font-mono text-theme-ink" data-theme="machine">
+      <header className="sticky top-0 z-50 border-b border-theme-border bg-theme-bg/82 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1540px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+          <Link href="/machine" className="group flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-theme-border bg-theme-surface text-theme-ink shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+              <VeklomMark className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[.22em] text-theme-ink">Veklom / machine</div>
+              <div className="mt-1 text-[9px] uppercase tracking-[.18em] text-theme-inkDim">runtime truth surface</div>
             </div>
-            <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-theme-inkDim hover:text-theme-ink transition-colors border border-theme-border bg-theme-surface px-3 py-1.5 rounded-sm shadow-sm">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Back to Human
-            </Link>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <a href="/api/proof/live" className="hidden rounded-full border border-theme-border bg-theme-surface px-3 py-2 text-[9px] font-semibold uppercase tracking-[.16em] text-theme-inkDim transition hover:text-theme-ink sm:inline-flex">raw runtime json ↗</a>
+            <Link href="/" className="inline-flex min-h-10 items-center justify-center rounded-full bg-theme-ink px-4 text-[10px] font-semibold uppercase tracking-[.16em] text-theme-bg transition hover:opacity-90">Human surface →</Link>
           </div>
+        </div>
+
+        <div className="border-t border-theme-border/70">
+          <nav className="mx-auto flex w-full max-w-[1540px] gap-1 overflow-x-auto px-5 py-2 sm:px-8 lg:px-10" aria-label="Machine protocol navigation">
+            {routes.map(([href, label]) => {
+              const active = pathname === href || (href !== "/machine" && pathname.startsWith(href));
+              return (
+                <Link key={href} href={href} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[.18em] transition ${active ? "bg-theme-surface2 text-theme-ink" : "text-theme-inkDim hover:bg-theme-surface hover:text-theme-ink"}`}>{label}</Link>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
-      <div className="border-b border-theme-border bg-theme-surface2 text-[10px] uppercase tracking-widest text-theme-inkDim py-2 overflow-x-auto">
-        <div className="max-w-7xl mx-auto px-6 flex gap-6 whitespace-nowrap">
-          <Link href="/machine" className={`hover:text-theme-ink ${pathname === '/machine' ? 'text-theme-ink font-bold' : ''}`}>MANIFEST</Link>
-          <Link href="/machine/claims.json" className="hover:text-theme-ink">CLAIM_REGISTRY</Link>
-          <Link href="/machine/conformance.json" className="hover:text-theme-ink">CONFORMANCE_MATRIX</Link>
-          <Link href="/machine/evidence-index.json" className="hover:text-theme-ink">EVIDENCE_INDEX</Link>
-          <Link href="/machine/openapi.json" className="hover:text-theme-ink">OPENAPI</Link>
-          <Link href="/mcp" className={`hover:text-theme-ink ${pathname.startsWith('/mcp') ? 'text-theme-ink font-bold' : ''}`}>MCP_TOOLS</Link>
-        </div>
-      </div>
-
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-12 w-full">
-        {children}
-      </main>
+      <main className="mx-auto w-full max-w-[1540px] px-5 py-8 sm:px-8 md:py-12 lg:px-10">{children}</main>
     </div>
   );
 }
-
-
