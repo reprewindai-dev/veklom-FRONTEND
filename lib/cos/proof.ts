@@ -19,16 +19,6 @@ function isRecord(payload: unknown): payload is Record<string, unknown> {
   return typeof payload === "object" && payload !== null && !Array.isArray(payload);
 }
 
-function payloadDeclaresVerifiedProof(payload: Record<string, unknown>): boolean {
-  const evidenceClass = typeof payload.evidence_class === "string" ? payload.evidence_class.toUpperCase() : "";
-  const proofState = typeof payload.proofState === "string" ? payload.proofState.toLowerCase() : "";
-  const truthState = typeof payload.truth_state === "string" ? payload.truth_state.toLowerCase() : "";
-  const signature = payload.signature ?? payload.signature_id ?? payload.evidence_signature;
-  
-  if (evidenceClass === "VERIFIED_EVIDENCE") return true;
-  return (proofState === "verified" || truthState === "verified") && Boolean(signature);
-}
-
 export function classifyPayload(payload: unknown): PayloadClassification {
   if (isRecord(payload) && payload.proofState === "degraded") {
     return {
@@ -55,13 +45,16 @@ export function classifyPayload(payload: unknown): PayloadClassification {
        return { observation: { kind: "local-receipt", status: 200 } };
     }
     
-    if (evidenceClass === "SIGNED_EVIDENCE" || payloadDeclaresVerifiedProof(payload)) {
+    // Self-asserted verification is NEVER trusted. A payload cannot declare itself verified.
+    // An external client-side cryptographic verifier must supply `verified: true` independently.
+    if (evidenceClass === "SIGNED_EVIDENCE" || evidenceClass === "VERIFIED_EVIDENCE") {
+      const signature = payload.signature ?? payload.signature_id ?? payload.evidence_signature;
       return { 
         observation: { 
           kind: "source-of-truth", 
           status: 200, 
-          signed: true,
-          verified: evidenceClass === "VERIFIED_EVIDENCE" 
+          signed: Boolean(signature),
+          verified: false // Must be independently verified by the client, not by payload assertion.
         } 
       };
     }
@@ -74,12 +67,12 @@ export function classifyPayload(payload: unknown): PayloadClassification {
     return {
       observation: metadataOnly
         ? { kind: "reachability-only", status: 200 }
-        : { kind: "reachability-only", status: 200 }, // Degrade arbitrary JSON from "Live" source-of-truth to reachability-only
+        : { kind: "reachability-only", status: 200 },
     };
   }
   
   if (Array.isArray(payload)) {
-    return { observation: { kind: "reachability-only", status: 200 } }; // Downgraded from source-of-truth
+    return { observation: { kind: "reachability-only", status: 200 } };
   }
   
   return { observation: { kind: "reachability-only", status: 200 } };
@@ -96,14 +89,12 @@ export function deriveProofStatus(
     case "not-called":
       return "Needs proof";
     case "reachability-only":
-      return "Live";
     case "static-assertion":
-      return "Live"; // Represents Route Live + Static metadata
     case "measured":
-      return "Live"; // Represents Route Live + Observed values
     case "local-receipt":
-      return "Live"; // Represents Route Live + Local execution record
+      return "Live";
     case "source-of-truth":
-      return observation.verified ? "Verified" : (observation.signed ? "Verified" : "Live");
+      // Signed != Verified. We only return Verified if the client independently confirmed the binding.
+      return observation.verified ? "Verified" : "Live";
   }
 }
