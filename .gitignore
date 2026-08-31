@@ -16,4 +16,7 @@ route_catalog.txt
 # Generated local/render artifacts
 tmp/pdfs/
 
+# Generated local runtime state and Cloudflare credentials.
+.veklom/runtime/
+
 .vercel
