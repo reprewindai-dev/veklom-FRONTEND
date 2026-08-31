@@ -1,49 +1,113 @@
-﻿$ErrorActionPreference = "SilentlyContinue"
-$Repo = "C:\Users\antho\.windsurf\veklom-control-plane"
-$LogFile = Join-Path $Repo "logs\veklom-public-watchdog.log"
+$ErrorActionPreference = "SilentlyContinue"
 
-function Log-Msg($msg) {
+$Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$LogDir = Join-Path $Repo "logs"
+$LogFile = Join-Path $LogDir "veklom-public-watchdog.log"
+$HealthUrl = "http://127.0.0.1:3002/api/health"
+$PublicUrl = "https://veklom.com/api/health"
+$VercelBackupUrl = "https://veklom-control-plane.vercel.app/api/health"
+$TunnelName = "veklom-local-edge"
+$TunnelConfig = Join-Path $env:USERPROFILE ".cloudflared\config.yml"
+
+New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+
+function Log-Msg([string]$Message) {
     $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    "$timestamp - $msg" | Out-File -FilePath $LogFile -Append
-    Write-Host "$timestamp - $msg"
+    "$timestamp - $Message" | Out-File -FilePath $LogFile -Append
+    Write-Host "$timestamp - $Message"
 }
 
-Log-Msg "Starting Veklom public watchdog..."
+function Test-Http200([string]$Url) {
+    try {
+        $res = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 10
+        return $res.StatusCode -eq 200
+    } catch {
+        return $false
+    }
+}
+
+function Find-Cloudflared {
+    $cmd = Get-Command cloudflared.exe -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+
+    $candidates = @(
+        "C:\Program Files (x86)\cloudflared\cloudflared.exe",
+        "C:\Program Files\cloudflared\cloudflared.exe"
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) { return $candidate }
+    }
+    return $null
+}
+
+function Restart-LocalFrontend {
+    Log-Msg "Local frontend health probe failed. Restarting only the managed port-3002 frontend."
+    $startScript = Join-Path $PSScriptRoot "start-veklom-next.ps1"
+    Start-Process -FilePath "powershell.exe" -ArgumentList @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", $startScript
+    ) -WindowStyle Hidden | Out-Null
+
+    for ($attempt = 1; $attempt -le 6; $attempt++) {
+        Start-Sleep -Seconds 5
+        if (Test-Http200 $HealthUrl) {
+            Log-Msg "Local frontend recovered on attempt $attempt."
+            return $true
+        }
+    }
+
+    Log-Msg "Local frontend did not recover after restart attempts. Check logs\veklom-next.stderr.log."
+    return $false
+}
+
+function Restart-Cloudflared {
+    $cloudflared = Find-Cloudflared
+    if (-not $cloudflared) {
+        Log-Msg "cloudflared executable not found; cannot restart tunnel."
+        return $false
+    }
+    if (-not (Test-Path $TunnelConfig)) {
+        Log-Msg "Cloudflare tunnel config not found at $TunnelConfig."
+        return $false
+    }
+
+    Log-Msg "Local frontend is healthy but public domain is not. Restarting only cloudflared."
+    Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Start-Process -FilePath $cloudflared -ArgumentList @(
+        "tunnel",
+        "--config", $TunnelConfig,
+        "run", $TunnelName
+    ) -WindowStyle Hidden | Out-Null
+
+    for ($attempt = 1; $attempt -le 6; $attempt++) {
+        Start-Sleep -Seconds 5
+        if (Test-Http200 $PublicUrl) {
+            Log-Msg "Cloudflare public route recovered on attempt $attempt."
+            return $true
+        }
+    }
+
+    Log-Msg "Public route did not recover after cloudflared restart."
+    return $false
+}
+
+Log-Msg "Starting canonical Veklom public watchdog from $Repo"
 
 while ($true) {
-    Start-Sleep -Seconds 60
-    
-    # 1. Check local Next.js origin
-    $localOk = $false
-    try {
-        $res = Invoke-WebRequest -Uri "http://localhost:3002/" -UseBasicParsing -TimeoutSec 10
-        if ($res.StatusCode -eq 200) { $localOk = $true }
-    } catch {
-        # Failed
-    }
-
-    # 2. Check public Cloudflare endpoint
-    $publicOk = $false
-    try {
-        $res = Invoke-WebRequest -Uri "https://veklom.com/" -UseBasicParsing -TimeoutSec 10
-        if ($res.StatusCode -eq 200) { $publicOk = $true }
-    } catch {
-        # Failed
-    }
+    $localOk = Test-Http200 $HealthUrl
+    $publicOk = Test-Http200 $PublicUrl
+    $vercelOk = Test-Http200 $VercelBackupUrl
 
     if (-not $localOk) {
-        Log-Msg "Local origin localhost:3002 is DOWN. Restarting Next.js production server..."
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Hidden -File $Repo\scripts\start-veklom-next.ps1"
-        Log-Msg "Restarted Next.js. Status -> Local: DOWN, Public: $publicOk"
-        Start-Sleep -Seconds 10
+        $localOk = Restart-LocalFrontend
     }
-    elseif ($localOk -and -not $publicOk) {
-        Log-Msg "Public origin veklom.com is DOWN (502). Restarting cloudflared..."
-        Stop-Process -Name "cloudflared" -Force
-        Start-Sleep -Seconds 2
-        Start-Process -FilePath "C:\Program Files (x86)\cloudflared\cloudflared.exe" -ArgumentList "tunnel --config C:\Users\antho\.cloudflared\config.yml run veklom-local-edge" -WindowStyle Hidden
-        Log-Msg "Restarted cloudflared. Status -> Local: UP, Public: DOWN"
-    } else {
-        Log-Msg "Health check passed. Local: UP, Public: UP"
+
+    if ($localOk -and -not $publicOk) {
+        [void](Restart-Cloudflared)
     }
+
+    Log-Msg "Health -> local=$localOk public=$publicOk vercel_backup=$vercelOk"
+    Start-Sleep -Seconds 60
 }
