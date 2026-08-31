@@ -1,63 +1,96 @@
-﻿import React from 'react';
+import React from "react";
+import Link from "next/link";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
-import { ProofChip, Section, EvidenceCard } from "@/components/ui/SharedUI";
+import { AmbientField, PremiumPageIntro, StageLabel } from "@/components/brand/PremiumPrimitives";
+import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
 
 export const metadata = {
-  title: 'Canonical Evidence | Veklom',
+  title: "Live Proof | Veklom",
+  description: "Observed Veklom runtime state and consequence-proof boundaries.",
 };
+
+const proofLevels = [
+  {
+    n: "01",
+    title: "Reachability",
+    body: "A declared service answers from the runtime endpoint that is actually configured. No simulated availability state is substituted.",
+  },
+  {
+    n: "02",
+    title: "Authority",
+    body: "An authenticated execution must carry authority that is valid for the requested consequence. Public health does not prove authorization.",
+  },
+  {
+    n: "03",
+    title: "Consequence",
+    body: "A real action is observed or reconciled. Unknown outcomes remain unknown instead of being promoted to success.",
+  },
+  {
+    n: "04",
+    title: "Evidence",
+    body: "The resulting evidence binds the execution back to the authority and observed result. That proof belongs to the governed execution itself.",
+  },
+];
 
 export default function ProofPage() {
   return (
     <HumanAppShell>
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-16 w-full">
-        <div className="mb-12">
-          <div className="flex items-center flex-wrap gap-3 mb-4">
-            <ProofChip label="P5/C0 CLOSED" state="verified" />
-            <ProofChip label="veklom-p5-closure-v1" state="unknown" />
-          </div>
-          <h1 className="text-4xl font-sans font-bold mb-4">Canonical Evidence Surface</h1>
-          <p className="text-theme-inkDim text-lg max-w-2xl leading-relaxed">
-            This is the first truthful vertical slice of the Veklom independent authority boundary.
-            Do not trust marketing copy. Download the raw cryptographic evidence bundle below and verify it locally.
-          </p>
-        </div>
+      <main className="relative overflow-hidden">
+        <AmbientField className="opacity-60" />
 
-        <Section title="Evidence Bundle (R2 Mirror)">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <EvidenceCard file="receipt.cose" desc="The signed execution consequence" status="VERIFIED" />
-            <EvidenceCard file="public-key.pem" desc="Ed25519 public key of the consequence kernel" status="VERIFIED" />
-            <EvidenceCard file="proof.json" desc="Merkle inclusion proof" status="VERIFIED" />
-            <EvidenceCard file="manifest.yaml" desc="Original declared intent" status="VERIFIED" />
-            <EvidenceCard file="cAPI_auth.jwt" desc="The verified budget/tenant claim" status="VERIFIED" />
-          </div>
-        </Section>
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 pb-14 pt-20 sm:px-8 md:pb-20 md:pt-28 lg:px-10">
+          <PremiumPageIntro
+            eyebrow="Proof, not theater"
+            title="See what is actually alive."
+            body="Veklom's public proof surface no longer runs a canned success harness. It observes real service endpoints, exposes degradation when it exists, and keeps consequence-level claims behind real governed execution."
+          />
+        </section>
 
-        <section className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-lg font-bold mb-4 font-mono text-theme-accent uppercase tracking-widest">Limitations & Caveats</h2>
-            <ul className="space-y-3">
-              <li className="flex gap-3 text-theme-inkDim text-sm">
-                <span className="text-theme-warn font-bold">LIVENESS NOT CLAIMED:</span> 
-                <span>The infrastructure (Next.js Edge, R2, Vector DB) was simulated as reachable. The real Edge network requires physical provisioning.</span>
-              </li>
-              <li className="flex gap-3 text-theme-inkDim text-sm">
-                <span className="text-theme-warn font-bold">G1 DEFERRED:</span>
-                <span>Genome Ledger persistence was deferred in this test boundary. The inclusion proof simulates the G1 ledger root state.</span>
-              </li>
-            </ul>
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 pb-20 sm:px-8 md:pb-28 lg:px-10">
+          <LiveProofFabric />
+        </section>
+
+        <section className="border-y border-theme-border bg-theme-surface/68">
+          <div className="mx-auto grid w-full max-w-[1480px] gap-12 px-5 py-20 sm:px-8 md:py-28 lg:grid-cols-[.72fr_1.28fr] lg:px-10">
+            <div>
+              <StageLabel>What a proof means</StageLabel>
+              <h2 className="mt-6 max-w-lg text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Green health is not the same thing as governed consequence.</h2>
+              <p className="mt-6 max-w-md text-sm leading-7 text-theme-inkDim">The public surface intentionally separates transport liveness from authority and evidence. That keeps the website from claiming more than the runtime has actually shown.</p>
+            </div>
+
+            <div className="grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border sm:grid-cols-2">
+              {proofLevels.map((item) => (
+                <article key={item.n} className="min-h-[280px] bg-theme-bg p-7 md:p-8">
+                  <div className="text-[10px] font-semibold tracking-[.22em] text-theme-inkDim">{item.n}</div>
+                  <h3 className="mt-14 text-2xl font-semibold tracking-[-.035em] text-theme-ink">{item.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-theme-inkDim">{item.body}</p>
+                </article>
+              ))}
+            </div>
           </div>
-          <div className="bg-theme-surface border border-theme-border p-6 rounded shadow-sm">
-            <h3 className="font-mono text-xs text-theme-accent font-bold mb-4 tracking-widest uppercase border-b border-theme-border pb-2">Raw Verify Command</h3>
-            <pre className="text-[10px] font-mono text-theme-inkDim whitespace-pre-wrap leading-relaxed">
-              <code>{`$ curl -s https://veklom.com/api/evidence/receipt.cose > receipt.cose
-$ curl -s https://veklom.com/api/evidence/public-key.pem > pub.pem
-$ openssl dgst -verify pub.pem -signature receipt.cose
-Verified OK`}</code>
-            </pre>
+        </section>
+
+        <section className="mx-auto w-full max-w-[1480px] px-5 py-24 sm:px-8 md:py-32 lg:px-10">
+          <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
+            <div className="rounded-[30px] border border-theme-border bg-[#05070b] p-7 text-white sm:p-9 md:p-12">
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">Consequence-level proof</div>
+              <h2 className="mt-5 max-w-3xl text-3xl font-semibold leading-[1.02] tracking-[-.045em] md:text-5xl">Run the real path inside Capability OS.</h2>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-white/58">A real proof run requires authenticated authority, an actual requested capability, an execution identity, and the resulting evidence. That is not something the public landing page should forge for visual effect.</p>
+              <Link href="/login?returnTo=/os" className="mt-9 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-black">Enter Capability OS →</Link>
+            </div>
+
+            <div className="rounded-[30px] border border-theme-border bg-theme-surface p-7 sm:p-9 md:p-12">
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">Machine inspection</div>
+              <h2 className="mt-5 text-3xl font-semibold tracking-[-.045em] text-theme-ink">Prefer raw surfaces?</h2>
+              <p className="mt-5 text-sm leading-7 text-theme-inkDim">Use the machine interface for protocol discovery, route surfaces, service observation, and machine-readable endpoints rather than a marketing abstraction.</p>
+              <div className="mt-9 grid gap-2">
+                <Link href="/machine" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Open machine surface <span>↗</span></Link>
+                <Link href="/conformance" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Read conformance <span>↗</span></Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>
     </HumanAppShell>
   );
 }
-
