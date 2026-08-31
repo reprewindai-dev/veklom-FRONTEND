@@ -5,9 +5,11 @@ $LogDir = Join-Path $Repo "logs"
 $LogFile = Join-Path $LogDir "veklom-public-watchdog.log"
 $HealthUrl = "http://127.0.0.1:3002/api/health"
 $PublicUrl = "https://veklom.com/api/health"
-$VercelBackupUrl = "https://veklom-control-plane.vercel.app/api/health"
 $TunnelName = "veklom-local-edge"
-$TunnelConfig = Join-Path $env:USERPROFILE ".cloudflared\config.yml"
+$TunnelConfigCandidates = @(
+    "C:\ProgramData\Veklom\cloudflared\config.yml",
+    (Join-Path $env:USERPROFILE ".cloudflared\config.yml")
+)
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
@@ -40,6 +42,13 @@ function Find-Cloudflared {
     return $null
 }
 
+function Find-TunnelConfig {
+    foreach ($candidate in $TunnelConfigCandidates) {
+        if (Test-Path $candidate) { return $candidate }
+    }
+    return $null
+}
+
 function Restart-LocalFrontend {
     Log-Msg "Local frontend health probe failed. Restarting only the managed port-3002 frontend."
     $startScript = Join-Path $PSScriptRoot "start-veklom-next.ps1"
@@ -67,8 +76,10 @@ function Restart-Cloudflared {
         Log-Msg "cloudflared executable not found; cannot restart tunnel."
         return $false
     }
-    if (-not (Test-Path $TunnelConfig)) {
-        Log-Msg "Cloudflare tunnel config not found at $TunnelConfig."
+
+    $tunnelConfig = Find-TunnelConfig
+    if (-not $tunnelConfig) {
+        Log-Msg "Cloudflare tunnel config not found in canonical locations."
         return $false
     }
 
@@ -77,7 +88,7 @@ function Restart-Cloudflared {
     Start-Sleep -Seconds 2
     Start-Process -FilePath $cloudflared -ArgumentList @(
         "tunnel",
-        "--config", $TunnelConfig,
+        "--config", $tunnelConfig,
         "run", $TunnelName
     ) -WindowStyle Hidden | Out-Null
 
@@ -93,21 +104,20 @@ function Restart-Cloudflared {
     return $false
 }
 
-Log-Msg "Starting canonical Veklom public watchdog from $Repo"
+Log-Msg "Starting sovereign Veklom public watchdog from $Repo"
 
 while ($true) {
     $localOk = Test-Http200 $HealthUrl
     $publicOk = Test-Http200 $PublicUrl
-    $vercelOk = Test-Http200 $VercelBackupUrl
 
     if (-not $localOk) {
         $localOk = Restart-LocalFrontend
     }
 
     if ($localOk -and -not $publicOk) {
-        [void](Restart-Cloudflared)
+        $publicOk = Restart-Cloudflared
     }
 
-    Log-Msg "Health -> local=$localOk public=$publicOk vercel_backup=$vercelOk"
+    Log-Msg "Health -> local=$localOk public=$publicOk"
     Start-Sleep -Seconds 60
 }
