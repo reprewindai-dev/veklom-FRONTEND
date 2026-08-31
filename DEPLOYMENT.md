@@ -1,20 +1,68 @@
-# Standalone Frontend Deployment
+# Veklom Public Frontend Deployment
 
-This repository (`veklom-control-plane`) is now configured to be deployed as a **Standalone Next.js App** (Decoupled architecture).
+The canonical public frontend deployment is the local Docker stack defined in `docker-compose.public.yml`.
 
-## Coolify Setup
-To deploy this on Coolify:
-1. Create a new application pointing to the `veklom-control-plane` repository.
-2. Select **Nixpacks** or **Docker** buildpack (Nixpacks will auto-detect Next.js).
-3. Set the domain to your desired frontend URL (e.g. `veklom.com`).
+## Deployment Boundary
 
-## Environment Variables
-You MUST provide the `NEXT_PUBLIC_API_BASE_URL` in Coolify so the frontend knows how to talk to the decoupled Python backend.
+- `veklom-frontend` runs the production Next.js standalone build on container port `3002`.
+- `veklom-cloudflared` runs the existing Cloudflare Tunnel as a Docker sidecar.
+- Both containers use `restart: unless-stopped`.
+- The frontend exposes `127.0.0.1:3002` for local verification only.
+- Cloudflare is the public transport; the frontend is not opened directly to the LAN or WAN.
+- Coolify, Hetzner, and Vercel are not deployment authorities for this repository.
 
-```env
-# The absolute URL of the Python backend
-NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com
+## Bootstrap
+
+The bootstrap script preserves the existing Cloudflare ingress map, copies the existing tunnel credential into a git-ignored runtime directory, translates host-local service addresses for Docker networking, validates the generated Cloudflare config, builds the frontend image, starts both containers, and installs current-user logon recovery tasks.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-public-docker.ps1
 ```
 
-## Internal API Proxies
-To avoid CORS issues, `next.config.mjs` is configured to rewrite `/api/*` to `https://api.veklom.com/api/*`. This means the client-side code can simply `fetch('/api/v1/auth/me')` and Next.js will proxy it to the backend securely.
+Generated Cloudflare runtime files live under `.veklom/runtime/` and are git-ignored. Tunnel credentials must never be committed.
+
+## Normal Start
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-public-docker.ps1
+```
+
+Equivalent Docker command:
+
+```powershell
+docker compose -f docker-compose.public.yml up -d
+```
+
+## Health
+
+Local:
+
+```text
+http://127.0.0.1:3002/api/health
+```
+
+Public:
+
+```text
+https://veklom.com/api/health
+```
+
+The Docker image and Compose service both health-check `/api/health`.
+
+## Recovery
+
+`scripts/docker-public-watchdog.ps1` checks the frontend container, the Cloudflare container, and the public health endpoint. It restarts only the failed Veklom component; it does not kill unrelated Node or Docker workloads.
+
+Docker restart policy remains the first recovery layer. The watchdog covers the additional case where a process stays alive but becomes unhealthy.
+
+## Backend Contract
+
+Production frontend API configuration remains:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com
+VBB_BACKEND_URL=https://api.veklom.com
+CAPPO_BACKEND_URL=https://capi.veklom.com
+```
+
+Client-side code should continue to prefer same-origin API routes where available.
