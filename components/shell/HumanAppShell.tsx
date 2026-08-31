@@ -52,7 +52,10 @@ const footerGroups = [
   {
     title: "Legal & Trust",
     links: [
+      ["/trust", "Trust Center"],
       ["/privacy", "Privacy"],
+      ["/privacy-choices", "Privacy Choices"],
+      ["/data-rights", "Data Rights"],
       ["/terms", "Terms"],
       ["/acceptable-use", "Acceptable Use"],
       ["/cookies", "Cookies"],
@@ -159,6 +162,8 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
             <span>© {new Date().getFullYear()} Veklom · Governed machine infrastructure</span>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               <Link href="/.well-known/security.txt" className="hover:text-theme-ink">security.txt</Link>
+              <Link href="/trust" className="hover:text-theme-ink">Trust Center</Link>
+              <Link href="/privacy-choices" className="hover:text-theme-ink">Privacy Choices</Link>
               <Link href="/privacy" className="hover:text-theme-ink">Privacy</Link>
               <Link href="/terms" className="hover:text-theme-ink">Terms</Link>
               <Link href="/support" className="hover:text-theme-ink">Support</Link>
