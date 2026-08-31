@@ -1,0 +1,71 @@
+name: Veklom Public Availability
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: veklom-public-availability
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PUBLIC_URL: https://veklom.com/api/health
+    steps:
+      - name: Probe sovereign public origin
+        id: probe
+        shell: bash
+        run: |
+          set +e
+
+          for attempt in 1 2 3; do
+            code="$(curl --silent --show-error --location --max-time 12 --output /tmp/probe-body --write-out '%{http_code}' "$PUBLIC_URL")"
+            if [ "$code" = "200" ]; then
+              echo "UP $PUBLIC_URL on attempt $attempt"
+              echo "public_ok=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "DOWN $PUBLIC_URL attempt=$attempt http=$code"
+            sleep 4
+          done
+
+          echo "public_ok=false" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Open or update outage issue
+        if: steps.probe.outputs.public_ok != 'true'
+        shell: bash
+        run: |
+          title="[Availability] veklom.com sovereign origin degraded"
+          body="The public Veklom health probe failed three times. The canonical public origin is the self-hosted Veklom frontend behind the Cloudflare tunnel; no third-party frontend origin is treated as production authority.\n\nPublic: $PUBLIC_URL\nWorkflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi
+
+      - name: Close recovered outage issue
+        if: steps.probe.outputs.public_ok == 'true'
+        shell: bash
+        run: |
+          title="[Availability] veklom.com sovereign origin degraded"
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Recovered: the self-hosted public health probe is returning HTTP 200 again. Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            gh issue close "$number" --repo "$GITHUB_REPOSITORY" --reason completed
+          fi
+
+      - name: Fail when sovereign public origin is unavailable
+        if: steps.probe.outputs.public_ok != 'true'
+        run: exit 1

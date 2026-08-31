@@ -1,103 +1,40 @@
-"use client";
+import { SystemLanding } from "@/components/brand/SystemLanding";
 
-import React from 'react';
-import Link from 'next/link';
-import { ArrowRight, Code, Shield, Activity, Terminal } from 'lucide-react';
-import { motion } from"framer-motion";
-import { MarketingLayout } from"@/components/marketing/MarketingLayout";
-
-const fadeUpVariants = {
- hidden: { opacity: 0, y: 30 },
- visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
-} as any;
-
-const staggerContainer = {
- hidden: { opacity: 0 },
- visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+export const metadata = {
+  title: "VCGB | Veklom Capability Governance Benchmark",
+  description: "The adversarial benchmark and conformance surface for governed capability systems.",
 };
 
-export default function VCGBLandingPage() {
- return (
- <MarketingLayout isMachine={false}>
- {/* Hero Section */}
- <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-6 overflow-hidden">
- <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
- <div className="absolute top-[10%] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] bg-cos-accent/15 blur-[120px] rounded-full opacity-50 mix-blend-screen" />
- </div>
- 
- <motion.div
- initial="hidden"
- animate="visible"
- variants={staggerContainer}
- className="max-w-4xl mx-auto text-center relative z-10"
- >
- <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cos-accent/10 border border-cos-accent/20 text-cos-accent text-xs font-semibold uppercase tracking-wider mb-8">
- <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
- VCGB Protocol v0.1.0
- </motion.div>
- 
- <motion.h1 variants={fadeUpVariants} className="max-w-4xl mx-auto text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight text-balance text-cos-text">
- Veklom Capability <br className="hidden sm:block" />
- <span className="text-cos-accent">
- Governance Benchmark
- </span>
- </motion.h1>
- 
- <motion.p variants={fadeUpVariants} className="text-xl text-cos-text/70 mb-10 max-w-3xl mx-auto leading-relaxed">
- An open, machine-readable adversarial benchmark for capability governance systems.
- </motion.p>
- 
- <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
- <Link href="/vcgb/docs" className="w-full sm:w-auto px-8 py-4 rounded-lg bg-cos-surface text-paper font-bold text-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-white/5">
- Open VCGB SDK Docs <ArrowRight className="w-5 h-5" />
- </Link>
- </motion.div>
- </motion.div>
- </section>
-
- {/* Trust Section */}
- <section id="protocol" className="py-24 px-6 border-t border-cos-border bg-cos-bg-dim relative scroll-mt-16 text-cos-text">
- <div className="max-w-7xl mx-auto">
- <div className="text-center mb-16 max-w-3xl mx-auto">
- <h2 className="text-4xl font-extrabold tracking-tight mb-6">Evaluating Enforcement Boundaries</h2>
- <p className="text-cos-text/70 max-w-2xl mx-auto text-lg leading-relaxed">
- VCGB tests implementations, not vendors. Any system capable of gating capability execution can be evaluated.
- </p>
- </div>
-
- <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
- <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
- <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
- <Shield className="w-6 h-6 text-cos-accent" />
- </div>
- <h3 className="text-xl font-bold mb-3">The Correct Decision</h3>
- <p className="text-cos-text/70 text-sm leading-relaxed">
- Systems are evaluated on whether they make the correct ALLOW/DENY decision based on complex adversarial inputs.
- </p>
- </div>
- 
- <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
- <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
- <Code className="w-6 h-6 text-cos-accent" />
- </div>
- <h3 className="text-xl font-bold mb-3">Real-World Effect Boundary</h3>
- <p className="text-cos-text/70 text-sm leading-relaxed">
- The harness owns the effect environment. Effect correctness is observed by the harness, never self-reported.
- </p>
- </div>
-
- <div className="card obsidian-glass p-8 flex flex-col hover:border-cos-accent/30 transition-all group duration-300">
- <div className="w-12 h-12 rounded-xl bg-cos-accent/10 flex items-center justify-center border border-cos-accent/20 mb-6 group-hover:bg-cos-accent/20 group-hover:border-cos-accent/40 transition-colors duration-300">
- <Activity className="w-6 h-6 text-cos-accent" />
- </div>
- <h3 className="text-xl font-bold mb-3">Conformant Evidence</h3>
- <p className="text-cos-text/70 text-sm leading-relaxed">
- Every execution attempt, including every denied attempt, must produce a verifiable Execution Evidence Envelope (EEE).
- </p>
- </div>
- </div>
- </div>
- </section>
- </MarketingLayout>
- );
+export default function Page() {
+  return (
+    <SystemLanding
+      eyebrow="VCGB"
+      title="A benchmark should attack the boundary, not decorate it."
+      body="VCGB is Veklom's adversarial capability-governance benchmark concept: a proof instrument for testing whether a system makes the correct decision and contains the real-world effect under hostile inputs. It is not presented as a core production runtime plane."
+      role="Adversarial benchmark / conformance instrument"
+      state="SPEC"
+      stateDetail="The frontend and documentation surface exist, but the current canonical runtime repositories do not expose a VCGB service with the same source/runtime depth as CAPPO, VNP, EEE, PGL or LockerPhycer. Until that changes, VCGB belongs in the proof lab, not the live runtime diagram."
+      owns={[
+        "The benchmark vocabulary for evaluating ALLOW / DENY and effect-boundary correctness.",
+        "Adversarial scenarios that can be applied to a capability-governance implementation.",
+        "A place to publish repeatable conformance criteria without turning the benchmark into execution authority.",
+      ]}
+      doesNotOwn={[
+        "VCGB is not a production execution service and does not sit in the consequence path.",
+        "A benchmark page is not proof that every scenario has been executed against the current deployment.",
+        "CAPPO, LockerPhycer, VLink, VNP and EEE each keep their own runtime/proof responsibilities.",
+      ]}
+      interfaces={[
+        { label: "Current classification", value: "Benchmark / specification surface" },
+        { label: "Execution authority", value: "None" },
+        { label: "Runtime status", value: "Do not represent as a live service until a canonical runtime exists" },
+        { label: "Best home", value: "Conformance + adversarial proof tooling" },
+      ]}
+      proofNote="We are keeping VCGB because the benchmark idea is useful. We are removing the false equivalence: it should not appear beside live runtime services with an ONLINE badge until there is a canonical implementation and executed conformance evidence to justify that placement."
+      primaryHref="/conformance"
+      primaryLabel="See conformance doctrine"
+      secondaryHref="/proof"
+      secondaryLabel="Inspect current proof"
+    />
+  );
 }

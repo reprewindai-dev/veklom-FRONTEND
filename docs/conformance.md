@@ -1,27 +1,34 @@
-﻿# Veklom Conformance Matrix
+# Veklom Conformance
 
-The Capability OS enforces strict zero-trust principles across all operating planes. This matrix demonstrates alignment with foundational regulatory and security frameworks.
+Veklom conformance is evidence-scoped. A source file, configured integration, passing unit test, reachable health route, and verified real-world consequence are different proof levels and must not be collapsed into one claim.
 
-## Regulatory Alignment
+## Constitutional invariants
 
-| Framework | Status | Notes |
-| :--- | :--- | :--- |
-| **Quebec Law 25 (PII)** | <span className="text-theme-verified font-bold">ALIGNED</span> | Automated PII tagging prevents cross-border data egress; forces 100% local baremetal inference. |
-| **PIPEDA** | <span className="text-theme-verified font-bold">ALIGNED</span> | Tamper-evident execution ledgers and strict sovereign controls protect Canadian citizen data. |
-| **NIST AI RMF 1.0** | <span className="text-theme-verified font-bold">ALIGNED</span> | Meets the Measure, Manage, and Govern functions via deterministic RepoGate AST interception. |
-| **EU AI Act / GDPR** | <span className="text-theme-warn font-bold">PARTIAL (EVAL)</span> | Currently indexing AI Transparency outputs and Proof-of-Graph (PoG) lineage for certification. |
+- **Authority:** no consequence beyond granted authority.
+- **Evidence:** no truth claim beyond observable evidence.
+- **Agency:** no residual execution authority after termination.
+- **Monotonicity:** delegated or derived authority may preserve or narrow scope, never silently widen it.
+- **Explicit uncertainty:** unknown outcomes remain unknown until reconciliation.
+- **Fail-closed execution:** missing or invalid authority must deny before consequence.
 
-## Technical Security Controls
+## Proof classes
 
-| Control | Status | Evidence Reference |
-| :--- | :--- | :--- |
-| **Dynamic Execution Block** | <span className="text-theme-verified font-bold">ENFORCED</span> | `SEC-AST-001`: Rejects `eval()` and unbounded execution. |
-| **Path Traversal Protection** | <span className="text-theme-verified font-bold">ENFORCED</span> | `SEC-AST-003`: Blocks host filesystem egress. |
-| **Data Residency** | <span className="text-theme-verified font-bold">ENFORCED</span> | Multi-region BYOS deployments guarantee sovereign execution domains. |
-| **Cryptographic Provenance** | <span className="text-theme-verified font-bold">ENFORCED</span> | Ed25519 payload signatures via LockerPhycer hardware enclave bounding. |
+| Class | Meaning |
+| --- | --- |
+| `SOURCE_OBSERVED` | The behavior exists in canonical source. Deployment is not implied. |
+| `TEST_VERIFIED` | An executable test/falsifier passed in the stated environment. |
+| `RUNTIME_OBSERVED` | The declared service responded in the tested runtime profile. |
+| `CONSEQUENCE_VERIFIED` | A real consequence plus authoritative post-state/evidence was observed. |
+| `UNVERIFIED` | Required evidence has not been produced. |
 
-## Continuous Assurance
+## Runtime planes
 
-Veklom operates a **Fail-Closed by Default** policy. The Semantic Kill Switch (SEKED) intercepts all execution requests before they reach the runtime sandbox, proving authorized intent prior to compute allocation.
+BYOS Runtime, LockerPhycer, CAPPO, cAPI, Gnomledger/PGL, VLink, and Guardian have distinct responsibilities. Health of one plane does not establish conformance of another.
 
-*Last Audited: Q3 2026*
+## Regulatory frameworks
+
+Veklom may be evaluated against frameworks such as Canadian privacy law, NIST AI RMF, and applicable enterprise governance requirements. This page does **not** claim legal compliance, certification, regulatory approval, or universal alignment. Those claims require a scoped legal/compliance assessment and deployment-specific evidence.
+
+## Deployment truth
+
+The public proof surface reports live reachability/readiness observations where endpoints are available. Consequence-level proof remains bound to actual governed execution and its evidence.

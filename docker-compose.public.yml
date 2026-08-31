@@ -1,0 +1,58 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
+        LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
+        CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
+        CAPPO_URL: ${CAPPO_URL:-https://cappo.veklom.com}
+        PGL_URL: ${PGL_URL:-https://pgl.veklom.com}
+        NEXT_PUBLIC_API_BASE_URL: ""
+    image: veklom/frontend:local
+    container_name: veklom-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+      HOSTNAME: 0.0.0.0
+      # Same-origin browser API. Server-side Next routes/proxies use these URLs.
+      NEXT_PUBLIC_API_BASE_URL: ""
+      BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
+      LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
+      CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
+      CAPPO_URL: ${CAPPO_URL:-https://cappo.veklom.com}
+      PGL_URL: ${PGL_URL:-https://pgl.veklom.com}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3002:3002"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3002/api/health >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 8s
+      retries: 3
+      start_period: 20s
+    networks:
+      - public-edge
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: veklom-cloudflared
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_healthy
+    command: ["tunnel", "--no-autoupdate", "--config", "/etc/cloudflared/config.yml", "run"]
+    volumes:
+      - ./.veklom/runtime/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ./.veklom/runtime/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - public-edge
+
+networks:
+  public-edge:
+    name: veklom-public-edge

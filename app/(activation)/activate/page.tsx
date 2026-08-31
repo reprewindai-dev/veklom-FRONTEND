@@ -1,398 +1,278 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Zap, ShieldAlert, Key, Search, FileText, CheckCircle2, XCircle, ArrowRight, Activity, Code2, Copy, FileSearch, Check } from "lucide-react";
-import Cookies from "js-cookie";
+import {
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+  FileSearch,
+  KeyRound,
+  ShieldAlert,
+  ShieldCheck,
+  XCircle,
+  Zap,
+} from "lucide-react";
 
-export default function ActivationPage() {
-  const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [viewMode, setViewMode] = useState<"summary" | "crypto">("summary");
-  const [sandboxId, setSandboxId] = useState<string | null>(null);
+import { PremiumLogo, StageLabel } from "@/components/brand/PremiumPrimitives";
+import { useAuth } from "@/lib/auth-context";
+import {
+  ActivationUnavailableError,
+  discoverActivationPackage,
+  executeActivationAllowed,
+  inspectActivationEvidence,
+  proveActivationDenial,
+  requestActivationLease,
+  type ActivationAllowedExecution,
+  type ActivationDenial,
+  type ActivationEvidence,
+  type ActivationLease,
+  type ActivationPackage,
+} from "@/lib/cos/activation";
 
-  // State to hold our "real" proof artifacts
-  const [lease, setLease] = useState<any>(null);
-  const [allowResult, setAllowResult] = useState<any>(null);
-  const [denyResult, setDenyResult] = useState<any>(null);
+const DEFAULT_PROJECT = "activation-v1";
+const steps = ["Discover", "Bind authority", "Prove denial", "Execute", "Inspect evidence"];
 
-  const processStep = async (nextStep: number, action: () => Promise<void>) => {
-    setIsProcessing(true);
-    try {
-      await action();
-      setStep(nextStep);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleConnect = async () => {
-    await new Promise((r) => setTimeout(r, 600));
-    setStep(2);
-  };
-
-  const handleGrant = async () => {
-    setIsProcessing(true);
-    try {
-      const res = await fetch("/api/activation/issuer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "mount" })
-      });
-      if (!res.ok) throw new Error("Mount failed");
-      const data = await res.json();
-      setSandboxId(data.sandboxId);
-      setLease({
-        id: "ls_" + data.sandboxId.slice(0, 8),
-        capability: "veklom.sandbox.record.write",
-        granted_path: data.scope?.writes?.[0] || "/demo/allowed/*",
-        duration: "15m",
-        signer: "ed25519:VKLM_SBX_...",
-        signature: "sig_" + Date.now().toString(16)
-      });
-      setStep(3);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to mount capability lease");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleRun = async () => {
-    setIsProcessing(true);
-    try {
-      const res = await fetch("/api/activation/issuer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "exec_allowed", sandboxId })
-      });
-      if (!res.ok) throw new Error("Exec failed");
-      const data = await res.json();
-      const ev = data.evidence || {};
-      setAllowResult({
-        tx_hash: ev.log_id || "0x8f2a99...3421a",
-        intent: "write /demo/allowed/data.txt",
-        decision: data.decision,
-        p5_state: ev.execution_id ? "COMPLETED_SUCCESS" : "FAILED",
-        assurance: "E2",
-        sealed_at: new Date().toISOString(),
-      });
-      setStep(4);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to run allowed consequence");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleChallenge = async () => {
-    setIsProcessing(true);
-    try {
-      const res = await fetch("/api/activation/issuer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "exec_denied", sandboxId })
-      });
-      const data = await res.json();
-      const ev = data.evidence || {};
-      setDenyResult({
-        tx_hash: ev.log_id || "0x3b1c44...9989c",
-        intent: "write /demo/private/secrets.txt",
-        decision: data.decision || "DENY",
-        reason: ev.detail || "Resource outside granted scope.",
-        p5_state: "REJECTED_AUTHORITY_BOUNDARY",
-        assurance: "E2",
-        sealed_at: new Date().toISOString(),
-      });
-      setStep(5);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to challenge boundaries");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const completeActivation = async () => {
-    setIsProcessing(true);
-    // In reality, this posts the activation payload to the backend
-    const activationRecord = {
-      activation: {
-        sandbox_connected: true,
-        lease_minted: true,
-        allowed_execution_verified: true,
-        hostile_denial_verified: true,
-        evidence_inspected: true,
-        activation_version: "v1",
-        completed_at: new Date().toISOString(),
-        allow_evidence_id: allowResult?.tx_hash,
-        deny_evidence_id: denyResult?.tx_hash,
-      }
-    };
-    
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1000));
-    
-    console.log("Saving Activation Record:", activationRecord);
-    Cookies.set("veklom_activated", "true", { expires: 365 });
-    
-    // Now redirect to OS
-    router.push("/");
-  };
-
+function JsonProof({ value }: { value: unknown }) {
   return (
-    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex items-center justify-center p-6 selection:bg-[var(--theme-accent)] selection:text-white">
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-5 gap-8 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded shadow-lg overflow-hidden min-h-[600px]">
-        
-        {/* Left Column: Progress Sidebar */}
-        <div className="md:col-span-2 bg-black/5 dark:bg-white/5 p-8 border-r border-[var(--theme-border)] flex flex-col">
-          <div className="flex items-center gap-2 mb-12">
-             <div className="w-8 h-8 rounded bg-[var(--theme-accent)] flex items-center justify-center shadow">
-               <ShieldCheck className="w-5 h-5 text-white" />
-             </div>
-             <span className="font-bold tracking-tight text-xl">Veklom</span>
-          </div>
+    <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-2xl border border-white/10 bg-[#05070b] p-4 font-mono text-[10px] leading-5 text-white/62 shadow-inner">
+      {JSON.stringify(value, null, 2)}
+    </pre>
+  );
+}
 
-          <div className="space-y-8 flex-1">
-            <h3 className="text-sm font-bold uppercase tracking-widest opacity-50 mb-2">Activation Proof</h3>
-            
-            <div className="relative">
-              {/* Connecting line */}
-              <div className="absolute left-[11px] top-4 bottom-4 w-px bg-[var(--theme-border)]" />
-              
-              <StepItem num={1} current={step} title="Connect" desc="Sandbox ready" />
-              <StepItem num={2} current={step} title="Grant" desc="Issue bounded lease" />
-              <StepItem num={3} current={step} title="Allow" desc="Authorized execution" />
-              <StepItem num={4} current={step} title="Deny" desc="Hostile boundary test" />
-              <StepItem num={5} current={step} title="Evidence" desc="Cryptographic proof" />
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Interactive Sandbox */}
-        <div className="md:col-span-3 p-8 flex flex-col justify-center">
-          
-          {step === 1 && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-md mx-auto w-full text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-[var(--theme-accent)]/10 text-[var(--theme-accent)] flex items-center justify-center mb-6">
-                <Activity className="w-8 h-8" />
-              </div>
-              <h2 className="text-2xl font-bold mb-4">Your sandbox is ready.</h2>
-              <p className="opacity-70 mb-8">
-                Welcome to Veklom. Before you access the control plane, you must prove the core invariant: <strong>there is no machine consequence without bounded authority and evidence.</strong>
-              </p>
-              <button 
-                onClick={() => processStep(2, handleConnect)}
-                disabled={isProcessing}
-                className="w-full py-3 px-4 bg-[var(--theme-accent)] text-white font-medium rounded shadow hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-              >
-                {isProcessing ? "Connecting..." : "Initialize Sandbox"} <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-md mx-auto w-full">
-               <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-                 <Key className="w-5 h-5 text-[var(--theme-accent)]" /> Grant Bounded Authority
-               </h2>
-               <p className="text-sm opacity-70 mb-6">Visually issue a cryptographic lease for a specific path.</p>
-               
-               <div className="border border-[var(--theme-border)] rounded bg-black/5 dark:bg-white/5 p-4 mb-6 text-sm font-mono space-y-2">
-                 <div className="flex justify-between">
-                   <span className="opacity-50">Capability:</span>
-                   <span className="font-medium">veklom.sandbox.record.write</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="opacity-50">Granted Path:</span>
-                   <span className="font-medium text-emerald-600 dark:text-emerald-400">/demo/allowed/*</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="opacity-50">Duration:</span>
-                   <span className="font-medium">15m</span>
-                 </div>
-               </div>
-
-               <button 
-                onClick={() => processStep(3, handleGrant)}
-                disabled={isProcessing}
-                className="w-full py-3 px-4 bg-[var(--theme-accent)] text-white font-medium rounded shadow hover:opacity-90 disabled:opacity-50 transition-all"
-              >
-                {isProcessing ? "Minting Lease..." : "Mint Authority Lease"}
-              </button>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-md mx-auto w-full">
-               <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-                 <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Authorized Execution
-               </h2>
-               <p className="text-sm opacity-70 mb-6">Send an intent that matches the bounded lease.</p>
-               
-               <div className="border border-emerald-500/30 rounded bg-emerald-500/5 p-4 mb-6">
-                 <div className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Intent</div>
-                 <code className="text-sm">write /demo/allowed/hello</code>
-               </div>
-
-               <button 
-                onClick={() => processStep(4, handleRun)}
-                disabled={isProcessing}
-                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-              >
-                {isProcessing ? "Executing via CAPPO..." : "Execute Allowed Intent"} <Zap className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-md mx-auto w-full">
-               <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-                 <ShieldAlert className="w-5 h-5 text-red-500" /> Hostile Boundary Test
-               </h2>
-               <p className="text-sm opacity-70 mb-6">Intentionally violate the boundary using the exact same lease.</p>
-               
-               <div className="border border-red-500/30 rounded bg-red-500/5 p-4 mb-6">
-                 <div className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 mb-2">Challenge Intent</div>
-                 <code className="text-sm">write /demo/private/secret</code>
-               </div>
-
-               <button 
-                onClick={() => processStep(5, handleChallenge)}
-                disabled={isProcessing}
-                className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded shadow disabled:opacity-50 transition-all"
-              >
-                {isProcessing ? "Attacking Boundary..." : "Try it anyway"}
-              </button>
-            </div>
-          )}
-
-          {step === 5 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto w-full flex flex-col h-full">
-               <div className="flex items-center justify-between mb-6">
-                 <h2 className="text-xl font-bold flex items-center gap-2">
-                   <FileSearch className="w-5 h-5 text-[var(--theme-accent)]" /> 
-                   Evidence Viewer
-                 </h2>
-                 <div className="flex bg-[var(--theme-bg)] border border-[var(--theme-border)] rounded p-1">
-                    <button 
-                      onClick={() => setViewMode("summary")} 
-                      className={`text-xs px-3 py-1 rounded ${viewMode === 'summary' ? 'bg-[var(--theme-surface)] shadow-sm font-medium' : 'opacity-70'}`}
-                    >
-                      Readable
-                    </button>
-                    <button 
-                      onClick={() => setViewMode("crypto")} 
-                      className={`text-xs px-3 py-1 rounded ${viewMode === 'crypto' ? 'bg-[var(--theme-surface)] shadow-sm font-medium' : 'opacity-70'}`}
-                    >
-                      Cryptographic Proof
-                    </button>
-                 </div>
-               </div>
-               
-               <div className="flex-1 overflow-y-auto pr-2 mb-6 space-y-4">
-                 {viewMode === "summary" ? (
-                   <>
-                     {/* Readable Summary Mode */}
-                     <div className="border border-[var(--theme-border)] rounded p-4 bg-[var(--theme-bg)]">
-                        <div className="flex items-center gap-2 mb-3">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          <span className="font-bold">Authorized Execution</span>
-                        </div>
-                        <ul className="text-sm space-y-2 opacity-80">
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Requested: `write /demo/allowed/hello`</li>
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Authority granted</li>
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Execution verified</li>
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Target result confirmed</li>
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Evidence sealed in Ledger</li>
-                        </ul>
-                     </div>
-
-                     <div className="border border-red-500/20 rounded p-4 bg-red-500/5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <ShieldAlert className="w-4 h-4 text-red-500" />
-                          <span className="font-bold text-red-600 dark:text-red-400">Hostile Execution Denied</span>
-                        </div>
-                        <ul className="text-sm space-y-2 opacity-80">
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Requested: `write /demo/private/secret`</li>
-                          <li className="flex items-center gap-2 text-red-600 dark:text-red-400"><XCircle className="w-3 h-3"/> Denied at authority boundary</li>
-                          <li className="pl-5 italic opacity-70 text-xs">Reason: {denyResult?.reason}</li>
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> No target consequence occurred</li>
-                          <li className="flex items-center gap-2"><Check className="w-3 h-3 text-emerald-500"/> Evidence sealed in Ledger</li>
-                        </ul>
-                     </div>
-                   </>
-                 ) : (
-                   <>
-                     {/* Cryptographic Drawer Mode */}
-                     <div className="border border-[var(--theme-border)] rounded bg-black/5 dark:bg-white/5 p-4 text-xs font-mono overflow-x-auto">
-                        <div className="text-[var(--theme-accent)] mb-2 font-bold">// ALLOWED INTENT RECEIPT</div>
-                        <pre className="opacity-80">
-{JSON.stringify({
-  lease_id: lease?.id,
-  tx_hash: allowResult?.tx_hash,
-  intent: allowResult?.intent,
-  p5_state: allowResult?.p5_state,
-  assurance: allowResult?.assurance,
-  sealed_at: allowResult?.sealed_at
-}, null, 2)}
-                        </pre>
-                     </div>
-                     <div className="border border-red-500/20 rounded bg-red-500/5 p-4 text-xs font-mono overflow-x-auto">
-                        <div className="text-red-500 mb-2 font-bold">// DENIED INTENT RECEIPT</div>
-                        <pre className="opacity-80">
-{JSON.stringify({
-  lease_id: lease?.id,
-  tx_hash: denyResult?.tx_hash,
-  intent: denyResult?.intent,
-  p5_state: denyResult?.p5_state,
-  assurance: denyResult?.assurance,
-  sealed_at: denyResult?.sealed_at,
-  rejection_reason: denyResult?.reason
-}, null, 2)}
-                        </pre>
-                     </div>
-                   </>
-                 )}
-               </div>
-
-               <div className="mt-auto border-t border-[var(--theme-border)] pt-6">
-                 <h3 className="font-bold text-center text-lg mb-4">You just governed a real machine consequence.</h3>
-                 <button 
-                  onClick={completeActivation}
-                  disabled={isProcessing}
-                  className="w-full py-3 px-4 bg-[var(--theme-accent)] text-white font-medium rounded shadow hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                 >
-                   {isProcessing ? "Activating OS..." : "Enter Veklom Control Plane"} <ArrowRight className="w-4 h-4" />
-                 </button>
-               </div>
-            </div>
-          )}
-
-        </div>
-      </div>
+function ProgressItem({ index, title, step }: { index: number; title: string; step: number }) {
+  const complete = step > index;
+  const active = step === index;
+  return (
+    <div className="grid grid-cols-[34px_1fr] items-center gap-3 py-2.5">
+      <span className={`flex h-8 w-8 items-center justify-center rounded-full border text-[10px] font-semibold transition ${complete ? "border-theme-verified bg-theme-verified text-white" : active ? "border-theme-accent text-theme-accent shadow-[0_0_0_5px_rgb(var(--theme-accent)/.07)]" : "border-theme-border text-theme-inkDim"}`}>
+        {complete ? <CheckCircle2 className="h-4 w-4" /> : String(index).padStart(2, "0")}
+      </span>
+      <span className={`text-xs font-medium ${active || complete ? "text-theme-ink" : "text-theme-inkDim"}`}>{title}</span>
     </div>
   );
 }
 
-function StepItem({ num, current, title, desc }: { num: number, current: number, title: string, desc: string }) {
-  const isPast = current > num;
-  const isCurrent = current === num;
-  
+function ActionButton({ children, onClick, busy, danger = false }: { children: React.ReactNode; onClick: () => void; busy: boolean; danger?: boolean }) {
   return (
-    <div className={`relative flex items-start gap-4 mb-8 ${isPast || isCurrent ? 'opacity-100' : 'opacity-40'}`}>
-      <div className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow
-        ${isPast ? 'bg-emerald-500 text-white' : isCurrent ? 'bg-[var(--theme-accent)] text-white ring-4 ring-[var(--theme-accent)]/20' : 'bg-[var(--theme-surface)] border border-[var(--theme-border)] text-[var(--theme-text)]'}
-      `}>
-        {isPast ? <Check className="w-3 h-3" /> : num}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className={`group mt-8 inline-flex min-h-13 items-center gap-4 rounded-full px-6 text-sm font-semibold shadow-[0_16px_42px_rgba(0,0,0,.12)] transition duration-300 hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-50 disabled:hover:translate-y-0 ${danger ? "bg-theme-danger text-white" : "bg-theme-ink text-theme-bg"}`}
+    >
+      {children}
+      {!busy && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+    </button>
+  );
+}
+
+export default function ActivationPage() {
+  const router = useRouter();
+  const { me } = useAuth();
+  const [step, setStep] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const [workspaceId, setWorkspaceId] = useState("");
+  const [projectId, setProjectId] = useState(DEFAULT_PROJECT);
+  const [capability, setCapability] = useState<ActivationPackage>();
+  const [lease, setLease] = useState<ActivationLease>();
+  const [denial, setDenial] = useState<ActivationDenial>();
+  const [execution, setExecution] = useState<ActivationAllowedExecution>();
+  const [evidence, setEvidence] = useState<ActivationEvidence>();
+
+  useEffect(() => {
+    const scopedWorkspace = me?.workspace_id;
+    if (scopedWorkspace && !workspaceId) setWorkspaceId(scopedWorkspace);
+  }, [me?.workspace_id, workspaceId]);
+
+  async function run(action: () => Promise<void>) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      await action();
+    } catch (cause) {
+      const message = cause instanceof ActivationUnavailableError || cause instanceof Error
+        ? cause.message
+        : "Activation is unavailable because a required live proof step failed.";
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function connect() {
+    await run(async () => {
+      const selected = await discoverActivationPackage();
+      setCapability(selected);
+      setStep(2);
+    });
+  }
+
+  async function grant() {
+    if (!capability || !workspaceId.trim() || !projectId.trim()) return;
+    await run(async () => {
+      const issued = await requestActivationLease(capability, workspaceId.trim(), projectId.trim());
+      setLease(issued);
+      setStep(3);
+    });
+  }
+
+  async function challenge() {
+    if (!lease) return;
+    await run(async () => {
+      const rejected = await proveActivationDenial(lease);
+      setDenial(rejected);
+      setStep(4);
+    });
+  }
+
+  async function execute() {
+    if (!lease) return;
+    await run(async () => {
+      const allowed = await executeActivationAllowed(lease);
+      setExecution(allowed);
+      setStep(5);
+    });
+  }
+
+  async function inspectEvidence() {
+    if (!execution) return;
+    await run(async () => {
+      const proof = await inspectActivationEvidence(execution);
+      setEvidence(proof);
+      setStep(6);
+    });
+  }
+
+  return (
+    <main className="min-h-screen bg-theme-bg text-theme-ink">
+      <header className="border-b border-theme-border bg-theme-bg/82 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1480px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+          <PremiumLogo />
+          <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[.18em] text-theme-inkDim">
+            <span className="hidden sm:inline">Live Activation</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-theme-verified shadow-[0_0_0_5px_rgb(var(--theme-verified)/.08)]" />
+            Real backend only
+          </div>
+        </div>
+      </header>
+
+      <div className="relative mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1480px] gap-8 px-5 py-8 sm:px-8 md:py-12 lg:grid-cols-[310px_1fr] lg:gap-10 lg:px-10">
+        <aside className="h-fit rounded-[28px] border border-theme-border bg-theme-surface p-6 lg:sticky lg:top-24 md:p-7">
+          <StageLabel>Proof sequence</StageLabel>
+          <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-.045em] text-theme-ink">One live journey from capability to evidence.</h1>
+          <div className="mt-7 border-t border-theme-border pt-5">
+            {steps.map((title, idx) => <ProgressItem key={title} index={idx + 1} title={title} step={step} />)}
+          </div>
+          <div className="mt-7 rounded-2xl border border-theme-border bg-theme-bg p-4 text-[11px] leading-6 text-theme-inkDim">
+            No browser-only lease. No fake hash. No canned ALLOW/DENY. A stage advances only after the real backend returns the required state.
+          </div>
+          {me?.email && (
+            <div className="mt-4 border-t border-theme-border pt-4 text-[10px] text-theme-inkDim">
+              Session · <span className="font-medium text-theme-ink">{me.email}</span>
+            </div>
+          )}
+        </aside>
+
+        <section className="relative overflow-hidden rounded-[32px] border border-theme-border bg-theme-surface shadow-[0_40px_120px_rgba(2,8,23,.07)]">
+          <div className="absolute right-[-8rem] top-[-9rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgb(var(--theme-accent)/.13),transparent_68%)] blur-3xl" aria-hidden="true" />
+          <div className="relative min-h-[680px] p-6 sm:p-9 md:p-12 lg:p-14">
+            {error && (
+              <div className="mb-8 flex gap-3 rounded-2xl border border-theme-danger/20 bg-theme-danger/5 p-4 text-sm leading-6 text-theme-danger">
+                <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div><div className="font-semibold">Live proof stopped.</div><div className="mt-1">{error}</div><div className="mt-1 text-xs opacity-70">No proof-bearing state was advanced.</div></div>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="max-w-3xl">
+                <Activity className="h-9 w-9 text-theme-accent" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">01 · Discover</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Start with a capability that actually exists.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Activation asks CAPPO for its live capability-package registry and selects a package that exposes both an allowed read and a blocked action. If none exists, the experience stops instead of inventing one.</p>
+                <ActionButton onClick={connect} busy={busy}>{busy ? "Discovering live registry…" : "Discover live capability"}</ActionButton>
+              </div>
+            )}
+
+            {step === 2 && capability && (
+              <div className="max-w-3xl">
+                <KeyRound className="h-9 w-9 text-theme-accent" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">02 · Bind authority</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Make the allowed action smaller than the machine.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO selected <strong className="text-theme-ink">{capability.title}</strong>. The lease requests one permitted operation and one explicit negative boundary for this workspace.</p>
+
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-theme-ink">
+                    <span className="mb-2.5 block">Workspace ID</span>
+                    <input value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="min-h-13 w-full rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm outline-none transition focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5" placeholder="Authenticated workspace" />
+                  </label>
+                  <label className="text-xs font-medium text-theme-ink">
+                    <span className="mb-2.5 block">Activation project</span>
+                    <input value={projectId} onChange={(e) => setProjectId(e.target.value)} className="min-h-13 w-full rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm outline-none transition focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5" />
+                  </label>
+                </div>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-theme-border bg-theme-bg p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Package</div><div className="mt-2 break-all font-mono text-[11px] text-theme-ink">{capability.id}</div></div>
+                  <div className="rounded-2xl border border-theme-verified/20 bg-theme-verified/5 p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Permitted</div><div className="mt-2 break-all font-mono text-[11px] text-theme-verified">{capability.reads?.[0]}</div></div>
+                  <div className="rounded-2xl border border-theme-danger/20 bg-theme-danger/5 p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Blocked</div><div className="mt-2 break-all font-mono text-[11px] text-theme-danger">{capability.blocked?.[0]}</div></div>
+                </div>
+
+                <ActionButton onClick={grant} busy={busy}>{busy ? "Requesting bounded lease…" : "Request CAPPO lease"}</ActionButton>
+              </div>
+            )}
+
+            {step === 3 && lease && (
+              <div className="max-w-3xl">
+                <ShieldAlert className="h-9 w-9 text-theme-danger" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">03 · Prove denial</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Attack the boundary before trusting the allow.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">The same backend-issued lease is deliberately asked to perform <strong className="text-theme-danger">{lease.deniedAction}</strong>. The journey advances only if CAPPO itself returns a denial before consequence.</p>
+                <div className="mt-7"><JsonProof value={{ mount_id: lease.mountId, package_ref: lease.packageRef, challenge_action: lease.deniedAction, mount_anchor_id: lease.anchorId ?? null }} /></div>
+                <ActionButton onClick={challenge} busy={busy} danger>{busy ? "Testing negative boundary…" : "Attempt blocked action"}</ActionButton>
+              </div>
+            )}
+
+            {step === 4 && lease && denial && (
+              <div className="max-w-3xl">
+                <ShieldCheck className="h-10 w-10 text-theme-verified" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">04 · Governed execution</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">The forbidden action failed. Now use the authority once.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO returned <strong className="text-theme-ink">{denial.reason}</strong>. The still-bounded lease now executes the permitted operation <strong className="text-theme-verified">{lease.allowedAction}</strong> through the canonical governed path.</p>
+                <div className="mt-7"><JsonProof value={denial} /></div>
+                <ActionButton onClick={execute} busy={busy}>{busy ? "Executing governed operation…" : "Run permitted operation"}</ActionButton>
+              </div>
+            )}
+
+            {step === 5 && execution && (
+              <div className="max-w-3xl">
+                <FileSearch className="h-10 w-10 text-theme-accent" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">05 · Inspect evidence</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Execution exists. That still is not proof.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO returned execution ID <strong className="text-theme-ink">{execution.executionId}</strong>. Activation now retrieves the persisted evidence for that exact execution and requires the backend verifier to accept it.</p>
+                <div className="mt-7"><JsonProof value={{ execution_id: execution.executionId, run_id: execution.runId ?? null, operation: execution.operation, capability_lease: execution.response.capability_lease ?? null }} /></div>
+                <ActionButton onClick={inspectEvidence} busy={busy}>{busy ? "Verifying persisted evidence…" : "Inspect persisted evidence"}</ActionButton>
+              </div>
+            )}
+
+            {step === 6 && evidence && denial && (
+              <div className="max-w-4xl">
+                <CheckCircle2 className="h-11 w-11 text-theme-verified" />
+                <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">Proof complete</div>
+                <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">The browser observed the whole boundary.</h2>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">A backend-issued lease, a real denial, a governed execution and persisted evidence are now tied to this journey. Completion is based on those proof objects—not a decorative success state.</p>
+                <div className="mt-8 grid gap-4 lg:grid-cols-2">
+                  <div><div className="mb-2 text-[9px] font-semibold uppercase tracking-[.2em] text-theme-inkDim">Denied boundary</div><JsonProof value={denial} /></div>
+                  <div><div className="mb-2 text-[9px] font-semibold uppercase tracking-[.2em] text-theme-inkDim">Execution evidence</div><JsonProof value={{ execution_id: evidence.execution_id, proof_state: evidence.proof_state, verification_reasons: evidence.verification_reasons, pgl: evidence.pgl, eee: evidence.eee }} /></div>
+                </div>
+                <button type="button" onClick={() => router.push("/os")} className="group mt-8 inline-flex min-h-13 items-center gap-4 rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg">Enter Capability OS <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-      <div>
-        <div className={`font-bold ${isCurrent ? 'text-[var(--theme-accent)]' : ''}`}>{title}</div>
-        <div className="text-xs opacity-70 mt-0.5">{desc}</div>
-      </div>
-    </div>
+    </main>
   );
 }

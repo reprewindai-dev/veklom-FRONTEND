@@ -1,12 +1,38 @@
-import { PageHeader } from "@/components/ui/SharedUI";
+import { PolicyPage } from "@/components/brand/PolicyPage";
 
-export const metadata = { title: `Support | Veklom` };
+export const metadata = { title: "Support | Veklom" };
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16 w-full">
-      <PageHeader title="Support" description="Support contact page for GitHub review and customers." />
-      <div className="prose prose-invert max-w-none text-theme-inkDim mt-8 [&>h3]:text-theme-ink [&>h3]:mb-2 [&>h3]:mt-8 [&>p]:mb-4" dangerouslySetInnerHTML={{ __html: `<p>For product, installation, account, Marketplace, or GitHub App support, contact <a href="mailto:support@veklom.com">support@veklom.com</a>. For suspected security issues, credential exposure, webhook abuse, or vulnerability reports, contact <a href="mailto:security@veklom.com">security@veklom.com</a>.</p>` }} />
-    </div>
+    <PolicyPage
+      eyebrow="Support"
+      title="Route the issue to the boundary that owns it."
+      intro="Veklom spans runtime, identity, authority, connection, evidence and recovery. Support is clearer when the report names the failing boundary instead of collapsing the entire stack into one generic 'site issue'."
+      sections={[
+        {
+          title: "Product & account",
+          items: [
+            "Login, workspace, GitHub App installation, Capability OS access and product questions: support@veklom.com",
+            "Include the affected route, approximate time and browser/device context. Do not include passwords, bearer tokens, refresh tokens or private keys.",
+          ],
+        },
+        {
+          title: "Security",
+          items: [
+            "Credential exposure, webhook abuse, suspected authorization bypass, evidence tampering or security vulnerabilities: security@veklom.com",
+            "Use /.well-known/security.txt for the canonical public security-contact surface.",
+          ],
+        },
+        {
+          title: "Runtime diagnostics",
+          body: "For service/runtime issues, include the affected Veklom plane when known: BYOS, LockerPhycer, CAPPO, cAPI, PGL/Gnomledger, VLink, VNP or Guardian. Health/reachability information is visible on the public status/proof surfaces without exposing internal credentials.",
+        },
+        {
+          title: "Evidence",
+          body: "When reporting an execution or recovery discrepancy, provide non-secret execution IDs, receipt/event IDs, timestamps and the expected vs observed outcome. Avoid copying full request bodies or sensitive provider data unless explicitly requested through a secure support channel.",
+        },
+      ]}
+      note="Support will never ask you to paste private keys, OAuth client secrets, bearer tokens or production credentials into a public issue, screenshot or chat."
+    />
   );
 }

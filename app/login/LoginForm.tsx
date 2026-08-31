@@ -1,160 +1,154 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight, CircleAlert, Github, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+
+type GithubStatus = {
+  configured: boolean;
+  present?: Record<string, boolean>;
+  missing?: string[];
+};
+
+function safeDestination(): string {
+  if (typeof window === "undefined") return "/os";
+  const requested = new URL(window.location.href).searchParams.get("returnTo");
+  if (requested && requested.startsWith("/") && !requested.startsWith("//") && !requested.includes("\\")) {
+    return requested;
+  }
+  return "/os";
+}
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, loginWithGithub } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [deviceFlowStarted, setDeviceFlowStarted] = useState(false);
-  const [deviceData, setDeviceData] = useState<any>(null);
+  const [error, setError] = useState("");
+  const [github, setGithub] = useState<GithubStatus | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/v1/auth/github/config-status", { cache: "no-store", headers: { Accept: "application/json" } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((status: GithubStatus) => { if (!cancelled) setGithub(status); })
+      .catch(() => { if (!cancelled) setGithub({ configured: false }); });
+
+    if (typeof window !== "undefined") {
+      const params = new URL(window.location.href).searchParams;
+      const oauthError = params.get("github_error_description") || params.get("github_error");
+      if (oauthError) setError(oauthError);
+    }
+
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Invalid credentials');
-      }
-
-      router.push('/os');
+      await login(email, password);
+      router.replace(safeDestination());
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during sign in');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Sign in failed");
       setLoading(false);
     }
   };
-
-  const handleDeviceFlowStart = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const res = await fetch('/api/auth/github/device/start', {
-        method: 'POST'
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to start device flow');
-      
-      setDeviceData(data);
-      setDeviceFlowStarted(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to initiate device flow');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (deviceFlowStarted && deviceData) {
-    return (
-      <div className="w-full max-w-md bg-theme-surface border border-theme-border rounded shadow-sm p-8 text-center">
-        <h2 className="text-xl font-sans font-bold text-theme-ink mb-4">Authorize a headless Veklom node</h2>
-        <p className="text-theme-inkDim text-sm mb-4">1. Go to <a href={deviceData.verification_uri} target="_blank" rel="noopener noreferrer" className="text-theme-accent hover:underline">{deviceData.verification_uri}</a></p>
-        <p className="text-theme-inkDim text-sm mb-4">2. Enter code:</p>
-        <div className="text-3xl font-mono font-bold text-theme-ink mb-6 tracking-widest">{deviceData.user_code}</div>
-        <p className="text-xs text-theme-inkDim animate-pulse">3. Waiting for authorization...</p>
-        <p className="text-[10px] text-theme-inkDim mt-6">4. Linked to Veklom workspace once approved.</p>
-        <button onClick={() => setDeviceFlowStarted(false)} className="mt-6 text-xs text-theme-inkDim hover:text-theme-ink underline">Cancel</button>
-      </div>
-    );
-  }
 
   return (
-    <div className="w-full max-w-md bg-theme-surface border border-theme-border rounded shadow-sm p-8">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-sans font-bold text-theme-ink mb-2">Capability OS Access</h1>
-        <p className="text-theme-inkDim text-sm">Sign in to enter your governed machine-action workspace.</p>
+    <div className="w-full max-w-[520px]">
+      <div className="mb-9">
+        <div className="inline-flex items-center gap-2 rounded-full border border-theme-border bg-theme-surface px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.2em] text-theme-inkDim">
+          <ShieldCheck className="h-3.5 w-3.5 text-theme-accent" />
+          Backend-issued session
+        </div>
+        <h1 className="mt-6 text-4xl font-semibold tracking-[-.055em] text-theme-ink sm:text-5xl">Enter Capability OS.</h1>
+        <p className="mt-4 max-w-md text-sm leading-7 text-theme-inkDim">Authentication resolves against the real BYOS identity/session backend. GitHub and password sign-in converge on the same workspace-bound session authority.</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-theme-danger/10 border border-theme-danger/20 text-theme-danger text-sm rounded">
-          {error}
+        <div className="mb-5 flex gap-3 rounded-2xl border border-theme-danger/20 bg-theme-danger/5 p-4 text-sm leading-6 text-theme-danger" role="alert">
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      <form className="space-y-4 mb-6" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <label className="text-xs font-mono font-bold uppercase tracking-wider text-theme-inkDim block">Email or Username</label>
-          <input 
-            type="text" 
+      <button
+        type="button"
+        onClick={loginWithGithub}
+        disabled={github?.configured !== true}
+        className="group flex min-h-14 w-full items-center justify-between rounded-2xl border border-theme-border bg-theme-surface px-5 text-sm font-semibold text-theme-ink shadow-[0_10px_35px_rgba(2,8,23,.05)] transition duration-300 hover:-translate-y-0.5 hover:border-theme-ink/15 hover:shadow-[0_18px_45px_rgba(2,8,23,.08)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+      >
+        <span className="flex items-center gap-3"><Github className="h-5 w-5" /> Continue with GitHub</span>
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      </button>
+
+      <div className="mt-3 min-h-5 text-[11px] text-theme-inkDim">
+        {github === null ? "Checking GitHub OAuth configuration…" : github.configured ? "GitHub OAuth is configured on the BYOS authentication boundary." : `GitHub OAuth setup is incomplete${github.missing?.length ? ` · missing ${github.missing.join(", ")}` : ""}.`}
+      </div>
+
+      <div className="my-7 flex items-center gap-4">
+        <div className="h-px flex-1 bg-theme-border" />
+        <span className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">or use your account</span>
+        <div className="h-px flex-1 bg-theme-border" />
+      </div>
+
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="veklom-login-email" className="mb-2.5 block text-[11px] font-semibold text-theme-ink">Email address</label>
+          <input
+            id="veklom-login-email"
+            type="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-theme-bg border border-theme-border rounded px-3 py-2 text-sm text-theme-ink focus:outline-none focus:border-theme-accent transition-colors"
-            placeholder="operator@example.com"
+            onChange={(event) => setEmail(event.target.value)}
+            className="min-h-14 w-full rounded-2xl border border-theme-border bg-theme-surface px-4 text-base text-theme-ink outline-none transition placeholder:text-theme-inkDim/55 focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5"
+            placeholder="you@company.com"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
           />
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-mono font-bold uppercase tracking-wider text-theme-inkDim block">Password</label>
-            <Link href="/forgot-password" className="text-xs text-theme-accent hover:underline">Forgot password?</Link>
+
+        <div>
+          <div className="mb-2.5 flex items-center justify-between gap-3">
+            <label htmlFor="veklom-login-password" className="text-[11px] font-semibold text-theme-ink">Password</label>
+            <Link href="/forgot-password" className="text-[11px] font-medium text-theme-inkDim transition hover:text-theme-ink">Forgot password?</Link>
           </div>
-          <input 
-            type="password" 
+          <input
+            id="veklom-login-password"
+            type="password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-theme-bg border border-theme-border rounded px-3 py-2 text-sm text-theme-ink focus:outline-none focus:border-theme-accent transition-colors"
-            placeholder="••••••••"
+            onChange={(event) => setPassword(event.target.value)}
+            className="min-h-14 w-full rounded-2xl border border-theme-border bg-theme-surface px-4 text-base text-theme-ink outline-none transition placeholder:text-theme-inkDim/55 focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5"
+            placeholder="Your password"
             autoComplete="current-password"
           />
         </div>
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           disabled={loading}
-          className="w-full bg-theme-ink text-theme-bg font-bold py-2.5 rounded transition-opacity hover:opacity-90 mt-2 disabled:opacity-50"
+          className="group flex min-h-14 w-full items-center justify-center gap-4 rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg shadow-[0_18px_48px_rgba(0,0,0,.14)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,.2)] disabled:cursor-wait disabled:opacity-55 disabled:hover:translate-y-0"
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? "Validating session…" : "Sign in to Capability OS"}
+          {!loading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
         </button>
       </form>
 
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-theme-border"></div>
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-theme-surface px-2 text-theme-inkDim uppercase tracking-widest font-mono font-bold">OR</span>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <a 
-          href="/api/auth/github/login" 
-          className="w-full flex items-center justify-center gap-2 border border-theme-border bg-theme-bg hover:bg-theme-surface2 text-theme-ink font-bold py-2.5 rounded transition-colors"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-          </svg>
-          Continue with GitHub
-        </a>
-        <button 
-          onClick={handleDeviceFlowStart}
-          type="button"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 border border-theme-border bg-theme-bg hover:bg-theme-surface2 text-theme-inkDim text-xs font-mono py-2 rounded transition-colors"
-        >
-          Authorize a headless Veklom node (Device Flow)
-        </button>
-      </div>
-
-      <div className="mt-6 text-center">
-        <Link href="/signup" className="text-xs text-theme-inkDim hover:text-theme-ink transition-colors">
-          Create account / request access
-        </Link>
+      <div className="mt-7 flex items-center justify-between gap-4 border-t border-theme-border pt-6 text-xs text-theme-inkDim">
+        <span>Need a workspace?</span>
+        <Link href="/signup" className="font-semibold text-theme-ink transition hover:text-theme-accent">Create account →</Link>
       </div>
     </div>
   );

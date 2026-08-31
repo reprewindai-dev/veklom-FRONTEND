@@ -46,15 +46,21 @@ export function resolveStageTransportPath(
 }
 
 export function resolveStageBaseUrl(
-  _stageId: StageDefinition["id"],
+  stageId: StageDefinition["id"],
   sandbox: boolean,
   endpointBaseUrl?: string,
   sandboxBaseUrl?: string,
-  _endpointPath?: string,
+  endpointPath?: string,
 ): string | undefined {
-  // Production browser traffic stays same-origin by contract. Service ownership
-  // is resolved by the Next proxy; stage metadata must never cause a direct
-  // cross-origin browser call. Sandbox may opt into an explicit sandbox base.
+  // CAPPO and Mount are always same-origin. A stage descriptor must never move
+  // machine-authority traffic around the authenticated Next proxy, including
+  // when the UI is rendering sandbox data.
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
+    return undefined;
+  }
+
+  // Production browser traffic is same-origin by contract. Only an explicit
+  // sandbox session may opt into a sandbox/external base for unrelated stages.
   if (!sandbox) return undefined;
   return sandboxBaseUrl || endpointBaseUrl;
 }
