@@ -1,165 +1,122 @@
 import React from "react";
 import Link from "next/link";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
-import { ProofChip, CapabilityLifecycle } from "@/components/ui/SharedUI";
+import { AmbientField, AuthorityOrb, LiveSignal, StageLabel } from "@/components/brand/PremiumPrimitives";
+import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
 
-const constitutionalRules = [
-  ["01", "Identity", "A machine execution is attributable before consequence."],
-  ["02", "Authority", "Capability is bounded by scope, policy, budget, and time."],
-  ["03", "Consequence", "Execution crosses a fail-closed governed boundary."],
-  ["04", "Evidence", "The result is bound back to the authority that permitted it."],
+const laws = [
+  { index: "01", title: "Authority", body: "Every consequence begins inside an explicit identity, policy, budget and time boundary." },
+  { index: "02", title: "Evidence", body: "Execution does not become truth because a model says it succeeded. Outcomes remain bound to observable evidence." },
+  { index: "03", title: "Agency", body: "Execution identity is temporary. When the execution ends, its authority ends with it." },
 ];
+
+const flow = ["Mount capability", "Bind authority", "Execute", "Observe", "Reconcile", "Preserve evidence"];
 
 export default function LandingPage() {
   return (
     <HumanAppShell>
-      <main className="relative overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[34rem] border-b border-theme-border bg-theme-surface2 opacity-40" />
+      <div className="relative overflow-hidden">
+        <AmbientField />
 
-        <section className="relative max-w-7xl mx-auto px-6 pt-10 md:pt-16 pb-20 md:pb-28 w-full">
-          <div className="flex items-center flex-wrap gap-2 pb-7 border-b border-theme-border">
-            <ProofChip label="FOUNDATIONAL BASELINE SEALED" state="verified" />
-            <ProofChip label="6 CONSTITUTIONAL INVARIANTS" state="verified" />
-            <ProofChip label="INBOUND TRUTH" state="verified" />
-            <ProofChip label="FAIL-CLOSED" state="verified" />
-            <ProofChip label="ACTIVATION IN PROGRESS" state="info" />
-          </div>
-
-          <div className="grid lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.7fr)] gap-14 lg:gap-20 pt-14 md:pt-20 items-start">
-            <div>
-              <div className="inline-flex items-center gap-3 mb-7 font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-theme-accent">
-                <span className="inline-block w-8 h-px bg-theme-accent" />
-                Machine Authority Infrastructure
-              </div>
-
-              <h1 className="max-w-5xl text-5xl sm:text-6xl md:text-7xl lg:text-[5.4rem] font-sans font-semibold tracking-[-0.045em] leading-[0.94] text-theme-ink mb-8">
-                Govern what machines are allowed to cause.
-              </h1>
-
-              <p className="max-w-3xl text-lg md:text-2xl text-theme-inkDim leading-relaxed mb-10">
-                Models create capability. <span className="text-theme-ink font-medium">Veklom governs consequence.</span> Give automation bounded authority to act across real systems, then preserve evidence of what actually happened.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <Link
-                  href="/get"
-                  className="group inline-flex min-h-14 items-center justify-between gap-8 rounded border border-theme-ink bg-theme-ink px-6 py-4 text-theme-bg font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                >
-                  <span>Get Veklom</span>
-                  <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
-                </Link>
-                <Link
-                  href="/proof"
-                  className="inline-flex min-h-14 items-center justify-center rounded border border-theme-border bg-theme-surface px-6 py-4 text-theme-ink font-bold transition-colors hover:border-theme-accent"
-                >
-                  Inspect the proof
-                </Link>
-              </div>
-
-              <p className="font-mono text-[11px] uppercase tracking-wider text-theme-inkDim">
-                Start with a governed workspace. No synthetic demo required.
-              </p>
+        <section className="relative mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1480px] items-center gap-12 px-5 py-16 sm:px-8 md:py-20 lg:grid-cols-[1.04fr_.96fr] lg:gap-16 lg:px-10 xl:py-24">
+          <div className="relative z-10 max-w-[760px]">
+            <div className="mb-8 flex flex-wrap items-center gap-3">
+              <LiveSignal label="Capability OS · early access" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Governed machine action</span>
             </div>
 
-            <aside className="relative lg:mt-3">
-              <div className="absolute -inset-3 border border-theme-border opacity-40 rounded" aria-hidden="true" />
-              <div className="relative border border-theme-border bg-theme-surface shadow-sm rounded overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-theme-border bg-theme-surface2">
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-theme-inkDim">The consequence boundary</span>
-                  <span className="font-mono text-[10px] font-bold text-theme-verified">FAIL CLOSED</span>
-                </div>
-                <div className="p-5 md:p-6 space-y-1">
-                  {constitutionalRules.map(([num, title, text]) => (
-                    <div key={num} className="grid grid-cols-[42px_1fr] gap-3 py-4 border-b border-theme-border last:border-b-0">
-                      <span className="font-mono text-[10px] text-theme-inkDim">{num}</span>
-                      <div>
-                        <div className="font-mono text-xs font-bold uppercase tracking-widest text-theme-ink mb-1.5">{title}</div>
-                        <p className="text-sm leading-relaxed text-theme-inkDim">{text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-theme-border px-5 py-4 font-mono text-[11px] text-theme-ink">
-                  CAPABILITY <span className="text-theme-accent">≠</span> AUTHORITY
-                </div>
-              </div>
-            </aside>
-          </div>
-        </section>
+            <h1 className="text-[clamp(4rem,8.6vw,8.8rem)] font-semibold leading-[0.82] tracking-[-0.075em] text-theme-ink">
+              Give machines<br />capability.<br /><span className="text-theme-inkDim">Not a blank check.</span>
+            </h1>
 
-        <section className="relative border-y border-theme-border bg-theme-surface">
-          <div className="max-w-7xl mx-auto px-6 py-16 md:py-20 grid lg:grid-cols-[0.72fr_1.28fr] gap-12 lg:gap-20">
-            <div>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-theme-accent mb-4">The invariant</p>
-              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-theme-ink">
-                Capability without authority produces no consequence.
-              </h2>
-            </div>
+            <p className="mt-9 max-w-2xl text-lg leading-8 text-theme-inkDim md:text-[1.35rem] md:leading-9">
+              Veklom is the authority layer between machine intent and real-world consequence. Mount a capability, bind it to policy, budget and time, execute through a governed boundary, then preserve what actually happened.
+            </p>
 
-            <div className="grid sm:grid-cols-2 gap-px bg-theme-border border border-theme-border">
-              <div className="bg-theme-bg p-6 md:p-7">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-theme-inkDim mb-7">Authority monotonicity</div>
-                <p className="text-lg text-theme-ink leading-relaxed">Authority can be preserved or narrowed. It cannot silently widen as work moves across systems.</p>
-              </div>
-              <div className="bg-theme-bg p-6 md:p-7">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-theme-inkDim mb-7">Explicit uncertainty</div>
-                <p className="text-lg text-theme-ink leading-relaxed">Unknown outcomes stay unknown until reconciliation. Veklom does not manufacture success.</p>
-              </div>
-              <div className="bg-theme-bg p-6 md:p-7">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-theme-inkDim mb-7">Inbound truth</div>
-                <p className="text-lg text-theme-ink leading-relaxed">Context does not become authority merely because another system reported it.</p>
-              </div>
-              <div className="bg-theme-bg p-6 md:p-7">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-theme-inkDim mb-7">Evidence continuity</div>
-                <p className="text-lg text-theme-ink leading-relaxed">Proof binds identity, authority, constraints, and the actual consequence.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-          <div className="grid lg:grid-cols-3 gap-5">
-            <div className="lg:col-span-2 border border-theme-border bg-theme-surface p-7 md:p-10 rounded">
-              <div className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-theme-accent mb-5">Sealed foundation</div>
-              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-theme-ink mb-5">The foundation is no longer the product question.</h2>
-              <p className="max-w-3xl text-base md:text-lg text-theme-inkDim leading-relaxed mb-8">
-                The foundational baseline covers bounded consequence authority, fail-closed rejection, disruption-safe finality, offline authority behavior, independent ingress, and evidence-backed replay/idempotency behavior. Product work now builds on that boundary instead of repeatedly redefining it.
-              </p>
-              <Link href="/conformance" className="font-mono text-xs font-bold uppercase tracking-widest text-theme-ink hover:text-theme-accent transition-colors">
-                Read conformance →
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <Link href="/login?returnTo=/os" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                Open Capability OS <span className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
+              <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect live proof</Link>
             </div>
 
-            <div className="border border-theme-border bg-theme-ink text-theme-bg p-7 md:p-10 rounded flex flex-col justify-between min-h-[320px]">
+            <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Authority</div><div className="mt-2 text-sm font-medium text-theme-ink">Bound before action</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Evidence</div><div className="mt-2 text-sm font-medium text-theme-ink">Observed after action</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Agency</div><div className="mt-2 text-sm font-medium text-theme-ink">Ends at termination</div></div>
+            </div>
+          </div>
+
+          <div className="relative z-10 lg:translate-x-3">
+            <AuthorityOrb />
+          </div>
+        </section>
+
+        <section className="relative border-y border-theme-border bg-theme-surface/68 backdrop-blur-xl">
+          <div className="mx-auto grid w-full max-w-[1480px] gap-12 px-5 py-20 sm:px-8 md:py-28 lg:grid-cols-[.68fr_1.32fr] lg:px-10">
+            <div>
+              <StageLabel>The operating law</StageLabel>
+              <h2 className="mt-6 max-w-md text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">A machine can know what to do and still not be allowed to do it.</h2>
+            </div>
+            <div className="grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border md:grid-cols-3">
+              {laws.map((law) => (
+                <article key={law.index} className="min-h-[320px] bg-theme-bg p-7 md:p-8">
+                  <div className="text-[10px] font-semibold tracking-[.2em] text-theme-inkDim">{law.index}</div>
+                  <h3 className="mt-20 text-2xl font-semibold tracking-[-.035em] text-theme-ink">{law.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-theme-inkDim">{law.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
+          <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <StageLabel>No synthetic green lights</StageLabel>
+              <h2 className="mt-5 max-w-3xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Look at the system that is actually answering.</h2>
+            </div>
+            <p className="max-w-md text-sm leading-7 text-theme-inkDim">This surface probes real Veklom service endpoints. If something is unavailable, it shows unavailable. It does not replace consequence-level proof with a canned demo.</p>
+          </div>
+          <LiveProofFabric compact />
+        </section>
+
+        <section className="relative overflow-hidden border-y border-theme-border bg-[#05070b] text-white">
+          <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(103,232,249,.18),transparent_26%),radial-gradient(circle_at_80%_70%,rgba(99,102,241,.16),transparent_28%)]" aria-hidden="true" />
+          <div className="relative mx-auto grid w-full max-w-[1480px] gap-14 px-5 py-24 sm:px-8 md:py-32 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">From intent to evidence</div>
+              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.96] tracking-[-.055em] md:text-6xl">The action disappears. The evidence does not.</h2>
+              <p className="mt-7 max-w-lg text-base leading-8 text-white/58">Veklom is designed for temporary execution identity and durable consequence evidence. The machine does its job, authority terminates, and the record remains inspectable.</p>
+            </div>
+            <div className="grid content-center gap-3">
+              {flow.map((item, index) => (
+                <div key={item} className="group flex items-center gap-5 rounded-2xl border border-white/10 bg-white/[.035] px-5 py-4 backdrop-blur transition hover:border-cyan-300/25 hover:bg-white/[.055]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-[10px] font-semibold text-white/42">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="text-sm font-medium tracking-[-.01em] text-white/88">{item}</span>
+                  <span className="ml-auto text-white/25 transition group-hover:translate-x-1 group-hover:text-cyan-200">→</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-24 sm:px-8 md:py-32 lg:px-10">
+          <div className="relative overflow-hidden rounded-[36px] border border-theme-border bg-theme-surface px-6 py-14 shadow-[0_40px_120px_rgba(2,8,23,.08)] sm:px-10 md:px-14 md:py-20">
+            <div className="absolute right-[-7rem] top-[-8rem] h-80 w-80 rounded-full bg-[radial-gradient(circle,rgb(var(--theme-accent)/.18),transparent_68%)] blur-2xl" aria-hidden="true" />
+            <div className="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
               <div>
-                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 mb-5">Activation v1</div>
-                <h2 className="text-3xl font-semibold tracking-tight leading-tight mb-4">See authority work, not just read about it.</h2>
-                <p className="text-sm leading-relaxed opacity-75">
-                  The current product gate is a first-run path from bounded grant to allowed consequence, intentional denial, and inspectable evidence.
-                </p>
+                <StageLabel>Capability OS</StageLabel>
+                <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Machines are starting to act. Give them a boundary worth trusting.</h2>
               </div>
-              <Link href="/get" className="mt-10 inline-flex items-center justify-between border-t border-current/25 pt-5 font-bold">
-                Start with Veklom <span aria-hidden="true">→</span>
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Link href="/login?returnTo=/os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
+                <Link href="/architecture" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">See architecture</Link>
+              </div>
             </div>
           </div>
         </section>
-
-        <CapabilityLifecycle />
-
-        <div className="fixed z-40 bottom-5 right-5 hidden md:block">
-          <Link
-            href="/get"
-            className="group flex items-center gap-5 rounded border border-theme-ink bg-theme-ink px-5 py-3.5 text-theme-bg shadow-xl transition-transform hover:-translate-y-1"
-          >
-            <span>
-              <span className="block font-mono text-[9px] uppercase tracking-[0.18em] opacity-60">Machine authority starts here</span>
-              <span className="block text-sm font-bold">Get Veklom</span>
-            </span>
-            <span aria-hidden="true" className="text-xl transition-transform group-hover:translate-x-1">→</span>
-          </Link>
-        </div>
-      </main>
+      </div>
     </HumanAppShell>
   );
 }
