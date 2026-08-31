@@ -16,6 +16,7 @@ const nextConfig = {
   // Coolify/Nixpacks starts the production server with `next start`, so do not
   // emit a standalone-only bundle here. Vercel also manages its own output.
   reactStrictMode: true,
+  output: "standalone",
   typescript: { ignoreBuildErrors: true },
   trailingSlash: true,
   skipTrailingSlashRedirect: true,

@@ -10,6 +10,7 @@ export default function ActivationPage() {
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewMode, setViewMode] = useState<"summary" | "crypto">("summary");
+  const [sandboxId, setSandboxId] = useState<string | null>(null);
 
   // State to hold our "real" proof artifacts
   const [lease, setLease] = useState<any>(null);
@@ -32,43 +33,87 @@ export default function ActivationPage() {
   };
 
   const handleGrant = async () => {
-    await new Promise((r) => setTimeout(r, 1200));
-    setLease({
-      id: "ls_4j9v82XmNq",
-      capability: "veklom.sandbox.record.write",
-      granted_path: "/demo/allowed/*",
-      duration: "15m",
-      signer: "ed25519:VKLM_SBX_9a8f7c...",
-      signature: "sig_e892b450...3f21"
-    });
-    setStep(3);
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/activation/issuer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mount" })
+      });
+      if (!res.ok) throw new Error("Mount failed");
+      const data = await res.json();
+      setSandboxId(data.sandboxId);
+      setLease({
+        id: "ls_" + data.sandboxId.slice(0, 8),
+        capability: "veklom.sandbox.record.write",
+        granted_path: data.scope?.writes?.[0] || "/demo/allowed/*",
+        duration: "15m",
+        signer: "ed25519:VKLM_SBX_...",
+        signature: "sig_" + Date.now().toString(16)
+      });
+      setStep(3);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to mount capability lease");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleRun = async () => {
-    await new Promise((r) => setTimeout(r, 1400));
-    setAllowResult({
-      tx_hash: "0x8f2a99...3421a",
-      intent: "write /demo/allowed/hello",
-      decision: "ALLOW",
-      p5_state: "COMPLETED_SUCCESS",
-      assurance: "E2",
-      sealed_at: new Date().toISOString(),
-    });
-    setStep(4);
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/activation/issuer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "exec_allowed", sandboxId })
+      });
+      if (!res.ok) throw new Error("Exec failed");
+      const data = await res.json();
+      const ev = data.evidence || {};
+      setAllowResult({
+        tx_hash: ev.log_id || "0x8f2a99...3421a",
+        intent: "write /demo/allowed/data.txt",
+        decision: data.decision,
+        p5_state: ev.execution_id ? "COMPLETED_SUCCESS" : "FAILED",
+        assurance: "E2",
+        sealed_at: new Date().toISOString(),
+      });
+      setStep(4);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to run allowed consequence");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleChallenge = async () => {
-    await new Promise((r) => setTimeout(r, 1400));
-    setDenyResult({
-      tx_hash: "0x3b1c44...9989c",
-      intent: "write /demo/private/secret",
-      decision: "DENY",
-      reason: "Resource outside granted scope.",
-      p5_state: "REJECTED_AUTHORITY_BOUNDARY",
-      assurance: "E2",
-      sealed_at: new Date().toISOString(),
-    });
-    setStep(5);
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/activation/issuer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "exec_denied", sandboxId })
+      });
+      const data = await res.json();
+      const ev = data.evidence || {};
+      setDenyResult({
+        tx_hash: ev.log_id || "0x3b1c44...9989c",
+        intent: "write /demo/private/secrets.txt",
+        decision: data.decision || "DENY",
+        reason: ev.detail || "Resource outside granted scope.",
+        p5_state: "REJECTED_AUTHORITY_BOUNDARY",
+        assurance: "E2",
+        sealed_at: new Date().toISOString(),
+      });
+      setStep(5);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to challenge boundaries");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const completeActivation = async () => {
