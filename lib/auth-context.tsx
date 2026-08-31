@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, apiUrl, clearTokens, getToken, setTokens, syncSessionMarker } from "./api";
+import { api, ApiError, clearTokens, setTokens } from "./api";
 import { normalizeTier, Tier } from "./tiers";
 import type { Me, Subscription } from "@/types/api";
 
@@ -18,10 +18,22 @@ interface AuthState {
   refresh: () => Promise<void>;
 }
 
-// The basePath the app is mounted under (e.g. /control-plane-next).
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
-
 const Ctx = createContext<AuthState | null>(null);
+
+function safeReturnTo(value: string | null, fallback = "/os"): string {
+  if (!value) return fallback;
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return fallback;
+  return value;
+}
+
+function markNavigationSession(present: boolean) {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = present
+    ? `veklom.session=present; Path=/; SameSite=Lax; Max-Age=86400${secure}`
+    : `veklom.session=; Path=/; SameSite=Lax; Max-Age=0${secure}`;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | undefined>();
@@ -32,32 +44,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError(undefined);
-    try {
-      const token = getToken();
-      if (token) {
-        const data = await api<Me>("/api/v1/auth/me");
-        setMe(data);
-        try {
-          const subData = await api<Subscription>("/api/v1/billing/subscription");
-          setSub(subData);
-        } catch {
-          setSub({
-            tier: "sovereign",
-            plan: "sovereign",
-            status: "active"
-          } as Subscription);
-        }
-        setLoading(false);
-        return;
-      }
 
-      // No token — clear state so middleware redirects to /login
-      setLoading(false);
-      setMe(undefined);
-      setSub(undefined);
-    } catch (e) {
-      setError((e as Error).message);
+    try {
+      // Always ask the backend. Password login may provide a local bearer token,
+      // while GitHub OAuth intentionally provides an HttpOnly access_token cookie.
+      // Same-origin fetch sends that cookie automatically, so both login methods
+      // converge on the same /auth/me truth boundary.
+      const data = await api<Me>("/api/v1/auth/me");
+      setMe(data);
+      markNavigationSession(true);
+
+      try {
+        const subData = await api<Subscription>("/api/v1/billing/subscription");
+        setSub(subData);
+      } catch {
+        // Subscription transport failure must never manufacture a paid/sovereign tier.
+        setSub(undefined);
+      }
+    } catch (cause) {
+      const isSignedOut = cause instanceof ApiError && cause.status === 401;
+      if (!isSignedOut) {
+        setError(cause instanceof Error ? cause.message : "Unable to validate session");
+      }
       clearTokens();
+      markNavigationSession(false);
       setMe(undefined);
       setSub(undefined);
     } finally {
@@ -79,22 +89,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         url.searchParams.delete("veklom_refresh_token");
         window.history.replaceState({}, document.title, url.toString());
       }
-      syncSessionMarker();
     }
     loadProfile();
   }, [loadProfile]);
-
-
 
   const login = useCallback(async (email: string, password: string) => {
     setError(undefined);
     const res = await api<{ access_token: string; refresh_token?: string; token?: string }>(
       "/api/v1/auth/login",
-      { unauth: true, body: { email, password } }
+      { unauth: true, body: { email: email.trim().toLowerCase(), password } },
     );
     const access = res.access_token || res.token;
-    if (!access) throw new Error("No access token returned");
+    if (!access) throw new Error("Authentication succeeded without an access token");
     setTokens(access, res.refresh_token);
+    markNavigationSession(true);
     await loadProfile();
   }, [loadProfile]);
 
@@ -102,53 +110,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
     const res = await api<{ access_token?: string; token?: string; refresh_token?: string }>(
       "/api/v1/auth/signup",
-      { unauth: true, body: { email, password, full_name: name, name } }
+      { unauth: true, body: { email: email.trim().toLowerCase(), password, full_name: name, name } },
     );
     const access = res.access_token || res.token;
     if (access) {
       setTokens(access, res.refresh_token);
-      
-      // HARDENED PGL ONBOARDING: Force mathematical binding of identity
+      markNavigationSession(true);
+
       try {
-        await api("/api/v1/pgl/onboarding/operator-identity", { 
+        await api("/api/v1/pgl/onboarding/operator-identity", {
           method: "POST",
-          body: { operator_name: name || "Sovereign Operator", role: "OWNER" }
+          body: { operator_name: name || "Sovereign Operator", role: "OWNER" },
         });
         await api("/api/v1/pgl/onboarding/workspace-authority", {
           method: "POST",
-          body: { workspace_name: "Default Workspace", network_zone: "VNP-Global" }
+          body: { workspace_name: "Default Workspace", network_zone: "VNP-Global" },
         });
-      } catch (e) {
-        console.warn("PGL Identity initialization warning:", e);
-        // Continue anyway so the user isn't fully blocked
+      } catch (cause) {
+        console.warn("PGL Identity initialization warning:", cause);
       }
 
       await loadProfile();
       return { autoSignedIn: true };
     }
-    // No token returned — account created but requires explicit sign-in.
     return { autoSignedIn: false };
   }, [loadProfile]);
 
   const loginWithGithub = useCallback(() => {
     if (typeof window === "undefined") return;
-    
-    // Determine where to return to after auth
-    let next = `${BASE_PATH}/os/onboarding`;
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("returnTo")) {
-      next = urlParams.get("returnTo")!;
-    }
-    
-    // We direct the user to our Next.js API route that handles the OAuth sequence
-    // rather than relying on a direct backend URL so the cookie can be set here.
-    const state = btoa(JSON.stringify({ returnTo: next })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    window.location.href = `${BASE_PATH}/api/auth/github/login?state=${encodeURIComponent(state)}`;
+    const params = new URLSearchParams(window.location.search);
+    const next = safeReturnTo(params.get("returnTo"), `${BASE_PATH}/os`);
+    window.location.href = `${BASE_PATH}/api/auth/github/login?next=${encodeURIComponent(next)}`;
   }, []);
 
   const logout = useCallback(() => {
     api("/api/v1/auth/logout", { method: "POST" }).catch(() => {});
     clearTokens();
+    markNavigationSession(false);
     setMe(undefined);
     setSub(undefined);
   }, []);
@@ -163,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuth(): AuthState {
-  const v = useContext(Ctx);
-  if (!v) throw new Error("useAuth must be used inside <AuthProvider>");
-  return v;
+  const value = useContext(Ctx);
+  if (!value) throw new Error("useAuth must be used inside <AuthProvider>");
+  return value;
 }
