@@ -15,6 +15,53 @@ const navItems = [
   ["/machine", "Machine"],
 ] as const;
 
+const footerGroups = [
+  {
+    title: "Capability OS",
+    links: [
+      ["/byos", "BYOS Runtime"],
+      ["/lockerphycer", "LockerPhycer"],
+      ["/cappo", "CAPPO"],
+      ["/capi", "cAPI"],
+      ["/vlink", "VLink"],
+      ["/guardian", "Guardian"],
+    ],
+  },
+  {
+    title: "Evidence & Network",
+    links: [
+      ["/pgl", "PGL / Gnomledger"],
+      ["/eee", "EEE"],
+      ["/vnp", "VNP"],
+      ["/vcgb", "VCGB"],
+      ["/proof", "Live Proof"],
+      ["/conformance", "Conformance"],
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      ["/docs", "Documentation"],
+      ["/api", "API Directory"],
+      ["/architecture", "Architecture"],
+      ["/security", "Security"],
+      ["/status", "System Status"],
+      ["/support", "Support"],
+    ],
+  },
+  {
+    title: "Legal & Trust",
+    links: [
+      ["/privacy", "Privacy"],
+      ["/terms", "Terms"],
+      ["/acceptable-use", "Acceptable Use"],
+      ["/cookies", "Cookies"],
+      ["/dpa", "Data Processing Addendum"],
+      ["/subprocessors", "Subprocessors"],
+    ],
+  },
+] as const;
+
 export function HumanAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -80,21 +127,44 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
       <main className="flex w-full min-w-0 flex-1 flex-col">{children}</main>
 
       <footer className="mt-auto border-t border-theme-border bg-theme-surface/55">
-        <div className="mx-auto grid w-full max-w-[1480px] gap-10 px-5 py-10 sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:px-10">
-          <div>
-            <PremiumLogo />
-            <p className="mt-5 max-w-md text-sm leading-6 text-theme-inkDim">Governed machine action infrastructure. Authority before consequence. Evidence after execution. No residual agency after termination.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-theme-inkDim sm:grid-cols-3 md:text-right">
-            <Link href="/proof" className="hover:text-theme-ink">Proof</Link>
-            <Link href="/security" className="hover:text-theme-ink">Security</Link>
-            <Link href="/docs" className="hover:text-theme-ink">Docs</Link>
-            <Link href="/privacy" className="hover:text-theme-ink">Privacy</Link>
-            <Link href="/terms" className="hover:text-theme-ink">Terms</Link>
-            <Link href="/machine" className="hover:text-theme-ink">Machine</Link>
+        <div className="mx-auto w-full max-w-[1480px] px-5 py-14 sm:px-8 md:py-16 lg:px-10">
+          <div className="grid gap-12 xl:grid-cols-[1.05fr_1.95fr]">
+            <div>
+              <PremiumLogo />
+              <p className="mt-5 max-w-md text-sm leading-7 text-theme-inkDim">Governed machine action infrastructure. Authority before consequence. Evidence after execution. No residual agency after termination.</p>
+              <div className="mt-8 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[.18em] text-theme-inkDim">
+                <span className="rounded-full border border-theme-border bg-theme-bg px-3 py-1.5">Canada-first</span>
+                <span className="rounded-full border border-theme-border bg-theme-bg px-3 py-1.5">Sovereign runtime</span>
+                <span className="rounded-full border border-theme-border bg-theme-bg px-3 py-1.5">Evidence-led</span>
+              </div>
+            </div>
+
+            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+              {footerGroups.map((group) => (
+                <div key={group.title}>
+                  <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">{group.title}</div>
+                  <div className="mt-5 grid gap-3 text-sm">
+                    {group.links.map(([href, label]) => (
+                      <Link key={href} href={href} className="text-theme-inkDim transition hover:translate-x-0.5 hover:text-theme-ink">{label}</Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="border-t border-theme-border px-5 py-5 text-center text-[11px] text-theme-inkDim sm:px-8 lg:px-10">© {new Date().getFullYear()} Veklom · Canada-first governed machine infrastructure</div>
+
+        <div className="border-t border-theme-border">
+          <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-3 px-5 py-5 text-[11px] text-theme-inkDim sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
+            <span>© {new Date().getFullYear()} Veklom · Governed machine infrastructure</span>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <Link href="/.well-known/security.txt" className="hover:text-theme-ink">security.txt</Link>
+              <Link href="/privacy" className="hover:text-theme-ink">Privacy</Link>
+              <Link href="/terms" className="hover:text-theme-ink">Terms</Link>
+              <Link href="/support" className="hover:text-theme-ink">Support</Link>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
