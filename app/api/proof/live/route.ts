@@ -6,6 +6,7 @@ export const revalidate = 0;
 type ServiceSpec = {
   id: string;
   label: string;
+  role: string;
   url: string;
 };
 
@@ -40,6 +41,7 @@ async function probe(service: ServiceSpec) {
     return {
       id: service.id,
       label: service.label,
+      role: service.role,
       endpoint: service.url,
       reachable: true,
       healthy: response.ok,
@@ -51,6 +53,7 @@ async function probe(service: ServiceSpec) {
     return {
       id: service.id,
       label: service.label,
+      role: service.role,
       endpoint: service.url,
       reachable: false,
       healthy: false,
@@ -64,16 +67,43 @@ async function probe(service: ServiceSpec) {
 }
 
 export async function GET() {
-  const backend = process.env.BACKEND_URL || process.env.VEKLOM_BACKEND_URL || "https://api.veklom.com";
+  const byos = process.env.BACKEND_URL || process.env.VEKLOM_BACKEND_URL || "https://api.veklom.com";
+  const lockerphycer = process.env.LOCKERPHYCER_URL || "http://host.docker.internal:8092";
   const capi = process.env.CAPI_URL || "https://capi.veklom.com";
   const cappo = process.env.CAPPO_URL || "https://cappo.veklom.com";
   const pgl = process.env.PGL_URL || "https://pgl.veklom.com";
 
   const services: ServiceSpec[] = [
-    { id: "control-api", label: "Control API", url: join(backend, "/health") },
-    { id: "capi", label: "cAPI", url: join(capi, "/health") },
-    { id: "cappo", label: "CAPPO", url: join(cappo, "/health") },
-    { id: "pgl", label: "Evidence Ledger", url: join(pgl, "/health") },
+    {
+      id: "byos",
+      label: "BYOS Runtime",
+      role: "Tenant / workspace execution substrate",
+      url: join(byos, "/ready"),
+    },
+    {
+      id: "lockerphycer",
+      label: "LockerPhycer",
+      role: "Governed security, key, identity and execution-host boundary",
+      url: join(lockerphycer, "/health"),
+    },
+    {
+      id: "cappo",
+      label: "CAPPO",
+      role: "Consequence authorization boundary",
+      url: join(cappo, "/health"),
+    },
+    {
+      id: "capi",
+      label: "cAPI",
+      role: "Cross-service connection layer",
+      url: join(capi, "/health"),
+    },
+    {
+      id: "pgl",
+      label: "Gnomledger / PGL",
+      role: "Durable evidence and provenance",
+      url: join(pgl, "/health"),
+    },
   ];
 
   const results = await Promise.all(services.map(probe));
