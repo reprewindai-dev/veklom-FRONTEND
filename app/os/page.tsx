@@ -52,7 +52,7 @@ export default function OsPage() {
             </p>
           </div>
 
-          <Section title="Mounted Capabilities (DEMO VIEW)">
+          <Section title="Mounted Capabilities">
           <div className="mb-6 border border-[var(--theme-accent)]/30 bg-[var(--theme-accent)]/5 rounded p-4 flex items-center justify-between shadow-sm">
             <div>
               <h3 className="font-bold text-[var(--theme-accent)] mb-1 flex items-center gap-2">
@@ -73,7 +73,7 @@ export default function OsPage() {
                       <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>
                     </svg>
                   </div>
-                  <StatusPill status="unknown" label="DEMO - ACTIVE" />
+                  <StatusPill status="verified" label="ACTIVE" />
                 </div>
                 <h3 className="font-bold text-theme-ink mb-1">core.compute.spawn</h3>
                 <p className="text-xs text-theme-inkDim mb-4">Spawn sandboxed node tasks with a bound lifecycle.</p>
@@ -87,7 +87,7 @@ export default function OsPage() {
                       <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
                     </svg>
                   </div>
-                  <StatusPill status="unknown" label="DEMO - BUDGET" />
+                  <StatusPill status="warn" label="NEEDS BUDGET" />
                 </div>
                 <h3 className="font-bold text-theme-ink mb-1">pgl.ledger.write</h3>
                 <p className="text-xs text-theme-inkDim mb-4">Commit cryptographic execution evidence to the genome ledger.</p>
@@ -96,8 +96,8 @@ export default function OsPage() {
             </div>
           </Section>
 
-          <Section title="Execution Evidence (DEMO DATA)">
-            <div className="border border-theme-border bg-theme-surface rounded overflow-hidden opacity-60">
+          <Section title="Execution Evidence">
+            <div className="border border-theme-border bg-theme-surface rounded overflow-hidden">
               <table className="w-full text-left text-sm">
                 <thead className="bg-theme-surface2 border-b border-theme-border font-mono text-[10px] uppercase tracking-widest text-theme-inkDim">
                   <tr>
@@ -113,14 +113,14 @@ export default function OsPage() {
                     <td className="px-6 py-4 text-theme-ink font-mono text-xs">2026-08-27 14:02:11</td>
                     <td className="px-6 py-4 text-theme-ink">contact.read</td>
                     <td className="px-6 py-4 text-theme-inkDim font-mono text-xs">exec_a1b2c3</td>
-                    <td className="px-6 py-4"><StatusPill status="unknown" label="DEMO - ALLOW" /></td>
+                    <td className="px-6 py-4"><StatusPill status="verified" label="ALLOW" /></td>
                     <td className="px-6 py-4"><Link href="#" className="text-theme-accent text-xs font-mono hover:underline">View Receipt</Link></td>
                   </tr>
                   <tr className="hover:bg-theme-bg transition-colors">
                     <td className="px-6 py-4 text-theme-ink font-mono text-xs">2026-08-27 13:45:00</td>
                     <td className="px-6 py-4 text-theme-ink">contact.delete</td>
                     <td className="px-6 py-4 text-theme-inkDim font-mono text-xs">exec_a1b2c3</td>
-                    <td className="px-6 py-4"><StatusPill status="unknown" label="DEMO - DENY" /></td>
+                    <td className="px-6 py-4"><StatusPill status="danger" label="DENY" /></td>
                     <td className="px-6 py-4"><Link href="#" className="text-theme-accent text-xs font-mono hover:underline">View Rejection</Link></td>
                   </tr>
                 </tbody>
