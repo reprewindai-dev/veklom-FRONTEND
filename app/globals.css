@@ -3,19 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --theme-bg: #F7F8FB;
+  --theme-bg: #F6F8FC;
   --theme-surface: #FFFFFF;
   --theme-surface-2: #F0F3F8;
   --theme-raised: #FFFFFF;
-  --theme-border: #E1E5EE;
-  --theme-accent: 37, 71, 208;
+  --theme-border: rgba(15, 23, 42, 0.08);
+  --theme-accent: 0, 229, 255;
   --theme-accent-steel: 138, 155, 176;
-  --theme-text: #10162B;
-  --theme-text-muted: #545F7A;
+  --theme-text: rgba(15, 23, 42, 0.92);
+  --theme-text-muted: rgba(71, 85, 105, 0.65);
   --theme-verified: 0, 255, 102;
   --theme-warn: 255, 171, 0;
   --theme-danger: 255, 77, 77;
-  --theme-info: 37, 71, 208;
+  --theme-info: 0, 229, 255;
   --theme-unknown: 107, 114, 128;
   --theme-mid-gray: #6B7280;
   --theme-white: #FFFFFF;
@@ -23,19 +23,19 @@
 }
 
 [data-theme="dark"] {
-  --theme-bg: #0A0E1F;
-  --theme-surface: #10162B;
+  --theme-bg: #0A0E1A;
+  --theme-surface: #111827;
   --theme-surface-2: #0D1220;
   --theme-raised: #111827;
-  --theme-border: #232B4A;
-  --theme-accent: 91, 127, 255;
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-accent: 0, 229, 255;
   --theme-accent-steel: 138, 155, 176;
-  --theme-text: #F3F5FC;
-  --theme-text-muted: #8792B5;
+  --theme-text: rgba(255, 255, 255, 0.92);
+  --theme-text-muted: rgba(255, 255, 255, 0.55);
   --theme-verified: 0, 255, 102;
   --theme-warn: 255, 171, 0;
   --theme-danger: 255, 77, 77;
-  --theme-info: 91, 127, 255;
+  --theme-info: 0, 229, 255;
   --theme-unknown: 107, 114, 128;
   --theme-mid-gray: #8A9BB0;
   --theme-white: #FFFFFF;
@@ -43,19 +43,19 @@
 }
 
 [data-theme="machine"] {
-  --theme-bg: #0B0B0B;
-  --theme-surface: #171717;
+  --theme-bg: #080808;
+  --theme-surface: #111111;
   --theme-surface-2: #181818;
   --theme-raised: #222222;
-  --theme-border: #2E2E2E;
-  --theme-accent: 138, 138, 138;
+  --theme-border: rgba(255, 255, 255, 0.10);
+  --theme-accent: 208, 208, 208;
   --theme-accent-steel: 102, 102, 102;
-  --theme-text: #EDEDED;
-  --theme-text-muted: #8A8A8A;
+  --theme-text: rgba(255, 255, 255, 0.86);
+  --theme-text-muted: rgba(255, 255, 255, 0.55);
   --theme-verified: 242, 242, 242;
   --theme-warn: 184, 184, 184;
   --theme-danger: 122, 122, 122;
-  --theme-info: 138, 138, 138;
+  --theme-info: 208, 208, 208;
   --theme-unknown: 85, 85, 85;
   --theme-mid-gray: #666666;
   --theme-white: #F5F5F5;
