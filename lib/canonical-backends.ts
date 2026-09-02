@@ -32,7 +32,7 @@ const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 export function canonicalBackends(): CanonicalBackendConfig[] {
   const byosUrl = process.env.BACKEND_URL || "https://api.veklom.com";
   const capiUrl = CAPI_RUNTIME_URL;
-  const cappoUrl = process.env.CAPPO_URL || "https://cappo.veklom.com";
+  const cappoUrl = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
   const ledgerUrl = process.env.LEDGER_URL || "https://ledger.veklom.com";
   const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
   const pglUrl = process.env.PGL_URL || `${byosUrl}/api/v1/pgl/proxy`;

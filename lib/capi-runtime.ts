@@ -1,7 +1,7 @@
 export const CAPI_RUNTIME_URL =
   process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL || "https://capi.veklom.com";
 
-export const CAPPO_BACKEND_URL = process.env.CAPPO_BACKEND_URL;
+export const CAPPO_BACKEND_URL = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL;
 
 export const CAPI_RUNTIME_LABEL = "cAPI Runtime";
 

@@ -84,7 +84,7 @@ export default function ActivationPage() {
 
   useEffect(() => {
     const scopedWorkspace = me?.workspace_id;
-    if (scopedWorkspace && !workspaceId) setWorkspaceId(scopedWorkspace);
+    if (typeof scopedWorkspace === "string" && scopedWorkspace && !workspaceId) setWorkspaceId(scopedWorkspace);
   }, [me?.workspace_id, workspaceId]);
 
   async function run(action: () => Promise<void>) {

@@ -9,12 +9,14 @@ import { VeklomLogo } from"./VeklomLogo";
 import { ProofBadge } from"./ProofBadge";
 import { CommandPalette } from"./CommandPalette";
 import { TerminalConsole } from"./TerminalConsole";
-import { SandboxProvider } from"@/lib/cos/sandbox";
+import { readEnvironmentIsSandbox, SandboxProvider } from"@/lib/cos/sandbox";
 import { ProdSandboxToggle } from"./ProdSandboxToggle";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
  const { me, loading } = useAuth();
- const [sandbox, setSandbox] = useState(false);
+ const [sandbox, setSandbox] = useState(() =>
+   typeof window !== "undefined" && window.localStorage.getItem("veklom.environment") === "sandbox",
+ );
  const [paletteOpen, setPaletteOpen] = useState(false);
  const [terminalOpen, setTerminalOpen] = useState(false);
  const [clock, setClock] = useState("");
@@ -77,6 +79,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
  cancelled = true;
  if (hTimer) clearInterval(hTimer);
  if (bTimer) clearInterval(bTimer);
+ };
+ }, []);
+
+ useEffect(() => {
+ const sync = () => setSandbox(readEnvironmentIsSandbox());
+ sync();
+ window.addEventListener("veklom.environment.changed", sync);
+ window.addEventListener("storage", sync);
+ return () => {
+ window.removeEventListener("veklom.environment.changed", sync);
+ window.removeEventListener("storage", sync);
  };
  }, []);
 
