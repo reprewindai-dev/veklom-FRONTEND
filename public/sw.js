@@ -1,5 +1,5 @@
 const CACHE = "veklom-shell-v1";
-const STATIC = ["/get", "/site.webmanifest", "/icon-192.png", "/icon-512.png", "/favicon.svg"];
+const STATIC = ["/get", "/site.webmanifest", "/icon-192.png", "/icon-512.png", "/favicon.ico", "/favicon-32.png", "/favicon-48.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC)).catch(() => undefined));

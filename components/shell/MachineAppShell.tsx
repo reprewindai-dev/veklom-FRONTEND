@@ -31,7 +31,7 @@ export function MachineAppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex h-[72px] w-full max-w-[1540px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
           <Link href="/machine" className="group flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-theme-border bg-theme-surface text-theme-ink shadow-[0_10px_30px_rgba(0,0,0,.25)]">
-              <VeklomMark className="h-5 w-5" />
+              <VeklomMark className="h-8 w-8 object-contain grayscale" />
             </span>
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[.22em] text-theme-ink">Veklom / machine</div>

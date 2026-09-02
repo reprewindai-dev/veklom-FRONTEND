@@ -11,10 +11,12 @@ describe("Veklom universal acquisition contract", () => {
     expect(manifest.scope).toBe("/");
     expect(manifest.display).toBe("standalone");
     expect(manifest.icons.map((icon: { src: string }) => icon.src)).toEqual(
-      expect.arrayContaining(["/icon-192.png", "/icon-512.png", "/favicon.svg"]),
+      expect.arrayContaining(["/icon-192.png", "/icon-512.png", "/favicon-32.png", "/favicon-48.png"]),
     );
     expect(fs.existsSync(path.join(root, "public/icon-192.png"))).toBe(true);
     expect(fs.existsSync(path.join(root, "public/icon-512.png"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "public/favicon-32.png"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "public/favicon-48.png"))).toBe(true);
   });
 
   test("service worker caches only the acquisition shell, not authority or API responses", () => {
