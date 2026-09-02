@@ -38,6 +38,7 @@ const BYOS_BACKEND_URL =
 
 const CAPPO_BACKEND_URL =
  process.env.CAPPO_BACKEND_URL ||
+ process.env.CAPPO_URL ||
  process.env.CAPI_RUNTIME_URL ||"https://capi.veklom.com";
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/,"");

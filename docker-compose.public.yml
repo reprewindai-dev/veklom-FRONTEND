@@ -7,8 +7,9 @@ services:
         BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
         LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
         CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
-        CAPPO_URL: ${CAPPO_URL:-https://cappo.veklom.com}
-        PGL_URL: ${PGL_URL:-https://pgl.veklom.com}
+        CAPPO_URL: ${CAPPO_BACKEND_URL:-${CAPPO_URL:-http://host.docker.internal:8002}}
+        CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
+        PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
         NEXT_PUBLIC_API_BASE_URL: ""
     image: veklom/frontend:local
     container_name: veklom-frontend
@@ -22,8 +23,9 @@ services:
       BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
       LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
       CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
-      CAPPO_URL: ${CAPPO_URL:-https://cappo.veklom.com}
-      PGL_URL: ${PGL_URL:-https://pgl.veklom.com}
+      CAPPO_URL: ${CAPPO_BACKEND_URL:-${CAPPO_URL:-http://host.docker.internal:8002}}
+      CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
+      PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

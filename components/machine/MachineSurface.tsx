@@ -78,6 +78,7 @@ export function MachineSurface() {
             <div className="text-[9px] font-semibold uppercase tracking-[.24em] text-theme-inkDim">Machine protocol / live runtime</div>
             <h1 className="mt-5 max-w-3xl font-sans text-4xl font-semibold leading-[.94] tracking-[-.055em] text-theme-ink sm:text-5xl md:text-7xl">Read the system without the marketing layer.</h1>
             <p className="mt-6 max-w-2xl font-sans text-sm leading-7 text-theme-inkDim md:text-base">This surface observes declared runtime planes directly and links to the raw machine-readable registries. No static ONLINE badge is emitted when the backend cannot prove it.</p>
+            <p className="mt-6 max-w-2xl font-sans text-sm leading-7 text-theme-inkDim md:text-base">You are reading this as a machine would receive it. Resolve a capability, get scoped authority, execute, produce evidence, settle. Nothing here runs past its granted scope. That is enforced, not promised.</p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">

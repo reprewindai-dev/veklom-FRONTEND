@@ -159,6 +159,7 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
 
         <div className="border-t border-theme-border">
           <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-3 px-5 py-5 text-[11px] text-theme-inkDim sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
+            <p className="text-xs italic text-theme-inkDim">&quot;Anything is possible, if you&#39;re willing to build the wire first.&quot;</p>
             <span>© {new Date().getFullYear()} Veklom · Governed machine infrastructure</span>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               <Link href="/.well-known/security.txt" className="hover:text-theme-ink">security.txt</Link>

@@ -40,6 +40,7 @@ export function MachineAppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/api/proof/live" className="hidden rounded-full border border-theme-border bg-theme-surface px-3 py-2 text-[9px] font-semibold uppercase tracking-[.16em] text-theme-inkDim transition hover:text-theme-ink sm:inline-flex">raw runtime json ↗</a>
             <Link href="/" className="inline-flex min-h-10 items-center justify-center rounded-full bg-theme-ink px-4 text-[10px] font-semibold uppercase tracking-[.16em] text-theme-bg transition hover:opacity-90">Human surface →</Link>
           </div>

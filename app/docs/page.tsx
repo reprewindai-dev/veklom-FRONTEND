@@ -105,6 +105,7 @@ export default function DocumentationPage() {
               <p className="mt-6 max-w-2xl text-sm leading-7 text-theme-inkDim">Claims, conformance, evidence indexes, OpenAPI, MCP manifests and the live runtime probe are exposed as machine-oriented surfaces so automated systems do not need to scrape a marketing page to understand Veklom.</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/machine" className="inline-flex min-h-12 items-center justify-center rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg">Machine surface →</Link>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a href="/api/proof/live" className="inline-flex min-h-12 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-6 text-sm font-semibold text-theme-ink">Runtime JSON</a>
               </div>
             </div>

@@ -9,12 +9,13 @@ import { VeklomLogo } from"./VeklomLogo";
 import { ProofBadge } from"./ProofBadge";
 import { CommandPalette } from"./CommandPalette";
 import { TerminalConsole } from"./TerminalConsole";
-import { SandboxProvider } from"@/lib/cos/sandbox";
+import { readEnvironmentIsSandbox, SandboxProvider } from"@/lib/cos/sandbox";
 import { ProdSandboxToggle } from"./ProdSandboxToggle";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
  const { me, loading } = useAuth();
  const [sandbox, setSandbox] = useState(false);
+ const environmentKey = sandbox ? "sandbox" : "production";
  const [paletteOpen, setPaletteOpen] = useState(false);
  const [terminalOpen, setTerminalOpen] = useState(false);
  const [clock, setClock] = useState("");
@@ -31,6 +32,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
  }, []);
 
  useEffect(() => {
+ setHealth(null);
+ setHealthError(null);
+ setBalance(null);
+ setBalanceError(null);
  let cancelled = false;
  let hTimer: ReturnType<typeof setInterval> | undefined;
  let bTimer: ReturnType<typeof setInterval> | undefined;
@@ -77,6 +82,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
  cancelled = true;
  if (hTimer) clearInterval(hTimer);
  if (bTimer) clearInterval(bTimer);
+ };
+ }, [sandbox]);
+
+ useEffect(() => {
+ const sync = () => setSandbox(readEnvironmentIsSandbox());
+ sync();
+ window.addEventListener("veklom.environment.changed", sync);
+ window.addEventListener("storage", sync);
+ return () => {
+ window.removeEventListener("veklom.environment.changed", sync);
+ window.removeEventListener("storage", sync);
  };
  }, []);
 
@@ -131,7 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
  <span className="hidden items-center gap-1 rounded-full border border-cos-border px-3 py-2 font-mono text-[10px] text-cos-steel xl:flex"><Clock3 size={13} />{clock}</span>
  </div>
  </header>
- <div className="flex min-h-0 flex-1"><LeftNav onTerminal={() => setTerminalOpen(true)} /><main className="min-w-0 flex-1 overflow-y-auto">{children}</main></div>
+ <div className="flex min-h-0 flex-1"><LeftNav onTerminal={() => setTerminalOpen(true)} /><main className="min-w-0 flex-1 overflow-y-auto"><div key={environmentKey} className="contents">{children}</div></main></div>
  </div>
  <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
  <TerminalConsole open={terminalOpen} onClose={() => setTerminalOpen(false)} />

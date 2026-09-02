@@ -5,7 +5,7 @@ export async function GET(
   context: { params: Promise<{ executionId: string }> },
 ) {
   const { executionId } = await context.params;
-  const baseUrl = process.env.CAPPO_BACKEND_URL ?? "http://127.0.0.1:8002";
+  const baseUrl = process.env.CAPPO_BACKEND_URL ?? process.env.CAPPO_URL ?? "http://127.0.0.1:8002";
   const workspaceToken = process.env.CAPPO_WORKSPACE_JWT;
   if (!workspaceToken) {
     return NextResponse.json(
