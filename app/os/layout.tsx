@@ -8,6 +8,20 @@ export const metadata: Metadata = {
  template:"%s · Capability OS · Veklom",
  },
  description:"Veklom Capability OS — the trust layer machines pass through. Prove identity, capability, governance, execution, evidence, and settlement.",
+ openGraph: {
+ type: "website",
+ siteName: "Veklom Capability OS",
+ title: "Capability OS · Veklom",
+ description: "Veklom Capability OS — the trust layer machines pass through.",
+ url: "/os",
+ images: [{ url: "/og-capability-os.jpg", width: 1024, height: 1024, alt: "Veklom Capability OS" }],
+ },
+ twitter: {
+ card: "summary_large_image",
+ title: "Capability OS · Veklom",
+ description: "Veklom Capability OS — the trust layer machines pass through.",
+ images: ["/og-capability-os.jpg"],
+ },
 };
 
 import { cookies } from"next/headers";

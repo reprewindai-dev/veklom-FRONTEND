@@ -15,8 +15,8 @@ const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 const TITLE = "Veklom - Capability OS for Governed Machine Action";
 const DESC = "Mount a capability. Bind it to identity, policy, budget, and time. Execute through a governed boundary. Preserve evidence after the machine disappears.";
 
-const OG_IMAGE = "/og/og-home.jpg";
-const TWITTER_IMAGE = "/og/og-home.jpg";
+const OG_IMAGE = "/images/veklom-logo-m2m.jpg";
+const TWITTER_IMAGE = "/images/veklom-logo-m2m.jpg";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://veklom.com"),
@@ -35,12 +35,13 @@ export const metadata: Metadata = {
   publisher: "Veklom",
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    shortcut: [{ url: "/favicon.svg" }],
-    apple: [{ url: "/apple-touch-icon.png" }],
+    shortcut: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/site.webmanifest",
   openGraph: {
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESC,
     url: "/",
-    images: [{ url: OG_IMAGE, width: 1792, height: 1024, alt: "Veklom - Capability OS" }],
+    images: [{ url: OG_IMAGE, width: 1024, height: 1024, alt: "Veklom M2M Trust Infrastructure" }],
   },
   twitter: {
     card: "summary_large_image",

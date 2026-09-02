@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
+import { PremiumLogo } from "@/components/brand/PremiumPrimitives";
 
 interface GlobalFooterProps {
   isMachine?: boolean;
@@ -62,9 +63,7 @@ export function GlobalFooter({ isMachine = true }: GlobalFooterProps) {
     >
       <div className="mx-auto grid max-w-7xl gap-12 xl:grid-cols-[1fr_2fr]">
         <div>
-          <Link href="/" className="inline-flex">
-            <img src="/veklom-wordmark.svg" alt="Veklom" className="h-6 w-auto opacity-75" />
-          </Link>
+          <PremiumLogo />
           <p className="mt-6 max-w-sm font-sans text-sm leading-7 text-cos-text/55">
             Governed machine action infrastructure. Authority before consequence. Evidence after execution. No residual agency after termination.
           </p>

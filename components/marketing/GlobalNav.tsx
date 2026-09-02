@@ -3,6 +3,7 @@
 import Link from"next/link";
 import React, { useEffect, useState } from"react";
 import { useUIStore } from"@/lib/store/ui-store";
+import { PremiumLogo } from "@/components/brand/PremiumPrimitives";
 
 interface GlobalNavProps {
  rightSlot?: React.ReactNode;
@@ -24,9 +25,7 @@ export function GlobalNav({ rightSlot, isMachineOverride }: GlobalNavProps) {
  data-machine={isMachine}
  >
  <div className="flex items-center gap-6">
- <Link href="/">
- <img src="/veklom-wordmark.svg" alt="Veklom Wordmark" className="h-8 w-auto" />
- </Link>
+ <PremiumLogo />
  <div className="hidden md:flex gap-6 text-sm font-medium text-cos-text/80 transition-colors" data-machine={isMachine}>
  <Link href="/vnp" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>VNP</Link>
  <Link href="/eee" className="hover:text-cos-text data-[machine=true]:hover:text-cos-accent transition-colors" data-machine={isMachine}>EEE</Link>

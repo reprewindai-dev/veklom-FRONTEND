@@ -1,20 +1,25 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export function VeklomMark({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path d="M8 8h10l6 18 6-18h10L27.5 40h-7L8 8Z" fill="currentColor" />
-      <path d="M18 8h12L24 26 18 8Z" fill="var(--theme-bg)" opacity=".96" />
-    </svg>
+    <Image
+      src="/brand/veklom-shield-512.png"
+      alt=""
+      width={512}
+      height={512}
+      className={className}
+      aria-hidden="true"
+    />
   );
 }
 
 export function PremiumLogo() {
   return (
     <Link href="/" className="group inline-flex items-center gap-3" aria-label="Veklom home">
-      <span className="flex h-9 w-9 items-center justify-center rounded-[11px] border border-theme-border bg-theme-surface text-theme-ink shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 group-hover:-translate-y-0.5">
-        <VeklomMark className="h-5 w-5" />
+      <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[11px] border border-theme-border bg-black shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 group-hover:-translate-y-0.5">
+        <VeklomMark className="h-9 w-9 object-contain" />
       </span>
       <span className="flex items-baseline gap-2">
         <span className="text-[15px] font-semibold tracking-[-0.02em] text-theme-ink">Veklom</span>

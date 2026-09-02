@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 // --- Branding ---
-export function VeklomLogoLockup() { return ( <div className="flex items-center gap-4"> <Link href="/" className="flex items-center gap-3 font-mono font-bold text-sm tracking-widest text-theme-ink hover:text-theme-accent transition-colors"> <img src="/logo.jpg" alt="Veklom Logo" className="w-8 h-8 rounded-sm border border-theme-border/50" /> <span className="text-lg">VEKLOM</span> </Link> <div className="h-4 w-px bg-theme-border hidden sm:block"></div> <span className="text-theme-inkDim font-mono text-[10px] uppercase tracking-widest hidden sm:inline-block"> Capability OS </span> </div> ); }
+export function VeklomLogoLockup() { return ( <div className="flex items-center gap-4"> <Link href="/" className="flex items-center gap-3 font-mono font-bold text-sm tracking-widest text-theme-ink hover:text-theme-accent transition-colors"> <img src="/brand/veklom-shield-512.png" alt="Veklom" className="h-8 w-8 rounded-sm border border-theme-border/50 object-contain" /> <span className="text-lg">VEKLOM</span> </Link> <div className="h-4 w-px bg-theme-border hidden sm:block"></div> <span className="text-theme-inkDim font-mono text-[10px] uppercase tracking-widest hidden sm:inline-block"> Capability OS </span> </div> ); }
 
 // --- Layout ---
 export function PageHeader({ title, description, badge }: { title: string, description: string, badge?: React.ReactNode }) {
