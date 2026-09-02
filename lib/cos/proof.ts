@@ -8,6 +8,7 @@ export type ProofObservation =
   | { kind: "static-assertion"; status: number }
   | { kind: "measured"; status: number }
   | { kind: "local-receipt"; status: number }
+  | { kind: "unproven"; status: number }
   | { kind: "source-of-truth"; status: number; signed?: boolean; verified?: boolean };
 
 export interface PayloadClassification {
@@ -23,6 +24,12 @@ export function classifyPayload(payload: unknown): PayloadClassification {
   if (isRecord(payload) && payload.proofState === "degraded") {
     return {
       observation: { kind: "failed", status: 200 },
+      reason: typeof payload.proofSignal === "string" ? payload.proofSignal : undefined,
+    };
+  }
+  if (isRecord(payload) && payload.proofState === "needs_proof") {
+    return {
+      observation: { kind: "unproven", status: 200 },
       reason: typeof payload.proofSignal === "string" ? payload.proofSignal : undefined,
     };
   }
@@ -84,6 +91,7 @@ export function deriveProofStatus(
 ): ProofStatus {
   if (observation.kind === "no-route") return "Not started";
   if (observation.kind === "failed") return "Degraded";
+  if (observation.kind === "unproven") return "Needs proof";
   if (sandbox && observation.kind !== "not-called") return "Simulated";
   switch (observation.kind) {
     case "not-called":

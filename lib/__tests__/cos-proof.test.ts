@@ -58,4 +58,25 @@ describe("Capability OS proof derivation", () => {
   it("does not let runtime metadata turn a health envelope into source truth", () => {
     expect(classifyPayload({ status: "ok", _runtimeMeta: {} }).observation.kind).toBe("reachability-only");
   });
+
+  it("does not let an absent VNP telemetry store read as Live", () => {
+    const classified = classifyPayload({
+      proofState: "needs_proof",
+      proofSignal: "No VNP regional telemetry rows recorded",
+      apis: [],
+    });
+
+    expect(classified.observation.kind).toBe("unproven");
+    expect(classified.reason).toBe("No VNP regional telemetry rows recorded");
+    expect(deriveProofStatus(classified.observation)).toBe("Needs proof");
+    expect(deriveProofStatus(classified.observation, true)).toBe("Needs proof");
+    expect(deriveProofStatus(classified.observation)).not.toBe("Live");
+  });
+
+  it("keeps a self-asserted verified VNP payload at Live, never Verified", () => {
+    const classified = classifyPayload({ proofState: "verified", apis: [{}] });
+
+    expect(deriveProofStatus(classified.observation)).toBe("Live");
+    expect(deriveProofStatus(classified.observation)).not.toBe("Verified");
+  });
 });
