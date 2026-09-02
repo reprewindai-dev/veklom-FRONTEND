@@ -10,6 +10,13 @@ const laws = [
   { index: "03", title: "Agency", body: "Execution identity is temporary. When the execution ends, its authority ends with it." },
 ];
 
+const demands = [
+  { title: "Prove a human was in control.", body: "Regulators are no longer asking for a promise of oversight. They are asking for proof of it, on record, per action. Veklom's evidence is a signed record of exactly what was authorized, by whom, and what happened next." },
+  { title: "Tell me who's liable.", body: "When a machine acts on your behalf, \"the AI did it\" is not an answer a regulator, a customer, or your board accepts. Every action through Veklom carries an identity, a scope, and a signature, so accountability never has to be reconstructed after the fact." },
+  { title: "Don't let it do more than I said.", body: "Every capability is bounded before it runs: what it may touch, spend, or reach. The permission is the control, not a report about a permission that didn't hold." },
+  { title: "Give me something I can show an auditor.", body: "Not logs scattered across six systems. One evidence trail per transaction that someone outside the company could pick up cold and verify without calling you first." },
+];
+
 const flow = ["Mount capability", "Bind authority", "Execute", "Observe", "Reconcile", "Preserve evidence"];
 
 export default function LandingPage() {
@@ -49,6 +56,28 @@ export default function LandingPage() {
 
           <div className="relative z-10 lg:translate-x-3">
             <AuthorityOrb />
+          </div>
+        </section>
+
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
+          <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
+            <div>
+              <StageLabel>A new kind of trust is arriving</StageLabel>
+              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Two machines just agreed to trust each other. No one was watching.</h2>
+              <p className="mt-7 max-w-lg text-base leading-8 text-theme-inkDim">It happens quietly, the way electricity first moved through a house nobody had rewired yet. One machine asks. Another answers. Something is proven. Something is paid. No person clicked &quot;approve.&quot; And when someone asks who is accountable for it, there is already an answer.</p>
+              <p className="mt-5 max-w-lg text-base leading-8 text-theme-inkDim">Veklom is the handshake. Small enough to happen a million times a second. Solid enough that neither side needs a person standing over its shoulder.</p>
+            </div>
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">What every enterprise has been asking for</div>
+              <div className="mt-5 grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border sm:grid-cols-2">
+                {demands.map((demand) => (
+                  <article key={demand.title} className="bg-theme-surface p-7">
+                    <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">{demand.title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-theme-inkDim">{demand.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
