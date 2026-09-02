@@ -11,7 +11,7 @@ const BACKEND_URL = (
     : "http://127.0.0.1:8088")
 ).replace(/\/$/, "");
 
-const CAPPO_URL = (process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
+const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
 const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
 const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
 const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");

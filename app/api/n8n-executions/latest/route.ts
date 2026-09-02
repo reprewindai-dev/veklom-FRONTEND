@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const baseUrl = process.env.CAPPO_BACKEND_URL ?? "http://127.0.0.1:8002";
+  const baseUrl = process.env.CAPPO_BACKEND_URL ?? process.env.CAPPO_URL ?? "http://127.0.0.1:8002";
   const workspaceToken = process.env.CAPPO_WORKSPACE_JWT;
   if (!workspaceToken) {
     return NextResponse.json(
