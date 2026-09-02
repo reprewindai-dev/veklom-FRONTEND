@@ -1,0 +1,6 @@
+services:
+  gate:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    image: veklom/frontend-ci:local

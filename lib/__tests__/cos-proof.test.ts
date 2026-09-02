@@ -19,14 +19,19 @@ describe("Capability OS proof derivation", () => {
 
   it("keeps unsigned source truth Live and requires explicit proof for Verified", () => {
     expect(deriveProofStatus({ kind: "source-of-truth", status: 200 })).toBe("Live");
-    expect(deriveProofStatus({ kind: "source-of-truth", status: 200, signed: true })).toBe("Verified");
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200, signed: true })).toBe("Live");
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200, signed: true, verified: true })).toBe("Verified");
   });
 
   it("only classifies a declared verified payload as signed when a signature is present", () => {
-    const unsigned = classifyPayload({ truth_state: "VERIFIED", result: "ok" });
-    const signed = classifyPayload({ truth_state: "VERIFIED", result: "ok", signature: "sig-123" });
+    const unsigned = classifyPayload({ evidence_class: "SIGNED_EVIDENCE", result: "ok" });
+    const signed = classifyPayload({ evidence_class: "SIGNED_EVIDENCE", result: "ok", signature: "sig-123" });
     expect(deriveProofStatus(unsigned.observation)).toBe("Live");
-    expect(deriveProofStatus(signed.observation)).toBe("Verified");
+    expect(signed.observation.kind).toBe("source-of-truth");
+    if (signed.observation.kind === "source-of-truth") {
+      expect(signed.observation.signed).toBe(true);
+    }
+    expect(deriveProofStatus(signed.observation)).toBe("Live");
   });
 
   it("marks sandbox source observations as Simulated but preserves failures", () => {
