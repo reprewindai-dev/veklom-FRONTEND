@@ -17,10 +17,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
  useEffect(() => {
  const savedTheme = localStorage.getItem("veklom-theme") as Theme;
+ const machineSurface = document.documentElement.getAttribute("data-theme") === "machine";
  if (savedTheme) {
  setThemeState(savedTheme);
- document.documentElement.setAttribute("data-theme", savedTheme);
- } else {
+ if (!machineSurface) document.documentElement.setAttribute("data-theme", savedTheme);
+ } else if (!machineSurface) {
  document.documentElement.setAttribute("data-theme","dark");
  }
  setMounted(true);
