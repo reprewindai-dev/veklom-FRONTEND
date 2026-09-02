@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CI_GATE_SKIP_BUILD=1 bash scripts/ci-gate.sh

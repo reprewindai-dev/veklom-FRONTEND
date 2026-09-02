@@ -9,6 +9,9 @@
         "test": "jest lib/__tests__ --runInBand",
         "lint": "eslint .",
         "typecheck": "tsc --noEmit",
+        "hooks:install": "git config core.hooksPath .githooks",
+        "ci:gate": "bash scripts/ci-gate.sh",
+        "ci:docker": "docker compose -f docker-compose.ci.yml run --rm --build gate",
         "test:runtime-port": "node scripts/check-runtime-port.mjs",
         "test:vnp-copy": "node scripts/check-vnp-public-copy.mjs",
         "audit:cos-runtime": "node scripts/audit-cos-runtime.mjs"
