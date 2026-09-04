@@ -1,14 +1,20 @@
 /** @type {import('next').NextConfig} */
 
-// Canonical public deployment: local Docker + Cloudflare Tunnel.
-// Browser API traffic stays same-origin. Next proxies it to the locally managed
-// BYOS runtime so cookies/session behavior remains consistent and CORS is not
-// introduced into the authentication boundary.
-const BACKEND_URL = (
-  process.env.BACKEND_URL ||
+// Route ownership:
+//   auth / users / workspace  → LockerPhycer (identity authority)
+//   cappo                     → CAPPO (consequence authority)
+//   ledger                    → PGL (evidence)
+//   vnp                       → VNP (measurement)
+//   apex / abide              → downstream services
+//
+// BYOS is NOT a fallback target. Any /api/* path not matched above
+// must return 404 from Next.js rather than silently reaching BYOS.
+
+const LOCKERPHYCER_URL = (
+  process.env.LOCKERPHYCER_URL ||
   (process.env.NODE_ENV === "production"
-    ? "http://host.docker.internal:8088"
-    : "http://127.0.0.1:8088")
+    ? "http://host.docker.internal:8092"
+    : "http://127.0.0.1:8092")
 ).replace(/\/$/, "");
 
 const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
@@ -16,6 +22,7 @@ const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/,
 const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
 const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");
 const PGL_URL = (process.env.PGL_URL || "https://pgl.veklom.com").replace(/\/$/, "");
+const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/$/, "");
 
 const nextConfig = {
   output: "standalone",
@@ -95,28 +102,34 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        { source: "/health/", destination: `${BACKEND_URL}/health/` },
-        { source: "/status/", destination: `${BACKEND_URL}/status/` },
-        { source: "/protocol.json", destination: `${BACKEND_URL}/protocol.json` },
-        { source: "/api/v1/cappo/:path*", destination: `${CAPPO_URL}/api/v1/cappo/:path*` },
-        { source: "/api/v1/vnp/:path*", destination: `${VNP_URL}/api/v1/vnp/:path*` },
-        { source: "/api/v1/apex/:path*", destination: `${APEX_URL}/api/v1/apex/:path*` },
-        { source: "/api/v1/abide/:path*", destination: `${ABIDE_URL}/api/v1/abide/:path*` },
+        // ── LockerPhycer: identity authority ──────────────────────────────────
+        { source: "/api/v1/auth/:path*",      destination: `${LOCKERPHYCER_URL}/api/v1/auth/:path*` },
+        { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
+        { source: "/api/v1/workspace/:path*", destination: `${LOCKERPHYCER_URL}/api/v1/workspace/:path*` },
+
+        // ── Health / protocol sourced from LockerPhycer ───────────────────────
+        { source: "/health/",       destination: `${LOCKERPHYCER_URL}/health/` },
+        { source: "/status/",       destination: `${LOCKERPHYCER_URL}/health/` },
+        { source: "/protocol.json", destination: `${LOCKERPHYCER_URL}/protocol.json` },
+
+        // ── CAPPO: consequence authority ──────────────────────────────────────
+        { source: "/api/v1/cappo/:path*",  destination: `${CAPPO_URL}/api/v1/cappo/:path*` },
+
+        // ── VNP: measurement ──────────────────────────────────────────────────
+        { source: "/api/v1/vnp/:path*",    destination: `${VNP_URL}/api/v1/vnp/:path*` },
+
+        // ── PGL: evidence ledger ──────────────────────────────────────────────
         { source: "/api/v1/ledger/:path*", destination: `${PGL_URL}/api/v1/ledger/:path*` },
-        { source: "/gpc", destination: `${BACKEND_URL}/gpc/` },
-        { source: "/gpc/:path*", destination: `${BACKEND_URL}/gpc/:path*` },
+
+        // ── cAPI: capability registry ─────────────────────────────────────────
+        { source: "/api/v1/capi/:path*",   destination: `${CAPI_URL}/api/v1/capi/:path*` },
+
+        // ── Downstream services ───────────────────────────────────────────────
+        { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },
+        { source: "/api/v1/abide/:path*",  destination: `${ABIDE_URL}/api/v1/abide/:path*` },
       ],
-      fallback: [
-        {
-          // All browser API calls remain same-origin and are forwarded to BYOS.
-          source: "/api/:path*",
-          destination: `${BACKEND_URL}/api/:path*`,
-        },
-        {
-          source: "/v1/:path*",
-          destination: `${BACKEND_URL}/v1/:path*`,
-        },
-      ],
+      // NO fallback to BYOS. Unmatched /api/* returns 404 from Next.js.
+      // This is intentional: silent catch-alls mask ownership regressions.
     };
   },
 };
