@@ -6,772 +6,772 @@ import { Pipeline } from '@/components/pipeline/Pipeline';
 import type { PhaseTrace } from '@/lib/cappo/types';
 import { getToken } from '@/lib/api';
 import { 
- Users, 
- ShieldAlert, 
- Play, 
- Zap, 
- Database, 
- KeyRound, 
- CheckCircle2, 
- AlertTriangle, 
- Layers, 
- FileCheck, 
- Sparkles, 
- Fingerprint, 
- Cpu, 
- ChevronRight, 
- Coins, 
- XCircle,
- Eye,
- RefreshCw,
- Lock,
- Unlock,
- History,
- TrendingDown,
- Activity,
- FileText,
- Check,
- ChevronDown
+  Users, 
+  ShieldAlert, 
+  Play, 
+  Zap, 
+  Database, 
+  KeyRound, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Layers, 
+  FileCheck, 
+  Sparkles, 
+  Fingerprint, 
+  Cpu, 
+  ChevronRight, 
+  Coins, 
+  XCircle,
+  Eye,
+  RefreshCw,
+  Lock,
+  Unlock,
+  History,
+  TrendingDown,
+  Activity,
+  FileText,
+  Check,
+  ChevronDown
 } from 'lucide-react';
 
 interface Agent {
- name: string;
- role: string;
- avatar: string;
- backstory: string;
+  name: string;
+  role: string;
+  avatar: string;
+  backstory: string;
 }
 
 interface Crew {
- id: string;
- name: string;
- description: string;
- agents: Agent[];
- tools: string[];
+  id: string;
+  name: string;
+  description: string;
+  agents: Agent[];
+  tools: string[];
 }
 
 const CREWS: Crew[] = [
- {
- id: 'treasury',
- name: 'Treasury Audit & Execution Crew',
- description: 'Automated treasury verification and cloud infrastructure payroll disbursement.',
- tools: ['AWS KMS', 'PostgreSQL Ledger', 'Slack Webhook'],
- agents: [
- {
- name: 'Agent-108 (Auditor)',
- role: 'SLA Performance Reviewer',
- avatar: '📊',
- backstory: 'Audits transaction sheets and verifies cryptographic settlement nonces before execution.'
- },
- {
- name: 'Agent-075 (Executor)',
- role: 'AWS Cloud Disburser',
- avatar: '⚙️',
- backstory: 'Executes highly governed API calls to AWS endpoints to release payroll metrics.'
- }
- ]
- },
- {
- id: 'devops',
- name: 'Kubernetes Cluster Deployment Crew',
- description: 'Dynamic cluster deployments and inline safety auditing.',
- tools: ['Kubernetes API', 'GitHub Webhooks', 'Docker Registry'],
- agents: [
- {
- name: 'Agent-092 (DevOps)',
- role: 'Infra Architect',
- avatar: '🐋',
- backstory: 'Compiles Kubernetes yaml blueprints and coordinates server deployments.'
- },
- {
- name: 'Agent-116 (Sentinel)',
- role: 'Zero-Trust Gatekeeper',
- avatar: '🛡️',
- backstory: 'Continuously monitors yaml dependencies against CVE databases and access rules.'
- }
- ]
- }
+  {
+    id: 'treasury',
+    name: 'Treasury Audit & Execution Crew',
+    description: 'Automated treasury verification and cloud infrastructure payroll disbursement.',
+    tools: ['AWS KMS', 'PostgreSQL Ledger', 'Slack Webhook'],
+    agents: [
+      {
+        name: 'Agent-108 (Auditor)',
+        role: 'SLA Performance Reviewer',
+        avatar: '📊',
+        backstory: 'Audits transaction sheets and verifies cryptographic settlement nonces before execution.'
+      },
+      {
+        name: 'Agent-075 (Executor)',
+        role: 'AWS Cloud Disburser',
+        avatar: '⚙️',
+        backstory: 'Executes highly governed API calls to AWS endpoints to release payroll metrics.'
+      }
+    ]
+  },
+  {
+    id: 'devops',
+    name: 'Kubernetes Cluster Deployment Crew',
+    description: 'Dynamic cluster deployments and inline safety auditing.',
+    tools: ['Kubernetes API', 'GitHub Webhooks', 'Docker Registry'],
+    agents: [
+      {
+        name: 'Agent-092 (DevOps)',
+        role: 'Infra Architect',
+        avatar: '🐋',
+        backstory: 'Compiles Kubernetes yaml blueprints and coordinates server deployments.'
+      },
+      {
+        name: 'Agent-116 (Sentinel)',
+        role: 'Zero-Trust Gatekeeper',
+        avatar: '🛡️',
+        backstory: 'Continuously monitors yaml dependencies against CVE databases and access rules.'
+      }
+    ]
+  }
 ];
 
 interface TraceNode {
- id: string;
- name: string;
- subtitle: string;
- latency: string;
- description: string;
- successDetails: string;
- failDetails: string;
- langsmithComparison: string;
+  id: string;
+  name: string;
+  subtitle: string;
+  latency: string;
+  description: string;
+  successDetails: string;
+  failDetails: string;
+  langsmithComparison: string;
 }
 
 const TRACE_NODES: TraceNode[] = [
- {
- id: 'intercept',
- name: 'cAPI Gateway Intercept',
- subtitle: 'Inline Request Capture',
- latency: '0.08ms',
- description: 'Intercepts incoming agent requests in-flight, parsing structure and establishing security context.',
- successDetails: 'Request captured safely. Session token extracted from headers.',
- failDetails: 'Incoming request intercepted. Structural analysis triggered.',
- langsmithComparison: 'LangSmith logs this passively after API dispatch. Veklom captures the packet in-flight before the LLM execution begins.'
- },
- {
- id: 'schema',
- name: 'Schema Moat',
- subtitle: 'Nesting & Type Integrity',
- latency: '0.12ms',
- description: 'Validates structural payload recursion limits, schema parameters, and JSON payloads against rigid type safety boundaries.',
- successDetails: 'Payload recursion depth verified (3/6). Structure compliant.',
- failDetails: 'CRITICAL: Nesting depth level 7 exceeds safe limit of 6. Potential call stack exhaustion threat flagged.',
- langsmithComparison: 'LangSmith fails at run-time when server crashes. Veklom active gatekeepers block deep recursive exploits instantly.'
- },
- {
- id: 'sanitizer',
- name: 'Sanitization Moat',
- subtitle: 'Credential Scrubbing & Regex',
- latency: '0.15ms',
- description: 'Continuous text-string inspection matching against regex regex-lists, scrubbing raw secrets, and enforcing strict prompt filters.',
- successDetails: 'Prompt content clean. No cleartext credentials found.',
- failDetails: 'EXPOSURE: Raw AWS Access Key detected in outbound agent logs. Initializing inline scrubbing and redaction sequence.',
- langsmithComparison: 'LangSmith stores leaked secrets in plain-text logs. Veklom sanitizes and redacts secrets in-flight before they are logged.'
- },
- {
- id: 'seked',
- name: 'SEKED Policy Gate',
- subtitle: 'Natural Language Compiler',
- latency: '0.22ms',
- description: 'Evaluates cognitive intents against system-defined policies in real-time, matching semantic meaning to approved directives.',
- successDetails: 'Intent matches approved treasury templates. Action approved.',
- failDetails: 'VETO: Rogue intent detected! Prompt contains override command attempting to bypass credentials isolation.',
- langsmithComparison: 'LangSmith reviews execution flows long after deployment. Veklom compiles and enforces natural language policies in real-time.'
- },
- {
- id: 'swapping',
- name: 'Token Swapping Vault',
- subtitle: 'Active Secret Swapper',
- latency: '0.05ms',
- description: 'Swaps static machine secrets with short-lived, in-context x402 token nonces. Real secrets are never revealed to the LLM agent.',
- successDetails: 'Static secret remains isolated. Nonce proof is displayed only when returned by the backend execution receipt.',
- failDetails: 'Bypassed. Cryptographic key swapping aborted due to earlier policy veto.',
- langsmithComparison: 'Aembit manages tokens blindly without semantic context. Veklom couples credentials directly with natural language policy compilation.'
- }
+  {
+    id: 'intercept',
+    name: 'cAPI Gateway Intercept',
+    subtitle: 'Inline Request Capture',
+    latency: '0.08ms',
+    description: 'Intercepts incoming agent requests in-flight, parsing structure and establishing security context.',
+    successDetails: 'Request captured safely. Session token extracted from headers.',
+    failDetails: 'Incoming request intercepted. Structural analysis triggered.',
+    langsmithComparison: 'LangSmith logs this passively after API dispatch. Veklom captures the packet in-flight before the LLM execution begins.'
+  },
+  {
+    id: 'schema',
+    name: 'Schema Moat',
+    subtitle: 'Nesting & Type Integrity',
+    latency: '0.12ms',
+    description: 'Validates structural payload recursion limits, schema parameters, and JSON payloads against rigid type safety boundaries.',
+    successDetails: 'Payload recursion depth verified (3/6). Structure compliant.',
+    failDetails: 'CRITICAL: Nesting depth level 7 exceeds safe limit of 6. Potential call stack exhaustion threat flagged.',
+    langsmithComparison: 'LangSmith fails at run-time when server crashes. Veklom active gatekeepers block deep recursive exploits instantly.'
+  },
+  {
+    id: 'sanitizer',
+    name: 'Sanitization Moat',
+    subtitle: 'Credential Scrubbing & Regex',
+    latency: '0.15ms',
+    description: 'Continuous text-string inspection matching against regex regex-lists, scrubbing raw secrets, and enforcing strict prompt filters.',
+    successDetails: 'Prompt content clean. No cleartext credentials found.',
+    failDetails: 'EXPOSURE: Raw AWS Access Key detected in outbound agent logs. Initializing inline scrubbing and redaction sequence.',
+    langsmithComparison: 'LangSmith stores leaked secrets in plain-text logs. Veklom sanitizes and redacts secrets in-flight before they are logged.'
+  },
+  {
+    id: 'seked',
+    name: 'SEKED Policy Gate',
+    subtitle: 'Natural Language Compiler',
+    latency: '0.22ms',
+    description: 'Evaluates cognitive intents against system-defined policies in real-time, matching semantic meaning to approved directives.',
+    successDetails: 'Intent matches approved treasury templates. Action approved.',
+    failDetails: 'VETO: Rogue intent detected! Prompt contains override command attempting to bypass credentials isolation.',
+    langsmithComparison: 'LangSmith reviews execution flows long after deployment. Veklom compiles and enforces natural language policies in real-time.'
+  },
+  {
+    id: 'swapping',
+    name: 'Token Swapping Vault',
+    subtitle: 'Active Secret Swapper',
+    latency: '0.05ms',
+    description: 'Swaps static machine secrets with short-lived, in-context x402 token nonces. Real secrets are never revealed to the LLM agent.',
+    successDetails: 'Static secret remains isolated. Nonce proof is displayed only when returned by the backend execution receipt.',
+    failDetails: 'Bypassed. Cryptographic key swapping aborted due to earlier policy veto.',
+    langsmithComparison: 'Aembit manages tokens blindly without semantic context. Veklom couples credentials directly with natural language policy compilation.'
+  }
 ];
 
 interface LedgerBlock {
- index: number;
- timestamp: string;
- prevHash: string;
- hash: string;
- action: string;
- vnpStake: string;
- evidenceHash: string;
- status: 'SUCCESS' | 'BLOCKED' | 'NEEDS_PROOF';
+  index: number;
+  timestamp: string;
+  prevHash: string;
+  hash: string;
+  action: string;
+  vnpStake: string;
+  evidenceHash: string;
+  status: 'SUCCESS' | 'BLOCKED' | 'NEEDS_PROOF';
 }
 
 export default function VanguardPlayground() {
- const [selectedCrew, setSelectedCrew] = useState<Crew>(CREWS[0]);
- const [agentId, setAgentId] = useState<string>("agent-atlas");
- const [action, setAction] = useState<string>("test_action");
- const [payloadStr, setPayloadStr] = useState<string>('{}');
- const [prompt, setPrompt] = useState<string>('Verify latest ledger ledger-root and release payroll payload to AWS.');
- const [activeThreat, setActiveThreat] = useState<string | null>(null);
- const [executionState, setExecutionState] = useState<'idle' | 'running' | 'success' | 'blocked'>('idle');
- const [currentStep, setCurrentStep] = useState<number>(0);
- const [trace, setTrace] = useState<PhaseTrace[] | null>(null);
- const [runId, setRunId] = useState<number>(0);
- const [logs, setLogs] = useState<string[]>([]);
- const [vnpBalance] = useState<number | null>(null);
- const [yieldApy] = useState<number | null>(null);
- const [selectedNode, setSelectedNode] = useState<TraceNode>(TRACE_NODES[0]);
- const [nonceToken, setNonceToken] = useState<string | null>(null);
- const [isRotating, setIsRotating] = useState<boolean>(false);
- const [lastActionStatus, setLastActionStatus] = useState<string>('Needs backend execution proof');
- const [floatingValue, setFloatingValue] = useState<string | null>(null);
- const [floatingColor, setFloatingValueColor] = useState<string>('text-green-400');
+  const [selectedCrew, setSelectedCrew] = useState<Crew>(CREWS[0]);
+  const [agentId, setAgentId] = useState<string>("agent-atlas");
+  const [action, setAction] = useState<string>("test_action");
+  const [payloadStr, setPayloadStr] = useState<string>('{}');
+  const [prompt, setPrompt] = useState<string>('Verify latest ledger ledger-root and release payroll payload to AWS.');
+  const [activeThreat, setActiveThreat] = useState<string | null>(null);
+  const [executionState, setExecutionState] = useState<'idle' | 'running' | 'success' | 'blocked'>('idle');
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [trace, setTrace] = useState<PhaseTrace[] | null>(null);
+  const [runId, setRunId] = useState<number>(0);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [vnpBalance] = useState<number | null>(null);
+  const [yieldApy] = useState<number | null>(null);
+  const [selectedNode, setSelectedNode] = useState<TraceNode>(TRACE_NODES[0]);
+  const [nonceToken, setNonceToken] = useState<string | null>(null);
+  const [isRotating, setIsRotating] = useState<boolean>(false);
+  const [lastActionStatus, setLastActionStatus] = useState<string>('Needs backend execution proof');
+  const [floatingValue, setFloatingValue] = useState<string | null>(null);
+  const [floatingColor, setFloatingValueColor] = useState<string>('text-green-400');
 
- const [ledger, setLedger] = useState<LedgerBlock[]>([]);
+  const [ledger, setLedger] = useState<LedgerBlock[]>([]);
 
- const consoleEndRef = useRef<HTMLDivElement>(null);
+  const consoleEndRef = useRef<HTMLDivElement>(null);
 
- // Auto-scroll logs
- useEffect(() => {
- if (consoleEndRef.current) {
- consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
- }
- }, [logs]);
+  // Auto-scroll logs
+  useEffect(() => {
+    if (consoleEndRef.current) {
+      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs]);
 
- const extractProofId = (payload: any): string => {
- return String(
- payload?.evidence_hash ||
- payload?.result?.evidence_hash ||
- payload?.receipt_id ||
- payload?.result?.receipt_id ||
- payload?.run_id ||
- payload?.result?.run_id ||
- payload?.execution_id ||
- payload?.result?.execution_id ||
- payload?.log_id ||
- payload?.result?.log_id ||
- ''
- );
- };
+  const extractProofId = (payload: any): string => {
+    return String(
+      payload?.evidence_hash ||
+      payload?.result?.evidence_hash ||
+      payload?.receipt_id ||
+      payload?.result?.receipt_id ||
+      payload?.run_id ||
+      payload?.result?.run_id ||
+      payload?.execution_id ||
+      payload?.result?.execution_id ||
+      payload?.log_id ||
+      payload?.result?.log_id ||
+      ''
+    );
+  };
 
- const traceFromPayload = (payload: any): PhaseTrace[] => {
- const backendTrace = Array.isArray(payload?.trace)
- ? payload.trace
- : Array.isArray(payload?.result?.trace)
- ? payload.result.trace
- : [];
+  const traceFromPayload = (payload: any): PhaseTrace[] => {
+    const backendTrace = Array.isArray(payload?.trace)
+      ? payload.trace
+      : Array.isArray(payload?.result?.trace)
+      ? payload.result.trace
+      : [];
 
- if (backendTrace.length) {
- return backendTrace.map((item: any, index: number) => ({
- phase: Number(item.phase ?? index + 1),
- name: String(item.name ?? item.stage ?? `cAPI Phase ${index + 1}`),
- status: item.status === 'error' || item.status === 'fail' || item.ok === false ? 'fail' : 'pass',
- summary: String(item.summary ?? item.message ?? item.status ?? 'cAPI phase returned.'),
- duration_ms: Number(item.duration_ms ?? item.latency_ms ?? 0),
- detail: typeof item === 'object' && item ? item : {},
- }));
- }
+    if (backendTrace.length) {
+      return backendTrace.map((item: any, index: number) => ({
+        phase: Number(item.phase ?? index + 1),
+        name: String(item.name ?? item.stage ?? `cAPI Phase ${index + 1}`),
+        status: item.status === 'error' || item.status === 'fail' || item.ok === false ? 'fail' : 'pass',
+        summary: String(item.summary ?? item.message ?? item.status ?? 'cAPI phase returned.'),
+        duration_ms: Number(item.duration_ms ?? item.latency_ms ?? 0),
+        detail: typeof item === 'object' && item ? item : {},
+      }));
+    }
 
- return [{
- phase: 1,
- name: 'cAPI Execute',
- status: payload?.status === 'error' ? 'fail' : 'pass',
- summary: extractProofId(payload)
- ? `Backend proof emitted: ${extractProofId(payload)}`
- : 'cAPI returned without a receipt, run id, execution id, or evidence hash.',
- duration_ms: 0,
- detail: typeof payload === 'object' && payload ? payload : {},
- }];
- };
+    return [{
+      phase: 1,
+      name: 'cAPI Execute',
+      status: payload?.status === 'error' ? 'fail' : 'pass',
+      summary: extractProofId(payload)
+        ? `Backend proof emitted: ${extractProofId(payload)}`
+        : 'cAPI returned without a receipt, run id, execution id, or evidence hash.',
+      duration_ms: 0,
+      detail: typeof payload === 'object' && payload ? payload : {},
+    }];
+  };
 
- const appendBackendEvidence = (payload: any, actionName: string, status: LedgerBlock['status']) => {
- const proofId = extractProofId(payload);
- if (!proofId) return;
+  const appendBackendEvidence = (payload: any, actionName: string, status: LedgerBlock['status']) => {
+    const proofId = extractProofId(payload);
+    if (!proofId) return;
 
- setLedger(prev => [{
- index: prev[0] ? prev[0].index + 1 : 1,
- timestamp: new Date().toISOString(),
- prevHash: prev[0]?.hash || '',
- hash: proofId,
- action: actionName,
- vnpStake: 'Backend proof only',
- evidenceHash: proofId,
- status,
- }, ...prev]);
- };
+    setLedger(prev => [{
+      index: prev[0] ? prev[0].index + 1 : 1,
+      timestamp: new Date().toISOString(),
+      prevHash: prev[0]?.hash || '',
+      hash: proofId,
+      action: actionName,
+      vnpStake: 'Backend proof only',
+      evidenceHash: proofId,
+      status,
+    }, ...prev]);
+  };
 
- // Nonce rotation requires a backend receipt. This control no longer mints local tokens.
- const handleRotateNonce = () => {
- setIsRotating(true);
- setTimeout(() => {
- setNonceToken(null);
- setIsRotating(false);
- setLastActionStatus('Needs backend nonce rotation receipt');
- setLogs(prev => [...prev, '[SYSTEM] Nonce rotation endpoint is not wired for this panel. No local nonce was generated.']);
- }, 250);
- };
+  // Nonce rotation requires a backend receipt. This control no longer mints local tokens.
+  const handleRotateNonce = () => {
+    setIsRotating(true);
+    setTimeout(() => {
+      setNonceToken(null);
+      setIsRotating(false);
+      setLastActionStatus('Needs backend nonce rotation receipt');
+      setLogs(prev => [...prev, '[SYSTEM] Nonce rotation endpoint is not wired for this panel. No local nonce was generated.']);
+    }, 250);
+  };
 
- // Trigger simulated hybrid run
- const handleExecute = async (threatId: string | null) => {
- setActiveThreat(threatId);
- setExecutionState('running');
- setCurrentStep(0);
- setLogs([]);
- setFloatingValue(null);
- setTrace([]);
- const rid = Date.now();
- setRunId(rid);
+  // Trigger simulated hybrid run
+  const handleExecute = async (threatId: string | null) => {
+    setActiveThreat(threatId);
+    setExecutionState('running');
+    setCurrentStep(0);
+    setLogs([]);
+    setFloatingValue(null);
+    setTrace([]);
+    const rid = Date.now();
+    setRunId(rid);
 
- let currentAgent = agentId;
- let currentAction = action;
- let currentPayload = payloadStr;
+    let currentAgent = agentId;
+    let currentAction = action;
+    let currentPayload = payloadStr;
 
- if (threatId === 'injection') {
- currentPayload = '{"cmd":"rm -rf /"}'; // triggers SYSTEM_POLICY_VETO
- setPayloadStr(currentPayload);
- } else if (threatId === 'depth') {
- currentPayload = '{"a": {"b": {"c": {"d": {"e": {"f": {"g": 1}}}}}}}'; // triggers RECURSIVE_DEPTH_LIMIT_EXCEEDED
- setPayloadStr(currentPayload);
- } else if (threatId === 'credentials') {
- currentPayload = '{"req":"fetch_aws"}'; 
- setPayloadStr(currentPayload);
- }
+    if (threatId === 'injection') {
+      currentPayload = '{"cmd": "rm -rf /"}'; // triggers SYSTEM_POLICY_VETO
+      setPayloadStr(currentPayload);
+    } else if (threatId === 'depth') {
+      currentPayload = '{"a": {"b": {"c": {"d": {"e": {"f": {"g": 1}}}}}}}'; // triggers RECURSIVE_DEPTH_LIMIT_EXCEEDED
+      setPayloadStr(currentPayload);
+    } else if (threatId === 'credentials') {
+      currentPayload = '{"req": "fetch_aws"}'; 
+      setPayloadStr(currentPayload);
+    }
 
- let parsedPayload = {};
- try {
- parsedPayload = JSON.parse(currentPayload);
- } catch (e) {
- setLogs(["[SYSTEM] Error: Invalid JSON Payload. Execution Aborted."]);
- setExecutionState('idle');
- return;
- }
+    let parsedPayload = {};
+    try {
+      parsedPayload = JSON.parse(currentPayload);
+    } catch (e) {
+      setLogs(["[SYSTEM] Error: Invalid JSON Payload. Execution Aborted."]);
+      setExecutionState('idle');
+      return;
+    }
 
- try {
- const token = getToken();
- const res = await fetch('/api/v1/capi/execute', {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- ...(token ? { Authorization: `Bearer ${token}` } : {}),
- },
- body: JSON.stringify({
- agent_id: currentAgent,
- pgl_id:"valid_pgl", 
- target_protocol:"mcp",
- action: currentAction,
- payload: parsedPayload
- })
- });
+    try {
+      const token = getToken();
+      const res = await fetch('/api/v1/capi/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          agent_id: currentAgent,
+          pgl_id: "valid_pgl", 
+          target_protocol: "mcp",
+          action: currentAction,
+          payload: parsedPayload
+        })
+      });
 
- const payload = await res.json().catch(() => ({}));
- const traceArr = traceFromPayload(payload);
- setTrace(traceArr);
- setCurrentStep(traceArr.length);
- traceArr.forEach(ph => setLogs(prev => [...prev, `[GATEWAY] Phase ${ph.phase}: ${ph.summary}`]));
+      const payload = await res.json().catch(() => ({}));
+      const traceArr = traceFromPayload(payload);
+      setTrace(traceArr);
+      setCurrentStep(traceArr.length);
+      traceArr.forEach(ph => setLogs(prev => [...prev, `[GATEWAY] Phase ${ph.phase}: ${ph.summary}`]));
 
- if (!res.ok || payload?.status === 'error') {
- const proofId = extractProofId(payload);
- setExecutionState('blocked');
- setLastActionStatus(proofId ? 'Backend blocked execution with proof' : 'Backend rejected execution; proof id missing');
- setFloatingValue(null);
- appendBackendEvidence(payload, 'GOVERNED_RUN_BLOCKED', proofId ? 'BLOCKED' : 'NEEDS_PROOF');
- throw new Error(payload?.error || payload?.detail || `cAPI execute failed: HTTP ${res.status}`);
- }
+      if (!res.ok || payload?.status === 'error') {
+        const proofId = extractProofId(payload);
+        setExecutionState('blocked');
+        setLastActionStatus(proofId ? 'Backend blocked execution with proof' : 'Backend rejected execution; proof id missing');
+        setFloatingValue(null);
+        appendBackendEvidence(payload, 'GOVERNED_RUN_BLOCKED', proofId ? 'BLOCKED' : 'NEEDS_PROOF');
+        throw new Error(payload?.error || payload?.detail || `cAPI execute failed: HTTP ${res.status}`);
+      }
 
- const proofId = extractProofId(payload);
- if (proofId) {
- setExecutionState('success');
- setNonceToken(String(payload?.nonce || payload?.result?.nonce || 'Backend did not return a nonce token'));
- setFloatingValue('Proof recorded');
- setFloatingValueColor('text-green-400 font-bold');
- setLastActionStatus('Backend execution proof recorded');
- setLogs(prev => [...prev, `[SYSTEM] Backend proof recorded: ${proofId}`]);
- appendBackendEvidence(payload, 'GOVERNED_RUN', 'SUCCESS');
- } else {
- setExecutionState('blocked');
- setLastActionStatus('Needs backend receipt or evidence hash');
- setFloatingValue(null);
- setLogs(prev => [...prev, '[SYSTEM] cAPI returned without a backend proof identifier. Marking this run Needs proof.']);
- }
- } catch (error) {
- setLogs(prev => [...prev, `[SYSTEM] Execution failed: ${error}`]);
- setExecutionState('blocked');
- }
- };
+      const proofId = extractProofId(payload);
+      if (proofId) {
+        setExecutionState('success');
+        setNonceToken(String(payload?.nonce || payload?.result?.nonce || 'Backend did not return a nonce token'));
+        setFloatingValue('Proof recorded');
+        setFloatingValueColor('text-green-400 font-bold');
+        setLastActionStatus('Backend execution proof recorded');
+        setLogs(prev => [...prev, `[SYSTEM] Backend proof recorded: ${proofId}`]);
+        appendBackendEvidence(payload, 'GOVERNED_RUN', 'SUCCESS');
+      } else {
+        setExecutionState('blocked');
+        setLastActionStatus('Needs backend receipt or evidence hash');
+        setFloatingValue(null);
+        setLogs(prev => [...prev, '[SYSTEM] cAPI returned without a backend proof identifier. Marking this run Needs proof.']);
+      }
+    } catch (error) {
+      setLogs(prev => [...prev, `[SYSTEM] Execution failed: ${error}`]);
+      setExecutionState('blocked');
+    }
+  };
 
- const resetPlayground = () => {
- setExecutionState('idle');
- setActiveThreat(null);
- setCurrentStep(0);
- setLogs([]);
- setFloatingValue(null);
- setLastActionStatus('Needs backend execution proof');
- };
+  const resetPlayground = () => {
+    setExecutionState('idle');
+    setActiveThreat(null);
+    setCurrentStep(0);
+    setLogs([]);
+    setFloatingValue(null);
+    setLastActionStatus('Needs backend execution proof');
+  };
 
- return (
- <div className="w-full h-full min-h-screen bg-[#030303] text-[#a4c5d4] font-mono p-4 xl:p-6 overflow-y-auto relative select-none">
- 
- {/* Background radial effects */}
- <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#b8860b]/5 blur-[120px] rounded-full pointer-events-none -z-10" />
- <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-theme-accent/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+  return (
+    <div className="w-full h-full min-h-screen bg-[#030303] text-[#a4c5d4] font-mono p-4 xl:p-6 overflow-y-auto relative select-none">
+      
+      {/* Background radial effects */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#b8860b]/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
- {/* Header Panel */}
- <div className="border border-white/10 rounded-2xl bg-[#090D14]/85 backdrop-blur-xl p-5 mb-6 shadow-2xl relative overflow-hidden">
- <div className="absolute top-0 right-0 p-2 text-[9px] font-mono border-l border-b border-white/10 text-[#b8860b] bg-black/40">
- SECURE_VANGUARD_V1.5
- </div>
- <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
- <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-xl bg-[#b8860b]/10 border border-[#b8860b]/30 flex items-center justify-center text-[#b8860b] shadow-[0_0_15px_rgba(184,134,11,0.15)]">
- <Cpu className="w-6 h-6 animate-pulse" />
- </div>
- <div>
- <h1 className="text-base xl:text-lg font-bold text-white tracking-wider flex flex-wrap items-center gap-2">
- VEKLOM VANGUARD HYBRID PLAYGROUND 
- <span className="text-[10px] bg-[#b8860b]/20 text-[#b8860b] px-2 py-0.5 rounded border border-[#b8860b]/30">COGNITIVE INLINE GATEWAY</span>
- </h1>
- <p className="text-[11px] text-gray-400 mt-1 max-w-4xl leading-relaxed">
- Compiles machine credentials directly with natural language policy compilation (<strong className="text-white">SEKED</strong>). Outperforming legacy competitors <strong className="text-theme-accent">Aembit</strong> (10x Machine Identity), <strong className="text-[#00E5FF]">LangSmith</strong> (10x Observability), and <strong className="text-[#FFB800]">CrewAI</strong> (10x Multi-Agent Orchestration).
- </p>
- </div>
- </div>
- <div className="flex gap-2 self-end xl:self-auto">
- <button 
- onClick={resetPlayground}
- className="flex items-center gap-1.5 border border-white/10 hover:border-white/20 text-xs px-3.5 py-2 rounded-lg hover:bg-white/5 transition-all text-gray-300 active:scale-[0.98] shadow-lg"
- >
- <RefreshCw className="w-3.5 h-3.5" /> Reset Demo
- </button>
- </div>
- </div>
- </div>
+      {/* Header Panel */}
+      <div className="border border-white/10 rounded-2xl bg-[#090D14]/85 backdrop-blur-xl p-5 mb-6 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-2 text-[9px] font-mono border-l border-b border-white/10 text-[#b8860b] bg-black/40">
+          SECURE_VANGUARD_V1.5
+        </div>
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#b8860b]/10 border border-[#b8860b]/30 flex items-center justify-center text-[#b8860b] shadow-[0_0_15px_rgba(184,134,11,0.15)]">
+              <Cpu className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <h1 className="text-base xl:text-lg font-bold text-white tracking-wider flex flex-wrap items-center gap-2">
+                VEKLOM VANGUARD HYBRID PLAYGROUND 
+                <span className="text-[10px] bg-[#b8860b]/20 text-[#b8860b] px-2 py-0.5 rounded border border-[#b8860b]/30">COGNITIVE INLINE GATEWAY</span>
+              </h1>
+              <p className="text-[11px] text-gray-400 mt-1 max-w-4xl leading-relaxed">
+                Compiles machine credentials directly with natural language policy compilation (<strong className="text-white">SEKED</strong>). Outperforming legacy competitors <strong className="text-cyan-400">Aembit</strong> (10x Machine Identity), <strong className="text-[#00E5FF]">LangSmith</strong> (10x Observability), and <strong className="text-[#FFB800]">CrewAI</strong> (10x Multi-Agent Orchestration).
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 self-end xl:self-auto">
+            <button 
+              onClick={resetPlayground}
+              className="flex items-center gap-1.5 border border-white/10 hover:border-white/20 text-xs px-3.5 py-2 rounded-lg hover:bg-white/5 transition-all text-gray-300 active:scale-[0.98] shadow-lg"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Reset Demo
+            </button>
+          </div>
+        </div>
+      </div>
 
- {/* OVERTHROWS OVERVIEW GRID */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
- {/* Aembit Card */}
- <div className="border border-[#b8860b]/20 bg-[#090D14]/45 rounded-xl p-3.5 backdrop-blur-sm relative overflow-hidden">
- <div className="absolute top-2 right-3 flex items-center gap-1">
- <span className="text-[8px] font-bold text-[#b8860b] bg-[#b8860b]/10 border border-[#b8860b]/25 px-1 rounded">10X MACHINE ID</span>
- </div>
- <h4 className="text-[11px] font-bold text-white tracking-wide uppercase flex items-center gap-1.5 mb-1.5">
- <Fingerprint className="w-3.5 h-3.5 text-[#b8860b]" /> Veklom vs Aembit
- </h4>
- <p className="text-[10px] text-gray-400 leading-normal">
- Aembit manages tokens blindly without cognitive context. Veklom couples credentials directly with SEKED compilation to execute short-lived, in-context x402 swaps shielding raw keys.
- </p>
- </div>
+      {/* OVERTHROWS OVERVIEW GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Aembit Card */}
+        <div className="border border-[#b8860b]/20 bg-[#090D14]/45 rounded-xl p-3.5 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-2 right-3 flex items-center gap-1">
+            <span className="text-[8px] font-bold text-[#b8860b] bg-[#b8860b]/10 border border-[#b8860b]/25 px-1 rounded">10X MACHINE ID</span>
+          </div>
+          <h4 className="text-[11px] font-bold text-white tracking-wide uppercase flex items-center gap-1.5 mb-1.5">
+            <Fingerprint className="w-3.5 h-3.5 text-[#b8860b]" /> Veklom vs Aembit
+          </h4>
+          <p className="text-[10px] text-gray-400 leading-normal">
+            Aembit manages tokens blindly without cognitive context. Veklom couples credentials directly with SEKED compilation to execute short-lived, in-context x402 swaps shielding raw keys.
+          </p>
+        </div>
 
- {/* LangSmith Card */}
- <div className="border border-theme-border bg-[#090D14]/45 rounded-xl p-3.5 backdrop-blur-sm relative overflow-hidden">
- <div className="absolute top-2 right-3 flex items-center gap-1">
- <span className="text-[8px] font-bold text-theme-accent bg-cyan-400/10 border border-theme-border px-1 rounded">10X OBSERVABILITY</span>
- </div>
- <h4 className="text-[11px] font-bold text-white tracking-wide uppercase flex items-center gap-1.5 mb-1.5">
- <Activity className="w-3.5 h-3.5 text-theme-accent" /> Veklom vs LangSmith
- </h4>
- <p className="text-[10px] text-gray-400 leading-normal">
- LangSmith logs errors passively after damage has occurred. Veklom intercepts requests in-flight with inline gatekeeping (Schema Moats, Sanitizers, and SEKED Policy Gates) in real-time.
- </p>
- </div>
+        {/* LangSmith Card */}
+        <div className="border border-cyan-500/20 bg-[#090D14]/45 rounded-xl p-3.5 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-2 right-3 flex items-center gap-1">
+            <span className="text-[8px] font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/25 px-1 rounded">10X OBSERVABILITY</span>
+          </div>
+          <h4 className="text-[11px] font-bold text-white tracking-wide uppercase flex items-center gap-1.5 mb-1.5">
+            <Activity className="w-3.5 h-3.5 text-cyan-400" /> Veklom vs LangSmith
+          </h4>
+          <p className="text-[10px] text-gray-400 leading-normal">
+            LangSmith logs errors passively after damage has occurred. Veklom intercepts requests in-flight with inline gatekeeping (Schema Moats, Sanitizers, and SEKED Policy Gates) in real-time.
+          </p>
+        </div>
 
- {/* CrewAI Card */}
- <div className="border border-orange-500/20 bg-[#090D14]/45 rounded-xl p-3.5 backdrop-blur-sm relative overflow-hidden">
- <div className="absolute top-2 right-3 flex items-center gap-1">
- <span className="text-[8px] font-bold text-orange-400 bg-orange-400/10 border border-orange-400/25 px-1 rounded">10X ORCHESTRATION</span>
- </div>
- <h4 className="text-[11px] font-bold text-white tracking-wide uppercase flex items-center gap-1.5 mb-1.5">
- <Coins className="w-3.5 h-3.5 text-orange-400" /> Veklom vs CrewAI
- </h4>
- <p className="text-[10px] text-gray-400 leading-normal">
- CrewAI coordinates agents but lacks accountability. Veklom locks performance down with micro-stakes (VNP), hash-chained telemetry, and automated slashing on SLA deviations.
- </p>
- </div>
- </div>
+        {/* CrewAI Card */}
+        <div className="border border-orange-500/20 bg-[#090D14]/45 rounded-xl p-3.5 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-2 right-3 flex items-center gap-1">
+            <span className="text-[8px] font-bold text-orange-400 bg-orange-400/10 border border-orange-400/25 px-1 rounded">10X ORCHESTRATION</span>
+          </div>
+          <h4 className="text-[11px] font-bold text-white tracking-wide uppercase flex items-center gap-1.5 mb-1.5">
+            <Coins className="w-3.5 h-3.5 text-orange-400" /> Veklom vs CrewAI
+          </h4>
+          <p className="text-[10px] text-gray-400 leading-normal">
+            CrewAI coordinates agents but lacks accountability. Veklom locks performance down with micro-stakes (VNP), hash-chained telemetry, and automated slashing on SLA deviations.
+          </p>
+        </div>
+      </div>
 
- {/* Main Grid: 3 Column Split */}
- <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
- 
- {/* LEFT COLUMN: Crew & Threat Injection */}
- <div className="xl:col-span-4 flex flex-col gap-6">
- <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow">
- 
- <div className="space-y-4">
- <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
- <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
- <Database className="w-4 h-4 text-[#b8860b]" /> 1. REQUEST BUILDER
- </span>
- <span className="text-[9px] text-gray-500 font-mono">HYBRID_PLAYGROUND</span>
- </div>
+      {/* Main Grid: 3 Column Split */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+        
+        {/* LEFT COLUMN: Crew & Threat Injection */}
+        <div className="xl:col-span-4 flex flex-col gap-6">
+          <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow">
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
+                  <Database className="w-4 h-4 text-[#b8860b]" /> 1. REQUEST BUILDER
+                </span>
+                <span className="text-[9px] text-gray-500 font-mono">HYBRID_PLAYGROUND</span>
+              </div>
 
- {/* Request Builder Form */}
- <div className="space-y-3 flex-grow mt-2">
- <div className="space-y-1.5">
- <label className="text-[10px] text-gray-400 tracking-wider">AGENT IDENTITY</label>
- <select value={agentId} onChange={e => setAgentId(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl p-2 text-xs text-white outline-none focus:border-[#b8860b] transition-all">
- <option value="agent-atlas">agent-atlas (Data & DB Query)</option>
- <option value="agent-ledger">agent-ledger (Financial & Transactions)</option>
- <option value="agent-echo">agent-echo (Echo / Utility)</option>
- <option value="agent-scout">agent-scout (Search & Retrieval)</option>
- </select>
- </div>
- 
- <div className="space-y-1.5">
- <label className="text-[10px] text-gray-400 tracking-wider">ACTION ENDPOINT</label>
- <input value={action} onChange={e => setAction(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl p-2 text-xs text-white outline-none focus:border-[#b8860b] transition-all font-mono" />
- </div>
+              {/* Request Builder Form */}
+              <div className="space-y-3 flex-grow mt-2">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-gray-400 tracking-wider">AGENT IDENTITY</label>
+                  <select value={agentId} onChange={e => setAgentId(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl p-2 text-xs text-white outline-none focus:border-[#b8860b] transition-all">
+                    <option value="agent-atlas">agent-atlas (Data & DB Query)</option>
+                    <option value="agent-ledger">agent-ledger (Financial & Transactions)</option>
+                    <option value="agent-echo">agent-echo (Echo / Utility)</option>
+                    <option value="agent-scout">agent-scout (Search & Retrieval)</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-gray-400 tracking-wider">ACTION ENDPOINT</label>
+                  <input value={action} onChange={e => setAction(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl p-2 text-xs text-white outline-none focus:border-[#b8860b] transition-all font-mono" />
+                </div>
 
- <div className="space-y-1.5">
- <label className="text-[10px] text-gray-400 tracking-wider">JSON PAYLOAD</label>
- <textarea
- value={payloadStr}
- onChange={(e) => setPayloadStr(e.target.value)}
- rows={6}
- spellCheck={false}
- className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-[11px] text-[#00E5FF] outline-none focus:border-[#b8860b] transition-all resize-none font-mono scrollbar-thin"
- />
- </div>
- </div>
- </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-gray-400 tracking-wider">JSON PAYLOAD</label>
+                  <textarea
+                    value={payloadStr}
+                    onChange={(e) => setPayloadStr(e.target.value)}
+                    rows={6}
+                    spellCheck={false}
+                    className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-[11px] text-[#00E5FF] outline-none focus:border-[#b8860b] transition-all resize-none font-mono scrollbar-thin"
+                  />
+                </div>
+              </div>
+            </div>
 
- {/* Simulated Exploit Injector Panel */}
- <div className="border-t border-white/5 pt-4 mt-4 space-y-3.5">
- <div className="text-[10px] text-gray-400 tracking-wider flex items-center gap-1">
- <ShieldAlert className="w-3.5 h-3.5 text-red-500 animate-pulse" /> SIMULATE COGNITIVE THREATS (TEST GATEWAY)
- </div>
- 
- <div className="grid grid-cols-1 gap-2">
- <button
- onClick={() => handleExecute('injection')}
- disabled={executionState === 'running'}
- className="flex items-center justify-between p-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.02] hover:bg-red-500/5 text-left text-[11px] font-bold text-red-400 transition-all hover:border-red-500/40 disabled:opacity-50"
- >
- <span className="flex items-center gap-2">
- <AlertTriangle className="w-4 h-4 animate-bounce" /> Prompt Injection Override (Expose Secrets)
- </span>
- <ChevronRight className="w-3.5 h-3.5" />
- </button>
+            {/* Simulated Exploit Injector Panel */}
+            <div className="border-t border-white/5 pt-4 mt-4 space-y-3.5">
+              <div className="text-[10px] text-gray-400 tracking-wider flex items-center gap-1">
+                <ShieldAlert className="w-3.5 h-3.5 text-red-500 animate-pulse" /> SIMULATE COGNITIVE THREATS (TEST GATEWAY)
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  onClick={() => handleExecute('injection')}
+                  disabled={executionState === 'running'}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-red-500/20 bg-red-500/[0.02] hover:bg-red-500/5 text-left text-[11px] font-bold text-red-400 transition-all hover:border-red-500/40 disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 animate-bounce" /> Prompt Injection Override (Expose Secrets)
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
 
- <button
- onClick={() => handleExecute('depth')}
- disabled={executionState === 'running'}
- className="flex items-center justify-between p-2.5 rounded-xl border border-orange-500/20 bg-orange-500/[0.02] hover:bg-orange-500/5 text-left text-[11px] font-bold text-orange-400 transition-all hover:border-orange-500/40 disabled:opacity-50"
- >
- <span className="flex items-center gap-2">
- <Layers className="w-4 h-4" /> Payload Nesting Overflow Limit (&gt;6 levels)
- </span>
- <ChevronRight className="w-3.5 h-3.5" />
- </button>
+                <button
+                  onClick={() => handleExecute('depth')}
+                  disabled={executionState === 'running'}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-orange-500/20 bg-orange-500/[0.02] hover:bg-orange-500/5 text-left text-[11px] font-bold text-orange-400 transition-all hover:border-orange-500/40 disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <Layers className="w-4 h-4" /> Payload Nesting Overflow Limit (&gt;6 levels)
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
 
- <button
- onClick={() => handleExecute('credentials')}
- disabled={executionState === 'running'}
- className="flex items-center justify-between p-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.02] hover:bg-yellow-500/5 text-left text-[11px] font-bold text-yellow-400 transition-all hover:border-yellow-500/40 disabled:opacity-50"
- >
- <span className="flex items-center gap-2">
- <KeyRound className="w-4 h-4" /> Key Leakage / Dynamic Redaction Swap
- </span>
- <ChevronRight className="w-3.5 h-3.5" />
- </button>
- </div>
+                <button
+                  onClick={() => handleExecute('credentials')}
+                  disabled={executionState === 'running'}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.02] hover:bg-yellow-500/5 text-left text-[11px] font-bold text-yellow-400 transition-all hover:border-yellow-500/40 disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <KeyRound className="w-4 h-4" /> Key Leakage / Dynamic Redaction Swap
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
- <button
- onClick={() => handleExecute(null)}
- disabled={executionState === 'running'}
- className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 active:scale-[0.98] text-xs shadow-lg"
- >
- <Play className="w-3.5 h-3.5 fill-current text-black" /> Run Custom Payload
- </button>
- </div>
+              <button
+                onClick={() => handleExecute(null)}
+                disabled={executionState === 'running'}
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 active:scale-[0.98] text-xs shadow-lg"
+              >
+                <Play className="w-3.5 h-3.5 fill-current text-black" /> Run Custom Payload
+              </button>
+            </div>
 
- </div>
- </div>
+          </div>
+        </div>
 
- {/* MIDDLE COLUMN: Inline Active Tracing Graph (LangSmith Overtaken) */}
- <div className="xl:col-span-5 flex flex-col gap-6">
- <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow min-h-[550px]">
- <div className="space-y-3.5 flex-grow flex flex-col">
- <div className="flex items-center justify-between border-b border-white/5 pb-2.5 shrink-0">
- <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
- <Sparkles className="w-4 h-4 text-theme-accent animate-pulse" /> 2. INLINE COGNITIVE TRACING
- </span>
- <span className="text-[9px] text-[#00E5FF] font-bold uppercase tracking-wider bg-theme-surface2 px-2 py-0.5 rounded border border-theme-border">
- {executionState === 'running' ? 'Tracing Active...' : 'Gateway Armed'}
- </span>
- </div>
+        {/* MIDDLE COLUMN: Inline Active Tracing Graph (LangSmith Overtaken) */}
+        <div className="xl:col-span-5 flex flex-col gap-6">
+          <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow min-h-[550px]">
+            <div className="space-y-3.5 flex-grow flex flex-col">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5 shrink-0">
+                <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" /> 2. INLINE COGNITIVE TRACING
+                </span>
+                <span className="text-[9px] text-[#00E5FF] font-bold uppercase tracking-wider bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/30">
+                  {executionState === 'running' ? 'Tracing Active...' : 'Gateway Armed'}
+                </span>
+              </div>
 
- {/* Advanced Trace Graph */}
- <div className="flex-grow bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col relative overflow-hidden min-h-[300px]">
- <Pipeline trace={trace} runId={runId} />
- </div>
+              {/* Advanced Trace Graph */}
+              <div className="flex-grow bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col relative overflow-hidden min-h-[300px]">
+                <Pipeline trace={trace} runId={runId} />
+              </div>
 
- {/* Typing Console Logs */}
- <div className="space-y-1 bg-black rounded-xl p-3 h-28 overflow-y-auto border border-white/5 text-[9.5px] leading-relaxed scrollbar-thin select-text">
- {logs.length === 0 ? (
- <div className="text-gray-500 italic flex items-center gap-1.5 h-full justify-center">
- <Eye className="w-3.5 h-3.5" /> Waiting for execution sequence...
- </div>
- ) : (
- logs.map((log, i) => {
- let color = 'text-gray-400';
- if (log.startsWith('[SYSTEM]')) color = 'text-theme-accent';
- if (log.startsWith('[ATTACK]')) color = 'text-red-500 font-bold';
- if (log.startsWith('[GATEWAY]')) color = 'text-yellow-500 font-bold';
- if (log.startsWith('[SHIELD]')) color = 'text-green-400 font-extrabold';
- return (
- <div key={i} className={`${color}`}>
- {log}
- </div>
- );
- })
- )}
- <div ref={consoleEndRef} />
- </div>
+              {/* Typing Console Logs */}
+              <div className="space-y-1 bg-black rounded-xl p-3 h-28 overflow-y-auto border border-white/5 text-[9.5px] leading-relaxed scrollbar-thin select-text">
+                {logs.length === 0 ? (
+                  <div className="text-gray-500 italic flex items-center gap-1.5 h-full justify-center">
+                    <Eye className="w-3.5 h-3.5" /> Waiting for execution sequence...
+                  </div>
+                ) : (
+                  logs.map((log, i) => {
+                    let color = 'text-gray-400';
+                    if (log.startsWith('[SYSTEM]')) color = 'text-cyan-400';
+                    if (log.startsWith('[ATTACK]')) color = 'text-red-500 font-bold';
+                    if (log.startsWith('[GATEWAY]')) color = 'text-yellow-500 font-bold';
+                    if (log.startsWith('[SHIELD]')) color = 'text-green-400 font-extrabold';
+                    return (
+                      <div key={i} className={`${color}`}>
+                        {log}
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={consoleEndRef} />
+              </div>
 
- </div>
- </div>
- </div>
+            </div>
+          </div>
+        </div>
 
- {/* RIGHT COLUMN: Machine Identity & SLA Performance Ledger */}
- <div className="xl:col-span-3 flex flex-col gap-6">
- 
- {/* Identity Shielding Vault (Aembit Overtaken) */}
- <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between">
- <div className="space-y-3">
- <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
- <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
- <Fingerprint className="w-4 h-4 text-theme-accent animate-pulse" /> 3. MACHINE IDENTITY (IAM)
- </span>
- <span className="text-[9px] text-[#b8860b] font-mono">SEKED_SWAP</span>
- </div>
+        {/* RIGHT COLUMN: Machine Identity & SLA Performance Ledger */}
+        <div className="xl:col-span-3 flex flex-col gap-6">
+          
+          {/* Identity Shielding Vault (Aembit Overtaken) */}
+          <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
+                  <Fingerprint className="w-4 h-4 text-cyan-400 animate-pulse" /> 3. MACHINE IDENTITY (IAM)
+                </span>
+                <span className="text-[9px] text-[#b8860b] font-mono">SEKED_SWAP</span>
+              </div>
 
- {/* Key Swapping Flow Panel */}
- <div className="space-y-2">
- <div className="p-3 rounded-xl bg-black/50 border border-white/5 relative overflow-hidden">
- <span className="text-[8px] text-gray-500 uppercase block">Cognitive Context View (Agent LLM Eye)</span>
- <div className="text-[10px] font-bold text-white mt-1 flex items-center gap-1.5">
- <Lock className="w-3.5 h-3.5 text-green-400" /> Isolated Secrets Shield
- </div>
- 
- {/* Dynamic secret redaction simulation */}
- <div className="text-[9.5px] font-mono text-theme-accent mt-2 bg-theme-surface2 p-2 rounded border border-theme-border break-all leading-relaxed relative">
- {executionState === 'success' && activeThreat === 'credentials' ? (
- <span className="text-yellow-400 font-bold">
- AWS_KEY_REDACTED: [UACP_SHIELD_MASK_******]
- </span>
- ) : executionState === 'success' ? (
- <span className="text-green-400">
- {nonceToken || 'Backend proof recorded; no nonce token returned'}
- </span>
- ) : (
- <span className="text-gray-400 italic">
- Waiting for backend execution receipt.
- </span>
- )}
- </div>
- </div>
+              {/* Key Swapping Flow Panel */}
+              <div className="space-y-2">
+                <div className="p-3 rounded-xl bg-black/50 border border-white/5 relative overflow-hidden">
+                  <span className="text-[8px] text-gray-500 uppercase block">Cognitive Context View (Agent LLM Eye)</span>
+                  <div className="text-[10px] font-bold text-white mt-1 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-green-400" /> Isolated Secrets Shield
+                  </div>
+                  
+                  {/* Dynamic secret redaction simulation */}
+                  <div className="text-[9.5px] font-mono text-cyan-400 mt-2 bg-cyan-950/20 p-2 rounded border border-cyan-500/10 break-all leading-relaxed relative">
+                    {executionState === 'success' && activeThreat === 'credentials' ? (
+                      <span className="text-yellow-400 font-bold">
+                        AWS_KEY_REDACTED: [UACP_SHIELD_MASK_******]
+                      </span>
+                    ) : executionState === 'success' ? (
+                      <span className="text-green-400">
+                        {nonceToken || 'Backend proof recorded; no nonce token returned'}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">
+                        Waiting for backend execution receipt.
+                      </span>
+                    )}
+                  </div>
+                </div>
 
- {/* Downward Swapping Connector Arrow */}
- <div className="flex justify-center my-0.5">
- <ChevronDown className="w-4 h-4 text-theme-accent animate-bounce" />
- </div>
+                {/* Downward Swapping Connector Arrow */}
+                <div className="flex justify-center my-0.5">
+                  <ChevronDown className="w-4 h-4 text-cyan-500 animate-bounce" />
+                </div>
 
- <div className="p-3 rounded-xl bg-black/50 border border-[#b8860b]/20 relative overflow-hidden">
- <span className="text-[8px] text-[#b8860b] uppercase block font-bold">cAPI Standalone Gateway View</span>
- <div className="text-[10px] font-bold text-white mt-1 flex items-center gap-1.5">
- <Unlock className="w-3.5 h-3.5 text-[#b8860b]" /> Short-Lived x402 Token Dispatch
- </div>
- <div className="text-[9px] font-mono text-gray-400 mt-2 bg-[#b8860b]/5 p-2 rounded border border-[#b8860b]/10 break-all">
- {executionState === 'success' ? (
- <span className="text-[#b8860b] font-bold">
- RESOLVED: backend receipt recorded in evidence ledger.
- </span>
- ) : (
- <span>GATEWAY: awaiting cAPI/BYOS execution proof.</span>
- )}
- </div>
- </div>
+                <div className="p-3 rounded-xl bg-black/50 border border-[#b8860b]/20 relative overflow-hidden">
+                  <span className="text-[8px] text-[#b8860b] uppercase block font-bold">cAPI Standalone Gateway View</span>
+                  <div className="text-[10px] font-bold text-white mt-1 flex items-center gap-1.5">
+                    <Unlock className="w-3.5 h-3.5 text-[#b8860b]" /> Short-Lived x402 Token Dispatch
+                  </div>
+                  <div className="text-[9px] font-mono text-gray-400 mt-2 bg-[#b8860b]/5 p-2 rounded border border-[#b8860b]/10 break-all">
+                    {executionState === 'success' ? (
+                      <span className="text-[#b8860b] font-bold">
+                        RESOLVED: backend receipt recorded in evidence ledger.
+                      </span>
+                    ) : (
+                      <span>GATEWAY: awaiting cAPI/BYOS execution proof.</span>
+                    )}
+                  </div>
+                </div>
 
- {/* Manual Rotation Action */}
- <button
- onClick={handleRotateNonce}
- disabled={isRotating}
- className="w-full flex items-center justify-center gap-1.5 border border-[#b8860b]/20 hover:border-[#b8860b]/40 bg-[#b8860b]/5 hover:bg-[#b8860b]/10 text-[#b8860b] py-2 rounded-lg text-[10px] font-bold uppercase transition-all disabled:opacity-50"
- >
- <RefreshCw className={`w-3.5 h-3.5 ${isRotating ? 'animate-spin' : ''}`} />
- {isRotating ? 'Checking Proof Path...' : 'Check Nonce Proof Path'}
- </button>
- </div>
+                {/* Manual Rotation Action */}
+                <button
+                  onClick={handleRotateNonce}
+                  disabled={isRotating}
+                  className="w-full flex items-center justify-center gap-1.5 border border-[#b8860b]/20 hover:border-[#b8860b]/40 bg-[#b8860b]/5 hover:bg-[#b8860b]/10 text-[#b8860b] py-2 rounded-lg text-[10px] font-bold uppercase transition-all disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRotating ? 'animate-spin' : ''}`} />
+                  {isRotating ? 'Checking Proof Path...' : 'Check Nonce Proof Path'}
+                </button>
+              </div>
 
- <p className="text-[9px] text-gray-400 leading-relaxed">
- This panel only displays nonce or receipt data when it is returned by the backend execution response.
- </p>
- </div>
- </div>
+              <p className="text-[9px] text-gray-400 leading-relaxed">
+                This panel only displays nonce or receipt data when it is returned by the backend execution response.
+              </p>
+            </div>
+          </div>
 
- {/* Backend evidence ledger */}
- <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow relative overflow-hidden">
- 
- {/* Floating Balance Decrement Animation */}
- <AnimatePresence>
- {floatingValue && (
- <motion.div
- initial={{ opacity: 0, y: 15 }}
- animate={{ opacity: 1, y: -25 }}
- exit={{ opacity: 0 }}
- transition={{ duration: 1.5 }}
- className={`absolute right-6 top-1/4 text-xs ${floatingColor} bg-black/80 px-2.5 py-1 rounded border border-white/10 z-10`}
- >
- {floatingValue}
- </motion.div>
- )}
- </AnimatePresence>
+          {/* Backend evidence ledger */}
+          <div className="border border-white/10 rounded-2xl bg-[#090D14]/80 backdrop-blur-xl p-5 shadow-xl flex flex-col justify-between flex-grow relative overflow-hidden">
+            
+            {/* Floating Balance Decrement Animation */}
+            <AnimatePresence>
+              {floatingValue && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: -25 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.5 }}
+                  className={`absolute right-6 top-1/4 text-xs ${floatingColor} bg-black/80 px-2.5 py-1 rounded border border-white/10 z-10`}
+                >
+                  {floatingValue}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
- <div className="space-y-4">
- <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
- <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
- <Coins className="w-4 h-4 text-orange-400 animate-pulse" /> 4. BACKEND EVIDENCE LEDGER
- </span>
- <span className="text-[9px] text-orange-400 font-mono">PROOF_ONLY</span>
- </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <span className="text-xs font-bold text-white tracking-widest flex items-center gap-1.5">
+                  <Coins className="w-4 h-4 text-orange-400 animate-pulse" /> 4. BACKEND EVIDENCE LEDGER
+                </span>
+                <span className="text-[9px] text-orange-400 font-mono">PROOF_ONLY</span>
+              </div>
 
- <div className="space-y-3">
- {/* Metric Dials */}
- <div className="grid grid-cols-2 gap-3">
- <div className="p-3 bg-black/50 border border-white/5 rounded-xl text-center relative">
- <span className="text-[8px] text-gray-500 uppercase block">ACTIVE STAKE</span>
- <span className="text-xs xl:text-sm font-bold text-white mt-1 font-mono block tracking-wider">
- {vnpBalance == null ? 'Needs proof' : `${vnpBalance.toLocaleString()} VNP`}
- </span>
- </div>
- <div className="p-3 bg-black/50 border border-white/5 rounded-xl text-center">
- <span className="text-[8px] text-gray-500 uppercase block">SLA YIELD APY</span>
- <span className="text-xs xl:text-sm font-bold mt-1 font-mono block tracking-wider transition-colors duration-500 text-orange-400">
- {yieldApy == null ? 'Needs proof' : `${yieldApy}% APY`}
- </span>
- </div>
- </div>
+              <div className="space-y-3">
+                {/* Metric Dials */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-black/50 border border-white/5 rounded-xl text-center relative">
+                    <span className="text-[8px] text-gray-500 uppercase block">ACTIVE STAKE</span>
+                    <span className="text-xs xl:text-sm font-bold text-white mt-1 font-mono block tracking-wider">
+                      {vnpBalance == null ? 'Needs proof' : `${vnpBalance.toLocaleString()} VNP`}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-black/50 border border-white/5 rounded-xl text-center">
+                    <span className="text-[8px] text-gray-500 uppercase block">SLA YIELD APY</span>
+                    <span className="text-xs xl:text-sm font-bold mt-1 font-mono block tracking-wider transition-colors duration-500 text-orange-400">
+                      {yieldApy == null ? 'Needs proof' : `${yieldApy}% APY`}
+                    </span>
+                  </div>
+                </div>
 
- {/* Status Notice */}
- <div className="p-2.5 rounded-lg border transition-all text-[10px] border-white/5 bg-white/[0.01]">
- <span className="text-[8px] text-gray-500 uppercase block font-bold">Ledger Status Summary</span>
- <span className="font-bold mt-0.5 block text-green-400">
- {lastActionStatus}
- </span>
- </div>
+                {/* Status Notice */}
+                <div className="p-2.5 rounded-lg border transition-all text-[10px] border-white/5 bg-white/[0.01]">
+                  <span className="text-[8px] text-gray-500 uppercase block font-bold">Ledger Status Summary</span>
+                  <span className="font-bold mt-0.5 block text-green-400">
+                    {lastActionStatus}
+                  </span>
+                </div>
 
- {/* Scrolling backend evidence ledger */}
- <div className="space-y-2">
- <span className="text-[8.5px] text-gray-400 uppercase tracking-wider font-bold flex items-center gap-1">
- <History className="w-3.5 h-3.5 text-orange-400" /> Backend Evidence Rows
- </span>
- 
- <div className="space-y-2 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
- {ledger.length === 0 && (
- <div className="p-3 rounded border border-white/5 bg-black/40 text-[9px] text-gray-500">
- No cAPI/BYOS receipt rows returned in this browser session.
- </div>
- )}
- {ledger.map((block) => {
- const isBlocked = block.status === 'BLOCKED';
- return (
- <div 
- key={block.index}
- className={`p-2 rounded border text-[9px] font-mono leading-relaxed transition-all ${
- isBlocked 
- ? 'border-red-500/30 bg-red-950/10 text-red-400' 
- : 'border-white/5 bg-black/40 text-gray-300'
- }`}
- >
- <div className="flex justify-between font-bold">
- <span>ROW #{block.index}</span>
- <span className={isBlocked ? 'text-red-500' : 'text-green-400'}>{block.action}</span>
- </div>
- <div className="text-gray-500 text-[8.5px] flex justify-between mt-0.5 border-b border-white/5 pb-1 mb-1">
- <span>{block.timestamp}</span>
- <span>{block.vnpStake}</span>
- </div>
- <div className="text-[8px] text-gray-500 grid grid-cols-2 gap-1 font-mono">
- <div>PREV: <span className="text-gray-400">{block.prevHash}</span></div>
- <div>HASH: <span className="text-gray-400">{block.hash}</span></div>
- </div>
- <div className="text-[8px] text-theme-accent/80 mt-1 uppercase font-mono">
- EVIDENCE: <span className="text-gray-400 font-normal">{block.evidenceHash}</span>
- </div>
- </div>
- );
- })}
- </div>
- </div>
+                {/* Scrolling backend evidence ledger */}
+                <div className="space-y-2">
+                  <span className="text-[8.5px] text-gray-400 uppercase tracking-wider font-bold flex items-center gap-1">
+                    <History className="w-3.5 h-3.5 text-orange-400" /> Backend Evidence Rows
+                  </span>
+                  
+                  <div className="space-y-2 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+                    {ledger.length === 0 && (
+                      <div className="p-3 rounded border border-white/5 bg-black/40 text-[9px] text-gray-500">
+                        No cAPI/BYOS receipt rows returned in this browser session.
+                      </div>
+                    )}
+                    {ledger.map((block) => {
+                      const isBlocked = block.status === 'BLOCKED';
+                      return (
+                        <div 
+                          key={block.index}
+                          className={`p-2 rounded border text-[9px] font-mono leading-relaxed transition-all ${
+                            isBlocked 
+                              ? 'border-red-500/30 bg-red-950/10 text-red-400' 
+                              : 'border-white/5 bg-black/40 text-gray-300'
+                          }`}
+                        >
+                          <div className="flex justify-between font-bold">
+                            <span>ROW #{block.index}</span>
+                            <span className={isBlocked ? 'text-red-500' : 'text-green-400'}>{block.action}</span>
+                          </div>
+                          <div className="text-gray-500 text-[8.5px] flex justify-between mt-0.5 border-b border-white/5 pb-1 mb-1">
+                            <span>{block.timestamp}</span>
+                            <span>{block.vnpStake}</span>
+                          </div>
+                          <div className="text-[8px] text-gray-500 grid grid-cols-2 gap-1 font-mono">
+                            <div>PREV: <span className="text-gray-400">{block.prevHash}</span></div>
+                            <div>HASH: <span className="text-gray-400">{block.hash}</span></div>
+                          </div>
+                          <div className="text-[8px] text-cyan-500/80 mt-1 uppercase font-mono">
+                            EVIDENCE: <span className="text-gray-400 font-normal">{block.evidenceHash}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
- </div>
- </div>
+              </div>
+            </div>
 
- </div>
- </div>
+          </div>
+        </div>
 
- </div>
+      </div>
 
- </div>
- );
+    </div>
+  );
 }

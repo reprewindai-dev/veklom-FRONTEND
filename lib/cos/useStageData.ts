@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { classifyPayload, deriveProofStatus } from "./proof";
-import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
@@ -35,36 +34,6 @@ function keyFor(endpoint: StageEndpoint) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
-export function resolveStageTransportPath(
-  _stageId: StageDefinition["id"],
-  path: string,
-): string {
-  if (isCappoProxyPath(path)) {
-    return `/api/cappo${path}`;
-  }
-  return path;
-}
-
-export function resolveStageBaseUrl(
-  stageId: StageDefinition["id"],
-  sandbox: boolean,
-  endpointBaseUrl?: string,
-  sandboxBaseUrl?: string,
-  endpointPath?: string,
-): string | undefined {
-  // CAPPO and Mount are always same-origin. A stage descriptor must never move
-  // machine-authority traffic around the authenticated Next proxy, including
-  // when the UI is rendering sandbox data.
-  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
-    return undefined;
-  }
-
-  // Production browser traffic is same-origin by contract. Only an explicit
-  // sandbox session may opt into a sandbox/external base for unrelated stages.
-  if (!sandbox) return undefined;
-  return sandboxBaseUrl || endpointBaseUrl;
-}
-
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
   const observation: ProofObservation = endpoint.classification === "absent"
     ? { kind: "no-route" }
@@ -94,7 +63,6 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     body?: unknown,
   ): Promise<StageCallResult<T>> => {
     const key = keyFor(endpoint);
-    const isDeclaredEndpoint = stage.endpoints.some((candidate) => keyFor(candidate) === key);
     if (endpoint.classification === "absent") {
       const record = initialRecord(endpoint, sandbox);
       setRecords((current) => ({ ...current, [key]: record }));
@@ -108,19 +76,15 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     const started = performance.now();
     setLoading((current) => ({ ...current, [key]: true }));
     try {
-      const data = await api<T>(resolveStageTransportPath(stageId, endpoint.path), {
+      const data = await api<T>(endpoint.path, {
         method: endpoint.method,
         body,
         query: { mode: sandbox ? "sandbox" : "production" },
         headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
         handlePaymentRequired: false,
-        baseUrl: resolveStageBaseUrl(
-          stageId,
-          sandbox,
-          endpoint.baseUrl,
-          process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL,
-          endpoint.path,
-        ),
+        baseUrl: sandbox
+          ? (process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL || endpoint.baseUrl)
+          : endpoint.baseUrl,
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
       const classification = classifyPayload(data);
@@ -136,7 +100,6 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
       };
       setRecords((current) => ({ ...current, [key]: record }));
       setAdditionalRecords((current) => {
-        if (!isDeclaredEndpoint) return { ...current, [key]: record };
         if (!(key in current)) return current;
         const next = { ...current };
         delete next[key];
@@ -161,7 +124,6 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
           paymentRequired: true,
         };
         setRecords((current) => ({ ...current, [key]: record }));
-        if (!isDeclaredEndpoint) setAdditionalRecords((current) => ({ ...current, [key]: record }));
         setPayloads((current) => ({ ...current, [key]: error.body }));
         return { data: error.body as T, record };
       }
@@ -178,7 +140,6 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
       };
       setRecords((current) => ({ ...current, [key]: record }));
       setAdditionalRecords((current) => {
-        if (!isDeclaredEndpoint) return { ...current, [key]: record };
         if (!(key in current)) return current;
         const next = { ...current };
         delete next[key];
@@ -188,7 +149,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     } finally {
       setLoading((current) => ({ ...current, [key]: false }));
     }
-  }, [sandbox, stage.endpoints, stageId]);
+  }, [sandbox]);
 
   useEffect(() => {
     if (!options.autoGet) return;
@@ -207,20 +168,11 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
 
   const stageProof = useMemo<ProofStatus>(() => {
     if (recordsList.some((record) => record.observation.kind === "no-route")) return "Not started";
-    if (recordsList.every((record) => record.proof === "Not started")) return "Not started";
     if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
+    if (recordsList.some((record) => record.proof === "Verified")) return "Verified";
+    if (recordsList.some((record) => record.proof === "Present")) return "Present";
     if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
-
-    const called = recordsList.filter(
-      (record) => record.observation.kind !== "not-called" && record.classification !== "absent",
-    );
-
-    if (called.length > 0) {
-      if (called.some((record) => record.proof === "Needs proof")) return "Needs proof";
-      if (called.every((record) => record.proof === "Verified")) return "Verified";
-      if (called.every((record) => record.proof === "Verified" || record.proof === "Live")) return "Live";
-    }
-
+    if (recordsList.every((record) => record.proof === "Not started")) return "Not started";
     return "Needs proof";
   }, [recordsList]);
 

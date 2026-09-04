@@ -24,301 +24,301 @@ import VanguardPlayground from './components/VanguardPlayground';
 
 
 interface TerminalAppProps {
- defaultTab?: string;
+  defaultTab?: string;
 }
-
 
 export default function App({ defaultTab = 'overview' }: TerminalAppProps) {
- // Primary Navigation State
- const [activeTab, setActiveTab] = useState<string>(defaultTab);
- const [isLandingPage, setIsLandingPage] = useState<boolean>(false);
+  // Primary Navigation State
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+  const [isLandingPage, setIsLandingPage] = useState<boolean>(false);
 
- useEffect(() => {
- if (typeof window !=="undefined") {
- const isLanding = window.location.pathname ==="/";
- setIsLandingPage(isLanding);
- }
- }, []);
-
-
- // Real-time ticking UTC clock for Geometric Balance theme
- const [currentTime, setCurrentTime] = useState<string>('');
-
- useEffect(() => {
- const updateTime = () => {
- const now = new Date();
- const pad = (num: number) => String(num).padStart(2, '0');
- setCurrentTime(`${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`);
- };
- updateTime();
- const interval = setInterval(updateTime, 1000);
- return () => clearInterval(interval);
- }, []);
-
- // Runtime state populated from live routes when the backend returns proof.
- const [agents, setAgents] = useState<any[]>([]);
- const [runs, setRuns] = useState<any[]>([]);
- const [delegates, setDelegates] = useState<any[]>([]);
- const [logs, setLogs] = useState<any[]>([]);
- const [liveMetrics, setLiveMetrics] = useState<any>({ globalThroughput: null, complianceScore: null, slaMisses: null, activeYieldTokens: null, totalPglRequests: null, autoRoutedExecutions: null, mcpIOHeartbeat: 'unknown', throughput: null, attestationRate: null, gasSaved: null, activeQueue: null, uptime: null, totalExecutions: null });
- const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-
- // Future integration point:
- useEffect(() => {
- }, []);
-
- // Update a single agent properties (Reboot / Diagnostics actions)
- const handleAgentUpdate = (id: string, updatedFields: Partial<AgentNode>) => {
- setAgents(prev => prev.map(a => a.id === id ? { ...a, ...updatedFields } : a));
- };
-
- // Propose standard motion on the Legislative Matrix
- const handleVotePropose = (proposalName: string) => {
- setLogs(prev => [{
- timestamp: new Date().toISOString(),
- source: 'Council',
- message: `LEGISLATURE: Motion initiated for ${proposalName}. Transmitting to backend for validation.`,
- type: 'warn'
- }, ...prev]);
- };
-
- // Handle high priority manual execution injection
- const handleTriggerManualOverride = async (intentText: string, policyText: string) => {
- setLogs(prev => [{
- timestamp: new Date().toISOString(),
- source: 'Terminal',
- message: `Submitting governed execution intent through /api/v1/capi/execute with policy ${policyText}.`,
- type: 'warn'
- }, ...prev]);
-
- try {
- const response = await fetch('/api/v1/capi/execute', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- action: 'terminal_manual_override',
- payload: { intent: intentText, policy: policyText },
- target_protocol: 'terminal',
- workspace_id: 'control-plane'
- })
- });
- const data = await response.json().catch(() => ({}));
- setLogs(prev => [{
- timestamp: new Date().toISOString(),
- source: 'CAPI',
- message: response.ok
- ? `Execution accepted: ${data.execution_id || data.run_id || data.status || 'receipt returned'}`
- : `Execution rejected: ${data.detail || data.error || response.statusText}`,
- type: response.ok ? 'success' : 'error'
- }, ...prev]);
- } catch (err) {
- setLogs(prev => [{
- timestamp: new Date().toISOString(),
- source: 'CAPI',
- message: `Execution proxy unavailable: ${err instanceof Error ? err.message : String(err)}`,
- type: 'error'
- }, ...prev]);
- }
- };
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isLanding = window.location.pathname === "/";
+      setIsLandingPage(isLanding);
+    }
+  }, []);
 
 
- if (isLandingPage) {
- return (
- <div className="w-full h-[550px] lg:h-[650px] rounded-xl shadow-2xl border border-white/10 overflow-hidden relative bg-[#030303] text-white/90 font-sans">
- {/* Futuristic Scanline CRT overlay for cinematic feel */}
- <div className="absolute inset-x-0 top-0 h-1 bg-theme-surface from-transparent via-electric-cyan/2 w-full animate-scanline pointer-events-none z-50" />
- <div className="w-full h-full relative">
- <QuantumTerminal />
- </div>
- </div>
- );
- }
+  // Real-time ticking UTC clock for Geometric Balance theme
+  const [currentTime, setCurrentTime] = useState<string>('');
 
- return (
- <div className="w-screen h-screen border-4 border-[#0A0A0C] bg-[#030303] text-white/90 overflow-hidden flex flex-col font-sans relative">
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const pad = (num: number) => String(num).padStart(2, '0');
+      setCurrentTime(`${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
- 
- {/* 1. Futuristic Scanline CRT overlay for cinematic feel */}
- <div className="absolute inset-x-0 top-0 h-1 bg-theme-surface from-transparent via-electric-cyan/2 w-full animate-scanline pointer-events-none z-50" />
- 
- {/* Top Navigation Bar */}
- <header className="h-12 border-b border-white/10 flex items-center justify-between px-4 bg-black/40 backdrop-blur-md z-50 shrink-0 select-none">
- <div className="flex items-center gap-6">
- <div className="flex items-center gap-2">
- <div className="w-3 h-3 bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]"></div>
- <span className="text-xs font-bold tracking-[0.2em] uppercase">Veklom Control Plane</span>
- </div>
- <div className="h-4 w-px bg-white/20"></div>
- <div className="flex items-center gap-4 font-mono text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded border border-white/10">
- <span className="text-white/30">RUNTIME_NODE:</span>
- <select 
- className="bg-transparent text-white/80 outline-none cursor-pointer hover:text-white transition-colors"
- onChange={(e) => {
- import('./data/pglLoader').then(m => m.setCapiBaseUrl(e.target.value));
- }}
- defaultValue=""
- >
- <option value="" className="bg-black text-white">Control Proxy (same-origin)</option>
- <option value="https://api.veklom.com" className="bg-black text-white">BYOS API (api.veklom.com)</option>
- <option value="https://capi.veklom.com" className="bg-black text-white">CAPPO CAPI (capi.veklom.com)</option>
- </select>
- <div className="w-px h-3 bg-white/20"></div>
- <span>ROUTING: SAME-ORIGIN</span>
- <span className="text-[#00FF66]">PROOF: LIVE ROUTES</span>
- </div>
- </div>
- <div className="flex items-center gap-6">
- {isLandingPage && (
- <a 
- href="/terminal" 
- className="px-4 py-1.5 bg-[#FFB800]/10 border border-[#FFB800]/40 hover:bg-[#FFB800]/20 text-[#FFB800] hover:text-white font-mono text-[10px] font-bold uppercase rounded tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,184,0,0.1)] hover:shadow-[0_0_15px_rgba(255,184,0,0.3)] animate-pulse"
- >
- [ ACCESS SOVEREIGN CONSOLE ]
- </a>
- )}
- {!isLandingPage && (
- <div className="flex items-center gap-4">
- <div className="text-right">
- <div className="text-[9px] text-white/40 leading-none uppercase">ARBITEROS STATUS</div>
- <div className="text-[10px] font-mono text-[#00FF66] uppercase">ENFORCING / MODE_01</div>
- </div>
- <div className="w-24 h-1.5 bg-white/10 overflow-hidden">
- <div className="w-3/4 h-full bg-[#00FF66] shadow-[0_0_4px_#00FF66]"></div>
- </div>
- </div>
- )}
- <div className="text-xs font-mono tabular-nums text-white/70">{currentTime}</div>
- <div className="ml-4">
- {/* eslint-disable-next-line */}
- {/* @ts-ignore - appkit-button is a Reown Web Component */}
- <appkit-button />
- </div>
- </div>
+  // Runtime state populated from live routes when the backend returns proof.
+  const [agents, setAgents] = useState<any[]>([]);
+  const [runs, setRuns] = useState<any[]>([]);
+  const [delegates, setDelegates] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [liveMetrics, setLiveMetrics] = useState<any>({ globalThroughput: 0, complianceScore: 100, slaMisses: 0, activeYieldTokens: 0, totalPglRequests: 0, autoRoutedExecutions: 0, mcpIOHeartbeat: 0, throughput: 0, attestationRate: 0, gasSaved: 0, activeQueue: 0, uptime: '0h', totalExecutions: 0 });
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
- </header>
+  // Future integration point:
+  useEffect(() => {
+  }, []);
 
- {/* Main Content Split Frame */}
- <div className="flex-grow flex overflow-hidden relative">
- {/* 2. Primary Navigation Sidebar */}
- <Sidebar
- mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
- throughput={liveMetrics.throughput}
- agentsCount={agents.length}
- />
+  // Update a single agent properties (Reboot / Diagnostics actions)
+  const handleAgentUpdate = (id: string, updatedFields: Partial<AgentNode>) => {
+    setAgents(prev => prev.map(a => a.id === id ? { ...a, ...updatedFields } : a));
+  };
+
+  // Propose standard motion on the Legislative Matrix
+  const handleVotePropose = (proposalName: string) => {
+    setLogs(prev => [{
+      timestamp: new Date().toISOString(),
+      source: 'Council',
+      message: `LEGISLATURE: Motion initiated for ${proposalName}. Transmitting to backend for validation.`,
+      type: 'warn'
+    }, ...prev]);
+  };
+
+  // Handle high priority manual execution injection
+  const handleTriggerManualOverride = async (intentText: string, policyText: string) => {
+    setLogs(prev => [{
+      timestamp: new Date().toISOString(),
+      source: 'Terminal',
+      message: `Submitting governed execution intent through /api/v1/capi/execute with policy ${policyText}.`,
+      type: 'warn'
+    }, ...prev]);
+
+    try {
+      const response = await fetch('/api/v1/capi/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'terminal_manual_override',
+          payload: { intent: intentText, policy: policyText },
+          target_protocol: 'terminal',
+          workspace_id: 'control-plane'
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      setLogs(prev => [{
+        timestamp: new Date().toISOString(),
+        source: 'CAPI',
+        message: response.ok
+          ? `Execution accepted: ${data.execution_id || data.run_id || data.status || 'receipt returned'}`
+          : `Execution rejected: ${data.detail || data.error || response.statusText}`,
+        type: response.ok ? 'success' : 'error'
+      }, ...prev]);
+    } catch (err) {
+      setLogs(prev => [{
+        timestamp: new Date().toISOString(),
+        source: 'CAPI',
+        message: `Execution proxy unavailable: ${err instanceof Error ? err.message : String(err)}`,
+        type: 'error'
+      }, ...prev]);
+    }
+  };
 
 
- {/* 3. Central Application Viewport */}
- <main className="flex-grow flex flex-col justify-between overflow-y-auto overflow-x-hidden relative min-w-0 border-l border-white/5">
- 
- {/* VIEW CONTAINER */}
- <div className="flex-grow overflow-y-auto overflow-x-hidden relative bg-[#030303]">
- {activeTab === 'overview' && (
- <QuantumDashboard />
- )}
- {activeTab === 'swarm-map' && (
- <SwarmMap 
- agents={agents} 
- onAgentUpdate={handleAgentUpdate}
- />
- )}
- {activeTab === 'terminal' && (
- <div className="w-full h-full flex flex-col xl:flex-row overflow-hidden">
- <div className="flex-grow h-full relative min-w-0">
- <QuantumTerminal />
- </div>
- {!isLandingPage && (
- <div className="w-full xl:w-96 shrink-0 h-full border-t xl:border-t-0 xl:border-l border-white/5 bg-[#030303]/85 overflow-y-auto">
- <TriageTelemetry context="terminal" />
- </div>
- )}
- </div>
- )}
- {activeTab === 'spine' && (
- <RunSpine 
- runs={runs}
- selectedRunId={selectedRunId}
- onSelectRun={setSelectedRunId}
- />
- )}
+  if (isLandingPage) {
+    return (
+      <div className="w-full h-[550px] lg:h-[650px] rounded-xl shadow-2xl border border-white/10 overflow-hidden relative bg-[#030303] text-white/90 font-sans">
+        {/* Futuristic Scanline CRT overlay for cinematic feel */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-electric-cyan/2 w-full animate-scanline pointer-events-none z-50" />
+        <div className="w-full h-full relative">
+          <QuantumTerminal />
+        </div>
+      </div>
+    );
+  }
 
- {activeTab === 'runtime' && (
- <AmphotericRuntimeControl />
- )}
+  return (
+    <div className="w-screen h-screen border-4 border-[#0A0A0C] bg-[#030303] text-white/90 overflow-hidden flex flex-col font-sans relative">
 
- {activeTab === 'runs' && (
- <IncidentsSlashing />
- )}
+      
+      {/* 1. Futuristic Scanline CRT overlay for cinematic feel */}
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-electric-cyan/2 w-full animate-scanline pointer-events-none z-50" />
+      
+      {/* Top Navigation Bar */}
+      <header className="h-12 border-b border-white/10 flex items-center justify-between px-4 bg-black/40 backdrop-blur-md z-50 shrink-0 select-none">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]"></div>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase">Veklom Control Plane</span>
+          </div>
+          <div className="h-4 w-px bg-white/20"></div>
+          <div className="flex items-center gap-4 font-mono text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded border border-white/10">
+            <span className="text-white/30">RUNTIME_NODE:</span>
+            <select 
+              className="bg-transparent text-white/80 outline-none cursor-pointer hover:text-white transition-colors"
+              onChange={(e) => {
+                import('./data/pglLoader').then(m => m.setCapiBaseUrl(e.target.value));
+              }}
+              defaultValue=""
+            >
+              <option value="" className="bg-black text-white">Control Proxy (same-origin)</option>
+              <option value="https://api.veklom.com" className="bg-black text-white">BYOS API (api.veklom.com)</option>
+              <option value="https://capi.veklom.com" className="bg-black text-white">CAPPO CAPI (capi.veklom.com)</option>
+            </select>
+            <div className="w-px h-3 bg-white/20"></div>
+            <span>ROUTING: SAME-ORIGIN</span>
+            <span className="text-[#00FF66]">PROOF: LIVE ROUTES</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          {isLandingPage && (
+            <a 
+              href="/terminal" 
+              className="px-4 py-1.5 bg-[#FFB800]/10 border border-[#FFB800]/40 hover:bg-[#FFB800]/20 text-[#FFB800] hover:text-white font-mono text-[10px] font-bold uppercase rounded tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,184,0,0.1)] hover:shadow-[0_0_15px_rgba(255,184,0,0.3)] animate-pulse"
+            >
+              [ ACCESS SOVEREIGN CONSOLE ]
+            </a>
+          )}
+          {!isLandingPage && (
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-[9px] text-white/40 leading-none uppercase">ARBITEROS STATUS</div>
+                <div className="text-[10px] font-mono text-[#00FF66] uppercase">ENFORCING / MODE_01</div>
+              </div>
+              <div className="w-24 h-1.5 bg-white/10 overflow-hidden">
+                <div className="w-3/4 h-full bg-[#00FF66] shadow-[0_0_4px_#00FF66]"></div>
+              </div>
+            </div>
+          )}
+          <div className="text-xs font-mono tabular-nums text-white/70">{currentTime}</div>
+          <div className="ml-4">
+            {/* eslint-disable-next-line */}
+            {/* @ts-ignore - appkit-button is a Reown Web Component */}
+            <appkit-button />
+          </div>
+        </div>
 
- {activeTab === 'nexus' && (
- <NexusProtocol />
- )}
+      </header>
 
- {activeTab === 'id' && (
- <GenomeLedgerOnboarding />
- )}
+      {/* Main Content Split Frame */}
+      <div className="flex-grow flex overflow-hidden relative">
+        {/* 2. Primary Navigation Sidebar */}
+        <Sidebar
+          mcpHeartbeat={liveMetrics.mcpIOHeartbeat}
+          throughput={liveMetrics.throughput}
+          agentsCount={agents.length}
+        />
 
- {activeTab === 'committee' && (
- <CouncilMatrix 
- delegates={delegates}
- onVotePropose={handleVotePropose}
- logs={logs}
- metrics={liveMetrics}
- />
- )}
 
- {activeTab === 'playground' && (
- <VanguardPlayground />
- )}
+        {/* 3. Central Application Viewport */}
+        <main className="flex-grow flex flex-col justify-between overflow-y-auto overflow-x-hidden relative min-w-0 border-l border-white/5">
+          
+          {/* VIEW CONTAINER */}
+          <div className="flex-grow overflow-y-auto overflow-x-hidden relative bg-[#030303]">
+            {activeTab === 'overview' && (
+              <QuantumDashboard />
+            )}
+            {activeTab === 'swarm-map' && (
+              <SwarmMap 
+                agents={agents} 
+                onAgentUpdate={handleAgentUpdate}
+              />
+            )}
+            {activeTab === 'terminal' && (
+              <div className="w-full h-full flex flex-col xl:flex-row overflow-hidden">
+                <div className="flex-grow h-full relative min-w-0">
+                  <QuantumTerminal />
+                </div>
+                {!isLandingPage && (
+                  <div className="w-full xl:w-96 shrink-0 h-full border-t xl:border-t-0 xl:border-l border-white/5 bg-[#030303]/85 overflow-y-auto">
+                    <TriageTelemetry context="terminal" />
+                  </div>
+                )}
+              </div>
+            )}
+            {activeTab === 'spine' && (
+              <RunSpine 
+                runs={runs}
+                selectedRunId={selectedRunId}
+                onSelectRun={setSelectedRunId}
+              />
+            )}
 
- {(['staking', 'duel', 'discovery', 'treasury'].includes(activeTab)) && (
- <div className="w-full h-full flex flex-col items-center justify-center bg-[#030303] text-white/20 font-mono gap-4">
- <div className="w-16 h-16 rounded-full border border-dashed border-white/10 flex items-center justify-center animate-pulse">
- <Cpu size={32} />
- </div>
- <div className="text-center">
- <h3 className="text-sm font-bold uppercase tracking-widest text-white/40 mb-1">Module Initializing</h3>
- <p className="text-[10px] uppercase">Secure connection to {activeTab.toUpperCase()}_NODE pending...</p>
- </div>
- </div>
- )}
+            {activeTab === 'runtime' && (
+              <AmphotericRuntimeControl />
+            )}
 
- {activeTab === 'interlink' && (
- <div className="w-full h-full bg-[#030303] overflow-hidden">
- <iframe 
- src="https://interlink.veklom.com/ui" 
- className="w-full h-full border-0" 
- title="Interlink API Console" 
- />
- </div>
- )}
- </div>
+            {activeTab === 'runs' && (
+              <IncidentsSlashing />
+            )}
 
- {/* 4. Live Telemetry Console Ticker */}
- {!isLandingPage && ['overview', 'swarm-map', 'terminal'].includes(activeTab) && (
- <div className="h-72 border-t border-white/[0.05] bg-[#030303] shrink-0 relative z-10 select-none">
- <LiveTelemetry
- logs={logs}
- metrics={liveMetrics}
- onTriggerManualOverride={handleTriggerManualOverride}
- />
- </div>
- )}
+            {activeTab === 'nexus' && (
+              <NexusProtocol />
+            )}
 
- </main>
- </div>
+            {activeTab === 'id' && (
+              <GenomeLedgerOnboarding />
+            )}
 
- {/* System Footer Bar */}
- <footer className="h-6 border-t border-white/10 bg-black flex items-center justify-between px-4 text-[9px] font-mono text-white/30 shrink-0 select-none">
- <div className="flex gap-4">
- <span>ENCRYPT: TLS_1.3_CHACHA20_POLY1305</span>
- <span>SESSION: B82-ALPHA-77</span>
- </div>
- <div className="flex gap-4">
- <span className="text-[#00FF66]">● UACP_CORE_UP</span>
- <span className="text-[#00E5FF]">● MCP_BUS_CONNECTED</span>
- </div>
- </footer>
+            {activeTab === 'committee' && (
+              <CouncilMatrix 
+                delegates={delegates}
+                onVotePropose={handleVotePropose}
+                logs={logs}
+                metrics={liveMetrics}
+              />
+            )}
 
- </div>
- );
+            {activeTab === 'playground' && (
+              <VanguardPlayground />
+            )}
+
+            {(['staking', 'duel', 'discovery', 'treasury'].includes(activeTab)) && (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-[#030303] text-white/20 font-mono gap-4">
+                <div className="w-16 h-16 rounded-full border border-dashed border-white/10 flex items-center justify-center animate-pulse">
+                  <Cpu size={32} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-white/40 mb-1">Module Initializing</h3>
+                  <p className="text-[10px] uppercase">Secure connection to {activeTab.toUpperCase()}_NODE pending...</p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'interlink' && (
+              <div className="w-full h-full bg-[#030303] overflow-hidden">
+                <iframe 
+                  src="https://interlink.veklom.com/ui" 
+                  className="w-full h-full border-0" 
+                  title="Interlink API Console" 
+                />
+              </div>
+            )}
+          </div>
+
+          {/* 4. Live Telemetry Console Ticker */}
+          {!isLandingPage && ['overview', 'swarm-map', 'terminal'].includes(activeTab) && (
+            <div className="h-72 border-t border-white/[0.05] bg-[#030303] shrink-0 relative z-10 select-none">
+              <LiveTelemetry
+                logs={logs}
+                metrics={liveMetrics}
+                onTriggerManualOverride={handleTriggerManualOverride}
+              />
+            </div>
+          )}
+
+        </main>
+      </div>
+
+      {/* System Footer Bar */}
+      <footer className="h-6 border-t border-white/10 bg-black flex items-center justify-between px-4 text-[9px] font-mono text-white/30 shrink-0 select-none">
+        <div className="flex gap-4">
+          <span>ENCRYPT: TLS_1.3_CHACHA20_POLY1305</span>
+          <span>SESSION: B82-ALPHA-77</span>
+        </div>
+        <div className="flex gap-4">
+          <span className="text-[#00FF66]">● UACP_CORE_UP</span>
+          <span className="text-[#00E5FF]">● MCP_BUS_CONNECTED</span>
+        </div>
+      </footer>
+
+    </div>
+  );
 }
+

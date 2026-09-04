@@ -59,7 +59,22 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
+        
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-8 sm:px-8 lg:px-10 z-20">
+          <div className="rounded-[32px] border border-theme-border bg-theme-surface/50 p-8 md:p-12 text-center flex flex-col items-center gap-6 shadow-sm backdrop-blur-sm">
+            <h2 className="text-2xl md:text-3xl font-serif text-theme-ink">Connect workloads with VLink</h2>
+            <p className="max-w-2xl text-theme-ink/70 leading-relaxed">
+              The low-friction portable connection primitive into Veklom. Pair a workload, receive short-lived scoped access, and leave verifiable activity without rewriting your application.
+            </p>
+            <div className="mt-2">
+              <Link href="/vlink" className="inline-flex min-h-12 items-center justify-center rounded-full bg-theme-accent px-8 text-sm font-semibold text-[#020817] hover:bg-theme-accent/90 transition-colors">
+                Explore VLink Documentation
+              </Link>
+            </div>
+          </div>
+        </section>
+
+  <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
           <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
             <div>
               <StageLabel>A new kind of trust is arriving</StageLabel>
