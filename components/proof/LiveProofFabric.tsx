@@ -93,7 +93,7 @@ export function LiveProofFabric({ compact = false }: { compact?: boolean }) {
             <div className="mb-7 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
               <div>
                 <div className={`text-4xl font-semibold tracking-[-0.05em] ${stateTone(data.summary.state)}`}>{data.summary.state}</div>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-inkDim">{data.summary.healthy} of {data.summary.total} core runtime probes returned healthy at this observation. BYOS and LockerPhycer are treated as primary Veklom planes, not supporting footnotes.</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-inkDim">{data.summary.healthy} of {data.summary.total} core runtime probes returned healthy at this observation. LockerPhycer is treated as a primary Veklom plane, not a supporting footnote.</p>
               </div>
               <div className="rounded-full border border-theme-border bg-theme-bg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-inkDim">Source · {data.source.replaceAll("_", " ")}</div>
             </div>

@@ -240,6 +240,25 @@ export default function M2MLandingPage() {
             {isMachine ? '// live capability layer — no human in this loop' : 'A new kind of trust is arriving'}
           </div>
           
+          {/* Compact Connect Actions Section */}
+          <div className="w-full max-w-2xl mx-auto mb-16 bg-paper-dim/60 data-[machine=true]:bg-void-panel/60 border border-rule data-[machine=true]:border-wire rounded-2xl p-6 backdrop-blur-md transition-colors text-left flex flex-col gap-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="font-serif text-xl font-medium text-ink data-[machine=true]:text-machine-ink data-[machine=true]:font-mono">Connect Veklom</h2>
+              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold uppercase tracking-wider">
+                <Link href="/os" className="text-ink/70 hover:text-ink data-[machine=true]:text-cyan/70 data-[machine=true]:hover:text-cyan transition-colors">Open Capability OS</Link>
+                <Link href="/os/evidence" className="text-ink/70 hover:text-ink data-[machine=true]:text-cyan/70 data-[machine=true]:hover:text-cyan transition-colors">Inspect live proof</Link>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <p className="text-[13px] leading-relaxed text-ink/75 data-[machine=true]:text-machine-ink/70 data-[machine=true]:font-mono flex-1">
+                Wire your workloads securely without changing your application code. Create a connection, pair your workload, and leave a verifiable activity receipt.
+              </p>
+              <Link href={process.env.NEXT_PUBLIC_VLINK_URL || "/vlink/connect/"} className="shrink-0 px-8 py-3 bg-brass data-[machine=true]:bg-cyan text-paper data-[machine=true]:text-[#0D1114] rounded-full font-semibold text-sm hover:opacity-90 transition-opacity data-[machine=true]:font-mono data-[machine=true]:font-bold shadow-sm">
+                Connect with VLink
+              </Link>
+            </div>
+          </div>
+          
           <h1 className="text-5xl md:text-7xl font-serif font-medium tracking-tight mb-8 leading-[1.1] transition-colors duration-500 text-ink data-[machine=true]:text-machine-ink" data-machine={isMachine}>
             {isMachine ? (
               <>identity &rarr; authority &rarr; policy &rarr; execution &rarr; <em className="text-cyan font-normal not-italic">proof</em></>
@@ -255,11 +274,8 @@ export default function M2MLandingPage() {
             }
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center mb-20">
-            <Link href="/os" className="px-8 py-4 bg-ink text-paper font-semibold rounded-lg hover:opacity-90 transition-opacity data-[machine=true]:bg-cyan data-[machine=true]:text-[#0D1114] data-[machine=true]:font-mono data-[machine=true]:font-bold data-[machine=true]:rounded-md" data-machine={isMachine}>
-              {isMachine ? 'GET /capabilities' : 'See how it works'}
-            </Link>
-            <button onClick={crossThreshold} className="px-8 py-4 font-semibold text-ink/70 hover:text-ink transition-colors data-[machine=true]:text-cyan/70 data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:hover:text-cyan" data-machine={isMachine}>
+          <div className="flex flex-col sm:flex-row gap-4 items-center mb-20 justify-center">
+            <button onClick={crossThreshold} className="px-8 py-4 font-semibold text-ink hover:text-brass transition-colors data-[machine=true]:text-cyan data-[machine=true]:font-mono data-[machine=true]:text-sm data-[machine=true]:hover:text-cyan/80 border border-rule data-[machine=true]:border-wire rounded-full" data-machine={isMachine}>
               {isMachine ? '← step back as a human' : 'or step through as a machine →'}
             </button>
           </div>
@@ -294,8 +310,10 @@ export default function M2MLandingPage() {
           </p>
         </section>
 
-        {/* Enterprise Block */}
-        <section className="px-6 py-24 bg-paper-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500" data-machine={isMachine}>
+          {/* VLink CTA removed to be placed at the top */}
+
+          {/* Enterprise Block */}
+<section className="px-6 py-24 bg-paper-dim border-y border-rule data-[machine=true]:bg-void-panel data-[machine=true]:border-wire transition-colors duration-500" data-machine={isMachine}>
           <div className="max-w-5xl mx-auto">
             <span className="font-mono text-xs tracking-[0.2em] uppercase block mb-4 text-brass data-[machine=true]:text-cyan" data-machine={isMachine}>
               What every enterprise has been asking for

@@ -26,7 +26,7 @@ export default function Page() {
         "Gnomledger / PGL remains the durable evidence and provenance service.",
       ]}
       interfaces={[
-        { label: "Canonical local port", value: "8088" },
+        { label: "Status", value: "DECOMMISSIONED (Was 8088)" },
         { label: "Health", value: "GET /health" },
         { label: "Readiness", value: "GET /ready (dependency-aware)" },
         { label: "Authentication", value: "/api/v1/auth/* — email/password + GitHub OAuth/session issuance" },

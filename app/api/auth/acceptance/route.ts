@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       ]
     };
 
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8088";
+    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8092";
 
     const backendRes = await fetch(`${backendUrl}/api/auth/acceptance`, {
       method: "POST",

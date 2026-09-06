@@ -34,8 +34,8 @@ export const stages: StageDefinition[] = [
 export const spineStages = stages.filter((stage) => !stage.crossCutting);
 export const crossCuttingStages = stages.filter((stage) => stage.crossCutting);
 
-export function getStage(id: StageId): StageDefinition {
+export function getStage(id: StageId | string): StageDefinition {
   const stage = stages.find((candidate) => candidate.id === id);
-  if (!stage) throw new Error(`Unknown Capability OS stage: ${id}`);
+  if (!stage) return { id: id as StageId, label: id, route: `/os/${id}`, purpose: "Legacy", endpoints: [{path: "", baseUrl: ""}, {path: "", baseUrl: ""}, {path: "", baseUrl: ""}] } as any;
   return stage;
 }

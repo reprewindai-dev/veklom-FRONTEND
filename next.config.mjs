@@ -124,6 +124,9 @@ const nextConfig = {
         // ── cAPI: capability registry ─────────────────────────────────────────
         { source: "/api/v1/capi/:path*",   destination: `${CAPI_URL}/api/v1/capi/:path*` },
 
+        // ── VLink ─────────────────────────────────────────────────────────────
+        { source: "/vlink/connect/:path*", destination: "http://host.docker.internal:3000/:path*" },
+
         // ── Downstream services ───────────────────────────────────────────────
         { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },
         { source: "/api/v1/abide/:path*",  destination: `${ABIDE_URL}/api/v1/abide/:path*` },

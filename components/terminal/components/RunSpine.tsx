@@ -309,7 +309,7 @@ export function BYOAgentHub({ isCompleted }: BYOAgentHubProps) {
   const [sshKeyName, setSshKeyName] = useState('HETZNER_SSH_KEY');
   const [appDir, setAppDir] = useState('/data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru');
   const [containerName, setContainerName] = useState('n13gp1nhrcdp0hvazvbnlxru-213557155694');
-  const [containerPort, setContainerPort] = useState('8088');
+  const [containerPort, setContainerPort] = useState('8092');
 
   const codeWrappers = {
     crewai: {
@@ -660,7 +660,7 @@ jobs:
                       setSshKeyName('HETZNER_SSH_KEY');
                       setAppDir('/data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru');
                       setContainerName('n13gp1nhrcdp0hvazvbnlxru-213557155694');
-                      setContainerPort('8088');
+                      setContainerPort('8092');
                     }}
                     className="text-[8px] text-[#b8860b] uppercase font-bold tracking-wider hover:text-white transition-colors cursor-pointer"
                   >

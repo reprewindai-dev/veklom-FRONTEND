@@ -51,9 +51,10 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   const stage = getStage(stageId);
   const sandboxContext = useSandboxMode();
   const sandbox = options.sandbox ?? sandboxContext;
-  const [records, setRecords] = useState<Record<string, StageCallRecord>>(() => (
-    Object.fromEntries(stage.endpoints.map((endpoint) => [keyFor(endpoint), initialRecord(endpoint, sandbox)]))
-  ));
+  const [records, setRecords] = useState<Record<string, StageCallRecord>>(() => {
+    const endpoints = (stage as any).endpoints || [];
+    return Object.fromEntries(endpoints.map((endpoint: any) => [keyFor(endpoint), initialRecord(endpoint, sandbox)]));
+  });
   const [payloads, setPayloads] = useState<Record<string, unknown>>({});
   const [additionalRecords, setAdditionalRecords] = useState<Record<string, StageCallRecord>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
@@ -153,17 +154,21 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
 
   useEffect(() => {
     if (!options.autoGet) return;
-    for (const endpoint of stage.endpoints) {
+    const endpoints = (stage as any).endpoints || [];
+    for (const endpoint of endpoints) {
       if (endpoint.method === "GET" && !endpoint.path.includes("{")) void call(endpoint);
     }
-  }, [call, options.autoGet, stage.endpoints]);
+  }, [call, options.autoGet, stage]);
 
   const recordsList = useMemo(
-    () => [
-      ...stage.endpoints.map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
-      ...Object.values(additionalRecords),
-    ],
-    [additionalRecords, records, sandbox, stage.endpoints],
+    () => {
+      const endpoints = (stage as any).endpoints || [];
+      return [
+        ...endpoints.map((endpoint: any) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
+        ...Object.values(additionalRecords),
+      ];
+    },
+    [additionalRecords, records, sandbox, stage],
   );
 
   const stageProof = useMemo<ProofStatus>(() => {

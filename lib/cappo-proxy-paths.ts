@@ -3,6 +3,7 @@ const CAPPO_PUBLIC_PATHS = [
   "/.well-known/capability-beacon-keys",
   "/api/v1/pricing",
   "/v1/vnp/metrics",
+  "/v1/capability/packages",
 ] as const;
 
 const CAPPO_EXEC_PATH = "/v1/exec";
@@ -35,6 +36,9 @@ export function isCappoExecPath(path: string) {
 
 export function isCappoIdentityPath(path: string) {
   if (path === "/api/v1/agents") return true;
+  // /v1/capability/packages is read-only discovery — no assertion exchange required.
+  // All workspace-bound mount/action paths remain identity-protected below.
+  if (path === "/v1/capability/packages") return false;
   if (path.startsWith("/v1/capability/")) return true;
   if ([
     "/v1/audit/ledger",

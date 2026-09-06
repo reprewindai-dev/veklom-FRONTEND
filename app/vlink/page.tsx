@@ -32,8 +32,8 @@ export default function Page() {
         { label: "Bounded failover", value: "/failover/vlinks/{id}/v1/chat/completions + X-VLink-Retry-Safe: true" },
       ]}
       proofNote="VLink's public promise should stay simple: link an existing system into Veklom with scoped temporary access and verifiable connection activity. It is not allowed to turn transport convenience into wider execution authority."
-      primaryHref="/docs"
-      primaryLabel="Open developer docs"
+      primaryHref={process.env.NEXT_PUBLIC_VLINK_URL || "/vlink/connect/"}
+      primaryLabel="Connect with VLink"
       secondaryHref="/architecture"
       secondaryLabel="See its boundary"
     />
