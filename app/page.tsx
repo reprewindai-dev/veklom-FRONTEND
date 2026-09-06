@@ -45,7 +45,7 @@ export default function LandingPage() {
                 Open Capability OS <span className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
               <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect proof</Link>
-              <Link href="/vlink" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Connect existing system</Link>
+              <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</Link>
             </div>
 
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
@@ -57,6 +57,30 @@ export default function LandingPage() {
 
           <div className="relative z-10 lg:translate-x-3">
             <AuthorityOrb />
+          </div>
+        </section>
+
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-12 sm:px-8 lg:px-10">
+          <div className="relative overflow-hidden rounded-[36px] border border-theme-border bg-theme-surface/75 px-6 py-10 shadow-[0_20px_80px_rgba(2,8,23,.05)] backdrop-blur-md sm:px-10 md:px-14 md:py-16">
+            <div className="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <StageLabel>VLink — connect what you already use.</StageLabel>
+                <p className="mt-6 max-w-3xl text-lg leading-8 text-theme-inkDim md:text-[1.25rem] md:leading-9">
+                  Keep your existing client, API, automation, webhook, pipeline or container. Create one VLink, approve the connection, copy a familiar base URL + short-lived key, and let Veklom govern consequential actions behind it.
+                </p>
+                <p className="mt-6 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim/70">
+                  Works with OpenAI-compatible clients · APIs · MCP/automation · webhooks · CI/CD · containers
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Link href="/vlink/connect/" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                  Try VLink now <span className="transition-transform group-hover:translate-x-1">→</span>
+                </Link>
+                <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20 hover:bg-theme-surface">
+                  Scan to connect <span className="text-theme-inkDim">→</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -142,7 +166,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
                 <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
                 <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</Link>
-                <Link href="/vlink" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Connect existing system</Link>
+                <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</Link>
               </div>
             </div>
           </div>

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const byosApiUrl = process.env.VEKLOM_BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8092";
+    const byosApiUrl = process.env.VEKLOM_BACKEND_URL || process.env.LOCKERPHYCER_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.veklom.com";
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
