@@ -1,4 +1,4 @@
-﻿// Shared, truth-locked helpers for the canonical VNP beacon topology.
+// Shared, truth-locked helpers for the canonical VNP beacon topology.
 //
 // Source of truth: GET /api/v1/beacon/topology (same-origin proxy to the
 // canonical backend / vnp.veklom.com). The response is nested under a
@@ -71,6 +71,7 @@ export type ProofState =
   | "Insufficient Evidence"
   | "Not started"
   | "Simulated"
+  | "Present"
   | "Unknown";
 
 // A heartbeat only counts as "recent" if it arrived within this window.

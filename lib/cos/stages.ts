@@ -8,7 +8,21 @@ export type StageId =
   | "evidence"
   | "measure"
   | "settings"
-  | "terminal";
+  | "terminal"
+  | "blueprint"
+  | "execute"
+  | "govern"
+  | "mount"
+  | "settle"
+  | "tracker";
+
+export interface StageEndpoint {
+  path: string;
+  baseUrl?: string;
+  method?: "POST" | "GET" | "PUT" | "PATCH" | "DELETE";
+  classification?: string;
+  response?: any;
+}
 
 export interface StageDefinition {
   id: StageId;
@@ -16,19 +30,20 @@ export interface StageDefinition {
   route: string;
   purpose: string;
   crossCutting?: boolean;
+  endpoints: StageEndpoint[];
 }
 
 export const stages: StageDefinition[] = [
-  { id: "command", label: "Command", route: "/os/command", purpose: "Command center" },
-  { id: "capabilities", label: "Capabilities", route: "/os/capabilities", purpose: "Capabilities" },
-  { id: "workflows", label: "Workflows", route: "/os/workflows", purpose: "Workflows" },
-  { id: "authority", label: "Authority", route: "/os/authority", purpose: "Authority" },
-  { id: "governed-compute", label: "Governed Compute", route: "/os/governed-compute", purpose: "Governed Compute" },
-  { id: "executions", label: "Executions", route: "/os/executions", purpose: "Executions" },
-  { id: "evidence", label: "Evidence", route: "/os/evidence", purpose: "Evidence" },
-  { id: "measure", label: "Measure", route: "/os/measure", purpose: "Measure" },
-  { id: "settings", label: "Settings", route: "/os/settings", purpose: "Settings", crossCutting: true },
-  { id: "terminal", label: "Terminal", route: "/os/terminal", purpose: "Terminal", crossCutting: true },
+  { id: "command", label: "Command", route: "/os/command", purpose: "Command center", endpoints: [] },
+  { id: "capabilities", label: "Capabilities", route: "/os/capabilities", purpose: "Capabilities", endpoints: [] },
+  { id: "workflows", label: "Workflows", route: "/os/workflows", purpose: "Workflows", endpoints: [] },
+  { id: "authority", label: "Authority", route: "/os/authority", purpose: "Authority", endpoints: [] },
+  { id: "governed-compute", label: "Governed Compute", route: "/os/governed-compute", purpose: "Governed Compute", endpoints: [] },
+  { id: "executions", label: "Executions", route: "/os/executions", purpose: "Executions", endpoints: [] },
+  { id: "evidence", label: "Evidence", route: "/os/evidence", purpose: "Evidence", endpoints: [] },
+  { id: "measure", label: "Measure", route: "/os/measure", purpose: "Measure", endpoints: [] },
+  { id: "settings", label: "Settings", route: "/os/settings", purpose: "Settings", crossCutting: true, endpoints: [] },
+  { id: "terminal", label: "Terminal", route: "/os/terminal", purpose: "Terminal", crossCutting: true, endpoints: [] },
 ];
 
 export const spineStages = stages.filter((stage) => !stage.crossCutting);
