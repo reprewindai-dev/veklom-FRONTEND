@@ -103,10 +103,19 @@ async function proxyRequest(req: NextRequest) {
  headers.delete("x-workspace-id");
  headers.delete("x-veklom-requester-id");
 
+ console.log(`[PROXY DEBUG] path=${path}, forward=${forwardPath}, exec=${isCappoExecPath(forwardPath)}, id=${isCappoIdentityPath(forwardPath)}`);
+
  if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
- // Authenticate the browser session against BYOS and mint a short-lived,
- // workspace-bound CAPPO audience assertion. The browser never receives
- // or forwards a standing CAPPO operator credential.
+    // IDENTITY SEAM — explicit architectural decision required:
+    // BYOS is the deliberate CAPPO assertion issuer. The /api/v1/auth/cappo-token
+    // endpoint lives in BYOS and mints a 120-second EdDSA JWT scoped to the
+    // user's workspace. BYOS's get_current_user resolves the session established
+    // by LockerPhycer (September 4 routing change moved browser identity authority
+    // there). If LockerPhycer sessions are not correctly forwarded through BYOS's
+    // session middleware, this minting path silently breaks.
+    //
+    // TODO: When LockerPhycer becomes the sole canonical identity authority,
+    // move /cappo-token there so assertion issuance follows identity authority.
  const exchange = await exchangeCappoAssertion(req);
  if (exchange.kind ==="unauthenticated") {
  return NextResponse.json(

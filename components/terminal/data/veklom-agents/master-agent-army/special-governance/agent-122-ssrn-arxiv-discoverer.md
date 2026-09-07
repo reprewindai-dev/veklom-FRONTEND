@@ -15,7 +15,7 @@ Continuously scan SSRN, ArXiv, and academic repositories for next-generation qua
 ## Special Abilities
 
 - **Paper Triage**: Scan 500+ papers/day across SSRN, ArXiv, Semantic Scholar with intelligent filtering
-- **Technique Extraction**: Parse cryptographic evidences and algorithms into implementable pseudocode
+- **Technique Extraction**: Parse mathematical proofs and algorithms into implementable pseudocode
 - **Applicability Scoring**: Rate each discovery on a 0–100 scale for Veklom stack relevance
 - **Blueprint Generation**: Convert high-scoring techniques into implementation plans with cost estimates
 - **Prior Art Detection**: Identify if a technique has been implemented elsewhere and assess competitive advantage

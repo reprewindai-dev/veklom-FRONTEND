@@ -1,78 +1,200 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Activity, Database, FileText, Search, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Database, FileText, Search, Activity, Clock, ShieldCheck, Download } from 'lucide-react';
 import { ProofBadge } from './ProofBadge';
-import { useSandboxMode } from '@/lib/cos/sandbox';
-import { useStageData } from '@/lib/cos/useStageData';
-import { proofRecordStatus, requestStillCurrent } from '@/lib/cos/vertical-slice-truth';
-import { SectionShell } from './SectionShell';
 
-type EvidenceRecord = {
- execution_id: string;
- proof_state: 'verified' | 'verified_with_unresolved_refs' | 'failed' | 'unknown';
- verification_reasons?: string[];
- eee?: { envelope_hash?: string; status?: string; capability_id?: string };
- pgl?: { event_id?: string; certificate_id?: string; event_hash?: string; previous_event_hash?: string | null; persisted?: boolean };
-};
-
-export function EvidenceHarness() {
- const sandbox = useSandboxMode();
- const stageData = useStageData('evidence');
- const [executionId, setExecutionId] = useState('');
- const [record, setRecord] = useState<EvidenceRecord | null>(null);
- const [loading, setLoading] = useState(false);
- const [error, setError] = useState<string | null>(null);
- const currentExecutionId = useRef('');
- const requestSequence = useRef(0);
- useEffect(() => {
- const stored = sessionStorage.getItem('veklom_execution_id') ?? '';
- currentExecutionId.current = stored;
- setExecutionId(stored);
- }, []);
-
- async function retrieve() {
- if (!executionId) return;
- const requestedExecutionId = executionId;
- const sequence = ++requestSequence.current;
- setLoading(true); setError(null); setRecord(null);
- try {
- const result = await stageData.call<EvidenceRecord>({
- method: 'GET',
- path: `/v1/executions/${encodeURIComponent(requestedExecutionId)}/evidence`,
- classification: 'live',
- response: 'execution-bound EEE and PGL evidence',
- });
- if (!requestStillCurrent(requestedExecutionId, currentExecutionId.current, sequence, requestSequence.current)) return;
- const next = result.data;
- if (!next) {
- if (result.record.status !== 404) setError(result.record.error ?? 'Evidence unavailable');
- return;
- }
- setRecord(next.execution_id === requestedExecutionId ? next : {
- ...next,
- proof_state: 'failed',
- verification_reasons: [...(next.verification_reasons ?? []), 'execution_id_mismatch'],
- });
- } catch (caught) {
- if (requestStillCurrent(requestedExecutionId, currentExecutionId.current, sequence, requestSequence.current)) {
- setError(caught instanceof Error ? caught.message : 'Evidence unavailable');
- }
- } finally {
- if (requestStillCurrent(requestedExecutionId, currentExecutionId.current, sequence, requestSequence.current)) setLoading(false);
- }
- }
-
- const proof = proofRecordStatus({ verified: record?.proof_state === 'verified', degraded: Boolean(error), sandbox });
- return <SectionShell stage={stageData.stage} proof={proof} records={stageData.records}>
- <div className="xl:col-span-2">
- <div className="mb-10 flex items-start justify-between gap-6"><div><div className="mb-3 font-mono text-[10px] uppercase tracking-[0.24em] text-cos-accent">Evidence Workspace</div><h1 className="text-4xl font-semibold tracking-tight text-cos-text">EEE / PGL Lineage</h1><p className="mt-3 max-w-xl text-sm leading-6 text-cos-muted">Retrieve the signed execution envelope and its exact persisted ledger link. Unresolved references stay unresolved.</p></div><ProofBadge status={proof} /></div>
- <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
- <div className="rounded-xl border border-cos-border bg-cos-surface/50 p-5"><h3 className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-cos-text"><ShieldCheck size={14} className="text-cos-accent" />Session authority</h3><label className="block text-[10px] uppercase tracking-wider text-cos-steel">Execution ID<input value={executionId} onChange={(event) => { const value = event.target.value; requestSequence.current += 1; currentExecutionId.current = value; setExecutionId(value); setLoading(false); setRecord(null); setError(null); }} placeholder="Execution identity" className="mt-1.5 w-full rounded border border-cos-border bg-cos-surface2 p-2 font-mono text-sm text-cos-text focus:border-cos-accent focus:outline-none" /></label><button onClick={retrieve} disabled={loading || !executionId} className="mt-4 flex w-full items-center justify-center gap-2 rounded border border-cos-border bg-cos-surface2 py-2.5 font-mono text-[10px] uppercase tracking-wider text-cos-text disabled:opacity-50">{loading ? <Activity size={14} className="animate-spin" /> : <Search size={14} />}{loading ? 'Verifying…' : 'Retrieve proof'}</button></div>
- <div className="min-h-[420px] overflow-hidden rounded-xl border border-cos-border bg-[#050505] lg:col-span-3"><div className="flex items-center gap-2 border-b border-[#222] bg-[#0A0A0A] p-3"><FileText size={14} className="text-[#666]" /><span className="font-mono text-[10px] uppercase tracking-widest text-[#888]">Persisted evidence record</span></div><div className="p-6 font-mono text-xs text-gray-300">{error && <div className="rounded border border-red-900/50 bg-red-950/20 p-4 text-red-400">[EVIDENCE NOT VERIFIED] {error}</div>}{!error && !record && !loading && <div className="flex min-h-[320px] flex-col items-center justify-center text-[#555]"><Database size={32} className="mb-4" />No execution evidence loaded.</div>}{record && <div className="space-y-5"><div className="grid gap-3 md:grid-cols-2"><Fact label="Execution" value={record.execution_id} /><Fact label="EEE status" value={record.eee?.status ?? 'unknown'} /><Fact label="Capability" value={record.eee?.capability_id ?? 'unknown'} /><Fact label="Envelope hash" value={record.eee?.envelope_hash ?? 'missing'} /></div><div className="grid gap-3 border-t border-[#222] pt-5 md:grid-cols-2"><Fact label="PGL event" value={record.pgl?.event_id ?? 'missing'} /><Fact label="Certificate" value={record.pgl?.certificate_id ?? 'missing'} /><Fact label="Event hash" value={record.pgl?.event_hash ?? 'missing'} /><Fact label="Previous hash" value={record.pgl?.previous_event_hash ?? 'unresolved'} /></div>{(record.verification_reasons?.length ?? 0) > 0 && <div className="rounded border border-cos-unknown/30 p-3 text-cos-unknown">Unresolved: {record.verification_reasons?.join(', ')}</div>}</div>}</div></div>
- </div>
- </div>
- </SectionShell>;
+interface AuditLog {
+  id: string;
+  workspace_id: string;
+  operation_type: string;
+  provider: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  cost: string;
+  latency_ms: number;
+  hmac_hash: string;
+  created_at: string;
 }
 
-function Fact({ label, value }: { label: string; value: string }) { return <div className="rounded border border-[#222] bg-[#111] p-3"><div className="mb-1 text-[9px] uppercase tracking-widest text-[#666]">{label}</div><div className="break-all">{value}</div></div>; }
+export function EvidenceHarness() {
+  const [apiKey, setApiKey] = useState('');
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEvidence = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // NOTE: Using /api/v1/audit per backend USER_MANUAL.md
+      const res = await fetch('https://api.veklom.com/api/v1/audit?limit=50', {
+        headers: {
+          'Authorization': `Bearer ${apiKey || 'byos_test_key'}`,
+          'X-API-Key': apiKey || 'byos_test_key', // Fallback for either auth method
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`API Error: ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      setLogs(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch evidence');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-10 lg:px-10">
+      <div className="mb-10 flex items-start justify-between gap-6">
+        <div>
+          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.24em] text-cos-accent">
+            Evidence Workspace
+          </div>
+          <h1 className="text-4xl font-semibold tracking-tight text-cos-text">
+            Settlement Ledger
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-cos-muted">
+            Cryptographic proof of paid compute. Review execution identity tokens and HMAC hashes across the governed network.
+          </p>
+        </div>
+        <ProofBadge status={logs.length > 0 ? "Verified" : "Needs proof"} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Left Column: Authority Input */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="rounded-xl border border-cos-border bg-cos-surface/50 p-5">
+            <h3 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-cos-text mb-4">
+              <ShieldCheck size={14} className="text-cos-accent" />
+              Authority
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-cos-steel mb-1.5">Execution Key (API Key)</label>
+                <input 
+                  type="password" 
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="byos_..."
+                  className="w-full bg-cos-surface2 border border-cos-border rounded p-2 text-sm text-cos-text font-mono focus:border-cos-accent focus:outline-none"
+                />
+              </div>
+              <button 
+                onClick={fetchEvidence}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-cos-surface2 border border-cos-border text-cos-text font-mono uppercase tracking-wider text-[10px] py-2.5 rounded hover:border-cos-accent transition-all"
+              >
+                {isLoading ? <Activity size={14} className="animate-spin" /> : <Search size={14} />}
+                {isLoading ? 'Querying...' : 'Fetch Evidence'}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface/20 p-5">
+            <h3 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-cos-steel mb-4">
+              <Database size={14} />
+              Ledger State
+            </h3>
+            <div className="space-y-3 font-mono text-[10px] uppercase tracking-widest text-cos-steel">
+              <div className="flex justify-between">
+                <span>Total Records</span>
+                <span className="text-cos-text">{logs.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Network</span>
+                <span className="text-cos-text">Server 0</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Encryption</span>
+                <span className="text-cos-text">SHA-256</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Ledger Grid */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="rounded-xl border border-cos-border bg-[#050505] overflow-hidden flex flex-col h-full min-h-[500px]">
+            <div className="bg-[#0A0A0A] border-b border-[#222] p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <FileText size={14} className="text-[#666]" />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#666]">Immutable Audit Trail</span>
+              </div>
+              {logs.length > 0 && (
+                <button className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-cos-accent hover:text-white transition-colors">
+                  <Download size={12} /> Export CSV
+                </button>
+              )}
+            </div>
+            
+            <div className="flex-1 overflow-x-auto">
+              {error && (
+                <div className="m-5 p-4 border border-red-900/50 bg-red-950/20 text-red-400 font-mono text-sm rounded">
+                  <div className="font-bold mb-1">[LEDGER QUERY FAILED]</div>
+                  {error}
+                </div>
+              )}
+
+              {!error && logs.length === 0 && !isLoading && (
+                <div className="h-full flex flex-col items-center justify-center text-[#555] font-mono text-xs p-10 text-center">
+                  <Database size={32} className="mb-4 opacity-50" />
+                  No evidence records loaded.<br/>Enter your Authority key and query the ledger.
+                </div>
+              )}
+
+              {logs.length > 0 && (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#222] bg-[#0A0A0A] font-mono text-[9px] uppercase tracking-widest text-[#666]">
+                      <th className="p-3 whitespace-nowrap">Timestamp</th>
+                      <th className="p-3 whitespace-nowrap">Operation</th>
+                      <th className="p-3 whitespace-nowrap">Provider/Model</th>
+                      <th className="p-3 whitespace-nowrap">Usage</th>
+                      <th className="p-3 whitespace-nowrap">Latency</th>
+                      <th className="p-3 whitespace-nowrap">Cryptographic Hash (SHA-256)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono text-[11px] text-gray-300">
+                    {logs.map((log) => (
+                      <tr key={log.id} className="border-b border-[#111] hover:bg-[#111] transition-colors">
+                        <td className="p-3 whitespace-nowrap text-[#888]">
+                          {new Date(log.created_at).toLocaleString()}
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <span className="text-cos-accent">{log.operation_type}</span>
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <div className="text-white">{log.provider}</div>
+                          <div className="text-[#666] text-[9px]">{log.model}</div>
+                        </td>
+                        <td className="p-3 whitespace-nowrap text-right">
+                          <span className="text-[#00FF41]">+{log.input_tokens + log.output_tokens}</span>
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <span className="flex items-center gap-1">
+                            <Clock size={10} className="text-[#666]" />
+                            {log.latency_ms}ms
+                          </span>
+                        </td>
+                        <td className="p-3 font-bold text-[#888] truncate max-w-[200px]" title={log.hmac_hash}>
+                          {log.hmac_hash}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

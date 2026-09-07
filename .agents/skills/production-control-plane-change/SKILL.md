@@ -5,7 +5,7 @@ description: Apply Veklom production standards for secure, monetizable, governed
 
 # Production Control Plane Change
 
-Use this skill before implementing or reviewing any meaningful Veklom control-plane change in the `veklom-control-plane` frontend.
+Use this skill before implementing or reviewing any meaningful Veklom control-plane change.
 
 ## Required Checks
 
@@ -13,7 +13,7 @@ Use this skill before implementing or reviewing any meaningful Veklom control-pl
 - Access control: confirm tier gates, auth redirects, superuser behavior, and locked module behavior still work.
 - Security: no secret exposure, no unsafe token logging, no untrusted HTML injection, no weakened API auth handling.
 - Evidence: actions that affect source, review, package, install, deploy, runtime, or compliance must surface audit/proof state.
-- Live API: do not introduce mocked or fake endpoints into production code. Rely on the `api.veklom.com` backend.
+- Live API: do not introduce mocked or fake endpoints into production code.
 - Failure states: show degraded or missing proof honestly instead of hiding backend failures.
 - Maintainability: keep changes modular, typed, and aligned with existing components.
 

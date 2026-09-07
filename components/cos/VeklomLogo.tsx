@@ -2,18 +2,18 @@ import Image from "next/image";
 
 export function VeklomLogo() {
   return (
-    <div className="flex items-center gap-3" aria-label="Veklom Capability OS">
+    <div className="flex items-center gap-3" aria-label="Veklom — Machine-to-Machine Trust Infrastructure">
       <Image
-        src="/brand/veklom-shield-512.png"
-        alt=""
-        width={512}
-        height={512}
+        src="/brand/veklom-mark.png"
+        alt="Veklom"
+        width={40}
+        height={40}
         priority
-        className="h-10 w-10 rounded-sm object-contain"
+        className="h-9 w-9 shrink-0 drop-shadow-[0_0_14px_rgba(0,229,255,0.35)]"
       />
       <div className="leading-none">
-        <div className="font-mono text-sm font-bold tracking-[0.22em] text-theme-ink">VEKLOM</div>
-        <div className="mt-1 font-mono text-[8px] uppercase tracking-[0.2em] text-theme-inkDim">Capability OS</div>
+        <div className="text-[17px] font-semibold tracking-[0.22em] text-white">VEKLOM</div>
+        <div className="mt-1 font-mono text-[8px] uppercase tracking-[0.18em] text-cos-steel">Machine-to-Machine Trust Infrastructure</div>
       </div>
     </div>
   );

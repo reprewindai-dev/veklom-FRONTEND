@@ -64,7 +64,8 @@ export function AuthorityOrb() {
   const rings = [72, 104, 138];
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[590px]">
-      <div className="absolute inset-[13%] rounded-full bg-[radial-gradient(circle_at_40%_36%,rgba(255,255,255,.95),rgba(221,249,255,.74)_18%,rgba(31,41,55,.96)_58%,rgba(4,7,15,1)_78%)] shadow-[0_45px_120px_rgba(0,0,0,.35),inset_0_0_70px_rgba(103,232,249,.16)]" />
+      {/* Shifted highlight higher (36% -> 22%) and dimmed slightly in center so text is readable */}
+      <div className="absolute inset-[13%] rounded-full bg-[radial-gradient(circle_at_40%_22%,rgba(255,255,255,.85),rgba(221,249,255,.64)_18%,rgba(31,41,55,.98)_55%,rgba(4,7,15,1)_78%)] shadow-[0_45px_120px_rgba(0,0,0,.35),inset_0_0_70px_rgba(103,232,249,.16)]" />
       <div className="absolute inset-[19%] rounded-full border border-white/10 shadow-[inset_0_0_50px_rgba(103,232,249,.12)]" />
       <svg viewBox="0 0 320 320" className="absolute inset-0 h-full w-full text-theme-ink" fill="none" aria-hidden="true">
         {rings.map((r) => <circle key={r} cx="160" cy="160" r={r} stroke="currentColor" opacity="0.12" strokeDasharray="2 8" />)}
@@ -81,14 +82,14 @@ export function AuthorityOrb() {
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="translate-y-1 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/45">Authority boundary</div>
+          <div className="text-[12px] font-semibold uppercase tracking-[0.3em] text-white/80">Authority boundary</div>
           <div className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">Consequence<br />requires permission.</div>
         </div>
       </div>
-      <div className="absolute left-[2%] top-[28%] rounded-full border border-theme-border bg-theme-bg/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Identity</div>
-      <div className="absolute right-[1%] top-[30%] rounded-full border border-theme-border bg-theme-bg/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Policy</div>
-      <div className="absolute bottom-[14%] left-[10%] rounded-full border border-theme-border bg-theme-bg/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Budget</div>
-      <div className="absolute bottom-[12%] right-[9%] rounded-full border border-theme-border bg-theme-bg/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Evidence</div>
+      <div className="absolute left-[2%] top-[28%] rounded-full border border-theme-border bg-theme-bg/90 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Identity</div>
+      <div className="absolute right-[1%] top-[30%] rounded-full border border-theme-border bg-theme-bg/90 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Policy</div>
+      <div className="absolute bottom-[14%] left-[10%] rounded-full border border-theme-border bg-theme-bg/90 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Budget</div>
+      <div className="absolute bottom-[12%] right-[9%] rounded-full border border-theme-border bg-theme-bg/90 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-theme-ink shadow-xl backdrop-blur">Evidence</div>
     </div>
   );
 }

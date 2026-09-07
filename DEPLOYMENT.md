@@ -57,12 +57,32 @@ Docker restart policy remains the first recovery layer. The watchdog covers the 
 
 ## Backend Contract
 
-Production frontend API configuration remains:
+Production frontend API configuration uses same-origin browser routing with direct local CAPPO and backend connections:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://api.veklom.com
+# NEXT_PUBLIC_API_BASE_URL must be empty so the browser uses same-origin routes.
+# Do NOT set this to https://api.veklom.com — that forces an unnecessary
+# Cloudflare round trip and breaks same-origin cookie handling.
+NEXT_PUBLIC_API_BASE_URL=
+
 VBB_BACKEND_URL=https://api.veklom.com
-CAPPO_BACKEND_URL=https://capi.veklom.com
+BACKEND_URL=http://host.docker.internal:8088
+
+# CAPPO_BACKEND_URL must point at the cappo-backend service directly (port 8002).
+# Do NOT set this to https://capi.veklom.com — that points at cAPI, not cappo-backend.
+CAPPO_BACKEND_URL=http://host.docker.internal:8002
 ```
 
 Client-side code should continue to prefer same-origin API routes where available.
+
+### Identity Seam
+
+BYOS (`VBB_BACKEND_URL`) currently issues CAPPO audience assertions via
+`POST /api/v1/auth/cappo-token`. This endpoint mints a short-lived (120-second)
+EdDSA JWT that the frontend proxy attaches to workspace-bound CAPPO requests.
+
+Since September 4, LockerPhycer is the browser identity authority. BYOS's
+session middleware must correctly forward LockerPhycer-established sessions for
+assertion minting to work. When LockerPhycer becomes the sole canonical identity
+authority, the `/cappo-token` endpoint should move there.
+

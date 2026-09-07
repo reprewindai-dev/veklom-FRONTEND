@@ -5,7 +5,7 @@ description: Review Veklom UI changes against the governed asset spine and proof
 
 # Asset Spine Review
 
-Use this skill when editing or reviewing the Asset Spine surface, navigation, marketplace, deployments, runtime, audit, or related control-plane surfaces within the `veklom-control-plane` frontend.
+Use this skill when editing or reviewing the Asset Spine surface, navigation, marketplace, deployments, runtime, audit, or related control-plane surfaces.
 
 ## Review Rules
 
@@ -19,4 +19,4 @@ Use this skill when editing or reviewing the Asset Spine surface, navigation, ma
 
 ## Output
 
-Report blocking issues first, then recommended fixes. Include file paths and line references within the `veklom-control-plane` when possible.
+Report blocking issues first, then recommended fixes. Include file paths and line references when possible.

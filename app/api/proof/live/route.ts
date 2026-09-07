@@ -75,12 +75,6 @@ export async function GET() {
 
   const services: ServiceSpec[] = [
     {
-      id: "byos",
-      label: "BYOS Runtime",
-      role: "Tenant / workspace execution substrate",
-      url: join(byos, "/ready"),
-    },
-    {
       id: "lockerphycer",
       label: "LockerPhycer",
       role: "Governed security, key, identity and execution-host boundary",

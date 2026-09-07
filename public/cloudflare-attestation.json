@@ -8,7 +8,7 @@
   "routes": [
     {
       "hostname": "api.veklom.com",
-      "service": "http://localhost:8088"
+      "service": "http://localhost:8092"
     },
     {
       "hostname": "cappo.veklom.com",

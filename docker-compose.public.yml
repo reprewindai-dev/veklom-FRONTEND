@@ -11,7 +11,7 @@ services:
         CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
         PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
         NEXT_PUBLIC_API_BASE_URL: ""
-    image: veklom/frontend:local
+    image: veklom-frontend:main
     container_name: veklom-frontend
     restart: unless-stopped
     environment:

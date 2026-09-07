@@ -5,19 +5,19 @@ import { AmbientField, AuthorityOrb, LiveSignal, StageLabel } from "@/components
 import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
 
 const laws = [
-  { index: "01", title: "Authority", body: "Every consequence begins inside an explicit identity, policy, budget and time boundary." },
-  { index: "02", title: "Evidence", body: "Execution does not become truth because a model says it succeeded. Outcomes remain bound to observable evidence." },
-  { index: "03", title: "Agency", body: "Execution identity is temporary. When the execution ends, its authority ends with it." },
+  { index: "01", title: "Authority", body: "Every execution begins inside an explicit identity, capability, policy, budget and time boundary." },
+  { index: "02", title: "Lifecycle", body: "Persistent and ephemeral compute can share the same authority semantics. Lifecycle changes; authority does not become ambient." },
+  { index: "03", title: "Evidence", body: "Execution does not become truth because a runtime says it succeeded. Consequences remain bound to observable evidence." },
 ];
 
 const demands = [
-  { title: "Prove a human was in control.", body: "Regulators are no longer asking for a promise of oversight. They are asking for proof of it, on record, per action. Veklom's evidence is a signed record of exactly what was authorized, by whom, and what happened next." },
-  { title: "Tell me who's liable.", body: "When a machine acts on your behalf, \"the AI did it\" is not an answer a regulator, a customer, or your board accepts. Every action through Veklom carries an identity, a scope, and a signature, so accountability never has to be reconstructed after the fact." },
-  { title: "Don't let it do more than I said.", body: "Every capability is bounded before it runs: what it may touch, spend, or reach. The permission is the control, not a report about a permission that didn't hold." },
-  { title: "Give me something I can show an auditor.", body: "Not logs scattered across six systems. One evidence trail per transaction that someone outside the company could pick up cold and verify without calling you first." },
+  { title: "Bound what can execute.", body: "Define what the machine may do, what it may touch, what it may spend, how long the authority lasts, and which execution context is allowed to use it." },
+  { title: "Use the same contract across compute.", body: "A long-lived service and a short-lived execution should not require two unrelated trust models. Veklom keeps the capability contract stable while lifecycle policy changes." },
+  { title: "Keep consequence separate from claim.", body: "An executor claiming success is not enough. Veklom is built to preserve the distinction between authorization, execution, observation and established outcome." },
+  { title: "Leave evidence after compute disappears.", body: "Execution can be temporary. The authority record, consequence evidence and causal history are designed to remain inspectable after the runtime is gone." },
 ];
 
-const flow = ["Mount capability", "Bind authority", "Execute", "Observe", "Reconcile", "Preserve evidence"];
+const flow = ["Request capability", "Bind authority", "Materialize compute", "Execute", "Observe consequence", "Preserve evidence"];
 
 export default function LandingPage() {
   return (
@@ -29,7 +29,7 @@ export default function LandingPage() {
           <div className="relative z-10 max-w-[760px]">
             <div className="mb-8 flex flex-wrap items-center gap-3">
               <LiveSignal label="Capability OS · early access" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Governed machine action</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Governed compute infrastructure</span>
             </div>
 
             <h1 className="text-[clamp(4rem,8.6vw,8.8rem)] font-semibold leading-[0.82] tracking-[-0.075em] text-theme-ink">
@@ -37,20 +37,21 @@ export default function LandingPage() {
             </h1>
 
             <p className="mt-9 max-w-2xl text-lg leading-8 text-theme-inkDim md:text-[1.35rem] md:leading-9">
-              Veklom is the authority layer between machine intent and real-world consequence. Mount a capability, bind it to policy, budget and time, execute through a governed boundary, then preserve what actually happened.
+              Veklom is building governed compute infrastructure: bounded capability, identity, authority, lifecycle, execution, observation and evidence under one execution contract. Persistent services and ephemeral work can run without turning compute into ambient authority.
             </p>
 
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link href="/login?returnTo=/os" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link href="/os" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
                 Open Capability OS <span className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
-              <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect live proof</Link>
+              <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect proof</Link>
+              <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</Link>
             </div>
 
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
-              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Authority</div><div className="mt-2 text-sm font-medium text-theme-ink">Bound before action</div></div>
-              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Evidence</div><div className="mt-2 text-sm font-medium text-theme-ink">Observed after action</div></div>
-              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Agency</div><div className="mt-2 text-sm font-medium text-theme-ink">Ends at termination</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Authority</div><div className="mt-2 text-sm font-medium text-theme-ink">Bound before execution</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Compute</div><div className="mt-2 text-sm font-medium text-theme-ink">Lifecycle is explicit</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Evidence</div><div className="mt-2 text-sm font-medium text-theme-ink">Preserved after action</div></div>
             </div>
           </div>
 
@@ -59,16 +60,40 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-12 sm:px-8 lg:px-10">
+          <div className="relative overflow-hidden rounded-[36px] border border-theme-border bg-theme-surface/75 px-6 py-10 shadow-[0_20px_80px_rgba(2,8,23,.05)] backdrop-blur-md sm:px-10 md:px-14 md:py-16">
+            <div className="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <StageLabel>VLink — connect what you already use.</StageLabel>
+                <p className="mt-6 max-w-3xl text-lg leading-8 text-theme-inkDim md:text-[1.25rem] md:leading-9">
+                  Keep your existing client, API, automation, webhook, pipeline or container. Create one VLink, approve the connection, copy a familiar base URL + short-lived key, and let Veklom govern consequential actions behind it.
+                </p>
+                <p className="mt-6 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim/70">
+                  Works with OpenAI-compatible clients · APIs · MCP/automation · webhooks · CI/CD · containers
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Link href="/vlink/connect/" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                  Try VLink now <span className="transition-transform group-hover:translate-x-1">→</span>
+                </Link>
+                <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20 hover:bg-theme-surface">
+                  Scan to connect <span className="text-theme-inkDim">→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
           <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
             <div>
-              <StageLabel>A new kind of trust is arriving</StageLabel>
-              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Two machines just agreed to trust each other. No one was watching.</h2>
-              <p className="mt-7 max-w-lg text-base leading-8 text-theme-inkDim">It happens quietly, the way electricity first moved through a house nobody had rewired yet. One machine asks. Another answers. Something is proven. Something is paid. No person clicked &quot;approve.&quot; And when someone asks who is accountable for it, there is already an answer.</p>
-              <p className="mt-5 max-w-lg text-base leading-8 text-theme-inkDim">Veklom is the handshake. Small enough to happen a million times a second. Solid enough that neither side needs a person standing over its shoulder.</p>
+              <StageLabel>Governed compute</StageLabel>
+              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Compute should not exist outside its authority.</h2>
+              <p className="mt-7 max-w-lg text-base leading-8 text-theme-inkDim">Cloud platforms usually start with a resource, workload, service or function. Veklom starts one level higher: what bounded capability is allowed to exist, under whose authority, for what lifecycle, and with what evidence of the result.</p>
+              <p className="mt-5 max-w-lg text-base leading-8 text-theme-inkDim">That makes persistent service, ephemeral execution and consequential action different lifecycle expressions of the same governed execution contract — not separate trust systems.</p>
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">What every enterprise has been asking for</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">What the contract has to hold</div>
               <div className="mt-5 grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border sm:grid-cols-2">
                 {demands.map((demand) => (
                   <article key={demand.title} className="bg-theme-surface p-7">
@@ -102,10 +127,10 @@ export default function LandingPage() {
         <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
           <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <StageLabel>No synthetic green lights</StageLabel>
-              <h2 className="mt-5 max-w-3xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Look at the system that is actually answering.</h2>
+              <StageLabel>Evidence over theater</StageLabel>
+              <h2 className="mt-5 max-w-3xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">See what is actually answering — and what is not yet proven.</h2>
             </div>
-            <p className="max-w-md text-sm leading-7 text-theme-inkDim">This surface probes real Veklom service endpoints. If something is unavailable, it shows unavailable. It does not replace consequence-level proof with a canned demo.</p>
+            <p className="max-w-md text-sm leading-7 text-theme-inkDim">Reachability is not consequence proof. The public proof surface separates live service state from engineering claims and keeps unknown outcomes unknown.</p>
           </div>
           <LiveProofFabric compact />
         </section>
@@ -114,9 +139,9 @@ export default function LandingPage() {
           <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(103,232,249,.18),transparent_26%),radial-gradient(circle_at_80%_70%,rgba(99,102,241,.16),transparent_28%)]" aria-hidden="true" />
           <div className="relative mx-auto grid w-full max-w-[1480px] gap-14 px-5 py-24 sm:px-8 md:py-32 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">From intent to evidence</div>
-              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.96] tracking-[-.055em] md:text-6xl">The action disappears. The evidence does not.</h2>
-              <p className="mt-7 max-w-lg text-base leading-8 text-white/58">Veklom is designed for temporary execution identity and durable consequence evidence. The machine does its job, authority terminates, and the record remains inspectable.</p>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">From capability to evidence</div>
+              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.96] tracking-[-.055em] md:text-6xl">The runtime can disappear. The governed record should not.</h2>
+              <p className="mt-7 max-w-lg text-base leading-8 text-white/58">Veklom is designed so execution lifecycle and authority lifecycle are explicit. Compute may persist, terminate or be reconstructed; the authority and consequence record remain separately inspectable.</p>
             </div>
             <div className="grid content-center gap-3">
               {flow.map((item, index) => (
@@ -136,11 +161,12 @@ export default function LandingPage() {
             <div className="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
               <div>
                 <StageLabel>Capability OS</StageLabel>
-                <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Machines are starting to act. Give them a boundary worth trusting.</h2>
+                <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Use what is available now. Inspect what is proven. Build from a bounded capability.</h2>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <Link href="/login?returnTo=/os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
-                <Link href="/architecture" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">See architecture</Link>
+                <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
+                <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</Link>
+                <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</Link>
               </div>
             </div>
           </div>

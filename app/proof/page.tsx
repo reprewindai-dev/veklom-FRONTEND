@@ -5,31 +5,40 @@ import { AmbientField, PremiumPageIntro, StageLabel } from "@/components/brand/P
 import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
 
 export const metadata = {
-  title: "Live Proof | Veklom",
-  description: "Observed Veklom runtime state and consequence-proof boundaries.",
+  title: "Proof | Veklom Governed Compute",
+  description: "What Veklom has demonstrated, what remains unproven, and the live runtime surfaces available today.",
 };
 
 const proofLevels = [
   {
     n: "01",
-    title: "Reachability",
-    body: "A declared service answers from the runtime endpoint that is actually configured. No simulated availability state is substituted.",
+    title: "Real route authority",
+    body: "The current proof branch exercises the real /v1/exec consequence boundary with bounded capability leases and Biscuit authority. Invalid authority, wrong executor, mutated intent and inactive mounts are rejected.",
   },
   {
     n: "02",
-    title: "Authority",
-    body: "An authenticated execution must carry authority that is valid for the requested consequence. Public health does not prove authorization.",
+    title: "Common contract",
+    body: "Persistent-service and ephemeral execution token types are both represented in the capability-mount contract and can traverse the same governed execution route. Lifecycle policy differs; bounded authority remains explicit.",
   },
   {
     n: "03",
-    title: "Consequence",
-    body: "A real action is observed or reconciled. Unknown outcomes remain unknown instead of being promoted to success.",
+    title: "Workspace isolation",
+    body: "Execution context is workspace-bound. A capability mounted to one workspace is not valid in another authenticated workspace. This is an authority boundary, not a UI convention.",
   },
   {
     n: "04",
-    title: "Evidence",
-    body: "The resulting evidence binds the execution back to the authority and observed result. That proof belongs to the governed execution itself.",
+    title: "Consequence evidence",
+    body: "The stronger Activation path can re-observe durable target state directly. Generic provider execution still needs stronger independent consequence establishment before it should be called fully proven.",
   },
+];
+
+const claims = [
+  ["Demonstrated", "A real HTTP execution path is dominated by capability lease checks, scoped authority and a common governed execution handler."],
+  ["Demonstrated", "Persistent and ephemeral execution modes can share the same capability/authority contract shape while carrying different lifecycle semantics."],
+  ["Demonstrated", "Workspace scope mismatch, invalid/incorrect authority, mutated action intent and inactive capability context can fail closed."],
+  ["Not yet proven", "Wasmtime and Firecracker are not yet established as real interchangeable execution substrates under the same Veklom contract."],
+  ["Not yet proven", "Generic executor success is not yet equivalent to independently established business consequence."],
+  ["Not yet proven", "Cross-provider production-scale governed compute, host-compromise resistance and hardware isolation remain outside the current proof."],
 ];
 
 export default function ProofPage() {
@@ -40,10 +49,14 @@ export default function ProofPage() {
 
         <section className="relative mx-auto w-full max-w-[1480px] px-5 pb-14 pt-20 sm:px-8 md:pb-20 md:pt-28 lg:px-10">
           <PremiumPageIntro
-            eyebrow="Proof, not theater"
-            title="See what is actually alive."
-            body="Veklom's public proof surface no longer runs a canned success harness. It observes real service endpoints, exposes degradation when it exists, and keeps consequence-level claims behind real governed execution."
+            eyebrow="Governed compute proof"
+            title="What is demonstrated. What is still a thesis."
+            body="Veklom's proof surface separates live reachability, authority enforcement, lifecycle behavior and consequence establishment. The current evidence supports a real governed execution path across persistent and ephemeral capability contexts. It does not yet support calling every runtime or every consequence independently proven."
           />
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/os" className="inline-flex min-h-12 items-center justify-center rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
+            <Link href="/vlink" className="inline-flex min-h-12 items-center justify-center rounded-full border border-theme-border bg-theme-surface px-6 text-sm font-semibold text-theme-ink">Connect existing system</Link>
+          </div>
         </section>
 
         <section className="relative mx-auto w-full max-w-[1480px] px-5 pb-20 sm:px-8 md:pb-28 lg:px-10">
@@ -53,9 +66,9 @@ export default function ProofPage() {
         <section className="border-y border-theme-border bg-theme-surface/68">
           <div className="mx-auto grid w-full max-w-[1480px] gap-12 px-5 py-20 sm:px-8 md:py-28 lg:grid-cols-[.72fr_1.28fr] lg:px-10">
             <div>
-              <StageLabel>What a proof means</StageLabel>
-              <h2 className="mt-6 max-w-lg text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Green health is not the same thing as governed consequence.</h2>
-              <p className="mt-6 max-w-md text-sm leading-7 text-theme-inkDim">The public surface intentionally separates transport liveness from authority and evidence. That keeps the website from claiming more than the runtime has actually shown.</p>
+              <StageLabel>Current proof boundary</StageLabel>
+              <h2 className="mt-6 max-w-lg text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">The governed execution path is real. The full cloud thesis is not sealed yet.</h2>
+              <p className="mt-6 max-w-md text-sm leading-7 text-theme-inkDim">This distinction matters. The proof supports bounded authority across the actual execution route and a shared persistent/ephemeral contract. It does not yet prove real multi-hypervisor materialization or universal consequence truth.</p>
             </div>
 
             <div className="grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border sm:grid-cols-2">
@@ -71,21 +84,29 @@ export default function ProofPage() {
         </section>
 
         <section className="mx-auto w-full max-w-[1480px] px-5 py-24 sm:px-8 md:py-32 lg:px-10">
-          <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
+          <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
             <div className="rounded-[30px] border border-theme-border bg-[#05070b] p-7 text-white sm:p-9 md:p-12">
-              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">Consequence-level proof</div>
-              <h2 className="mt-5 max-w-3xl text-3xl font-semibold leading-[1.02] tracking-[-.045em] md:text-5xl">Run the real path inside Capability OS.</h2>
-              <p className="mt-5 max-w-2xl text-sm leading-7 text-white/58">A real proof run requires authenticated authority, an actual requested capability, an execution identity, and the resulting evidence. That is not something the public landing page should forge for visual effect.</p>
-              <Link href="/login?returnTo=/os" className="mt-9 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-black">Enter Capability OS →</Link>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">Claim ledger</div>
+              <h2 className="mt-5 max-w-3xl text-3xl font-semibold leading-[1.02] tracking-[-.045em] md:text-5xl">Use the strong claim. Keep the boundary visible.</h2>
+              <div className="mt-8 space-y-4">
+                {claims.map(([status, body], index) => (
+                  <div key={`${status}-${index}`} className="rounded-2xl border border-white/10 bg-white/[.035] p-5">
+                    <div className="text-[10px] font-semibold uppercase tracking-[.2em] text-white/45">{status}</div>
+                    <p className="mt-2 text-sm leading-7 text-white/72">{body}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="rounded-[30px] border border-theme-border bg-theme-surface p-7 sm:p-9 md:p-12">
-              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">Machine inspection</div>
-              <h2 className="mt-5 text-3xl font-semibold tracking-[-.045em] text-theme-ink">Prefer raw surfaces?</h2>
-              <p className="mt-5 text-sm leading-7 text-theme-inkDim">Use the machine interface for protocol discovery, route surfaces, service observation, and machine-readable endpoints rather than a marketing abstraction.</p>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">Available today</div>
+              <h2 className="mt-5 text-3xl font-semibold tracking-[-.045em] text-theme-ink">Capability OS is the product surface.</h2>
+              <p className="mt-5 text-sm leading-7 text-theme-inkDim">People should be able to enter the current Capability OS, inspect available capabilities, use the surfaces that are already wired, and connect existing systems through VLink as those routes are brought online. Early access should expose what exists rather than hiding it behind a future-state promise.</p>
               <div className="mt-9 grid gap-2">
-                <Link href="/machine" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Open machine surface <span>↗</span></Link>
-                <Link href="/conformance" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Read conformance <span>↗</span></Link>
+                <Link href="/os" className="flex min-h-12 items-center justify-between rounded-2xl bg-theme-ink px-4 text-sm font-semibold text-theme-bg">Open Capability OS <span>→</span></Link>
+                <Link href="/vlink" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Connect with VLink <span>↗</span></Link>
+                <Link href="/machine" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Machine surface <span>↗</span></Link>
+                <Link href="/conformance" className="flex min-h-12 items-center justify-between rounded-2xl border border-theme-border bg-theme-bg px-4 text-sm font-medium text-theme-ink">Conformance boundary <span>↗</span></Link>
               </div>
             </div>
           </div>

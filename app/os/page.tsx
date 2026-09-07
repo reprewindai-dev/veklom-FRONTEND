@@ -1,135 +1,84 @@
 "use client";
-import React, { useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { HumanAppShell } from "@/components/shell/HumanAppShell";
-import { Card, Section, StatusPill } from "@/components/ui/SharedUI";
-import { useAuth } from '@/lib/auth-context';
 
-export default function OsPage() {
-  const { me, loading } = useAuth();
-  const router = useRouter();
+import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Boxes, Clock3, Sparkles } from "lucide-react";
+import { capabilities, type Capability } from "@/lib/cos/capabilities";
+import { CapabilityCard } from "@/components/cos/CapabilityCard";
+import { CapabilitySearch } from "@/components/cos/CapabilitySearch";
+import { ProofBadge } from "@/components/cos/ProofBadge";
+import { BeaconDiscovery } from "@/components/cos/BeaconDiscovery";
 
+export default function CapabilityHome() {
+  const reduceMotion = useReducedMotion();
+  const [query, setQuery] = useState("");
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   useEffect(() => {
-    if (!loading && !me) {
-      router.push('/login?returnTo=/os');
-    }
-  }, [loading, me, router]);
-
-  if (loading || !me) {
-    return (
-      <HumanAppShell>
-        <div className="flex-1 flex items-center justify-center min-h-screen">
-          <StatusPill status="unknown" label="AUTHENTICATING..." />
-        </div>
-      </HumanAppShell>
-    );
-  }
-
+    try { setRecentIds(JSON.parse(localStorage.getItem("veklom.cos.recent-capabilities") || "[]")); } catch { setRecentIds([]); }
+  }, []);
+  const openCapability = (capability: Capability) => {
+    const next = [capability.id, ...recentIds.filter((id) => id !== capability.id)].slice(0, 6);
+    setRecentIds(next);
+    localStorage.setItem("veklom.cos.recent-capabilities", JSON.stringify(next));
+  };
+  const filtered = useMemo(() => capabilities.filter((capability) => `${capability.name} ${capability.description} ${capability.kind}`.toLowerCase().includes(query.toLowerCase())), [query]);
+  const recent = recentIds.map((id) => capabilities.find((capability) => capability.id === id)).filter(Boolean) as Capability[];
+  const mounted = filtered.filter((capability) => capability.mountState === "Mounted");
+  const trustSpine = [
+    { name: "Identity", sub1: "Sovereign ID Verification", sub2: "Workspace Mount State" },
+    { name: "Capability (cAPI)", sub1: "Action Discovery & Routing", sub2: "Contract Enveloping" },
+    { name: "Govern (CAPPO)", sub1: "Jurisdiction & Context Shaping", sub2: "PII Scrubbing & Filtering" },
+    { name: "Execute (BYOS)", sub1: "Sovereign Inference", sub2: "Isolated Execution" },
+    { name: "Evidence (PGL)", sub1: "GnomLedger Smart Ledger", sub2: "Cryptographic Hashing" },
+    { name: "Settle (x402)", sub1: "Void Compute Splitting", sub2: "Ledger Finalization" }
+  ];
   return (
-    <HumanAppShell>
-      <main className="flex-1 w-full bg-theme-bg">
-        
-        {/* Workspace Sub-header */}
-        <div className="border-b border-theme-border bg-theme-surface">
-          <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-bold text-theme-ink">My Workspace</span>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-theme-inkDim px-2 py-0.5 border border-theme-border rounded">Default Tenant</span>
-            </div>
-            <div className="flex items-center gap-4 text-xs font-mono">
-              <span className="text-theme-inkDim">Role:</span>
-              <span className="text-theme-ink font-bold">OPERATOR</span>
-            </div>
+    <section className="mx-auto max-w-7xl px-5 py-8 lg:px-10 lg:py-12">
+      <motion.div initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div><div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-cos-accent"><Sparkles size={13} />VEKLOM · MACHINE-TO-MACHINE TRUST INFRASTRUCTURE</div><h1 className="text-4xl font-semibold tracking-tight text-cos-text md:text-5xl">What do you need to do?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">The trust layer machines pass through — prove identity, capability, governance, execution, evidence, and settlement.</p></div>
+        <div className="flex items-center gap-2 text-xs text-cos-steel"><ProofBadge status="Present" /> <span>Catalog metadata</span></div>
+      </motion.div>
+      <CapabilitySearch value={query} onChange={setQuery} />
+      <BeaconDiscovery />
+      <div className="mt-10 rounded-2xl border border-cos-border bg-cos-surface2/55 p-6 shadow-cos-card lg:p-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-cos-accent">One machine action</div>
+            <h2 className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Veklom Trust Spine</h2>
           </div>
+          <span className="font-mono text-[10px] text-cos-steel">IDENTITY → SETTLEMENT</span>
         </div>
-
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="mb-10">
-            <h1 className="text-3xl font-sans font-bold text-theme-ink mb-2">Capability Cockpit</h1>
-            <p className="text-theme-inkDim text-sm max-w-2xl">
-              Discover capabilities, compose work, request bounded authority, execute, and preserve evidence.
-            </p>
-          </div>
-
-          <Section title="Mounted Capabilities">
-          <div className="mb-6 border border-[var(--theme-accent)]/30 bg-[var(--theme-accent)]/5 rounded p-4 flex items-center justify-between shadow-sm">
-            <div>
-              <h3 className="font-bold text-[var(--theme-accent)] mb-1 flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> 
-                Proof Sandbox
-              </h3>
-              <p className="text-sm opacity-80 text-theme-ink">The Veklom continuous conformance and activation sandbox.</p>
-            </div>
-            <Link href="/activate" className="px-4 py-2 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded text-sm font-medium hover:bg-[var(--theme-bg)] transition-colors">
-              Re-run activation proof
-            </Link>
-          </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60">
-              <Card>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-theme-bg border border-theme-border rounded">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-theme-ink">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 lg:gap-2">
+          {trustSpine.map((stage, index) => (
+            <div key={stage.name} className="flex flex-col lg:flex-row items-center flex-1">
+              <div className="flex flex-col gap-3 rounded-lg border border-cos-border bg-cos-bg/50 p-4 w-full h-full relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cos-unknown shadow-[0_0_10px_rgba(107,114,128,0.7)]" />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-steel">{index + 1}. {stage.name}</span>
                   </div>
-                  <StatusPill status="verified" label="ACTIVE" />
                 </div>
-                <h3 className="font-bold text-theme-ink mb-1">core.compute.spawn</h3>
-                <p className="text-xs text-theme-inkDim mb-4">Spawn sandboxed node tasks with a bound lifecycle.</p>
-                <Link href="#" className="text-xs font-mono font-bold text-theme-accent hover:underline">Manage &rarr;</Link>
-              </Card>
-
-              <Card>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-theme-bg border border-theme-border rounded">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-theme-ink">
-                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
-                    </svg>
-                  </div>
-                  <StatusPill status="warn" label="NEEDS BUDGET" />
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-cos-muted">{stage.sub1}</span>
+                  <span className="text-xs text-cos-muted">{stage.sub2}</span>
                 </div>
-                <h3 className="font-bold text-theme-ink mb-1">pgl.ledger.write</h3>
-                <p className="text-xs text-theme-inkDim mb-4">Commit cryptographic execution evidence to the genome ledger.</p>
-                <Link href="#" className="text-xs font-mono font-bold text-theme-accent hover:underline">Manage &rarr;</Link>
-              </Card>
+                <div className="mt-2">
+                  <ProofBadge status="Needs proof" />
+                </div>
+              </div>
+              {index < trustSpine.length - 1 && (
+                <div className="hidden lg:flex items-center justify-center w-6 shrink-0 mx-2">
+                  <ArrowUpRight className="text-cos-accent/50 rotate-45" size={16} />
+                </div>
+              )}
             </div>
-          </Section>
-
-          <Section title="Execution Evidence">
-            <div className="border border-theme-border bg-theme-surface rounded overflow-hidden">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-theme-surface2 border-b border-theme-border font-mono text-[10px] uppercase tracking-widest text-theme-inkDim">
-                  <tr>
-                    <th className="px-6 py-3">Timestamp</th>
-                    <th className="px-6 py-3">Action</th>
-                    <th className="px-6 py-3">Identity</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Evidence</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-theme-border">
-                  <tr className="hover:bg-theme-bg transition-colors">
-                    <td className="px-6 py-4 text-theme-ink font-mono text-xs">2026-08-27 14:02:11</td>
-                    <td className="px-6 py-4 text-theme-ink">contact.read</td>
-                    <td className="px-6 py-4 text-theme-inkDim font-mono text-xs">exec_a1b2c3</td>
-                    <td className="px-6 py-4"><StatusPill status="verified" label="ALLOW" /></td>
-                    <td className="px-6 py-4"><Link href="#" className="text-theme-accent text-xs font-mono hover:underline">View Receipt</Link></td>
-                  </tr>
-                  <tr className="hover:bg-theme-bg transition-colors">
-                    <td className="px-6 py-4 text-theme-ink font-mono text-xs">2026-08-27 13:45:00</td>
-                    <td className="px-6 py-4 text-theme-ink">contact.delete</td>
-                    <td className="px-6 py-4 text-theme-inkDim font-mono text-xs">exec_a1b2c3</td>
-                    <td className="px-6 py-4"><StatusPill status="danger" label="DENY" /></td>
-                    <td className="px-6 py-4"><Link href="#" className="text-theme-accent text-xs font-mono hover:underline">View Rejection</Link></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Section>
+          ))}
         </div>
-      </main>
-    </HumanAppShell>
+      </div>
+      <div className="mt-12"><div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-2"><Clock3 size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Recently used</h2></div><span className="font-mono text-[10px] text-cos-steel">LOCAL HISTORY</span></div>{recent.length ? <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.05 } } }} className="grid gap-4 md:grid-cols-3">{recent.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}</motion.div> : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">Your recently used capabilities will appear here.</div>}</div>
+      <div className="mt-12"><div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Mounted capabilities</h2></div>{mounted.length ? <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{mounted.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}</motion.div> : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">No mounted capabilities match this search.</div>}</div>
+      <div className="mt-12"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Capability catalog</h2><span className="font-mono text-[10px] text-cos-steel">{filtered.length} entries</span></div><motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.035 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}</motion.div></div>
+      <div className="mt-10 flex items-center gap-2 border-t border-cos-border pt-5 font-mono text-[10px] text-cos-steel"><ArrowUpRight size={13} className="text-cos-accent" />Backend routes are shown on capability detail surfaces; no route response is treated as proof here.</div>
+    </section>
   );
 }
-
