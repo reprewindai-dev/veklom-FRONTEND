@@ -73,6 +73,38 @@ export function getTransportState(error: unknown): TransportState {
   return "FAILED";
 }
 
+/**
+ * Normalise backend error bodies to a single string. Handles flat
+ * `{detail|message|error: string}`, nested `{error: {code, message}}`,
+ * and FastAPI 422 `{detail: [{msg, loc}]}`.
+ */
+export function extractErrorMessage(body: unknown): string | undefined {
+  if (body === null || body === undefined) return undefined;
+  if (typeof body === "string") return body || undefined;
+  if (Array.isArray(body)) {
+    const parts = body
+      .map((item) => {
+        if (item && typeof item === "object") {
+          const rec = item as Record<string, unknown>;
+          const loc = Array.isArray(rec.loc) ? rec.loc.filter((l) => l !== "body").join(".") : "";
+          const msg = extractErrorMessage(rec.msg ?? rec.message ?? rec.detail);
+          return loc && msg ? `${loc}: ${msg}` : msg;
+        }
+        return extractErrorMessage(item);
+      })
+      .filter(Boolean);
+    return parts.length ? parts.join("; ") : undefined;
+  }
+  if (typeof body === "object") {
+    const rec = body as Record<string, unknown>;
+    for (const key of ["detail", "message", "error", "error_description"]) {
+      const found = extractErrorMessage(rec[key]);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
 export interface RequestOpts {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
@@ -285,17 +317,14 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
       window.dispatchEvent(new CustomEvent("VeklomDegradedState", {
         detail: {
           isDegraded: true,
-          message: (json as any)?.error || "Veklom Core Services are currently experiencing instability. Control Plane is in Read-Only Mode."
+          message: extractErrorMessage((json as any)?.error) || "Veklom Core Services are currently experiencing instability. Control Plane is in Read-Only Mode."
         }
       }));
     }
   }
 
   if (!res.ok) {
-    const msg =
-      (json && (json.detail || json.message || json.error)) ||
-      res.statusText ||
-      `HTTP ${res.status}`;
+    const msg = extractErrorMessage(json) || res.statusText || `HTTP ${res.status}`;
 
     if (typeof window !== "undefined") {
       const isPublicPage = isPublicRoute(window.location.pathname);
@@ -406,10 +435,7 @@ export async function duelApi<T>(path: string, opts: RequestOpts = {}): Promise<
   const text = await res.text();
   const json = parseResponseBody(res, text, path) as any;
   if (!res.ok) {
-    const msg =
-      (json && (json.detail || json.message || json.error)) ||
-      res.statusText ||
-      `HTTP ${res.status}`;
+    const msg = extractErrorMessage(json) || res.statusText || `HTTP ${res.status}`;
     throw new ApiError(res.status, String(msg), json, "http", path);
   }
   return json as T;
