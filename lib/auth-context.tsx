@@ -35,6 +35,16 @@ function markNavigationSession(present: boolean) {
     : `veklom.session=; Path=/; SameSite=Lax; Max-Age=0${secure}`;
 }
 
+/** LockerPhycer requires a 3-50 char username; derive one from the name or email local part. */
+function deriveUsername(email: string, name?: string): string {
+  const source = (name?.trim() || email.split("@")[0] || "operator")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^[-._]+|[-._]+$/g, "");
+  const padded = source.length >= 3 ? source : `${source}-user`;
+  return padded.slice(0, 50);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | undefined>();
   const [sub, setSub] = useState<Subscription | undefined>();
@@ -108,9 +118,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = useCallback(async (email: string, password: string, name?: string) => {
     setError(undefined);
+    const normalizedEmail = email.trim().toLowerCase();
+    const baseUsername = deriveUsername(normalizedEmail, name);
+    const register = (username: string) =>
+      api<{ id: string; email: string; username: string }>("/api/v1/auth/register", {
+        unauth: true,
+        body: { email: normalizedEmail, username, password, full_name: name?.trim() || undefined },
+      });
+    try {
+      await register(baseUsername);
+    } catch (cause) {
+      const usernameTaken =
+        cause instanceof ApiError &&
+        (cause.status === 400 || cause.status === 409 || cause.status === 500) &&
+        /username|unique|duplicate|integrity/i.test(cause.message);
+      if (!usernameTaken) throw cause;
+      await register(`${baseUsername.slice(0, 43)}-${Math.random().toString(36).slice(2, 8)}`);
+    }
+
     const res = await api<{ access_token?: string; token?: string; refresh_token?: string }>(
-      "/api/v1/auth/signup",
-      { unauth: true, body: { email: email.trim().toLowerCase(), password, full_name: name, name } },
+      "/api/v1/auth/login",
+      { unauth: true, body: { email: normalizedEmail, password } },
     );
     const access = res.access_token || res.token;
     if (access) {

@@ -72,7 +72,7 @@ export function LoginForm() {
           Backend-issued session
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-[-.055em] text-theme-ink sm:text-5xl">Enter Capability OS.</h1>
-        <p className="mt-4 max-w-md text-sm leading-7 text-theme-inkDim">Authentication resolves against the real BYOS identity/session backend. GitHub and password sign-in converge on the same workspace-bound session authority.</p>
+        <p className="mt-4 max-w-md text-sm leading-7 text-theme-inkDim">Authentication resolves against the LockerPhycer identity and session authority. GitHub and password sign-in converge on the same workspace-bound session.</p>
       </div>
 
       {error && (
@@ -93,7 +93,7 @@ export function LoginForm() {
       </button>
 
       <div className="mt-3 min-h-5 text-[11px] text-theme-inkDim">
-        {github === null ? "Checking GitHub OAuth configuration…" : github.configured ? "GitHub OAuth is configured on the BYOS authentication boundary." : `GitHub OAuth setup is incomplete${github.missing?.length ? ` · missing ${github.missing.join(", ")}` : ""}.`}
+        {github === null ? "Checking GitHub OAuth configuration…" : github.configured ? "GitHub OAuth is configured on the identity authority." : `GitHub OAuth setup is incomplete${github.missing?.length ? ` · missing ${github.missing.join(", ")}` : ""}.`}
       </div>
 
       <div className="my-7 flex items-center gap-4">
