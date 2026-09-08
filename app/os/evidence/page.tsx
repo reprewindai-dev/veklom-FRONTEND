@@ -16,9 +16,9 @@ export default function EvidencePage() {
     <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
       <div className="space-y-4">
         <Pillar title="Work" proof={data.stageProof}><PhaseTrace phases={[
-          { id: "ledger", name: "Ledger", status: phaseStatus },
-          { id: "verify", name: "Verify", status: hasEvidence ? "current" : "pending" },
-          { id: "replay", name: "Replay", status: "pending" },
+          { id: "ledger", name: "Ledger", status: phaseStatus, kind: "transport" },
+          { id: "verify", name: "Verify", status: hasEvidence ? "current" : "pending", kind: "authority" },
+          { id: "replay", name: "Replay", status: "pending", kind: "execution" },
         ]} /></Pillar>
         <Pillar title="Telemetry" proof={data.stageProof}><HonestEmpty title="Evidence telemetry is route-backed" route="GET /v1/audit/ledger" detail="Latency and status remain in the route ledger below." /></Pillar>
         <Pillar title="Authority" proof={data.stageProof}><HonestEmpty title="Evidence authority not returned" route="GET /api/v1/ledger/agents/{id}" detail="An execution identity is required for the parameterized ledger view." /></Pillar>

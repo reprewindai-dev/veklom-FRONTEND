@@ -1,24 +1,26 @@
-import { Check, Clock, CircleDot, AlertTriangle } from "lucide-react";
+import type { ActivityCondition, ActivityKind } from "./VeklomActivityCue";
+import { VeklomActivityCue } from "./VeklomActivityCue";
 
 export interface TracePhase {
   id: string;
   name: string;
   status: "complete" | "current" | "pending" | "error";
   duration?: string;
+  kind?: ActivityKind;
 }
 
 export function PhaseTrace({ phases }: { phases: TracePhase[] }) {
-  const getStatusIcon = (status: string) => {
+  const getStatusCondition = (status: TracePhase["status"]): ActivityCondition => {
     switch (status) {
-      case "complete": return <Check size={14} className="text-cos-verified" />;
-      case "current": return <CircleDot size={14} className="text-cos-accent animate-pulse" />;
-      case "error": return <AlertTriangle size={14} className="text-cos-danger" />;
-      default: return <Clock size={14} className="text-cos-steel opacity-50" />;
+      case "complete": return "present";
+      case "current": return "active";
+      case "error": return "failed";
+      default: return "unknown";
     }
   };
 
-  const getLineColor = (status: string) => {
-    return status === "complete" ? "bg-cos-verified" : "bg-cos-border";
+  const getLineColor = (status: TracePhase["status"]) => {
+    return status === "complete" ? "bg-cos-present" : "bg-cos-border";
   };
 
   return (
@@ -27,7 +29,7 @@ export function PhaseTrace({ phases }: { phases: TracePhase[] }) {
         <div key={phase.id} className="flex flex-1 items-center">
           <div className="relative flex flex-col items-center">
             <div className={`flex h-8 w-8 items-center justify-center rounded-full border border-cos-border bg-cos-surface2 shadow-sm transition-all ${phase.status === 'current' ? 'border-cos-accent/50 shadow-[0_0_10px_rgba(0,229,255,0.2)]' : ''}`}>
-              {getStatusIcon(phase.status)}
+              <VeklomActivityCue kind={phase.kind ?? "execution"} condition={getStatusCondition(phase.status)} size={18} showCaption={false} />
             </div>
             <span className={`absolute -bottom-6 w-max text-[10px] font-medium uppercase tracking-wider transition-colors ${phase.status === 'current' ? 'text-cos-accent' : phase.status === 'complete' ? 'text-cos-text' : 'text-cos-muted'}`}>
               {phase.name}

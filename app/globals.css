@@ -1,3 +1,5 @@
+@import "../components/cos/VeklomActivityCue.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,6 +14,9 @@
   --theme-accent-steel: 138, 155, 176;
   --theme-text: rgba(15, 23, 42, 0.92);
   --theme-text-muted: rgba(71, 85, 105, 0.65);
+  --theme-present: 100, 116, 139;
+  --theme-grid-line: rgba(15, 23, 42, 0.06);
+  --theme-sheen: rgba(15, 23, 42, 0.04);
   --theme-verified: 0, 255, 102;
   --theme-warn: 255, 171, 0;
   --theme-danger: 255, 77, 77;
@@ -32,6 +37,9 @@
   --theme-accent-steel: 138, 155, 176;
   --theme-text: rgba(255, 255, 255, 0.92);
   --theme-text-muted: rgba(255, 255, 255, 0.55);
+  --theme-present: 183, 196, 214;
+  --theme-grid-line: rgba(255, 255, 255, 0.025);
+  --theme-sheen: rgba(255, 255, 255, 0.10);
   --theme-verified: 0, 255, 102;
   --theme-warn: 255, 171, 0;
   --theme-danger: 255, 77, 77;
@@ -52,6 +60,9 @@
   --theme-accent-steel: 102, 102, 102;
   --theme-text: rgba(255, 255, 255, 0.86);
   --theme-text-muted: rgba(255, 255, 255, 0.55);
+  --theme-present: 228, 228, 228;
+  --theme-grid-line: rgba(255, 255, 255, 0.04);
+  --theme-sheen: rgba(255, 255, 255, 0.08);
   --theme-verified: 242, 242, 242;
   --theme-warn: 184, 184, 184;
   --theme-danger: 122, 122, 122;

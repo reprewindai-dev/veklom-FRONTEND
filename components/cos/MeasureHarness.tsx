@@ -118,7 +118,7 @@ export function MeasureHarness() {
                   <div className="bg-[#111] border border-[#222] rounded-lg p-5 flex flex-col items-center justify-center text-center">
                     <DollarSign size={24} className="text-cos-accent mb-2" />
                     <div className="text-[10px] uppercase tracking-widest text-[#666] mb-1">Allocated Budget</div>
-                    <div className="text-3xl font-mono text-white">${budget.allocated.toFixed(4)}</div>
+                    <div className="text-3xl font-mono text-cos-text">${budget.allocated.toFixed(4)}</div>
                   </div>
                   
                   <div className="bg-[#111] border border-[#222] rounded-lg p-5 flex flex-col items-center justify-center text-center">

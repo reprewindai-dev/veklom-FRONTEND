@@ -29,7 +29,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const filteredLinks = links.filter(([label]) => label.toLowerCase().includes(term));
   return (
     <AnimatePresence>
-      {open && <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduceMotion ? undefined : { opacity: 0 }} className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pt-[12vh] backdrop-blur-sm" onMouseDown={onClose}>
+      {open && <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduceMotion ? undefined : { opacity: 0 }} className="fixed inset-0 z-50 flex items-start justify-center bg-cos-bg/70 px-4 pt-[12vh] backdrop-blur-sm" onMouseDown={onClose}>
       <motion.div initial={reduceMotion ? false : { opacity: 0, y: -14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={reduceMotion ? undefined : { opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: reduceMotion ? 0 : 0.18 }} className="w-full max-w-2xl overflow-hidden rounded-2xl border border-cos-border bg-cos-surface shadow-cos-glow" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center gap-3 border-b border-cos-border px-5 py-4"><Search size={18} className="text-cos-accent" /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Jump to a capability or workspace" className="flex-1 bg-transparent text-cos-text outline-none placeholder:text-cos-muted" /><kbd className="font-mono text-xs text-cos-steel">ESC</kbd></div>
         <div className="max-h-[55vh] overflow-y-auto p-3">
