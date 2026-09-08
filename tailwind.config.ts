@@ -15,9 +15,9 @@ const config: Config = {
       },
       colors: {
         theme: {
-          bg: "var(--theme-bg)",
-          surface: "var(--theme-surface)",
-          surface2: "var(--theme-surface-2)",
+          bg: "rgb(var(--theme-bg-rgb) / <alpha-value>)",
+          surface: "rgb(var(--theme-surface-rgb) / <alpha-value>)",
+          surface2: "rgb(var(--theme-surface-2-rgb) / <alpha-value>)",
           border: "var(--theme-border)",
           present: "rgb(var(--theme-present) / <alpha-value>)",
           
@@ -37,9 +37,9 @@ const config: Config = {
           black: "var(--theme-black)",
         },
         cos: {
-          bg: "var(--theme-bg)",
-          surface: "var(--theme-surface)",
-          surface2: "var(--theme-surface-2)",
+          bg: "rgb(var(--theme-bg-rgb) / <alpha-value>)",
+          surface: "rgb(var(--theme-surface-rgb) / <alpha-value>)",
+          surface2: "rgb(var(--theme-surface-2-rgb) / <alpha-value>)",
           raised: "var(--theme-raised)",
           border: "var(--theme-border)",
           text: "var(--theme-text)",
