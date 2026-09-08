@@ -21,7 +21,7 @@ interface AuthState {
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const Ctx = createContext<AuthState | null>(null);
 
-function safeReturnTo(value: string | null, fallback = "/os"): string {
+function safeReturnTo(value: string | null, fallback = "/os/onboarding"): string {
   if (!value) return fallback;
   if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return fallback;
   return value;
@@ -56,10 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
 
     try {
-      // Always ask the backend. Password login may provide a local bearer token,
-      // while GitHub OAuth intentionally provides an HttpOnly access_token cookie.
-      // Same-origin fetch sends that cookie automatically, so both login methods
-      // converge on the same /auth/me truth boundary.
       const data = await api<Me>("/api/v1/auth/me");
       setMe(data);
       markNavigationSession(true);
@@ -68,7 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const subData = await api<Subscription>("/api/v1/billing/subscription");
         setSub(subData);
       } catch {
-        // Subscription transport failure must never manufacture a paid/sovereign tier.
         setSub(undefined);
       }
     } catch (cause) {
@@ -167,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGithub = useCallback(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const next = safeReturnTo(params.get("returnTo"), `${BASE_PATH}/os`);
+    const next = safeReturnTo(params.get("returnTo"), `${BASE_PATH}/os/onboarding`);
     window.location.href = `${BASE_PATH}/api/auth/github/login?next=${encodeURIComponent(next)}`;
   }, []);
 
