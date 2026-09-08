@@ -1,6 +1,7 @@
 export type ProofStatus =
   | "Verified"
   | "Needs proof"
+  | "Live"
   | "Present"
   | "Degraded"
   | "Not started"

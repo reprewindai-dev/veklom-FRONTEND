@@ -29,6 +29,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
+      - "127.0.0.1:3037:3002"
       - "127.0.0.1:3002:3002"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3002/api/health >/dev/null || exit 1"]

@@ -30,6 +30,9 @@ export function MeasureHarness() {
       });
 
       if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error('No VNP measurement exists for execution (404). Absent probes are absent proof, not a pending state.');
+        }
         throw new Error(`API Error: ${res.status} ${res.statusText}`);
       }
 

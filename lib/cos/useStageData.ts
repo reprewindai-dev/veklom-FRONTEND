@@ -2,11 +2,36 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { classifyPayload, deriveProofStatus } from "./proof";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
 import { useSandboxMode } from "./sandbox";
+
+export function resolveStageTransportPath(
+  stageId: StageDefinition["id"],
+  path: string,
+): string {
+  if (stageId === "mount" || isCappoProxyPath(path)) {
+    return `/api/cappo${path}`;
+  }
+  return path;
+}
+
+export function resolveStageBaseUrl(
+  stageId: StageDefinition["id"],
+  sandbox: boolean,
+  endpointBaseUrl?: string,
+  sandboxBaseUrl?: string,
+  endpointPath?: string,
+): string | undefined {
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
+    return undefined;
+  }
+  if (!sandbox) return undefined;
+  return sandboxBaseUrl || endpointBaseUrl;
+}
 
 export interface StageCallRecord {
   method: StageEndpoint["method"];
@@ -77,15 +102,19 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
     const started = performance.now();
     setLoading((current) => ({ ...current, [key]: true }));
     try {
-      const data = await api<T>(endpoint.path, {
+      const data = await api<T>(resolveStageTransportPath(stageId, endpoint.path), {
         method: endpoint.method,
         body,
         query: { mode: sandbox ? "sandbox" : "production" },
         headers: { "X-Veklom-Data-Mode": sandbox ? "sandbox" : "production" },
         handlePaymentRequired: false,
-        baseUrl: sandbox
-          ? (process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL || endpoint.baseUrl)
-          : endpoint.baseUrl,
+        baseUrl: resolveStageBaseUrl(
+          stageId,
+          sandbox,
+          endpoint.baseUrl,
+          process.env.NEXT_PUBLIC_SANDBOX_API_BASE_URL,
+          endpoint.path,
+        ),
       });
       const latencyMs = Math.round((performance.now() - started) * 100) / 100;
       const classification = classifyPayload(data);

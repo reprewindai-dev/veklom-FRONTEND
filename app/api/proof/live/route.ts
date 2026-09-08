@@ -8,19 +8,20 @@ type ServiceSpec = {
   label: string;
   role: string;
   url: string;
+  fallbackUrl: string;
 };
 
 function join(base: string, path: string) {
   return `${base.replace(/\/$/, "")}${path}`;
 }
 
-async function probe(service: ServiceSpec) {
+async function probeSingle(url: string, id: string, label: string, role: string) {
   const started = performance.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 4500);
 
   try {
-    const response = await fetch(service.url, {
+    const response = await fetch(url, {
       method: "GET",
       headers: { Accept: "application/json, text/plain;q=0.9, */*;q=0.5" },
       cache: "no-store",
@@ -39,10 +40,10 @@ async function probe(service: ServiceSpec) {
     }
 
     return {
-      id: service.id,
-      label: service.label,
-      role: service.role,
-      endpoint: service.url,
+      id,
+      label,
+      role,
+      endpoint: url,
       reachable: true,
       healthy: response.ok,
       status: response.status,
@@ -51,10 +52,10 @@ async function probe(service: ServiceSpec) {
     };
   } catch (error) {
     return {
-      id: service.id,
-      label: service.label,
-      role: service.role,
-      endpoint: service.url,
+      id,
+      label,
+      role,
+      endpoint: url,
       reachable: false,
       healthy: false,
       status: null,
@@ -66,37 +67,66 @@ async function probe(service: ServiceSpec) {
   }
 }
 
+async function probe(service: ServiceSpec) {
+  let result = await probeSingle(service.url, service.id, service.label, service.role);
+  if (!result.reachable && service.fallbackUrl && service.fallbackUrl !== service.url) {
+    const fallbackResult = await probeSingle(service.fallbackUrl, service.id, service.label, service.role);
+    if (fallbackResult.reachable) {
+      result = fallbackResult;
+    }
+  }
+
+  // Canonical Truth Boundary for GnomLedger (PGL) per Issue #16
+  // Port 8001 health (200 OK) is OBSERVED; cAPI registration remains NOT_VERIFIED.
+  // Step 5 (evidence) must NOT be marked proven based on GnomLedger health.
+  if (service.id === "pgl") {
+    return {
+      ...result,
+      registration: "NOT_VERIFIED",
+      truthStatus: result.healthy ? "OBSERVED" : "UNAVAILABLE",
+      evidenceBoundary: "NOT_INDEPENDENTLY_PROVEN",
+      attested: false,
+      truthBoundaryNote: "GnomLedger port 8001 health is OBSERVED; cAPI registration remains NOT_VERIFIED per Issue #16. Step 5 (evidence) is not proven based on health.",
+    };
+  }
+
+  return result;
+}
+
 export async function GET() {
-  const byos = process.env.BACKEND_URL || process.env.VEKLOM_BACKEND_URL || "https://api.veklom.com";
-  const lockerphycer = process.env.LOCKERPHYCER_URL || "http://host.docker.internal:8092";
-  const capi = process.env.CAPI_URL || "https://capi.veklom.com";
-  const cappo = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
-  const pgl = process.env.PGL_URL || "https://pgl.veklom.com";
+  const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "http://host.docker.internal:8092";
+  const cappoUrl = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "http://host.docker.internal:8002";
+  const capiUrl = process.env.CAPI_URL || "http://host.docker.internal:3003";
+  const pglUrl = process.env.PGL_URL || "http://host.docker.internal:8001";
 
   const services: ServiceSpec[] = [
     {
       id: "lockerphycer",
       label: "LockerPhycer",
       role: "Governed security, key, identity and execution-host boundary",
-      url: join(lockerphycer, "/health"),
+      url: join(lockerphycerUrl, "/health"),
+      fallbackUrl: "http://localhost:8092/health",
     },
     {
       id: "cappo",
       label: "CAPPO",
       role: "Consequence authorization boundary",
-      url: join(cappo, "/health"),
+      url: join(cappoUrl, "/health"),
+      fallbackUrl: "http://localhost:8002/health",
     },
     {
       id: "capi",
       label: "cAPI",
       role: "Cross-service connection layer",
-      url: join(capi, "/health"),
+      url: join(capiUrl, "/health"),
+      fallbackUrl: "http://localhost:3003/health",
     },
     {
       id: "pgl",
       label: "Gnomledger / PGL",
       role: "Durable evidence and provenance",
-      url: join(pgl, "/health"),
+      url: join(pglUrl, "/health"),
+      fallbackUrl: "http://localhost:8001/health",
     },
   ];
 

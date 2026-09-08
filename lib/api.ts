@@ -403,7 +403,7 @@ api.delete = <T,>(path: string, opts?: RequestOpts) => api<T>(path, { ...opts, m
 export const fetcher = <T,>(path: string) => api<T>(path);
 
 export async function duelApi<T>(path: string, opts: RequestOpts = {}): Promise<T> {
-  const DUEL_BASE = "https://veklom-agent-duel.vercel.app";
+  const DUEL_BASE = process.env.NEXT_PUBLIC_DUEL_API_URL || process.env.DUEL_API_URL || "https://duel.veklom.com";
   const headers: Record<string, string> = {
     "Accept": "application/json",
   };

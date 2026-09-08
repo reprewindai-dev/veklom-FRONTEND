@@ -4,7 +4,7 @@ export function VeklomLogo() {
   return (
     <div className="flex items-center gap-3" aria-label="Veklom Capability OS">
       <Image
-        src="/brand/veklom-mark.png"
+        src="/brand/veklom-shield-512.png"
         alt="Veklom"
         width={40}
         height={40}
