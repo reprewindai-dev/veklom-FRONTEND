@@ -124,7 +124,7 @@ export function ExecuteHarness() {
               <button 
                 onClick={handleExecute}
                 disabled={isExecuting || !prompt}
-                className="w-full flex items-center justify-center gap-2 bg-cos-accent text-black font-semibold uppercase tracking-wider text-[11px] py-2.5 rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full flex items-center justify-center gap-2 bg-cos-accent text-cos-bg font-semibold uppercase tracking-wider text-[11px] py-2.5 rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isExecuting ? <Activity size={14} className="animate-spin" /> : <Play size={14} />}
                 {isExecuting ? 'Executing...' : 'Run Capability'}
@@ -184,7 +184,7 @@ export function ExecuteHarness() {
                   <div className="mt-6 border-t border-[#222] pt-4 grid grid-cols-2 gap-4 text-[10px] uppercase tracking-widest">
                     <div>
                       <div className="text-[#555] mb-1">Provider Route</div>
-                      <div className="text-white">{trace.provider} ({trace.model})</div>
+                      <div className="text-cos-text">{trace.provider} ({trace.model})</div>
                     </div>
                     <div>
                       <div className="text-[#555] mb-1">Audit Hash (PGL)</div>

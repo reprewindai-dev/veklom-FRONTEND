@@ -17,13 +17,13 @@ export function VeklomMark({ className = "" }: { className?: string }) {
 
 export function PremiumLogo() {
   return (
-    <Link href="/" className="group inline-flex items-center gap-3" aria-label="Veklom home">
+    <Link href="/" className="group inline-flex items-center gap-3" aria-label="Veklom M2M Trust Infrastructure — home">
       <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[11px] border border-theme-border bg-black shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 group-hover:-translate-y-0.5">
         <VeklomMark className="h-9 w-9 object-contain" />
       </span>
       <span className="flex items-baseline gap-2">
         <span className="text-[15px] font-semibold tracking-[-0.02em] text-theme-ink">Veklom</span>
-        <span className="hidden text-[10px] font-medium uppercase tracking-[0.22em] text-theme-inkDim sm:inline">Capability OS</span>
+        <span className="hidden text-[10px] font-medium uppercase tracking-[0.22em] text-theme-inkDim sm:inline">M2M Trust Infrastructure</span>
       </span>
     </Link>
   );

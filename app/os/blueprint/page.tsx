@@ -25,9 +25,9 @@ export default function BlueprintPage() {
       <div className="space-y-4">
         <Pillar title="Work" proof={data.stageProof}>
           <PhaseTrace phases={[
-            { id: "intent", name: "Intent", status: phaseStatus },
-            { id: "compile", name: "Compile", status: phaseStatus },
-            { id: "review", name: "Review", status: plan ? "current" : "pending" },
+            { id: "intent", name: "Intent", status: phaseStatus, kind: "discovery" },
+            { id: "compile", name: "Compile", status: phaseStatus, kind: "execution" },
+            { id: "review", name: "Review", status: plan ? "current" : "pending", kind: "authority" },
           ]} />
         </Pillar>
         <Pillar title="Telemetry" proof={data.stageProof}>

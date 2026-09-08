@@ -33,7 +33,7 @@ const CosGovernNode = React.memo(({ data, selected, isConnectable }: any) => {
   const statusColor = statusColors[data.status || 'idle'];
 
   return (
-    <div className={`px-4 py-3 rounded-lg border-2 transition-all min-w-[160px] text-center ${statusColor} ${selected ? 'border-white shadow-xl scale-105' : ''}`}>
+    <div className={`px-4 py-3 rounded-lg border-2 transition-all min-w-[160px] text-center ${statusColor} ${selected ? 'border-cos-present shadow-xl scale-105' : ''}`}>
       <Handle type="target" position={Position.Top} isConnectable={isConnectable} className="!bg-cos-muted" />
       <div className="text-xs font-black uppercase tracking-wider mb-1">
         {data.label}
@@ -65,10 +65,10 @@ export default function GovernCanvas({ nodes, edges, onNodeClick, isExecuting }:
     return edges.map(e => ({
       ...e,
       animated: isExecuting || e.animated,
-      style: { stroke: isExecuting ? '#00E5FF' : 'rgba(255,255,255,0.15)', strokeWidth: 2 },
+      style: { stroke: isExecuting ? 'rgb(var(--theme-accent))' : 'var(--theme-border)', strokeWidth: 2 },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: isExecuting ? '#00E5FF' : 'rgba(255,255,255,0.15)',
+        color: isExecuting ? 'rgb(var(--theme-accent))' : 'var(--theme-border)',
       },
     }));
   }, [edges, isExecuting]);
@@ -83,7 +83,7 @@ export default function GovernCanvas({ nodes, edges, onNodeClick, isExecuting }:
   }, []);
 
   return (
-    <div className="w-full h-[500px] border border-cos-border rounded-xl overflow-hidden bg-[#0A0A0A] shadow-[inset_0_4px_24px_rgba(0,0,0,0.6)]">
+    <div className="w-full h-[500px] border border-cos-border rounded-xl overflow-hidden bg-cos-bg shadow-[inset_0_4px_24px_rgb(0_0_0_/_0.6)]">
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
@@ -93,7 +93,7 @@ export default function GovernCanvas({ nodes, edges, onNodeClick, isExecuting }:
         fitView
         proOptions={{ hideAttribution: true }} // hide default react flow attribution
       >
-        <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.05)" />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="var(--theme-border)" />
         <Controls className="!bg-cos-surface !border-cos-border !text-cos-text !fill-cos-text" />
       </ReactFlow>
     </div>

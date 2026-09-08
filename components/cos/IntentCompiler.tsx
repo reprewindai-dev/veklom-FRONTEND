@@ -280,7 +280,7 @@ export default function IntentCompiler({ productOfferings, capabilities }: Inten
                 <button
                   onClick={handleMintAgreement}
                   disabled={priceCalculation.selectedCount === 0}
-                  className="w-full py-2.5 bg-cos-accent/10 border border-cos-accent text-cos-accent hover:bg-cos-accent hover:text-black text-xs font-black uppercase tracking-widest transition-all rounded-lg disabled:opacity-30 disabled:border-cos-border disabled:text-cos-muted disabled:bg-transparent"
+                  className="w-full py-2.5 bg-cos-accent/10 border border-cos-accent text-cos-accent hover:bg-cos-accent hover:text-cos-bg text-xs font-black uppercase tracking-widest transition-all rounded-lg disabled:opacity-30 disabled:border-cos-border disabled:text-cos-muted disabled:bg-transparent"
                 >
                   Mint Bundle Agreement Receipt
                 </button>

@@ -121,14 +121,14 @@ export function EvidenceHarness() {
 
         {/* Right Column: Ledger Grid */}
         <div className="lg:col-span-3 space-y-6">
-          <div className="rounded-xl border border-cos-border bg-[#050505] overflow-hidden flex flex-col h-full min-h-[500px]">
-            <div className="bg-[#0A0A0A] border-b border-[#222] p-3 flex justify-between items-center">
+            <div className="rounded-xl border border-cos-border bg-cos-bg overflow-hidden flex flex-col h-full min-h-[500px]">
+              <div className="bg-cos-surface border-b border-cos-border p-3 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <FileText size={14} className="text-[#666]" />
                 <span className="font-mono text-[10px] uppercase tracking-widest text-[#666]">Immutable Audit Trail</span>
               </div>
               {logs.length > 0 && (
-                <button className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-cos-accent hover:text-white transition-colors">
+                <button className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-cos-accent hover:text-cos-text transition-colors">
                   <Download size={12} /> Export CSV
                 </button>
               )}
@@ -143,7 +143,7 @@ export function EvidenceHarness() {
               )}
 
               {!error && logs.length === 0 && !isLoading && (
-                <div className="h-full flex flex-col items-center justify-center text-[#555] font-mono text-xs p-10 text-center">
+                <div className="h-full flex flex-col items-center justify-center text-cos-steel font-mono text-xs p-10 text-center">
                   <Database size={32} className="mb-4 opacity-50" />
                   No evidence records loaded.<br/>Enter your Authority key and query the ledger.
                 </div>
@@ -152,7 +152,7 @@ export function EvidenceHarness() {
               {logs.length > 0 && (
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[#222] bg-[#0A0A0A] font-mono text-[9px] uppercase tracking-widest text-[#666]">
+                    <tr className="border-b border-cos-border bg-cos-surface font-mono text-[9px] uppercase tracking-widest text-cos-steel">
                       <th className="p-3 whitespace-nowrap">Timestamp</th>
                       <th className="p-3 whitespace-nowrap">Operation</th>
                       <th className="p-3 whitespace-nowrap">Provider/Model</th>
@@ -161,29 +161,29 @@ export function EvidenceHarness() {
                       <th className="p-3 whitespace-nowrap">Cryptographic Hash (SHA-256)</th>
                     </tr>
                   </thead>
-                  <tbody className="font-mono text-[11px] text-gray-300">
+                  <tbody className="font-mono text-[11px] text-cos-text">
                     {logs.map((log) => (
-                      <tr key={log.id} className="border-b border-[#111] hover:bg-[#111] transition-colors">
-                        <td className="p-3 whitespace-nowrap text-[#888]">
+                      <tr key={log.id} className="border-b border-cos-border hover:bg-cos-surface transition-colors">
+                        <td className="p-3 whitespace-nowrap text-cos-muted">
                           {new Date(log.created_at).toLocaleString()}
                         </td>
                         <td className="p-3 whitespace-nowrap">
                           <span className="text-cos-accent">{log.operation_type}</span>
                         </td>
                         <td className="p-3 whitespace-nowrap">
-                          <div className="text-white">{log.provider}</div>
-                          <div className="text-[#666] text-[9px]">{log.model}</div>
+                          <div className="text-cos-text">{log.provider}</div>
+                          <div className="text-cos-steel text-[9px]">{log.model}</div>
                         </td>
                         <td className="p-3 whitespace-nowrap text-right">
                           <span className="text-[#00FF41]">+{log.input_tokens + log.output_tokens}</span>
                         </td>
                         <td className="p-3 whitespace-nowrap">
                           <span className="flex items-center gap-1">
-                            <Clock size={10} className="text-[#666]" />
+                            <Clock size={10} className="text-cos-steel" />
                             {log.latency_ms}ms
                           </span>
                         </td>
-                        <td className="p-3 font-bold text-[#888] truncate max-w-[200px]" title={log.hmac_hash}>
+                        <td className="p-3 font-bold text-cos-muted truncate max-w-[200px]" title={log.hmac_hash}>
                           {log.hmac_hash}
                         </td>
                       </tr>

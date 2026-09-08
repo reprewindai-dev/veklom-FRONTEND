@@ -1,0 +1,104 @@
+/* VeklomActivityCue.css
+   Motion only. Color comes from props/CSS vars in the component itself.
+   Import this once globally — don't duplicate per instance. */
+
+.vac-root {
+  line-height: 1;
+}
+
+.vac-caption {
+  font-size: 12px;
+}
+
+.vac-caption-sub {
+  color: var(--theme-text-muted, currentColor);
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.vac-token {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+
+/* Blink — discovery */
+@keyframes vac-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+.vac-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: vac-blink;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* V-pulse — authority */
+@keyframes vac-hex-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+.vac-hex {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: vac-hex-pulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Orb / system — execution + hybrid */
+@keyframes vac-ring-pulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+.vac-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: vac-ring-pulse;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+.vac-ring-delay {
+  animation-delay: 0.85s;
+}
+
+/* Status wave — transport */
+@keyframes vac-wave {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.vac-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: vac-wave;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.vac-dot-2 { animation-delay: 0.2s; }
+.vac-dot-3 { animation-delay: 0.4s; }
+.vac-dot-4 { animation-delay: 0.6s; }
+
+/* Liveness modifiers */
+.vac-stalled .vac-ring,
+.vac-stalled .vac-hex,
+.vac-stalled .vac-dot,
+.vac-stalled .vac-eye {
+  filter: saturate(0.55);
+}
+
+.vac-frozen {
+  filter: saturate(0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vac-eye,
+  .vac-hex,
+  .vac-ring,
+  .vac-dot {
+    animation: none !important;
+  }
+}

@@ -218,7 +218,7 @@ export default function PGLOnboardingPage() {
           </div>
 
           {/* TAB SELECTOR */}
-          <div className="flex bg-black/40 border border-cos-border p-1 rounded-xl">
+          <div className="flex bg-cos-bg/40 border border-cos-border p-1 rounded-xl">
             <button
               onClick={() => setActiveTab("pgl")}
               className={`px-4 py-1.5 rounded-lg text-xs font-mono transition-all ${
@@ -243,7 +243,7 @@ export default function PGLOnboardingPage() {
 
           <button
             onClick={() => router.replace("/control-node")}
-            className="bg-cos-accent text-black hover:bg-cos-accent/80 text-black font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-cos-glow hover:shadow-cos-glow transition-all text-xs font-mono"
+            className="bg-cos-accent text-cos-bg hover:bg-cos-accent/80 text-cos-bg font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-cos-glow hover:shadow-cos-glow transition-all text-xs font-mono"
           >
             Enter Sovereign Workspace <ChevronRight className="w-4 h-4" />
           </button>
@@ -412,7 +412,7 @@ export default function PGLOnboardingPage() {
           <div className="mt-12 flex items-center gap-4">
             <div className="flex-1 h-1 bg-cos-border rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-cos-accent text-black shadow-cos-glow"
+                className="h-full bg-cos-accent text-cos-bg shadow-cos-glow"
                 initial={{ width: 0 }}
                 animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -772,7 +772,7 @@ export default function PGLOnboardingPage() {
                 (step === 1 && !workspace.name) ||
                 (step === 2 && !agent.name)
               }
-              className="bg-cos-accent text-black hover:bg-cos-accent/80 text-black font-semibold px-8 shadow-cos-glow hover:shadow-cos-glow transition-all"
+              className="bg-cos-accent text-cos-bg hover:bg-cos-accent/80 text-cos-bg font-semibold px-8 shadow-cos-glow hover:shadow-cos-glow transition-all"
             >
               {loading ? (
                 <span className="animate-pulse">Processing Sequence...</span>
@@ -866,7 +866,7 @@ function WorkspaceVisualizer({
             </div>
             <div className="h-2 w-full bg-bg-800 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-cos-accent text-black"
+                className="h-full bg-cos-accent text-cos-bg"
                 initial={{ width: 0 }}
                 animate={{
                   width:
@@ -929,7 +929,7 @@ function AgentVisualizer({ agent }: { agent: any }) {
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-          <PolarGrid stroke="rgba(255,255,255,0.1)" />
+          <PolarGrid stroke="var(--theme-border)" />
           <PolarAngleAxis dataKey="subject" tick={{ fill: "#888", fontSize: 11 }} />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar
@@ -1086,7 +1086,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-black/20 border border-cos-border rounded-xl px-4 py-3 text-sm text-cos-text placeholder-ink-600 outline-none focus:border-cos-accent focus:ring-1 focus:ring-cos-accent transition-all"
+        className="w-full bg-cos-bg/20 border border-cos-border rounded-xl px-4 py-3 text-sm text-cos-text placeholder-ink-600 outline-none focus:border-cos-accent focus:ring-1 focus:ring-cos-accent transition-all"
       />
     </div>
   );
@@ -1111,7 +1111,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/20 border border-cos-border rounded-xl px-4 py-3 text-sm text-cos-text outline-none focus:border-cos-accent focus:ring-1 focus:ring-cos-accent transition-all appearance-none cursor-pointer"
+        className="w-full bg-cos-bg/20 border border-cos-border rounded-xl px-4 py-3 text-sm text-cos-text outline-none focus:border-cos-accent focus:ring-1 focus:ring-cos-accent transition-all appearance-none cursor-pointer"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-bg-900 text-cos-text">

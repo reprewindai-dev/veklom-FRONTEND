@@ -198,7 +198,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
               className={`px-3 py-1.5 border font-bold transition-all cursor-pointer text-[10px] uppercase tracking-wider rounded-md ${
                 visualizeMode === opt.id
                   ? "bg-cos-accent/15 border-cos-accent text-cos-accent font-black shadow-[0_0_10px_rgba(0,229,255,0.2)]"
-                  : "bg-black border-cos-border text-cos-muted hover:text-cos-text hover:border-cos-steel/50"
+                  : "bg-cos-bg border-cos-border text-cos-muted hover:text-cos-text hover:border-cos-steel/50"
               }`}
               title={opt.desc}
             >
@@ -214,10 +214,10 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
           <svg className="w-full h-full" viewBox="0 0 500 440">
             <defs>
               <pattern id="graph-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--theme-border)" strokeWidth="1" />
               </pattern>
               <marker id="arrow" viewBox="0 0 10 10" refX="14" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(255,255,255,0.2)" />
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--theme-text-muted)" />
               </marker>
               <marker id="arrow-dashed" viewBox="0 0 10 10" refX="14" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFAB00" />
@@ -236,7 +236,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
 
               const isHoveredNetwork = hoveredNode ? (link.source === hoveredNode || link.target === hoveredNode) : false;
               let opacity = hoveredNode ? (isHoveredNetwork ? "1" : "0.15") : "0.4";
-              let strokeColor = isHoveredNetwork ? "#00E5FF" : (link.dashed ? "#FFAB00" : "rgba(255,255,255,0.15)");
+              let strokeColor = isHoveredNetwork ? "rgb(var(--theme-accent))" : (link.dashed ? "rgb(var(--theme-warn))" : "var(--theme-border)");
               let strokeWidth = isHoveredNetwork ? "2.5" : "1.5";
 
               return (
@@ -278,7 +278,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
                   <circle
                     r={node.type === "domain" ? "12" : node.type === "product" ? "10" : "8"}
                     fill={color}
-                    stroke={isSelected ? "#FFF" : (isHovered ? "#00E5FF" : "#111827")}
+                    stroke={isSelected ? "var(--theme-text)" : (isHovered ? "rgb(var(--theme-accent))" : "var(--theme-border)")}
                     strokeWidth="2"
                     className="group-hover:scale-125 transition-transform duration-200"
                   />
@@ -294,7 +294,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
                   <text
                     y="-16"
                     textAnchor="middle"
-                    fill={isSelected || isHovered ? "#00E5FF" : "rgba(255,255,255,0.8)"}
+                    fill={isSelected || isHovered ? "rgb(var(--theme-accent))" : "var(--theme-text)"}
                     fontSize="7.5"
                     fontFamily="monospace"
                     fontWeight="bold"
@@ -304,7 +304,7 @@ export default function BlueprintCanvas({ companyGraph, capabilities }: Blueprin
                   </text>
                   {extraLabel && (
                     <g transform="translate(0, 16)">
-                      <rect x="-24" y="-6" width="48" height="11" fill="#111827" stroke={color} strokeWidth="0.5" rx="2" />
+                      <rect x="-24" y="-6" width="48" height="11" fill="var(--theme-surface)" stroke={color} strokeWidth="0.5" rx="2" />
                       <text textAnchor="middle" fill={color} fontSize="5.5" fontFamily="monospace" fontWeight="black" y="1">
                         {extraLabel}
                       </text>
