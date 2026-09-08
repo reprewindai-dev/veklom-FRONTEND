@@ -13,12 +13,15 @@ type GithubStatus = {
 };
 
 function safeDestination(): string {
-  if (typeof window === "undefined") return "/os";
+  if (typeof window === "undefined") return "/os/onboarding";
   const requested = new URL(window.location.href).searchParams.get("returnTo");
   if (requested && requested.startsWith("/") && !requested.startsWith("//") && !requested.includes("\\")) {
     return requested;
   }
-  return "/os";
+  // All ordinary sign-ins pass through the PGL onboarding gate first. The
+  // onboarding route asks backend truth whether the workspace still requires
+  // onboarding and can forward an already-onboarded workspace into Capability OS.
+  return "/os/onboarding";
 }
 
 export function LoginForm() {
