@@ -67,6 +67,17 @@ export const stages: StageDefinition[] = [
       { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate" },
     ],
   },
+  {
+    id: "settle",
+    label: "Settle",
+    route: "/os/settle",
+    purpose: "Inspect payment requirements and settlement evidence for an action.",
+    endpoints: [
+      { method: "GET", path: "/.well-known/x402" },
+      { method: "GET", path: "/api/v1/pricing" },
+    ],
+    crossCutting: true,
+  },
   { id: "settings", label: "Settings", route: "/os/settings", purpose: "Settings", crossCutting: true, endpoints: [] },
   { id: "terminal", label: "Terminal", route: "/os/terminal", purpose: "Terminal", crossCutting: true, endpoints: [] },
 ];
@@ -92,6 +103,15 @@ export const crossCuttingStages = stages.filter(
 
 export function getStage(id: StageId | string): StageDefinition {
   const stage = stages.find((candidate) => candidate.id === id);
-  if (!stage) return { id: id as StageId, label: id, route: `/os/${id}`, purpose: "Legacy", endpoints: [] };
+  if (!stage) return {
+    id: id as StageId,
+    label: id,
+    route: `/os/${id}`,
+    purpose: "Legacy",
+    endpoints: [
+      { method: "GET", path: "/.well-known/x402" },
+      { method: "GET", path: "/api/v1/pricing" },
+    ],
+  };
   return stage;
 }
