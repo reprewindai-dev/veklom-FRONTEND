@@ -15,6 +15,7 @@
     "VNP_URL": "https://vnp.veklom.com",
     "PGL_URL": "https://pgl.veklom.com",
     "CAPI_URL": "https://capi.veklom.com",
-    "LOCKERPHYCER_URL": "https://api.veklom.com"
+    "LOCKERPHYCER_URL": "https://api.veklom.com",
+    "VLINK_URL": "https://vlink.veklom.com"
   }
 }
