@@ -20,3 +20,6 @@ tmp/pdfs/
 .veklom/runtime/
 
 .vercel
+
+# OpenNext Cloudflare artifacts
+.open-next/
