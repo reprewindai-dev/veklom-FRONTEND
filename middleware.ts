@@ -28,12 +28,15 @@ const AUTH_REQUIRED_PREFIXES = [
 
 const MCP_PREFIXES = ['/mcp/execute'];
 
-const SESSION_COOKIE = 'veklom.session';
-const BACKEND_SESSION_COOKIE = 'access_token';
+const SESSION_COOKIE = 'veklom.session';      // client-set navigation marker (auth-context.tsx)
+const SESSION_COOKIE_HTTPONLY = 'veklom_session'; // HttpOnly cookie from /api/auth/login proxy route
 
 function isNavigation(request: NextRequest): boolean {
   if (request.headers.get('sec-fetch-mode') === 'navigate') return true;
-  return (request.headers.get('accept') || '').includes('text/html');
+  if (request.headers.get('rsc') === '1') return true;
+  if (request.nextUrl.searchParams.has('_rsc') || request.url.includes('_rsc=')) return true;
+  const accept = request.headers.get('accept') || '';
+  return accept.includes('text/html') || accept.includes('text/x-component');
 }
 
 function requiresAuth(pathname: string): boolean {
@@ -46,10 +49,13 @@ function isMCPSurface(pathname: string): boolean {
   return MCP_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'));
 }
 
+const BACKEND_SESSION_COOKIE = 'access_token'; // GitHub OAuth / direct backend cookie
+
 function hasNavigationSession(request: NextRequest): boolean {
   return Boolean(
-    request.cookies.get(SESSION_COOKIE)?.value ||
-    request.cookies.get(BACKEND_SESSION_COOKIE)?.value
+    request.cookies.get(SESSION_COOKIE)?.value ||          // client-set JS marker
+    request.cookies.get(SESSION_COOKIE_HTTPONLY)?.value || // HttpOnly server proxy cookie
+    request.cookies.get(BACKEND_SESSION_COOKIE)?.value     // GitHub OAuth token
   );
 }
 
@@ -60,6 +66,18 @@ export async function middleware(request: NextRequest) {
   if (requiresAuth(url.pathname)) {
     if (isNavigation(request)) {
       if (!hasNavigationSession(request)) {
+        // RSC and prefetch requests are data fetches — redirect breaks App Router.
+        // Return 401 so the router handles it client-side instead of following a redirect.
+        const isRSC = request.nextUrl.searchParams.has('_rsc') ||
+                      request.url.includes('_rsc=') ||
+                      request.headers.get('rsc') === '1' ||
+                      request.headers.get('next-router-prefetch') === '1';
+        if (isRSC) {
+          return NextResponse.json(
+            { error: 'authentication_required', path: url.pathname },
+            { status: 401, headers: { 'WWW-Authenticate': 'Bearer' } }
+          );
+        }
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('returnTo', url.pathname + url.search);
         return NextResponse.redirect(loginUrl);

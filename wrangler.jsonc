@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "veklom-frontend",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+    "run_worker_first": false
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "CAPPO_BACKEND_URL": "https://cappo.veklom.com",
+    "VNP_URL": "https://vnp.veklom.com",
+    "PGL_URL": "https://pgl.veklom.com",
+    "CAPI_URL": "https://capi.veklom.com",
+    "LOCKERPHYCER_URL": "https://command.veklom.com",
+    "VLINK_URL": "https://vlink.veklom.com"
+  }
+}

@@ -10,19 +10,56 @@
 // BYOS is NOT a fallback target. Any /api/* path not matched above
 // must return 404 from Next.js rather than silently reaching BYOS.
 
-const LOCKERPHYCER_URL = (
-  process.env.LOCKERPHYCER_URL ||
-  (process.env.NODE_ENV === "production"
-    ? "http://host.docker.internal:8092"
-    : "http://127.0.0.1:8092")
-).replace(/\/$/, "");
+const sanitizeDestination = (url, fallback) => {
+  if (!url) return fallback;
+  if (process.env.NODE_ENV === "production") {
+    // In production / edge worker builds, purge Docker bridge and local loopback addresses
+    if (url.includes("127.0.0.1") || url.includes("localhost") || url.includes("host.docker.internal")) {
+      return fallback;
+    }
+  }
+  return url.replace(/\/$/, "");
+};
 
-const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
-const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
-const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
-const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");
-const PGL_URL = (process.env.PGL_URL || "https://pgl.veklom.com").replace(/\/$/, "");
-const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/$/, "");
+const LOCKERPHYCER_URL = sanitizeDestination(
+  process.env.LOCKERPHYCER_URL,
+  "https://command.veklom.com"
+);
+
+const CAPPO_URL = sanitizeDestination(
+  process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL,
+  "https://cappo.veklom.com"
+);
+
+const VNP_URL = sanitizeDestination(
+  process.env.VNP_URL,
+  "https://vnp.veklom.com"
+);
+
+const APEX_URL = sanitizeDestination(
+  process.env.APEX_URL,
+  "https://apex.veklom.com"
+);
+
+const ABIDE_URL = sanitizeDestination(
+  process.env.ABIDE_URL,
+  "https://abide.veklom.com"
+);
+
+const PGL_URL = sanitizeDestination(
+  process.env.PGL_URL,
+  "https://pgl.veklom.com"
+);
+
+const CAPI_URL = sanitizeDestination(
+  process.env.CAPI_URL || process.env.CAPI_BACKEND_URL,
+  "https://capi.veklom.com"
+);
+
+const VLINK_URL = sanitizeDestination(
+  process.env.VLINK_URL,
+  "https://vlink.veklom.com"
+);
 
 const nextConfig = {
   output: "standalone",
@@ -106,11 +143,16 @@ const nextConfig = {
         { source: "/api/v1/auth/:path*",      destination: `${LOCKERPHYCER_URL}/api/v1/auth/:path*` },
         { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
         { source: "/api/v1/workspace/:path*", destination: `${LOCKERPHYCER_URL}/api/v1/workspace/:path*` },
+        { source: "/api/v1/billing/:path*",   destination: `${LOCKERPHYCER_URL}/api/v1/billing/:path*` },
 
-        // ── Health / protocol sourced from LockerPhycer ───────────────────────
-        { source: "/health/",       destination: `${LOCKERPHYCER_URL}/health/` },
-        { source: "/status/",       destination: `${LOCKERPHYCER_URL}/health/` },
-        { source: "/protocol.json", destination: `${LOCKERPHYCER_URL}/protocol.json` },
+        // ── Edge Health & Protocol Decoupling ────────────────────────────────
+        // Health and discovery served directly by local Edge API handlers,
+        // decoupled completely from local LockerPhycer or backend daemons.
+        { source: "/health",        destination: "/api/health" },
+        { source: "/health/",       destination: "/api/health" },
+        { source: "/protocol.json", destination: "/api/protocol.json" },
+        // NOTE: /status/ and /status are NOT rewritten here; they route directly
+        // to the canonical UI status page at app/status/page.tsx.
 
         // ── CAPPO: consequence authority ──────────────────────────────────────
         { source: "/api/v1/cappo/:path*",  destination: `${CAPPO_URL}/api/v1/cappo/:path*` },
@@ -124,8 +166,27 @@ const nextConfig = {
         // ── cAPI: capability registry ─────────────────────────────────────────
         { source: "/api/v1/capi/:path*",   destination: `${CAPI_URL}/api/v1/capi/:path*` },
 
-        // ── VLink ─────────────────────────────────────────────────────────────
-        { source: "/vlink/connect/:path*", destination: "http://host.docker.internal:3000/:path*" },
+        // ── VLink: complete public protocol boundary ───────────────────────
+        // Parameterized via VLINK_URL (defaulting to https://vlink.veklom.com).
+        // Order matters: specific before wildcard.
+        //
+        // UI entry point
+        { source: "/vlink/connect",        destination: `${VLINK_URL}/` },
+        { source: "/vlink/connect/:path*", destination: `${VLINK_URL}/:path*` },
+        //
+        // API — create, list, pair, approve, manifest, webhook, activity
+        { source: "/api/v1/vlinks",        destination: `${VLINK_URL}/api/v1/vlinks` },
+        { source: "/api/v1/vlinks/:path*", destination: `${VLINK_URL}/api/v1/vlinks/:path*` },
+        //
+        // Phone approval page (QR code scans land here)
+        { source: "/pair/:path*",          destination: `${VLINK_URL}/pair/:path*` },
+        //
+        // OpenAI-compatible API base URL  (generated by VLink as /vlinks/:id/v1)
+        { source: "/vlinks/:path*",        destination: `${VLINK_URL}/vlinks/:path*` },
+        //
+        // Discovery
+        { source: "/.well-known/vlink.json", destination: `${VLINK_URL}/.well-known/vlink.json` },
+
 
         // ── Downstream services ───────────────────────────────────────────────
         { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },

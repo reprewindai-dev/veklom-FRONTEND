@@ -23,6 +23,17 @@ function navigation(path: string, cookie?: string) {
   });
 }
 
+function rscNavigation(path: string, cookie?: string) {
+  return new NextRequest(`https://control.veklom.com${path}?_rsc=123`, {
+    headers: {
+      "rsc": "1",
+      "sec-fetch-mode": "cors",
+      accept: "text/x-component",
+      ...(cookie ? { cookie } : {}),
+    },
+  });
+}
+
 function apiCall(path: string, authorization?: string) {
   return new NextRequest(`https://control.veklom.com${path}`, {
     headers: {
@@ -68,6 +79,13 @@ describe("middleware auth gate", () => {
 
   it("leaves public surfaces ungated", async () => {
     const response = await middleware(navigation("/dev"));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("allows a Next.js App Router RSC navigation carrying the session marker", async () => {
+    const response = await middleware(rscNavigation("/os/command", "veklom.session=present"));
+    // NextResponse.next() returns a mock response with status 200
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
   });
