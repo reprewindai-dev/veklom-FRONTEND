@@ -23,7 +23,7 @@ const sanitizeDestination = (url, fallback) => {
 
 const LOCKERPHYCER_URL = sanitizeDestination(
   process.env.LOCKERPHYCER_URL,
-  "https://api.veklom.com"
+  "https://command.veklom.com"
 );
 
 const CAPPO_URL = sanitizeDestination(

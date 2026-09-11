@@ -47,6 +47,7 @@ async function probe(service: ServiceSpec) {
       healthy: response.ok,
       status: response.status,
       latencyMs: elapsed,
+      failure_reason: !response.ok ? (response.status === 404 ? "ROUTE_NOT_FOUND" : "HTTP_ERROR") : null,
       payload,
     };
   } catch (error) {
@@ -58,6 +59,7 @@ async function probe(service: ServiceSpec) {
       reachable: false,
       healthy: false,
       status: null,
+      failure_reason: (error instanceof Error && error.name === "AbortError") ? "TIMEOUT" : "UNREACHABLE",
       latencyMs: Math.max(1, Math.round(performance.now() - started)),
       error: error instanceof Error ? error.name : "probe_failed",
     };
@@ -96,7 +98,7 @@ export async function GET() {
       id: "pgl",
       label: "Gnomledger / PGL",
       role: "Durable evidence and provenance",
-      url: join(pgl, "/health"),
+      url: join(pgl, "/health/live"),
     },
   ];
 
