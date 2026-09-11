@@ -143,6 +143,7 @@ const nextConfig = {
         { source: "/api/v1/auth/:path*",      destination: `${LOCKERPHYCER_URL}/api/v1/auth/:path*` },
         { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
         { source: "/api/v1/workspace/:path*", destination: `${LOCKERPHYCER_URL}/api/v1/workspace/:path*` },
+        { source: "/api/v1/billing/:path*",   destination: `${LOCKERPHYCER_URL}/api/v1/billing/:path*` },
 
         // ── Edge Health & Protocol Decoupling ────────────────────────────────
         // Health and discovery served directly by local Edge API handlers,

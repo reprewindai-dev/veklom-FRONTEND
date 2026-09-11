@@ -33,7 +33,10 @@ const BACKEND_SESSION_COOKIE = 'access_token';
 
 function isNavigation(request: NextRequest): boolean {
   if (request.headers.get('sec-fetch-mode') === 'navigate') return true;
-  return (request.headers.get('accept') || '').includes('text/html');
+  if (request.headers.get('rsc') === '1') return true;
+  if (request.nextUrl.searchParams.has('_rsc') || request.url.includes('_rsc=')) return true;
+  const accept = request.headers.get('accept') || '';
+  return accept.includes('text/html') || accept.includes('text/x-component');
 }
 
 function requiresAuth(pathname: string): boolean {
