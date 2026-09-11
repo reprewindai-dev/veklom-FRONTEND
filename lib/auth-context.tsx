@@ -63,14 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await api<Me>("/api/v1/auth/me");
       setMe(data);
       markNavigationSession(true);
-
-      try {
-        const subData = await api<Subscription>("/api/v1/billing/subscription");
-        setSub(subData);
-      } catch {
-        // Subscription transport failure must never manufacture a paid/sovereign tier.
-        setSub(undefined);
-      }
+      // Billing subscription is currently managed by LockerPhycer wallet/activate endpoints
+      // and /auth/me provides the canonical workspace tier.
+      setSub(undefined);
     } catch (cause) {
       const isSignedOut = cause instanceof ApiError && cause.status === 401;
       if (!isSignedOut) {
