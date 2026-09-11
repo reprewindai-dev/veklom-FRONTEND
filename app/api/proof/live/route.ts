@@ -70,7 +70,7 @@ async function probe(service: ServiceSpec) {
 
 export async function GET() {
   const byos = process.env.BACKEND_URL || process.env.VEKLOM_BACKEND_URL || "https://api.veklom.com";
-  const lockerphycer = process.env.LOCKERPHYCER_URL || "http://host.docker.internal:8092";
+  const lockerphycer = process.env.LOCKERPHYCER_URL || "https://command.veklom.com";
   const capi = process.env.CAPI_URL || "https://capi.veklom.com";
   const cappo = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
   const pgl = process.env.PGL_URL || "https://pgl.veklom.com";
