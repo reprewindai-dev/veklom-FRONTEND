@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getExecutionIdentity, hasRequiredCapabilities } from './lib/interlink-capi/edge';
+// import removed
 
 /**
  * Application-layer resource security gate.
@@ -102,13 +102,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const executionIdentity = getExecutionIdentity(request);
-  if (executionIdentity && !hasRequiredCapabilities(executionIdentity, url.pathname)) {
-    return NextResponse.json(
-      { error: 'insufficient_capability', path: url.pathname },
-      { status: 403 }
-    );
-  }
+  // Execution identity is validated by CAPPO on execution.
+  // The frontend middleware does not need to enforce capabilities per path right now.
 
   return NextResponse.next();
 }
