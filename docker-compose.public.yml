@@ -23,6 +23,7 @@ services:
       NEXT_PUBLIC_API_BASE_URL: ""
       BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
       LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       CAPI_URL: ${CAPI_URL:-http://host.docker.internal:3003}
       CAPPO_URL: ${CAPPO_BACKEND_URL:-${CAPPO_URL:-http://host.docker.internal:8002}}
       CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}

@@ -27,10 +27,6 @@ function stripHopByHopHeaders(headers: Headers) {
 }
 
 
-
-
-}
-
 async function proxyRequest(req: NextRequest) {
  const url = new URL(req.url);
  const path = url.pathname;

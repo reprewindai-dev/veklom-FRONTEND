@@ -275,7 +275,7 @@ export default function VanguardPlayground() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-           reason: "USER_REVOKED"
+           reason: "explicit_terminate"
         })
       });
       if (!res.ok) {

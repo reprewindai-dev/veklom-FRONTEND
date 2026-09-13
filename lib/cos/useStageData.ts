@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { classifyPayload, deriveProofStatus } from "./proof";
-import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
@@ -58,26 +57,6 @@ interface StageDataOptions {
 
 function keyFor(endpoint: StageEndpoint) {
   return `${endpoint.method} ${endpoint.path}`;
-}
-
-export function resolveStageTransportPath(
-  _stageId: StageDefinition["id"],
-  path: string,
-): string {
-  if (isCappoProxyPath(path)) return `/api/cappo${path}`;
-  return path;
-}
-
-export function resolveStageBaseUrl(
-  stageId: StageDefinition["id"],
-  sandbox: boolean,
-  endpointBaseUrl?: string,
-  sandboxBaseUrl?: string,
-  endpointPath?: string,
-): string | undefined {
-  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) return undefined;
-  if (!sandbox) return undefined;
-  return sandboxBaseUrl || endpointBaseUrl;
 }
 
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
