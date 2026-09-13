@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Exchange with LockerPhycer
-    const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "http://127.0.0.1:8092";
+    const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "https://command.veklom.com";
     const exchangeRes = await fetch(lockerphycerUrl + "/api/v1/auth/github/exchange", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       session_granted: true,
       access_token: exchangeData.access_token
     });
-  } catch (err) {
+  } catch (err) { console.error("Poll error:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
