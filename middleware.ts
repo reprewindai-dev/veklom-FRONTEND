@@ -102,12 +102,17 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const executionIdentity = getExecutionIdentity(request);
-  if (executionIdentity && !hasRequiredCapabilities(executionIdentity, url.pathname)) {
-    return NextResponse.json(
-      { error: 'insufficient_capability', path: url.pathname },
-      { status: 403 }
-    );
+  if (url.pathname.startsWith('/terminal') || url.pathname.startsWith('/api/v1/jobs/')) {
+    const identity = await getExecutionIdentity(request);
+    const requiredCaps = ['openai_api_key'];
+    const { missing } = hasRequiredCapabilities(identity, requiredCaps);
+
+    if (missing.length > 0) {
+      const promptUrl = new URL('/edge-prompt', request.url);
+      promptUrl.searchParams.set('missing', missing.join(','));
+      promptUrl.searchParams.set('returnTo', url.pathname + url.search);
+      return NextResponse.redirect(promptUrl);
+    }
   }
 
   return NextResponse.next();
