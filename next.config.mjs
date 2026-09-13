@@ -11,18 +11,13 @@
 // must return 404 from Next.js rather than silently reaching BYOS.
 
 const LOCKERPHYCER_URL = (
-  process.env.LOCKERPHYCER_URL ||
-  (process.env.NODE_ENV === "production"
-    ? "http://host.docker.internal:8092"
-    : "http://127.0.0.1:8092")
+  process.env.LOCKERPHYCER_URL || "http://127.0.0.1:8092"
 ).replace(/\/$/, "");
 
 const CAPPO_URL = (
   process.env.CAPPO_BACKEND_URL ||
   process.env.CAPPO_URL ||
-  (process.env.NODE_ENV === "production"
-    ? "http://host.docker.internal:8002"
-    : "http://127.0.0.1:8002")
+  "http://127.0.0.1:8002"
 ).replace(/\/$/, "");
 const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
 const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
@@ -123,6 +118,8 @@ const nextConfig = {
 
         // ── CAPPO: consequence authority ──────────────────────────────────────
         { source: "/api/v1/cappo/:path*",  destination: `${CAPPO_URL}/api/v1/cappo/:path*` },
+        { source: "/v1/capability/:path*", destination: `${CAPPO_URL}/v1/capability/:path*` },
+        { source: "/v1/exec",             destination: `${CAPPO_URL}/v1/exec` },
         { source: "/.well-known/capability-beacon-keys", destination: `${CAPPO_URL}/.well-known/capability-beacon-keys` },
         { source: "/.well-known/x402",                   destination: `${CAPPO_URL}/.well-known/x402` },
 
