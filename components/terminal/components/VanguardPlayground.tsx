@@ -187,6 +187,8 @@ export default function VanguardPlayground() {
   const [lastActionStatus, setLastActionStatus] = useState<string>('Needs backend execution proof');
   const [floatingValue, setFloatingValue] = useState<string | null>(null);
   const [floatingColor, setFloatingValueColor] = useState<string>('text-green-400');
+  const [mountInfo, setMountInfo] = useState<{id: string, token: string, nonce: string} | null>(null);
+  const [counterValue, setCounterValue] = useState<number>(41);
 
   const [ledger, setLedger] = useState<LedgerBlock[]>([]);
 
@@ -259,6 +261,28 @@ export default function VanguardPlayground() {
       evidenceHash: proofId,
       status,
     }, ...prev]);
+  };
+
+  const handleRevoke = async () => {
+    if (!mountInfo) return;
+    setIsRotating(true);
+    const token = getToken();
+    try {
+      await fetch(/api/cappo/v1/capability/mounts//terminate, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: Bearer  } : {}),
+        },
+        body: JSON.stringify({
+           token_id: mountInfo.token,
+           reason: "USER_REVOKED"
+        })
+      });
+      setLogs(prev => [...prev, "[CAPPO] Capability revoked by user."]);
+    } finally {
+      setIsRotating(false);
+    }
   };
 
   // Nonce rotation requires a backend receipt. This control no longer mints local tokens.

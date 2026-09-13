@@ -106,35 +106,12 @@ async function proxyRequest(req: NextRequest) {
  console.log(`[PROXY DEBUG] path=${path}, forward=${forwardPath}, exec=${isCappoExecPath(forwardPath)}, id=${isCappoIdentityPath(forwardPath)}`);
 
  if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
-    // IDENTITY SEAM — explicit architectural decision required:
-    // BYOS is the deliberate CAPPO assertion issuer. The /api/v1/auth/cappo-token
-    // endpoint lives in BYOS and mints a 120-second EdDSA JWT scoped to the
-    // user's workspace. BYOS's get_current_user resolves the session established
-    // by LockerPhycer (September 4 routing change moved browser identity authority
-    // there). If LockerPhycer sessions are not correctly forwarded through BYOS's
-    // session middleware, this minting path silently breaks.
-    //
-    // TODO: When LockerPhycer becomes the sole canonical identity authority,
-    // move /cappo-token there so assertion issuance follows identity authority.
- const exchange = await exchangeCappoAssertion(req);
- if (exchange.kind ==="unauthenticated") {
- return NextResponse.json(
- { error:"AUTHENTICATION_REQUIRED" },
- { status: 401 },
- );
- }
- if (exchange.kind ==="missing-workspace") {
- return NextResponse.json(exchange.body, { status: 403 });
- }
- if (exchange.kind ==="unavailable") {
- return NextResponse.json(
- { error:"CAPPO_ASSERTION_UNAVAILABLE" },
- { status: 502 },
- );
- }
- headers.set("authorization", `Bearer ${exchange.token}`);
- }
- } else if (path.startsWith("/api/capi/")) {
+   if (req.headers.has("authorization")) {
+     console.log("[PROXY DEBUG] Passing authorization header directly to CAPPO");
+     headers.set("authorization", req.headers.get("authorization")!);
+   }
+   }
+   } else if (path.startsWith("/api/capi/")) {
  targetBase = CAPI_RUNTIME_URL;
  forwardPath = path.replace(/^\/api\/capi/,"/api/v1/capi");
  } else if (path.startsWith("/api/ledger/")) {
