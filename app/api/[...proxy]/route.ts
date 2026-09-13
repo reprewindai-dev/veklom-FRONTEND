@@ -16,13 +16,17 @@ const HOP_BY_HOP_HEADERS = ["connection","content-length","keep-alive","proxy-au
 ];
 
 function stripHopByHopHeaders(headers: Headers) {
- const nominated = (headers.get("connection") ||"")
- .split(",")
- .map((value) => value.trim().toLowerCase())
- .filter(Boolean);
+ const connectionHeader = headers.get("connection") || "";
+ const nominated = connectionHeader.split(",");
 
- for (const header of [...HOP_BY_HOP_HEADERS, ...nominated]) {
- headers.delete(header);
+ const toDelete = [...HOP_BY_HOP_HEADERS];
+ for (const val of nominated) {
+   const trimmed = val.trim().toLowerCase();
+   if (trimmed) toDelete.push(trimmed);
+ }
+
+ for (const header of toDelete) {
+   headers.delete(header);
  }
 }
 
