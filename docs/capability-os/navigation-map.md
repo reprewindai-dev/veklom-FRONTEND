@@ -1,4 +1,4 @@
-# Navigation Map — Veklom Capability OS
+# Navigation Map â€” Veklom Capability OS
 
 ## One shell
 
@@ -7,7 +7,7 @@
 
 ### Top bar (from cAPI enterprise dashboard)
 - Veklom logo (left).
-- **PROD MODE / DEMO (SANDBOX)** toggle — with honest state, not a fake "VERIFIED".
+- **PROD MODE / DEMO (SANDBOX)** toggle â€” with honest state, not a fake "VERIFIED".
 - Requester identity + Role.
 - Runtime/model status (e.g. Ollama Local: honest state).
 - Quick Action / command palette (`?K`).
@@ -18,45 +18,40 @@ Grouped, with live status pills and red/yellow/green severity where relevant.
 
 ## Primary navigation
 
-Capabilities are primary. The left nav is organized so the **capability lifecycle** reads top-to-bottom.
-**Everything revolves around capabilities.** A capability is the object; each stage is something you *do to* a capability.
+The canonical lifecycle spine is:
 
-```
-HOME
-  + Capabilities (search / recently used / mounted)        ? default landing
+`CAPABILITIES â†’ MOUNT â†’ BLUEPRINT â†’ GOVERN â†’ AUTHORITY â†’ EXECUTE â†’ EVIDENCE â†’ MEASURE â†’ SETTLE â†’ TRACKER`
 
-------------------------
-LIFECYCLE
-(every item below is entered in the context of a selected capability)
+Cross-cutting surfaces: Terminal overlay and Runtime diagnostics.
 
-  Mount
-  Blueprint
-  Govern
-  Authority
-  Execute
-  Evidence
-  Measure
-  Settle
-  Tracker
+The former Command / Capabilities-stub / Workflows / Executions / Governed Compute / Settings / Terminal-route shell model is SUPERSEDED (removed in devin/1789290468-cos-reconciliation; legacy URLs 301 to lifecycle routes). Do not reintroduce it.
 
-------------------------
-CAPABILITY TOOLS
+Lifecycle routes:
 
-  Registry
-  Marketplace
-  Harnesses
-  Contracts
-  Verification
+| Stage | Route |
+|---|---|
+| Capabilities | `/os` |
+| Mount | `/os/mount` |
+| Blueprint | `/os/blueprint` |
+| Govern | `/os/govern` |
+| Authority | `/os/authority` |
+| Execute | `/os/execute` |
+| Evidence | `/os/evidence` |
+| Measure | `/os/measure` |
+| Settle | `/os/settle` |
+| Tracker | `/os/tracker` |
 
-------------------------
-OPERATOR
+Redirects:
 
-  Terminal
-  Settings
-```
-
-**Reading order of the spine:** `Capabilities ? Mount ? Blueprint ? Govern ? Authority ? Execute ? Evidence ? Measure ? Settle ? Tracker`. 
-Every workspace exists to move, observe, or prove a capability as it progresses through its governed lifecycle.
+| Legacy route | Canonical route |
+|---|---|
+| `/os/command` | `/os/tracker` |
+| `/os/capabilities` | `/os` |
+| `/os/workflows` | `/os/blueprint` |
+| `/os/executions` | `/os/execute` |
+| `/os/governed-compute` | `/os/computeless` |
+| `/os/settings` | `/os` |
+| `/os/terminal` | `/os` |
 
 ## Capability Tools
 
@@ -64,15 +59,15 @@ Every workspace exists to move, observe, or prove a capability as it progresses 
 - **Harnesses**: Runtime bindings, Adapters, Provider compatibility.
 - **Verification**: Verifies repositories, artifacts, dependencies, images, provenance, and evidence.
 
-## Tracker — first-class (continuous truth)
+## Tracker â€” first-class (continuous truth)
 
 Compares the chain and flags drift:
 
-`Capability ? Mount ? Blueprint ? Govern ? Authority ? Execute ? Evidence ? Measure ? Settle ? Tracker`
+`CAPABILITIES â†’ MOUNT â†’ BLUEPRINT â†’ GOVERN â†’ AUTHORITY â†’ EXECUTE â†’ EVIDENCE â†’ MEASURE â†’ SETTLE â†’ TRACKER`
 
-**States:** `Aligned` · `Unreviewed change` · `Deployment drift` · `Policy drift` · `Capability drift` · `Evidence stale` · `Unknown/unmeasured`.
+**States:** `Aligned` Â· `Unreviewed change` Â· `Deployment drift` Â· `Policy drift` Â· `Capability drift` Â· `Evidence stale` Â· `Unknown/unmeasured`.
 
-## Evidence (PGL) — first-class
+## Evidence (PGL) â€” first-class
 
 ```
 Evidence search + execution ID
@@ -81,11 +76,11 @@ Execution decision graph
         ?
 Identity ? Policy ? Authority ? Runtime ? Settlement
         ?
-Hashes · signatures · repository commit · artifacts
+Hashes Â· signatures Â· repository commit Â· artifacts
         ?
-Verify • Replay • Export
+Verify â€¢ Replay â€¢ Export
 ```
-Answers per execution: who acted · what capability · which policy version · which repo commit · what authority was released · where it ran · what it consumed · what outcome · which signatures prove it · how to replay.
+Answers per execution: who acted Â· what capability Â· which policy version Â· which repo commit Â· what authority was released Â· where it ran Â· what it consumed Â· what outcome Â· which signatures prove it Â· how to replay.
 
 ## Naming rule
 

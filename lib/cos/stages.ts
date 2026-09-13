@@ -1,6 +1,10 @@
 import { canonicalBackends } from "@/lib/canonical-backends";
 
-export type StageEndpointClass = "live" | "proxy" | "absent";
+/**
+ * present = handler found in owning service source at the pinned SHA; needs_proof = declared but unverified/qualified; absent = no handler found.
+ * Runtime truth (Verified/Live/Degraded) is never static — it comes from probes only.
+ */
+export type StageEndpointClass = "present" | "needs_proof" | "absent";
 export type StageId =
   | "computeless"
   | "capabilities"
@@ -21,6 +25,7 @@ export interface StageEndpoint {
   classification: StageEndpointClass;
   response: string;
   baseUrl?: string;
+  qualification?: string;
 }
 
 export interface StageDefinition {
@@ -38,14 +43,14 @@ const backend = (id: string) => canonicalBackends().find((item) => item.id === i
 export const stages: StageDefinition[] = [
   {
     id: "computeless",
-    label: "Compute-less",
+    label: "Runtime diagnostics",
     route: "/os/computeless",
-    purpose: "Inspect connected compute supply and the bounded environments available for governed execution.",
-    owner: "Governed Compute / connected providers",
+    purpose: "Inspect source-declared compute diagnostics; no matching backend handlers were found at the audited SHAs.",
+    owner: "COMPUTLESS diagnostics (route handlers pending)",
     endpoints: [
-      { method: "GET", path: "/api/v1/computeless/telemetry", classification: "live", response: "compute telemetry" },
-      { method: "GET", path: "/api/v1/computeless/evidence", classification: "live", response: "compute evidence payload" },
-      { method: "POST", path: "/api/v1/computeless/execute", classification: "live", response: "execute action" },
+      { method: "GET", path: "/api/v1/computeless/telemetry", classification: "absent", response: "compute telemetry" },
+      { method: "GET", path: "/api/v1/computeless/evidence", classification: "absent", response: "compute evidence payload" },
+      { method: "POST", path: "/api/v1/computeless/execute", classification: "absent", response: "execute action" },
     ],
     crossCutting: true,
   },
@@ -54,13 +59,13 @@ export const stages: StageDefinition[] = [
     label: "Capabilities",
     route: "/os",
     purpose: "Discover what connected systems can do through Veklom without confusing discovery with authority.",
-    owner: "cAPI / capability registry",
+    owner: "CAPPO capability registry (beacons) — cAPI discovery pending",
     endpoints: [
-      { method: "GET", path: "/api/v1/agents", classification: "live", response: "capability/agent registry payload", baseUrl: backend("cappo") },
-      { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "live", response: "benchmark provider array", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/capability/beacons", classification: "live", response: "signed capability beacon set" },
-      { method: "POST", path: "/v1/capability/beacons/verify", classification: "live", response: "beacon signature verification result" },
-      { method: "GET", path: "/.well-known/capability-beacon-keys", classification: "live", response: "published beacon issuer keys" },
+      { method: "GET", path: "/api/v1/agents", classification: "needs_proof", qualification: "route is CAPPO-owned; registry owner says cAPI", response: "capability/agent registry payload", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "needs_proof", qualification: "seeded fallback when empty; route is CAPPO-owned", response: "benchmark provider array", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/beacons", classification: "needs_proof", qualification: "route is CAPPO-owned; registry owner says cAPI", response: "signed capability beacon set", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/capability/beacons/verify", classification: "needs_proof", qualification: "route is CAPPO-owned; registry owner says cAPI", response: "beacon signature verification result", baseUrl: backend("cappo") },
+      { method: "GET", path: "/.well-known/capability-beacon-keys", classification: "needs_proof", qualification: "configured published keys; route is CAPPO-owned", response: "published beacon issuer keys", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -70,11 +75,11 @@ export const stages: StageDefinition[] = [
     purpose: "Compatibility surface for binding a capability package to a scoped, expiring execution boundary.",
     owner: "CAPPO consequence authority",
     endpoints: [
-      { method: "GET", path: "/v1/capability/packages", classification: "live", response: "capability package catalog", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/capability/mounts", classification: "live", response: "mount decision, scope, and token descriptor", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "live", response: "persisted mount lifecycle status", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "live", response: "action allow or deny decision", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "live", response: "mount termination decision", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "mount decision, scope, and token descriptor", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "present", response: "persisted mount lifecycle status", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "present", response: "action allow or deny decision", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "present", response: "mount termination decision", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -82,10 +87,10 @@ export const stages: StageDefinition[] = [
     label: "Blueprint",
     route: "/os/blueprint",
     purpose: "Compose capabilities and compile intent into a reviewable blueprint before authority is requested.",
-    owner: "GPC / ABIDE",
+    owner: "CAPPO GPC router",
     endpoints: [
-      { method: "POST", path: "/api/v1/gpc/compile", classification: "live", response: "plan graph and proof hash" },
-      { method: "GET", path: "/api/v1/gpc/stats", classification: "live", response: "plan/run decision totals" },
+      { method: "POST", path: "/api/v1/gpc/compile", classification: "needs_proof", qualification: "generated plan id, not persisted", response: "plan graph and proof hash", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/gpc/stats", classification: "needs_proof", qualification: "route is CAPPO-owned; registry owner says GPC/ABIDE", response: "plan/run decision totals", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -93,11 +98,11 @@ export const stages: StageDefinition[] = [
     label: "Govern",
     route: "/os/govern",
     purpose: "Compatibility surface for policy and approval evaluation before consequence authority is issued.",
-    owner: "SEKED policy input / CAPPO authority",
+    owner: "CAPPO authorization / governance v2",
     endpoints: [
-      { method: "POST", path: "/api/v1/execution/authorize", classification: "live", response: "decision and authorization hashes", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/governance/v2/assess", classification: "live", response: "governance assessment", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/governance/v2/quarantine", classification: "live", response: "quarantine queue", baseUrl: backend("cappo") },
+      { method: "POST", path: "/api/v1/execution/authorize", classification: "needs_proof", qualification: "generated authorization id; local decision service", response: "decision and authorization hashes", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/governance/v2/assess", classification: "needs_proof", qualification: "in-memory, not durable", response: "governance assessment", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/governance/v2/quarantine", classification: "needs_proof", qualification: "in-memory, not durable", response: "quarantine queue", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -107,11 +112,11 @@ export const stages: StageDefinition[] = [
     purpose: "Inspect operation-specific CapabilityLeases, scope, expiry, revocation and target-state authority.",
     owner: "CAPPO consequence authority",
     endpoints: [
-      { method: "GET", path: "/api/v1/agents/{id}/certificate", classification: "live", response: "certificate metadata", baseUrl: backend("cappo") },
-      { method: "GET", path: "/api/v1/agents/{id}/lifecycle", classification: "live", response: "lifecycle state", baseUrl: backend("cappo") },
-      { method: "GET", path: "/api/v1/agents", classification: "live", response: "public agent certificate summaries", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/runs", classification: "live", response: "run EI/EAT fields when returned", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/identities/{execution_id}/revoke", classification: "live", response: "revocation state", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/agents/{id}/certificate", classification: "present", response: "certificate metadata", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/agents/{id}/lifecycle", classification: "present", response: "lifecycle state", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/agents", classification: "present", response: "public agent certificate summaries", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/runs", classification: "needs_proof", qualification: "admin authz not enforced in route", response: "run EI/EAT fields when returned", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/identities/{execution_id}/revoke", classification: "needs_proof", qualification: "admin authz not enforced in route", response: "revocation state", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -121,7 +126,7 @@ export const stages: StageDefinition[] = [
     purpose: "Inspect actual governed work, execution state, and consequence results.",
     owner: "CAPPO authority / Governed Compute execution",
     endpoints: [
-      { method: "POST", path: "/v1/exec", classification: "live", response: "execution response and execution id", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/exec", classification: "present", response: "execution response and execution id", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -129,12 +134,12 @@ export const stages: StageDefinition[] = [
     label: "Evidence",
     route: "/os/evidence",
     purpose: "Inspect EEE execution receipts and durable PGL/GnomLedger provenance.",
-    owner: "EEE / PGL / GnomLedger",
+    owner: "CAPPO audit/PGL ledger routes",
     endpoints: [
-      { method: "GET", path: "/v1/audit/ledger", classification: "live", response: "audit ledger entries", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/audit/verify", classification: "live", response: "ledger verification result", baseUrl: backend("cappo") },
-      { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "live", response: "agent ledger entries", baseUrl: backend("cappo") },
-      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "live", response: "agent chain verification result", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/audit/ledger", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "audit ledger entries", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/audit/verify", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "ledger verification result", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "agent ledger entries", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "agent chain verification result", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -142,13 +147,13 @@ export const stages: StageDefinition[] = [
     label: "Measure",
     route: "/os/measure",
     purpose: "Measure performance, reliability, economics and routing evidence without turning metrics into authority.",
-    owner: "VNP",
+    owner: "CAPPO VNP router",
     endpoints: [
-      { method: "GET", path: "/v1/vnp/metrics", classification: "live", response: "measurement payload" },
-      { method: "GET", path: "/v1/vnp/leaderboard", classification: "live", response: "VNP rankings" },
-      { method: "GET", path: "/v1/vnp/validators", classification: "live", response: "validator registry" },
-      { method: "GET", path: "/v1/vnp/incidents", classification: "live", response: "protocol incidents" },
-      { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "live", response: "benchmark provider array", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/vnp/metrics", classification: "needs_proof", qualification: "public route; route is CAPPO-owned", response: "measurement payload", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/vnp/leaderboard", classification: "needs_proof", qualification: "route is CAPPO-owned; VNP ownership pending", response: "VNP rankings", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/vnp/validators", classification: "needs_proof", qualification: "route is CAPPO-owned; VNP ownership pending", response: "validator registry", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/vnp/incidents", classification: "needs_proof", qualification: "route is CAPPO-owned; VNP ownership pending", response: "protocol incidents", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/benchmarks/leaderboard", classification: "needs_proof", qualification: "seeded fallback when empty; route is CAPPO-owned", response: "benchmark provider array", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -156,10 +161,10 @@ export const stages: StageDefinition[] = [
     label: "Settle",
     route: "/os/settle",
     purpose: "Compatibility surface for payment requirements and settlement evidence.",
-    owner: "x402 settlement",
+    owner: "CAPPO x402 router (ecobe-mvp is payment owner)",
     endpoints: [
-      { method: "GET", path: "/.well-known/x402", classification: "live", response: "payment discovery document", baseUrl: backend("cappo") },
-      { method: "GET", path: "/api/v1/pricing", classification: "live", response: "pricing response", baseUrl: backend("cappo") },
+      { method: "GET", path: "/.well-known/x402", classification: "needs_proof", qualification: "configured/disabled fallback", response: "payment discovery document", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/v1/pricing", classification: "needs_proof", qualification: "configured/disabled fallback", response: "pricing response", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -169,8 +174,8 @@ export const stages: StageDefinition[] = [
     purpose: "Show what needs attention now by composing authority, execution, evidence and measurement truth.",
     owner: "Capability OS composed view",
     endpoints: [
-      { method: "GET", path: "/v1/audit/ledger", classification: "live", response: "composed evidence ledger", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/runs", classification: "live", response: "composed execution runs", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/audit/ledger", classification: "present", response: "composed evidence ledger", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/runs", classification: "present", response: "composed execution runs", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -180,7 +185,7 @@ export const stages: StageDefinition[] = [
     purpose: "Expert alternate interface over the same governed paths; never an authority bypass.",
     owner: "Capability OS",
     endpoints: [
-      { method: "POST", path: "/v1/exec", classification: "live", response: "execution response", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/exec", classification: "present", response: "execution response", baseUrl: backend("cappo") },
     ],
     crossCutting: true,
   },
