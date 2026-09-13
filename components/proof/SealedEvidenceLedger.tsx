@@ -68,7 +68,7 @@ export async function SealedEvidenceLedger({
                       <span className="inline-flex rounded-full border border-theme-verified/25 bg-theme-verified/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.12em] text-theme-verified">Present</span>
                     ) : (
                       <span className="inline-flex flex-col items-start gap-1">
-                        <span className="rounded-full border border-theme-border bg-theme-bg px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.12em] text-theme-inkDim">Needs proof{"\n"}</span>
+                        <span className="rounded-full border border-theme-border bg-theme-bg px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.12em] text-theme-inkDim">Needs proof</span>
                         <span className="text-xs text-theme-inkDim">Not published on this deployment</span>
                       </span>
                     )}
