@@ -3,6 +3,10 @@ import Link from "next/link";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { AmbientField, PremiumPageIntro, StageLabel } from "@/components/brand/PremiumPrimitives";
 import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
+import { SealedEvidenceLedger } from "@/components/proof/SealedEvidenceLedger";
+import { readSealedBundles } from "@/lib/proof/sealed-bundles";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Proof | Veklom Governed Compute",
@@ -28,7 +32,7 @@ const proofLevels = [
   {
     n: "04",
     title: "Consequence evidence",
-    body: "The stronger Activation path can re-observe durable target state directly. Generic provider execution still needs stronger independent consequence establishment before it should be called fully proven.",
+    body: "The Activation path can re-observe durable target state directly. Executor-stage uncertainty is now recorded as OUTCOME_UNCERTAIN rather than relabeled as success or denial, but generic provider execution still needs independent consequence establishment before it is called proven.",
   },
 ];
 
@@ -36,12 +40,18 @@ const claims = [
   ["Demonstrated", "A real HTTP execution path is dominated by capability lease checks, scoped authority and a common governed execution handler."],
   ["Demonstrated", "Persistent and ephemeral execution modes can share the same capability/authority contract shape while carrying different lifecycle semantics."],
   ["Demonstrated", "Workspace scope mismatch, invalid/incorrect authority, mutated action intent and inactive capability context can fail closed."],
+  ["Local harness evidence", "Revocation state on the execution route is sourced from persisted CapabilityLease and ExecutionIdentity records: a revoked, expired or suspended lease, a revoked execution identity, or a stale revocation epoch fails closed."],
+  ["Local harness evidence", "Authority minted for one execution cannot be presented for another: the Biscuit execution identity is bound to the lease execution identity, and a caller cannot choose the persisted run identity."],
+  ["Local harness evidence", "Executor-stage provider failure is reported as OUTCOME_UNCERTAIN with durable evidence and no automatic re-execution; pre-execution denials keep their own distinct codes."],
+  ["Local harness evidence", "Two simultaneous identical requests yield exactly one admitted consequence: the mount nonce is consumed by an atomic conditional update before any allow evidence exists; the loser is denied as token_replay."],
   ["Not yet proven", "Wasmtime and Firecracker are not yet established as real interchangeable execution substrates under the same Veklom contract."],
   ["Not yet proven", "Generic executor success is not yet equivalent to independently established business consequence."],
   ["Not yet proven", "Cross-provider production-scale governed compute, host-compromise resistance and hardware isolation remain outside the current proof."],
 ];
 
-export default function ProofPage() {
+export default async function ProofPage() {
+  const bundles = await readSealedBundles();
+
   return (
     <HumanAppShell>
       <main className="relative overflow-hidden">
@@ -62,6 +72,8 @@ export default function ProofPage() {
         <section className="relative mx-auto w-full max-w-[1480px] px-5 pb-20 sm:px-8 md:pb-28 lg:px-10">
           <LiveProofFabric />
         </section>
+
+        <SealedEvidenceLedger bundles={bundles} />
 
         <section className="border-y border-theme-border bg-theme-surface/68">
           <div className="mx-auto grid w-full max-w-[1480px] gap-12 px-5 py-20 sm:px-8 md:py-28 lg:grid-cols-[.72fr_1.28fr] lg:px-10">
@@ -88,6 +100,16 @@ export default function ProofPage() {
             <div className="rounded-[30px] border border-theme-border bg-[#05070b] p-7 text-white sm:p-9 md:p-12">
               <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">Claim ledger</div>
               <h2 className="mt-5 max-w-3xl text-3xl font-semibold leading-[1.02] tracking-[-.045em] md:text-5xl">Use the strong claim. Keep the boundary visible.</h2>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {[
+                  "Demonstrated — exercised on the live route",
+                  "Local harness evidence — adversarial tests against the real /v1/exec path on the proof branch; not CI or production proof",
+                  "Not yet proven",
+                  "Sealed evidence — downloadable, hash-verifiable bundles",
+                ].map((label) => (
+                  <span key={label} className="rounded-full border border-white/10 bg-white/[.035] px-3 py-1.5 text-[10px] font-medium leading-4 text-white/65">{label}</span>
+                ))}
+              </div>
               <div className="mt-8 space-y-4">
                 {claims.map(([status, body], index) => (
                   <div key={`${status}-${index}`} className="rounded-2xl border border-white/10 bg-white/[.035] p-5">
