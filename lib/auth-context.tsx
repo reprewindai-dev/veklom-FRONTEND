@@ -56,10 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
 
     try {
-      // Always ask the backend. Password login may provide a local bearer token,
-      // while GitHub OAuth intentionally provides an HttpOnly access_token cookie.
-      // Same-origin fetch sends that cookie automatically, so both login methods
-      // converge on the same /auth/me truth boundary.
       const data = await api<Me>("/api/v1/auth/me");
       setMe(data);
       markNavigationSession(true);
@@ -68,7 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const subData = await api<Subscription>("/api/v1/billing/subscription");
         setSub(subData);
       } catch {
-        // Subscription transport failure must never manufacture a paid/sovereign tier.
         setSub(undefined);
       }
     } catch (cause) {
@@ -121,10 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const normalizedEmail = email.trim().toLowerCase();
     const baseUsername = deriveUsername(normalizedEmail, name);
     const register = (username: string) =>
-      api<{ id: string; email: string; username: string }>("/api/v1/auth/register", {
+      api<{ id: string; email: string; username: string; status: string }>("/api/v1/auth/register", {
         unauth: true,
         body: { email: normalizedEmail, username, password, full_name: name?.trim() || undefined },
       });
+
     try {
       await register(baseUsername);
     } catch (cause) {
@@ -136,33 +132,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await register(`${baseUsername.slice(0, 43)}-${Math.random().toString(36).slice(2, 8)}`);
     }
 
-    const res = await api<{ access_token?: string; token?: string; refresh_token?: string }>(
-      "/api/v1/auth/login",
-      { unauth: true, body: { email: normalizedEmail, password } },
-    );
-    const access = res.access_token || res.token;
-    if (access) {
-      setTokens(access, res.refresh_token);
-      markNavigationSession(true);
-
-      try {
-        await api("/api/v1/pgl/onboarding/operator-identity", {
-          method: "POST",
-          body: { operator_name: name || "Sovereign Operator", role: "OWNER" },
-        });
-        await api("/api/v1/pgl/onboarding/workspace-authority", {
-          method: "POST",
-          body: { workspace_name: "Default Workspace", network_zone: "VNP-Global" },
-        });
-      } catch (cause) {
-        console.warn("PGL Identity initialization warning:", cause);
-      }
-
-      await loadProfile();
-      return { autoSignedIn: true };
-    }
+    // Email/password accounts are deliberately not auto-signed-in. LockerPhycer
+    // sends a short-lived Resend verification link and refuses login until the
+    // address is verified. GitHub OAuth remains a separate verified identity path.
+    clearTokens();
+    markNavigationSession(false);
     return { autoSignedIn: false };
-  }, [loadProfile]);
+  }, []);
 
   const loginWithGithub = useCallback(() => {
     if (typeof window === "undefined") return;
