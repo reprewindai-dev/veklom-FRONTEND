@@ -1,4 +1,4 @@
-﻿{
+{
   "tools": [
     {
       "name": "read_manifest",
@@ -82,7 +82,7 @@
       },
       "auth_required": true,
       "status": "active",
-      "limitations": ["Requires valid Veklom session or Device Flow authorization", "Bounded by policy engine limits"]
+      "limitations": ["Requires valid Veklom session. Headless machine enrollment via Device Flow is in integration.", "Bounded by policy engine limits"]
     }
   ]
 }
