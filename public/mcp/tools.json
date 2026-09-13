@@ -83,14 +83,13 @@
       "auth_required": true,
       "status": "active",
       "limitations": [
-        "Requires valid Veklom session. Headless machine enrollment via Device Flow is in integration.",
         "Bounded by policy engine limits"
       ],
       "invocation_contract": {
         "authenticate": {
           "description": "Start Device Flow. Human approves on GitHub. Then poll to get Bearer token with workspace claim.",
-          "start_route": "https://command.veklom.com/api/v1/auth/device/code",
-          "poll_route": "https://command.veklom.com/api/v1/auth/device/token",
+          "start_route": "https://veklom.com/api/auth/github/device/start",
+          "poll_route": "https://veklom.com/api/auth/github/device/poll",
           "response_schema": {
             "type": "object",
             "required": ["access_token", "token_type", "expires_in", "audience"],

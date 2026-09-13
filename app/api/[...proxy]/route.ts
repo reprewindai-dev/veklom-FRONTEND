@@ -26,50 +26,9 @@ function stripHopByHopHeaders(headers: Headers) {
  }
 }
 
-type CappoAssertionExchangeResult =
- | { kind:"success"; token: string }
- | { kind:"unauthenticated" }
- | { kind:"missing-workspace"; body: unknown }
- | { kind:"unavailable" };
 
-async function exchangeCappoAssertion(req: NextRequest): Promise<CappoAssertionExchangeResult> {
- const authHeaders = new Headers();
- const authorization = req.headers.get("authorization");
- const cookie = req.headers.get("cookie");
- if (authorization) authHeaders.set("authorization", authorization);
- if (cookie) authHeaders.set("cookie", cookie);
- authHeaders.set("accept","application/json");
 
- try {
- const response = await fetch(
- `${VBB_BACKEND_URL.replace(/\/+$/,"")}/api/v1/auth/cappo-token`,
- {
- method:"POST",
- headers: authHeaders,
- redirect:"manual",
- cache:"no-store",
- },
- );
- if (response.status === 401) {
- return { kind:"unauthenticated" };
- }
- if (response.status === 403) {
- let body: unknown = { detail: { error:"WORKSPACE_CONTEXT_MISSING" } };
- try {
- body = await response.json();
- } catch {
- // Preserve the endpoint's documented error shape if its body is unreadable.
- }
- return { kind:"missing-workspace", body };
- }
- if (!response.ok) return { kind:"unavailable" };
- const body = (await response.json()) as { access_token?: unknown };
- return typeof body.access_token ==="string" && body.access_token
- ? { kind:"success", token: body.access_token }
- : { kind:"unavailable" };
- } catch {
- return { kind:"unavailable" };
- }
+
 }
 
 async function proxyRequest(req: NextRequest) {
@@ -105,16 +64,10 @@ async function proxyRequest(req: NextRequest) {
 
  console.log(`[PROXY DEBUG] path=${path}, forward=${forwardPath}, exec=${isCappoExecPath(forwardPath)}, id=${isCappoIdentityPath(forwardPath)}`);
 
-    if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
-      const exchange = await exchangeCappoAssertion(req);
-      if (exchange.kind === "success") {
-        headers.set("authorization", `Bearer ${exchange.token}`);
-      } else if (exchange.kind === "missing-workspace") {
-        return NextResponse.json(exchange.body, { status: 403 });
-      } else if (exchange.kind === "unauthenticated") {
-        return NextResponse.json({ detail: { error: "UNAUTHENTICATED" } }, { status: 401 });
-      } else {
-        return NextResponse.json({ detail: { error: "CAPPO_UNAVAILABLE" } }, { status: 502 });
+    if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath) || forwardPath.startsWith("/v1/capability/mounts")) {
+      if (req.headers.has("authorization")) {
+        console.log("[PROXY DEBUG] Passing authorization header directly to CAPPO");
+        headers.set("authorization", req.headers.get("authorization")!);
       }
     }
    } else if (path.startsWith("/api/capi/")) {

@@ -170,8 +170,8 @@ interface LedgerBlock {
 export default function VanguardPlayground() {
   const [selectedCrew, setSelectedCrew] = useState<Crew>(CREWS[0]);
   const [agentId, setAgentId] = useState<string>("agent-atlas");
-  const [action, setAction] = useState<string>("test_action");
-  const [payloadStr, setPayloadStr] = useState<string>('{}');
+  const [action, setAction] = useState<string>("counter.increment");
+  const [payloadStr, setPayloadStr] = useState<string>('{"amount": 1}');
   const [prompt, setPrompt] = useState<string>('Verify latest ledger ledger-root and release payroll payload to AWS.');
   const [activeThreat, setActiveThreat] = useState<string | null>(null);
   const [executionState, setExecutionState] = useState<'idle' | 'running' | 'success' | 'blocked'>('idle');
@@ -268,18 +268,22 @@ export default function VanguardPlayground() {
     setIsRotating(true);
     const token = getToken();
     try {
-      await fetch(/api/cappo/v1/capability/mounts//terminate, {
+      const res = await fetch(`/api/cappo/v1/capability/mounts/${mountInfo.id}/terminate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: Bearer  } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-           token_id: mountInfo.token,
            reason: "USER_REVOKED"
         })
       });
+      if (!res.ok) {
+        throw new Error("Failed to terminate mount");
+      }
       setLogs(prev => [...prev, "[CAPPO] Capability revoked by user."]);
+    } catch (err) {
+      setLogs(prev => [...prev, `[CAPPO] Revoke error: ${err}`]);
     } finally {
       setIsRotating(false);
     }
@@ -358,9 +362,15 @@ export default function VanguardPlayground() {
         throw new Error(mountPayload.detail || "Failed to mount capability");
       }
 
-      const mountId = mountPayload.mount_id;
-      const tokenId = mountPayload.token_id || "demo-token-id";
-      const nonce = mountPayload.nonce || "demo-nonce";
+      const mountId = mountPayload.mount?.id;
+      const tokenId = mountPayload.token?.token_id;
+      const nonce = mountPayload.token?.nonce;
+      
+      if (!mountId || !tokenId || !nonce) {
+        throw new Error("Invalid mount response from CAPPO: missing mount or token details");
+      }
+      
+      setMountInfo({ id: mountId, token: tokenId, nonce });
       
       setLogs(prev => [...prev, `[GATEWAY] Mount acquired: ${mountId}`]);
       setLogs(prev => [...prev, "[GATEWAY] Executing governed action on mount..."]);
