@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     // Fetch user
     const userRes = await fetch("https://api.github.com/user", {
       headers: {
-        "Authorization": `Bearer ${accessToken}`,
+        "Authorization": "Bearer " + accessToken,
         "Accept": "application/json",
         "User-Agent": "Veklom-M2M-App"
       }
@@ -64,11 +64,26 @@ export async function POST(req: NextRequest) {
       githubUsername = userData.login;
     }
 
+    // Exchange with LockerPhycer
+    const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "http://127.0.0.1:8092";
+    const exchangeRes = await fetch(lockerphycerUrl + "/api/v1/auth/github/exchange", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ github_username: githubUsername })
+    });
+    
+    if (!exchangeRes.ok) {
+        return NextResponse.json({ error: "LockerPhycer exchange failed" }, { status: 502 });
+    }
+    
+    const exchangeData = await exchangeRes.json();
+
     return NextResponse.json({
       success: true,
-      message: "Linked to Veklom workspace once approved",
+      message: "Session granted via Device Flow",
       github_username: githubUsername,
-      session_granted: true
+      session_granted: true,
+      access_token: exchangeData.access_token
     });
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
