@@ -133,7 +133,7 @@ export default function LandingPage() {
               <StageLabel>Evidence over theater</StageLabel>
               <h2 className="mt-5 max-w-3xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">See what is actually answering — and what is not yet proven.</h2>
             </div>
-            <p className="max-w-md text-sm leading-7 text-theme-inkDim">Reachability is not consequence proof. The public proof surface separates live service state from engineering claims and keeps unknown outcomes unknown.</p>
+            <p className="max-w-md text-sm leading-7 text-theme-inkDim">Reachability is not consequence proof. The public proof surface separates live service state from engineering claims and keeps unknown outcomes unknown. Latest: revocation, identity binding, outcome uncertainty and concurrent replay are covered by adversarial local harness evidence on the real execution route — see the claim ledger.</p>
           </div>
           <LiveProofFabric compact />
         </section>

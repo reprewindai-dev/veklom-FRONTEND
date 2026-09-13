@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { classifyPayload, deriveProofStatus } from "./proof";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
@@ -59,6 +60,26 @@ function keyFor(endpoint: StageEndpoint) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
+export function resolveStageTransportPath(
+  _stageId: StageDefinition["id"],
+  path: string,
+): string {
+  if (isCappoProxyPath(path)) return `/api/cappo${path}`;
+  return path;
+}
+
+export function resolveStageBaseUrl(
+  stageId: StageDefinition["id"],
+  sandbox: boolean,
+  endpointBaseUrl?: string,
+  sandboxBaseUrl?: string,
+  endpointPath?: string,
+): string | undefined {
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) return undefined;
+  if (!sandbox) return undefined;
+  return sandboxBaseUrl || endpointBaseUrl;
+}
+
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
   const observation: ProofObservation = endpoint.classification === "absent"
     ? { kind: "no-route" }
@@ -77,8 +98,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   const sandboxContext = useSandboxMode();
   const sandbox = options.sandbox ?? sandboxContext;
   const [records, setRecords] = useState<Record<string, StageCallRecord>>(() => {
-    const endpoints = (stage as any).endpoints || [];
-    return Object.fromEntries(endpoints.map((endpoint: any) => [keyFor(endpoint), initialRecord(endpoint, sandbox)]));
+    return Object.fromEntries(stage.endpoints.map((endpoint) => [keyFor(endpoint), initialRecord(endpoint, sandbox)]));
   });
   const [payloads, setPayloads] = useState<Record<string, unknown>>({});
   const [additionalRecords, setAdditionalRecords] = useState<Record<string, StageCallRecord>>({});
@@ -183,17 +203,15 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
 
   useEffect(() => {
     if (!options.autoGet) return;
-    const endpoints = (stage as any).endpoints || [];
-    for (const endpoint of endpoints) {
+    for (const endpoint of stage.endpoints) {
       if (endpoint.method === "GET" && !endpoint.path.includes("{")) void call(endpoint);
     }
   }, [call, options.autoGet, stage]);
 
   const recordsList = useMemo(
     () => {
-      const endpoints = (stage as any).endpoints || [];
       return [
-        ...endpoints.map((endpoint: any) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
+        ...stage.endpoints.map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
         ...Object.values(additionalRecords),
       ];
     },

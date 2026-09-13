@@ -11,22 +11,17 @@
 // must return 404 from Next.js rather than silently reaching BYOS.
 
 const LOCKERPHYCER_URL = (
-  process.env.LOCKERPHYCER_URL || "http://127.0.0.1:8092"
+  process.env.LOCKERPHYCER_URL ||
+  "http://127.0.0.1:8092"
 ).replace(/\/$/, "");
 
-const CAPPO_URL = (
-  process.env.CAPPO_BACKEND_URL ||
-  process.env.CAPPO_URL ||
-  "http://127.0.0.1:8002"
-).replace(/\/$/, "");
+const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
+const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
 const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
 const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
 const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");
 const PGL_URL = (process.env.PGL_URL || "https://pgl.veklom.com").replace(/\/$/, "");
 const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/$/, "");
-const VLINK_URL = (
-  process.env.VLINK_URL || "http://127.0.0.1:3000"
-).replace(/\/$/, "");
 
 const nextConfig = {
   output: "standalone",
@@ -95,6 +90,13 @@ const nextConfig = {
       { source: "/workspace/signup", destination: "/signup", permanent: true },
       { source: "/workspace/dashboard", destination: "/os", permanent: true },
       { source: "/onboarding/pgl", destination: "/os/onboarding", permanent: true },
+      { source: "/os/command", destination: "/os/tracker", permanent: true },
+      { source: "/os/capabilities", destination: "/os", permanent: true },
+      { source: "/os/workflows", destination: "/os/blueprint", permanent: true },
+      { source: "/os/executions", destination: "/os/execute", permanent: true },
+      { source: "/os/governed-compute", destination: "/os/computeless", permanent: true },
+      { source: "/os/settings", destination: "/os", permanent: true },
+      { source: "/os/terminal", destination: "/os", permanent: true },
       { source: "/dashboard", destination: "/os", permanent: false },
       { source: "/wallet", destination: "/os", permanent: false },
       { source: "/wallet/:path*", destination: "/os", permanent: false },
@@ -118,10 +120,6 @@ const nextConfig = {
 
         // ── CAPPO: consequence authority ──────────────────────────────────────
         { source: "/api/v1/cappo/:path*",  destination: `${CAPPO_URL}/api/v1/cappo/:path*` },
-        { source: "/v1/capability/:path*", destination: `${CAPPO_URL}/v1/capability/:path*` },
-        { source: "/v1/exec",             destination: `${CAPPO_URL}/v1/exec` },
-        { source: "/.well-known/capability-beacon-keys", destination: `${CAPPO_URL}/.well-known/capability-beacon-keys` },
-        { source: "/.well-known/x402",                   destination: `${CAPPO_URL}/.well-known/x402` },
 
         // ── VNP: measurement ──────────────────────────────────────────────────
         { source: "/api/v1/vnp/:path*",    destination: `${VNP_URL}/api/v1/vnp/:path*` },

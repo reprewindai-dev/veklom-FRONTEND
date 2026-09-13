@@ -34,7 +34,7 @@ export default function MeasurePage() {
       </div>
       <div className="space-y-4">
         <Pillar title="Evidence" proof={data.stageProof}><HonestEmpty title="Measurement evidence not returned" route="GET /v1/vnp/incidents" detail="No incident evidence was observed." /></Pillar>
-        <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Drift comparison not returned" route="GET /api/v1/platform/pulse" detail="No comparison value is available." /></Pillar>
+        <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Drift comparison not returned" route="GET /v1/vnp/incidents" detail="No comparison value is available." /></Pillar>
       </div>
     </SectionShell>
   );

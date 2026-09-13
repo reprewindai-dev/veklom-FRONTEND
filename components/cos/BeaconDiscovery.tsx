@@ -24,8 +24,7 @@ export function BeaconDiscovery() {
   const data = useStageData("capabilities", { autoGet: true });
   const verificationStarted = useRef(new Set<string>());
   const [verification, setVerification] = useState<Record<string, Verification>>({});
-  const endpoints = (stage as any).endpoints || [];
-  const beaconBase = endpoints.find((item: any) => item.path === "/v1/capability/beacons")?.baseUrl;
+  const beaconBase = stage.endpoints.find((item) => item.path === "/v1/capability/beacons")?.baseUrl;
   const beaconsPayload = data.payloads["GET /v1/capability/beacons"];
   const beacons = beaconsPayload && typeof beaconsPayload === "object" && !Array.isArray(beaconsPayload)
     ? (Array.isArray((beaconsPayload as { beacons?: unknown }).beacons) ? (beaconsPayload as { beacons: Beacon[] }).beacons : [])

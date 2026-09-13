@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Activity,
-  BookOpenCheck,
   Boxes,
   CircleDollarSign,
   Command,
@@ -22,15 +21,18 @@ import {
 import { crossCuttingStages, spineStages, type StageDefinition } from "@/lib/cos/stages";
 
 const icons = {
-  command: Command,
-  capabilities: LayoutGrid,
-  workflows: BookOpenCheck,
+  mount: Boxes,
+  blueprint: Route,
+  govern: Scale,
   authority: LockKeyhole,
-  "governed-compute": Server,
-  executions: Play,
+  execute: Play,
   evidence: FileCheck2,
   measure: Activity,
+  settle: CircleDollarSign,
+  tracker: Shield,
+  capabilities: LayoutGrid,
   settings: Settings,
+  computeless: Server,
   terminal: Command,
 } as const;
 
