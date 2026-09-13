@@ -78,19 +78,41 @@ export function recordsForStage(
   additionalRecords: Record<string, StageCallRecord>,
   sandbox: boolean,
 ): StageCallRecord[] {
-  const declared = stage.endpoints
-    .filter((endpoint) => !endpoint.path.includes("{"))
-    .map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox));
+  const allRecords = { ...records, ...additionalRecords };
+  const declared = stage.endpoints.map(
+    (endpoint) => allRecords[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox),
+  );
   const declaredKeys = new Set(stage.endpoints.map((endpoint) => keyFor(endpoint)));
-  const concrete = Object.entries({ ...records, ...additionalRecords })
+  const concrete = Object.entries(allRecords)
     .filter(([key]) => !declaredKeys.has(key))
     .map(([, record]) => record);
   return [...declared, ...concrete];
 }
 
+export function applicableRecords(
+  stage: StageDefinition,
+  records: StageCallRecord[],
+): StageCallRecord[] {
+  const templateKeys = new Set(
+    stage.endpoints
+      .filter((endpoint) => endpoint.path.includes("{"))
+      .map((endpoint) => keyFor(endpoint)),
+  );
+  return records.filter((record) => !(
+    templateKeys.has(keyFor(record))
+    && record.observation.kind === "not-called"
+  ));
+}
+
 export function aggregateStageProof(records: StageCallRecord[]): ProofStatus {
   if (records.some((record) => record.proof === "Degraded" || record.observation.kind === "failed")) {
     return "Degraded";
+  }
+  if (records.some((record) => record.proof === "Simulated")) {
+    return "Simulated";
+  }
+  if (records.length > 0 && records.every((record) => record.observation.kind === "no-route")) {
+    return "Not started";
   }
   if (records.length > 0 && records.every((record) => record.proof === "Verified")) {
     return "Verified";
@@ -222,8 +244,8 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   );
 
   const stageProof = useMemo<ProofStatus>(() => {
-    return aggregateStageProof(recordsList);
-  }, [recordsList]);
+    return aggregateStageProof(applicableRecords(stage, recordsList));
+  }, [recordsList, stage]);
 
   const hasLoading = Object.values(loading).some(Boolean);
   return { stage, records: recordsList, payloads, loading: hasLoading, call, stageProof };

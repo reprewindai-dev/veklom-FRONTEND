@@ -1,4 +1,5 @@
 import {
+  applicableRecords,
   aggregateStageProof,
   recordsForStage,
   type StageCallRecord,
@@ -52,8 +53,48 @@ describe("Capability OS stage aggregation", () => {
       false,
     );
 
-    expect(records.map(({ path }) => path)).toEqual(["/v1/summary"]);
-    expect(aggregateStageProof(records)).toBe("Verified");
+    expect(records.map(({ path }) => path)).toEqual([
+      "/v1/summary",
+      "/v1/mounts/{mount_id}",
+    ]);
+    expect(applicableRecords(definition, records)).toHaveLength(1);
+    expect(aggregateStageProof(applicableRecords(definition, records))).toBe("Verified");
+  });
+
+  it("treats a called template failure as degraded", () => {
+    const definition = stage([
+      { method: "GET", path: "/v1/summary", classification: "present", response: "summary" },
+      { method: "GET", path: "/v1/mounts/{mount_id}", classification: "present", response: "mount" },
+    ]);
+    const records = recordsForStage(
+      definition,
+      {
+        "GET /v1/summary": record("/v1/summary", "Verified"),
+        "GET /v1/mounts/{mount_id}": record(
+          "/v1/mounts/{mount_id}",
+          "Degraded",
+          { kind: "failed", status: 503 },
+        ),
+      },
+      {},
+      false,
+    );
+
+    expect(aggregateStageProof(applicableRecords(definition, records))).toBe("Degraded");
+  });
+
+  it("preserves Simulated over a verified record", () => {
+    expect(aggregateStageProof([
+      record("/v1/one", "Simulated"),
+      record("/v1/two", "Verified"),
+    ])).toBe("Simulated");
+  });
+
+  it("returns Not started when every applicable record has no route", () => {
+    expect(aggregateStageProof([
+      record("/v1/one", "Not started", { kind: "no-route" }),
+      record("/v1/two", "Not started", { kind: "no-route" }),
+    ])).toBe("Not started");
   });
 
   it("returns Present when a verified record has an uncalled concrete-less sibling", () => {
@@ -82,6 +123,7 @@ describe("Capability OS stage aggregation", () => {
 
     expect(records.map(({ path }) => path)).toEqual([
       "/v1/mounts",
+      "/v1/mounts/{mount_id}",
       "/v1/mounts/mnt_123",
     ]);
   });

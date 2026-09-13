@@ -15,7 +15,8 @@ function runCondition(value: Record<string, unknown>): ActivityCondition | undef
   if (typeof raw !== "string") return undefined;
   const status = raw.toLowerCase();
   if (["running", "active", "executing", "in_progress"].includes(status)) return "active";
-  if (["failed", "denied", "revoked", "expired", "cancelled", "uncertain"].includes(status)) return "failed";
+  if (["uncertain", "outcome_uncertain", "unknown"].includes(status)) return "degraded";
+  if (["failed", "denied", "revoked", "expired", "cancelled"].includes(status)) return "failed";
   if (["completed", "succeeded", "success", "allow"].includes(status)) return "present";
   return undefined;
 }
