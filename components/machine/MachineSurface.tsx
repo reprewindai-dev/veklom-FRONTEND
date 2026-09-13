@@ -107,7 +107,7 @@ export function MachineSurface() {
         <div className="flex flex-col gap-3 border-b border-theme-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
             <div className="text-[9px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">Core runtime planes</div>
-            <div className="mt-2 font-sans text-2xl font-semibold tracking-[-.035em] text-theme-ink">BYOS and LockerPhycer sit at the center of execution.</div>
+            <div className="mt-2 font-sans text-2xl font-semibold tracking-[-.035em] text-theme-ink">LockerPhycer and CAPPO sit at the center of execution.</div>
           </div>
           <button onClick={refresh} className="w-fit rounded-full border border-theme-border bg-theme-bg px-4 py-2 text-[9px] font-semibold uppercase tracking-[.18em] text-theme-inkDim transition hover:text-theme-ink">refresh probes</button>
         </div>
@@ -138,8 +138,8 @@ export function MachineSurface() {
           <div className="mt-7 space-y-3">
             {[
               ["intent", "Need / machine request"],
-              ["byos", "BYOS Runtime · workspace + execution substrate"],
-              ["locker", "LockerPhycer · host execution boundary"],
+              ["cappo", "CAPPO \· consequence authority"],
+              ["locker", "LockerPhycer \· identity/session/secrets/key security"],
               ["cappo", "CAPPO · consequence authorization"],
               ["capi", "cAPI / VLink · connection and transport"],
               ["pgl", "Gnomledger / PGL · evidence + provenance"],
@@ -186,3 +186,5 @@ export function MachineSurface() {
     </div>
   );
 }
+
+

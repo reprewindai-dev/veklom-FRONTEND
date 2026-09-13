@@ -20,7 +20,7 @@ const footerGroups = [
     title: "Capability OS",
     links: [
       ["/get", "Get Veklom"],
-      ["/byos", "BYOS Runtime"],
+      
       ["/lockerphycer", "LockerPhycer"],
       ["/cappo", "CAPPO"],
       ["/capi", "cAPI"],
@@ -177,3 +177,4 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

@@ -12,7 +12,7 @@ const groups = [
   {
     title: "Capability OS",
     links: [
-      ["/byos", "BYOS Runtime"],
+      
       ["/lockerphycer", "LockerPhycer"],
       ["/cappo", "CAPPO"],
       ["/capi", "cAPI"],
@@ -93,3 +93,4 @@ export function GlobalFooter({ isMachine = true }: GlobalFooterProps) {
     </footer>
   );
 }
+

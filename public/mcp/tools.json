@@ -1,155 +1,243 @@
 {
-  "tools": [
-    {
-      "name": "read_manifest",
-      "description": "Reads the primary WebMCP manifest JSON.",
-      "input_schema": {},
-      "output_route": "/mcp/manifest.json",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "read_claims",
-      "description": "Reads the cryptographic claims registry.",
-      "input_schema": {},
-      "output_route": "/machine/claims.json",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "read_conformance",
-      "description": "Reads the protocol conformance matrix.",
-      "input_schema": {},
-      "output_route": "/machine/conformance.json",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "read_evidence_index",
-      "description": "Reads the index of settled cryptographic evidence.",
-      "input_schema": {},
-      "output_route": "/machine/evidence-index.json",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "read_openapi",
-      "description": "Reads the OpenAPI specification for the node.",
-      "input_schema": {},
-      "output_route": "/machine/openapi.json",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "read_llms",
-      "description": "Reads the standard llms.txt index.",
-      "input_schema": {},
-      "output_route": "/llms.txt",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "read_llms_full",
-      "description": "Reads the expanded llms-full.txt context.",
-      "input_schema": {},
-      "output_route": "/llms-full.txt",
-      "auth_required": false,
-      "status": "active",
-      "limitations": ["Rate limited per IP"]
-    },
-    {
-      "name": "run_governed_machine_demo",
-      "description": "Executes the interactive governed machine demo.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "action": { "type": "string" }
-        },
-        "required": ["action"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "receipt_id": { "type": "string" },
-          "status": { "type": "string" }
-        }
-      },
-      "auth_required": true,
-      "status": "active",
-      "limitations": [
-        "Bounded by policy engine limits"
-      ],
-      "invocation_contract": {
-        "authenticate": {
-          "description": "Start Device Flow. Human approves on GitHub. Then poll to get Bearer token with workspace claim.",
-          "start_route": "https://veklom.com/api/auth/github/device/start",
-          "poll_route": "https://veklom.com/api/auth/github/device/poll",
-          "response_schema": {
-            "type": "object",
-            "required": ["access_token", "token_type", "expires_in", "audience"],
-            "properties": {
-              "access_token": { "type": "string" },
-              "token_type": { "const": "Bearer" },
-              "expires_in": { "type": "integer" },
-              "audience": { "type": "string" }
-            }
-          }
-        },
-        "request_mount": {
-          "method": "POST",
-          "route": "https://veklom.com/api/cappo/v1/capability/mounts",
-          "auth": { "type": "bearer" },
-          "body": {
-            "package_ref": "veklom.governed-counter@v1",
-            "execution_scope": { "workspace": "default", "project": "demo" },
-            "requested_action_scope": {
-              "reads": ["counter.read"],
-              "writes": ["counter.increment"],
-              "blocked": ["counter.reset"]
-            }
-          },
-          "response_schema": {
-            "required": ["mount_id", "state", "expires_at", "scope", "execution_identity", "governance_decision"]
-          },
-          "description": "Request bounded capability mount. Returns mount_id, token_id, and nonce."
-        },
-        "execute": {
-          "method": "POST",
-          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/execute",
-          "auth": { "type": "bearer" },
-          "body": {
-            "token_id": "string",
-            "nonce": "string",
-            "action": "counter.increment",
-            "target_ref": "activation.governed-counter",
-            "resource": "counter",
-            "arguments": {},
-            "operation_id": "string"
-          },
-          "description": "Execute governed action on mount. Returns receipt_id and resulting_state."
-        },
-        "revoke": {
-          "method": "POST",
-          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/terminate",
-          "auth": { "type": "bearer" },
-          "body": {
-            "reason": "machine_test_completed"
-          },
-          "description": "Revoke authority mount."
-        },
-        "replay_assertion": {
-          "request": "repeat the exact execute request using the revoked mount_id",
-          "expected_http_status": 403,
-          "expected_status": "DENIED",
-          "expected_reason": "mount_revoked"
-        }
-      }
-    }
-  ]
+    "tools":  [
+                  {
+                      "name":  "read_manifest",
+                      "description":  "Reads the primary WebMCP manifest JSON.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/mcp/manifest.json",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "read_claims",
+                      "description":  "Reads the cryptographic claims registry.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/machine/claims.json",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "read_conformance",
+                      "description":  "Reads the protocol conformance matrix.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/machine/conformance.json",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "read_evidence_index",
+                      "description":  "Reads the index of settled cryptographic evidence.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/machine/evidence-index.json",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "read_openapi",
+                      "description":  "Reads the OpenAPI specification for the node.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/machine/openapi.json",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "read_llms",
+                      "description":  "Reads the standard llms.txt index.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/llms.txt",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "read_llms_full",
+                      "description":  "Reads the expanded llms-full.txt context.",
+                      "input_schema":  {
+
+                                       },
+                      "output_route":  "/llms-full.txt",
+                      "auth_required":  false,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Rate limited per IP"
+                                      ]
+                  },
+                  {
+                      "name":  "run_governed_machine_demo",
+                      "description":  "Executes the interactive governed machine demo.",
+                      "input_schema":  {
+                                           "type":  "object",
+                                           "properties":  {
+                                                              "action":  {
+                                                                             "type":  "string"
+                                                                         }
+                                                          },
+                                           "required":  [
+                                                            "action"
+                                                        ]
+                                       },
+                      "output_schema":  {
+                                            "type":  "object",
+                                            "properties":  {
+                                                               "receipt_id":  {
+                                                                                  "type":  "string"
+                                                                              },
+                                                               "status":  {
+                                                                              "type":  "string"
+                                                                          }
+                                                           }
+                                        },
+                      "auth_required":  true,
+                      "status":  "active",
+                      "limitations":  [
+                                          "Bounded by policy engine limits"
+                                      ],
+                      "invocation_contract":  {
+                                                  "authenticate":  {
+                                                                       "description":  "Start Device Flow. Human approves on GitHub. Then poll to get Bearer token with workspace claim.",
+                                                                       "start_route":  "https://veklom.com/api/auth/github/device/start",
+                                                                       "poll_route":  "https://veklom.com/api/auth/github/device/poll",
+                                                                       "response_schema":  {
+                                                                                               "type":  "object",
+                                                                                               "required":  [
+                                                                                                                "access_token",
+                                                                                                                "token_type",
+                                                                                                                "expires_in",
+                                                                                                                "audience"
+                                                                                                            ],
+                                                                                               "properties":  {
+                                                                                                                  "access_token":  {
+                                                                                                                                       "type":  "string"
+                                                                                                                                   },
+                                                                                                                  "token_type":  {
+                                                                                                                                     "const":  "Bearer"
+                                                                                                                                 },
+                                                                                                                  "expires_in":  {
+                                                                                                                                     "type":  "integer"
+                                                                                                                                 },
+                                                                                                                  "audience":  {
+                                                                                                                                   "type":  "string"
+                                                                                                                               }
+                                                                                                              }
+                                                                                           }
+                                                                   },
+                                                  "request_mount":  {
+                                                                        "method":  "POST",
+                                                                        "route":  "https://veklom.com/api/cappo/v1/capability/mounts",
+                                                                        "auth":  {
+                                                                                     "type":  "bearer"
+                                                                                 },
+                                                                        "body":  {
+                                                                                     "package_ref":  "veklom.governed-counter@v1",
+                                                                                     "execution_scope":  {
+                                                                                                             "workspace":  "default",
+                                                                                                             "project":  "demo"
+                                                                                                         },
+                                                                                     "requested_action_scope":  {
+                                                                                                                    "reads":  [
+                                                                                                                                  "counter.read"
+                                                                                                                              ],
+                                                                                                                    "writes":  [
+                                                                                                                                   "counter.increment"
+                                                                                                                               ],
+                                                                                                                    "blocked":  [
+                                                                                                                                    "counter.reset"
+                                                                                                                                ]
+                                                                                                                }
+                                                                                 },
+                                                                        "response_schema":  {
+                                                                                                "properties":  {
+                                                                                                                   "mount":  {
+                                                                                                                                 "type":  "object",
+                                                                                                                                 "required":  [
+                                                                                                                                                  "id",
+                                                                                                                                                  "state"
+                                                                                                                                              ]
+                                                                                                                             },
+                                                                                                                   "token":  {
+                                                                                                                                 "type":  "object",
+                                                                                                                                 "required":  [
+                                                                                                                                                  "token_id",
+                                                                                                                                                  "nonce"
+                                                                                                                                              ]
+                                                                                                                             }
+                                                                                                               },
+                                                                                                "type":  "object",
+                                                                                                "required":  [
+                                                                                                                 "mount",
+                                                                                                                 "token"
+                                                                                                             ]
+                                                                                            },
+                                                                        "description":  "Request bounded capability mount. Returns nested mount (with id) and token (with token_id and nonce)."
+                                                                    },
+                                                  "execute":  {
+                                                                  "method":  "POST",
+                                                                  "route":  "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/execute",
+                                                                  "auth":  {
+                                                                               "type":  "bearer"
+                                                                           },
+                                                                  "body":  {
+                                                                               "token_id":  "string",
+                                                                               "nonce":  "string",
+                                                                               "action":  "counter.increment",
+                                                                               "target_ref":  "activation.governed-counter",
+                                                                               "resource":  "counter",
+                                                                               "arguments":  {
+
+                                                                                             },
+                                                                               "operation_id":  "string"
+                                                                           },
+                                                                  "description":  "Execute governed action on mount. Returns receipt_id and resulting_state."
+                                                              },
+                                                  "revoke":  {
+                                                                 "method":  "POST",
+                                                                 "route":  "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/terminate",
+                                                                 "auth":  {
+                                                                              "type":  "bearer"
+                                                                          },
+                                                                 "body":  {
+                                                                              "reason":  "explicit_terminate"
+                                                                          },
+                                                                 "description":  "Revoke authority mount."
+                                                             },
+                                                  "replay_assertion":  {
+                                                                           "expected_response_shape":  {
+                                                                                                           "decision":  "deny",
+                                                                                                           "reason":  "execution is terminated"
+                                                                                                       },
+                                                                           "request":  "repeat the exact execute request using the revoked mount_id",
+                                                                           "expected_http_status":  200
+                                                                       }
+                                              }
+                  }
+              ]
 }

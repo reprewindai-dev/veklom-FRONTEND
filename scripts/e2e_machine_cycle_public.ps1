@@ -3,17 +3,17 @@ Write-Host "Running COLD EXTERNAL MACHINE cycle..."
 
 # Step 1: Discover veklom.com
 Write-Host "1. Discover veklom.com"
-$manifest = Invoke-RestMethod "http://127.0.0.1:3002/mcp/manifest.json"
+$manifest = Invoke-RestMethod "https://veklom.com/mcp/manifest.json"
 Write-Host "Discovered product: $($manifest.product)"
 
 # Step 2: Read machine manifest/tool catalog
 Write-Host "2. Read machine tool catalog"
-$tools = Invoke-RestMethod "http://127.0.0.1:3002/mcp/tools.json"
+$tools = Invoke-RestMethod "https://veklom.com/mcp/tools.json"
 Write-Host "Found $($tools.tools.Length) tools."
 
 # Step 3: Request Device Flow code
 Write-Host "3. Requesting Device Flow code from Frontend API"
-$device_req = Invoke-RestMethod -Uri "http://127.0.0.1:3002/api/auth/github/device/start" -Method Post -ContentType "application/json"
+$device_req = Invoke-RestMethod -Uri "https://veklom.com/api/auth/github/device/start" -Method Post -ContentType "application/json"
 $device_code = $device_req.device_code
 $user_code = $device_req.user_code
 $verification_uri = $device_req.verification_uri
@@ -33,7 +33,7 @@ $token = $null
 while ($null -eq $token) {
     Start-Sleep -Seconds $interval
     try {
-        $token_req = Invoke-RestMethod -Uri "http://127.0.0.1:3002/api/auth/github/device/poll" -Method Post -Body (@{device_code=$device_code} | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
+        $token_req = Invoke-RestMethod -Uri "https://veklom.com/api/auth/github/device/poll" -Method Post -Body (@{device_code=$device_code} | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
         $token = $token_req.access_token
     } catch {
         $err_resp = $_.Exception.Response
@@ -69,7 +69,7 @@ $mount_body = @{
     execution_scope = @{ workspace = "default"; project = "demo" }
     requested_action_scope = @{ reads = @("counter.read"); writes = @("counter.increment"); blocked = @("counter.reset") }
 } | ConvertTo-Json -Depth 5
-$mount_a = Invoke-RestMethod -Uri "http://127.0.0.1:8002/v1/capability/mounts" -Method Post -Body $mount_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+$mount_a = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts" -Method Post -Body $mount_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
 $mount_id_a = $mount_a.mount.id
 $token_id_a = $mount_a.token.token_id
 $nonce_a = $mount_a.token.nonce
@@ -86,7 +86,7 @@ $exec_body_a = @{
     arguments = @{ amount = 1 }
     operation_id = "op_machine_$(Get-Date -UFormat %s)_A"
 } | ConvertTo-Json -Depth 5
-$exec_req_a = Invoke-RestMethod -Uri "http://127.0.0.1:8002/v1/capability/mounts/$mount_id_a/execute" -Method Post -Body $exec_body_a -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+$exec_req_a = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_a/execute" -Method Post -Body $exec_body_a -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
 
 if ($exec_req_a.decision -ne "allow") {
     Write-Host "FATAL: Expected allow for Mount A execute, got $($exec_req_a.decision)"
@@ -98,7 +98,7 @@ Write-Host "State A after execute: $state_a"
 
 # Replay Mount A
 Write-Host "7. Mount A: Replay identical operation"
-$replay_req_a = Invoke-RestMethod -Uri "http://127.0.0.1:8002/v1/capability/mounts/$mount_id_a/execute" -Method Post -Body $exec_body_a -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+$replay_req_a = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_a/execute" -Method Post -Body $exec_body_a -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
 if ($replay_req_a.decision -ne "deny") {
     Write-Host "FATAL: Expected deny for Mount A replay, got $($replay_req_a.decision)"
     exit 1
@@ -112,7 +112,7 @@ Write-Host "SUCCESS: Replay denied and state unchanged ($state_a_replay)."
 
 # Mount B
 Write-Host "8. Mount B: Fresh mount"
-$mount_b = Invoke-RestMethod -Uri "http://127.0.0.1:8002/v1/capability/mounts" -Method Post -Body $mount_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+$mount_b = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts" -Method Post -Body $mount_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
 $mount_id_b = $mount_b.mount.id
 $token_id_b = $mount_b.token.token_id
 $nonce_b = $mount_b.token.nonce
@@ -121,7 +121,7 @@ Write-Host "Mounted B: $mount_id_b"
 # Terminate Mount B
 Write-Host "9. Mount B: Explicit terminate"
 $revoke_body = @{ reason = "explicit_terminate" } | ConvertTo-Json
-Invoke-RestMethod -Uri "http://127.0.0.1:8002/v1/capability/mounts/$mount_id_b/terminate" -Method Post -Body $revoke_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_b/terminate" -Method Post -Body $revoke_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
 Write-Host "Mount B terminated."
 
 # Attempt Execute Mount B
@@ -135,7 +135,7 @@ $exec_body_b = @{
     arguments = @{ amount = 1 }
     operation_id = "op_machine_$(Get-Date -UFormat %s)_B"
 } | ConvertTo-Json -Depth 5
-$exec_req_b = Invoke-RestMethod -Uri "http://127.0.0.1:8002/v1/capability/mounts/$mount_id_b/execute" -Method Post -Body $exec_body_b -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+$exec_req_b = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_b/execute" -Method Post -Body $exec_body_b -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
 
 if ($exec_req_b.decision -eq "deny" -and $exec_req_b.reason -match "terminated") {
     Write-Host "SUCCESS: Execution on terminated mount B was denied: $($exec_req_b.reason)"
@@ -145,6 +145,7 @@ if ($exec_req_b.decision -eq "deny" -and $exec_req_b.reason -match "terminated")
 }
 
 Write-Host "E2E COLD MACHINE SEAL COMPLETE!"
+
 
 
 
