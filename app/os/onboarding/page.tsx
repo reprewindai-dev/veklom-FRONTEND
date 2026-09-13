@@ -129,20 +129,20 @@ export default function PGLOnboardingPage() {
 
     try {
       if (step === 0) {
-        await api("/api/v1/pgl/onboarding/operator-identity", {
-          body: { operator_name: operator.name, email: operator.email },
-        });
+        // STEP 1 — Operator Identity -> Veklom ID / LockerPhycer
+        await api("/api/v1/identity/me");
       } else if (step === 1) {
-        await api("/api/v1/pgl/onboarding/workspace-authority", {
+        // STEP 2 — Workspace Authority -> LockerPhycer
+        await api("/api/v1/workspace", {
           body: {
             name: workspace.name,
-            authority_level: workspace.authority_level,
-            permissions: workspace.compliance_frameworks,
+            slug: workspace.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           },
         });
       } else if (step === 2) {
+        // STEP 3 & 4 — Agent Certificate & Genome Setup -> GnomLedger
         const certRes = await api<{ certificate_id: string }>(
-          "/api/v1/pgl/onboarding/agent-certificate",
+          "/api/v1/ledger/agents",
           {
             body: {
               agent_name: agent.name,
@@ -160,22 +160,27 @@ export default function PGLOnboardingPage() {
         );
         setCertificateId(certRes.certificate_id || "");
       } else if (step === 3) {
-        // Genome Preview (already submitted in step 2 technically, or handled locally)
+        // Genome Preview (already submitted in step 2)
       } else if (step === 4) {
-        await api("/api/v1/pgl/onboarding/ledger-lineage", {
-          body: { certificate_id: certificateId, genesis_block: "GENESIS" },
-        });
+        // STEP 5 — Ledger Root (Handled natively on agent creation by GnomLedger)
       } else if (step === 5) {
-        // Payment Binding
+        // STEP 6 — Payment Binding -> Veklom ID
+        if (wallet.address) {
+          await api("/api/v1/identity/link-wallet", {
+            body: { wallet_address: wallet.address },
+          });
+        }
       } else if (step === 6) {
-        await api("/api/v1/pgl/onboarding/first-proof", {
+        // STEP 7 — First Proof -> CAPPO (Execution)
+        await api("/v1/capability/mounts", {
           body: {
             certificate_id: certificateId,
-            proof_type: "identity_anchor",
-            payload: { wallet_address: wallet.address },
+            capability: "activation.governed-counter",
+            action: "counter.increment",
+            resource: "onboarding-proof",
+            arguments: {}
           },
         });
-        await api("/api/v1/pgl/onboarding/complete", { body: {} });
         setOnboardingCompleted(true);
         return;
       }
