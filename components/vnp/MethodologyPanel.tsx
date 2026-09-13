@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -285,7 +285,7 @@ export default function MethodologyPanel() {
             <div className="font-medium text-[#A1A1A6] mb-1">Node Operator Model</div>
             <div>• At least 3 independent node operators</div>
             <div>• No single operator controls {">"} 40% of capacity</div>
-            <div>• Mixed providers: AWS, Azure, GCP, Hetzner, bare-metal</div>
+            <div>• Mixed providers: AWS, Azure, GCP, Local Hardware, bare-metal</div>
             <div>• Stateless containerized k6 agents (Docker)</div>
           </div>
         </div>
@@ -900,3 +900,4 @@ function DocRef({ title, status, desc }: { title: string; status: string; desc: 
     </div>
   );
 }
+

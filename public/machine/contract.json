@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "discovery": {
+    "tools": "/mcp/tools.json",
+    "openapi": "/openapi.json",
+    "x402": "/.well-known/x402.json"
+  },
+  "authentication": {
+    "mechanism": "github_device_flow",
+    "start": "/api/auth/github/device/start",
+    "poll": "/api/auth/github/device/poll",
+    "credential": "LockerPhycer Bearer Token",
+    "meaning": "Authenticated session only. Does not grant consequence authority."
+  },
+  "execution_authority": {
+    "issuer": "CAPPO",
+    "primitive": "Capability Mount",
+    "credential": "EphemeralScopedToken",
+    "properties": [
+      "mount_bound",
+      "execution_bound",
+      "scope_bound",
+      "short_lived",
+      "single_use",
+      "nonce_protected",
+      "fail_closed"
+    ]
+  },
+  "limits": {
+    "public_execution_proxy": {
+      "requests_per_minute": 60,
+      "scope": "ip"
+    },
+    "workspace": {
+      "runs_per_hour": 1000,
+      "tokens_per_hour": 10000000
+    },
+    "node": {
+      "concurrent_executions": 50
+    }
+  },
+  "commerce": {
+    "free_execution": {
+      "count": 1,
+      "scope": "workspace",
+      "reset": "UTC daily"
+    },
+    "protocol": "x402",
+    "network": "eip155:8453",
+    "network_name": "Base Mainnet",
+    "asset": "USDC",
+    "pricing_usd": {
+      "micro": 0.001,
+      "read": 0.005,
+      "action": 0.05,
+      "compute": 0.5
+    },
+    "invariant": "Payment satisfies commercial admission only. CAPPO independently determines consequence authority."
+  }
+}

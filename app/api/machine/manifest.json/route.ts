@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 export const dynamic = 'force-static';
 export function GET() {
  return NextResponse.json({
@@ -11,6 +11,7 @@ export function GET() {
  canonical_repo: 'github.com/reprewindai-dev/cappo-backend',
  endpoints: {
  manifest: '/api/machine/manifest.json',
+ contract: '/machine/contract.json',
  claims: '/api/machine/claims.json',
  conformance: '/api/machine/conformance.json',
  evidence_index: '/api/machine/evidence-index.json',

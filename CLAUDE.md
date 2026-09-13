@@ -1,4 +1,4 @@
-# Veklom Control Plane Doctrine
+﻿# Veklom Control Plane Doctrine
 
 This repository is the private, tier-gated Next.js control plane for Veklom. Treat it as revenue-critical production software, not a demo.
 
@@ -49,3 +49,4 @@ For visible UI changes, also run the app locally and inspect the affected route.
 ## Commit And Push
 
 When implementation is requested and verification passes, commit the intended changes and push to `origin/main`.
+

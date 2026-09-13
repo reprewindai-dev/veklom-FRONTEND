@@ -52,8 +52,8 @@ services:
         condition: service_healthy
     command: ["tunnel", "--no-autoupdate", "--config", "/etc/cloudflared/config.yml", "run"]
     volumes:
-      - ./.veklom/runtime/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
-      - ./.veklom/runtime/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
+      - C:/Users/antho/.veklom/runtime/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - C:/Users/antho/.veklom/runtime/cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

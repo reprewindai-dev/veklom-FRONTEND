@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import clsx from"clsx";
 import { ReactNode, useId } from"react";
@@ -83,7 +83,7 @@ export function Pill({
 }
 
 export function RoutePill({ route }: { route?: string }) {
- const label = (route ||"").toLowerCase().includes("aws") ?"AWS · BURST" :"HETZNER · PRIMARY";
+ const label = (route ||"").toLowerCase().includes("aws") ?"AWS · BURST" :"Local Hardware · PRIMARY";
  return <Pill tone={routeTone(route)}>{label}</Pill>;
 }
 
@@ -218,7 +218,7 @@ export function SectionCard({
 }
 
 /* =========================================================================
- DualLineChart — two smooth series (e.g. Hetzner vs AWS burst)
+ DualLineChart — two smooth series (e.g. Local Hardware vs AWS burst)
  ========================================================================= */
 export function DualLineChart({
  points,
@@ -412,3 +412,4 @@ export function ProgressBar({ percent, color = ACCENT.amber }: { percent: number
  </div>
  );
 }
+

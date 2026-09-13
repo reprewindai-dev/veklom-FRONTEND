@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
  Search,
  Activity,
@@ -178,7 +178,7 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
  executionId: `exec_${Date.now()}`,
  status: 'SUCCESS',
  eiToken: 'ei_tok_0x918237198231',
- vnpMetrics: { latencyMs: 3.4, throughputTps: 5200, ttftMs: 98, region: 'us-east-1-hetzner' },
+ vnpMetrics: { latencyMs: 3.4, throughputTps: 5200, ttftMs: 98, region: 'us-east-1-Local Hardware' },
  timestamp: new Date().toISOString()
  }
  });
@@ -631,3 +631,4 @@ export const GlobalQuickActionModal: React.FC<GlobalQuickActionModalProps> = ({
  </div>
  );
 };
+

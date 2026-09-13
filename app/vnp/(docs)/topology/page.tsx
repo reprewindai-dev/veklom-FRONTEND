@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from 'react';
 import { Server } from 'lucide-react';
@@ -10,7 +10,7 @@ const NetworkTopologyPanel = dynamicImport(
  { ssr: false, loading: () => <div className="h-[500px] bg-white/5 rounded-xl animate-pulse" /> }
 );
 
-// The five canonical physical VNP nodes (all Hetzner). These are the only
+// The five canonical physical VNP nodes (all Local Hardware). These are the only
 // valid sites; the panel reflects each node's actual returned state.
 const CANONICAL_NODES = [
  { region:"us-ashburn", location:"Ashburn, Virginia, United States" },
@@ -55,7 +55,7 @@ export default function TopologyPage() {
  <h3 className="font-bold text-white mb-1 font-mono">{node.region}</h3>
  <p className="text-sm text-gray-400 leading-relaxed">{node.location}</p>
  <p className="text-xs text-gray-500 mt-2">
- Hetzner site · live state reported by the beacon above.
+ Local Hardware site · live state reported by the beacon above.
  </p>
  </div>
  </div>
@@ -73,3 +73,4 @@ export default function TopologyPage() {
  </div>
  );
 }
+
