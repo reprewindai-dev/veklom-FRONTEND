@@ -12,7 +12,7 @@ type Beacon = Record<string, unknown>;
 type Verification = { valid?: boolean; reason?: string; kid?: string };
 
 function endpoint(method: StageEndpoint["method"], path: string, baseUrl?: string): StageEndpoint {
-  return { method, path, classification: "live", response: "CAPPO beacon response", baseUrl };
+  return { method, path, classification: "present", response: "CAPPO beacon response", baseUrl };
 }
 
 function stringValue(value: unknown): string {
