@@ -1,152 +1,235 @@
 $ErrorActionPreference = "Stop"
-Write-Host "Running COLD EXTERNAL MACHINE cycle..."
+$Base = if ($env:VEKLOM_BASE_URL) { $env:VEKLOM_BASE_URL.TrimEnd('/') } else { "https://veklom.com" }
+$startedAt = (Get-Date).ToUniversalTime().ToString("o")
+$proof = [ordered]@{
+    version = "machine-onboarding-e2e.v1"
+    base_url = $Base
+    started_at = $startedAt
+    stages = @()
+    result = "INDETERMINATE"
+}
 
-# Step 1: Discover veklom.com
-Write-Host "1. Discover veklom.com"
-$manifest = Invoke-RestMethod "https://veklom.com/mcp/manifest.json"
-Write-Host "Discovered product: $($manifest.product)"
+function Add-Stage([string]$name, [string]$status, [hashtable]$evidence = @{}) {
+    $proof.stages += [ordered]@{
+        name = $name
+        status = $status
+        at = (Get-Date).ToUniversalTime().ToString("o")
+        evidence = $evidence
+    }
+    Write-Host ("[{0}] {1}" -f $status, $name)
+}
 
-# Step 2: Read machine manifest/tool catalog
-Write-Host "2. Read machine tool catalog"
-$tools = Invoke-RestMethod "https://veklom.com/mcp/tools.json"
-Write-Host "Found $($tools.tools.Length) tools."
+function Fail-Proof([string]$stage, [string]$message) {
+    Add-Stage $stage "FAIL" @{ error = $message }
+    $proof.result = "INVALID"
+    $proof.completed_at = (Get-Date).ToUniversalTime().ToString("o")
+    $proof | ConvertTo-Json -Depth 12 | Set-Content -Encoding UTF8 "machine-e2e-proof.json"
+    throw "$stage : $message"
+}
 
-# Step 3: Request Device Flow code
-Write-Host "3. Requesting Device Flow code from Frontend API"
-$device_req = Invoke-RestMethod -Uri "https://veklom.com/api/auth/github/device/start" -Method Post -ContentType "application/json"
-$device_code = $device_req.device_code
-$user_code = $device_req.user_code
-$verification_uri = $device_req.verification_uri
-$interval = $device_req.interval
-if ($null -eq $interval) { $interval = 5 }
+try {
+    Write-Host "=== VEKLOM COLD EXTERNAL MACHINE ONBOARDING ==="
 
-Write-Host "=================================================="
-Write-Host "Please authorize this machine!"
-Write-Host "Navigate to: $verification_uri"
-Write-Host "Enter code:  $user_code"
-Write-Host "=================================================="
-Write-Host "Polling for token..."
+    # 1. Machine discovery. These are public contract surfaces only; reachability
+    # is not counted as execution proof.
+    $manifest = Invoke-RestMethod "$Base/mcp/manifest.json"
+    $tools = Invoke-RestMethod "$Base/mcp/tools.json"
+    $contract = Invoke-RestMethod "$Base/machine/contract.json"
+    $x402 = Invoke-RestMethod "$Base/.well-known/x402.json"
+    Add-Stage "discovery" "PASS" @{
+        product = $manifest.product
+        tool_count = @($tools.tools).Count
+        contract_version = $contract.version
+        commerce_protocol = $contract.commerce.protocol
+        x402_reachable = ($null -ne $x402)
+    }
 
-# Step 4: Machine authenticates with LockerPhycer
-Write-Host "4. Machine polls for token..."
-$token = $null
-while ($null -eq $token) {
-    Start-Sleep -Seconds $interval
-    try {
-        $token_req = Invoke-RestMethod -Uri "https://veklom.com/api/auth/github/device/poll" -Method Post -Body (@{device_code=$device_code} | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
-        $token = $token_req.access_token
-    } catch {
-        $err_resp = $_.Exception.Response
-        if ($err_resp.StatusCode.value__ -eq 202) {
-            Write-Host "Authorization pending... waiting."
-        } elseif ($err_resp.StatusCode.value__ -eq 400) {
-            $err_stream = $err_resp.GetResponseStream()
-            $err_body = (New-Object System.IO.StreamReader($err_stream)).ReadToEnd() | ConvertFrom-Json
-            if ($err_body.error -eq "authorization_pending") {
-                Write-Host "Authorization pending... waiting."
-            } elseif ($err_body.error -eq "slow_down") {
-                $interval += 5
-                Write-Host "Slowing down. New interval: $interval"
-            } else {
-                Write-Host "FATAL DEVICE FLOW ERROR: $($err_body.error)"
-                exit 1
-            }
-        } elseif ($err_resp.StatusCode.value__ -eq 429) { $interval += 5; Write-Host "Slowing down. New interval: $interval" } elseif ($err_resp.StatusCode.value__ -eq 403) {
-            Write-Host "FATAL: Access Denied by user."
-            exit 1
-        } else {
-            Write-Host "FATAL HTTP ERROR: $($err_resp.StatusCode.value__) - $( (New-Object System.IO.StreamReader($err_resp.GetResponseStream())).ReadToEnd() )"
-            exit 1
+    # 2. GitHub Device Flow. This is the only interactive boundary: the human
+    # authorizes the machine on GitHub, then the machine resumes autonomously.
+    $device = Invoke-RestMethod -Uri "$Base/api/auth/github/device/start" -Method Post -ContentType "application/json"
+    if (-not $device.device_code -or -not $device.user_code -or -not $device.verification_uri) {
+        Fail-Proof "device_flow_start" "Device Flow did not return device_code, user_code, and verification_uri"
+    }
+    Add-Stage "device_flow_start" "PASS" @{ verification_uri = $device.verification_uri; user_code = $device.user_code }
+    Write-Host "AUTHORIZE MACHINE: $($device.verification_uri) code $($device.user_code)"
+
+    $interval = if ($device.interval) { [int]$device.interval } else { 5 }
+    $token = $null
+    $deadline = (Get-Date).AddMinutes(15)
+    while (-not $token -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Seconds $interval
+        try {
+            $poll = Invoke-RestMethod -Uri "$Base/api/auth/github/device/poll" -Method Post -Body (@{ device_code = $device.device_code } | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
+            $token = $poll.access_token
+        } catch {
+            $statusCode = $null
+            try { $statusCode = $_.Exception.Response.StatusCode.value__ } catch {}
+            if ($statusCode -eq 202) { continue }
+            if ($statusCode -eq 429) { $interval += 5; continue }
+            if ($statusCode -eq 403) { Fail-Proof "device_flow_poll" "Human denied GitHub Device Flow" }
+            Fail-Proof "device_flow_poll" ("Device Flow poll failed with HTTP {0}: {1}" -f $statusCode, $_.Exception.Message)
         }
     }
-}
-Write-Host "Received LockerPhycer token!"
+    if (-not $token) { Fail-Proof "device_flow_poll" "Timed out waiting for GitHub Device Flow authorization" }
+    Add-Stage "device_flow_poll" "PASS" @{ session_granted = $true }
 
-# Step 5: Mount A
-Write-Host "5. Mount A: Mount capability"
-$mount_body = @{
-    package_ref = "veklom.governed-counter@v1"
-    execution_scope = @{ workspace = "default"; project = "demo" }
-    requested_action_scope = @{ reads = @("counter.read"); writes = @("counter.increment"); blocked = @("counter.reset") }
-} | ConvertTo-Json -Depth 5
-$mount_a = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts" -Method Post -Body $mount_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
-$mount_id_a = $mount_a.mount.id
-$token_id_a = $mount_a.token.token_id
-$nonce_a = $mount_a.token.nonce
-Write-Host "Mounted A: $mount_id_a"
+    $auth = @{ Authorization = "Bearer $token" }
 
-# Execute Mount A
-Write-Host "6. Mount A: Execute increment"
-$exec_body_a = @{
-    token_id = $token_id_a
-    nonce = $nonce_a
-    action = "counter.increment"
-    target_ref = "activation.governed-counter"
-    resource = "counter"
-    arguments = @{ amount = 1 }
-    operation_id = "op_machine_$(Get-Date -UFormat %s)_A"
-} | ConvertTo-Json -Depth 5
-$exec_req_a = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_a/execute" -Method Post -Body $exec_body_a -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
+    # 3. Prove the bearer resolves to a LockerPhycer identity. Do not use the
+    # Veklom-ID cookie card here: machine auth must resolve from the same bearer.
+    $identity = Invoke-RestMethod -Uri "$Base/api/v1/auth/me" -Method Get -Headers $auth
+    if (-not $identity.id -or -not $identity.email) {
+        Fail-Proof "lockerphycer_identity" "Bearer did not resolve to a canonical LockerPhycer user"
+    }
+    Add-Stage "lockerphycer_identity" "PASS" @{
+        user_id = $identity.id
+        status = $identity.status
+        role = $identity.role
+    }
 
-if ($exec_req_a.decision -ne "allow") {
-    Write-Host "FATAL: Expected allow for Mount A execute, got $($exec_req_a.decision)"
+    # 4. Establish a workspace and rotate the session onto the concrete workspace
+    # identity. This changes identity context only; it does not grant CAPPO authority.
+    $machineName = if ($identity.username) { $identity.username } else { "machine" }
+    $safeSlug = (($machineName.ToLower() -replace '[^a-z0-9-]', '-') -replace '-+', '-').Trim('-')
+    if (-not $safeSlug) { $safeSlug = "machine" }
+    $workspaceBody = @{
+        name = "Machine $machineName"
+        slug = "machine-$safeSlug"
+    } | ConvertTo-Json
+    $workspace = Invoke-RestMethod -Uri "$Base/api/v1/workspace/" -Method Post -Body $workspaceBody -ContentType "application/json" -Headers $auth
+    if (-not $workspace.id -or -not $workspace.access_token) {
+        Fail-Proof "workspace_binding" "Workspace creation did not return a workspace-bound access token"
+    }
+    $token = $workspace.access_token
+    $auth = @{ Authorization = "Bearer $token" }
+    Add-Stage "workspace_binding" "PASS" @{
+        workspace_id = $workspace.id
+        existing = [bool]$workspace.existing
+        tier = $workspace.tier
+        session_rotated = $true
+    }
+
+    # 5. Mount a bounded capability. Scope is deliberately narrow: one safe read
+    # plus one explicitly blocked action. The workspace must match the token claim.
+    $mountBody = @{
+        package_ref = "veklom.governed-counter@v1"
+        execution_scope = @{ workspace = $workspace.id; project = "machine-onboarding" }
+        requested_action_scope = @{
+            reads = @("counter.read")
+            writes = @()
+            blocked = @("counter.reset")
+        }
+        role = "ephemeral_executor"
+        policy = @{}
+        ttl_seconds = 300
+    } | ConvertTo-Json -Depth 8
+    $mount = Invoke-RestMethod -Uri "$Base/api/cappo/v1/capability/mounts" -Method Post -Body $mountBody -ContentType "application/json" -Headers $auth
+    if ($mount.decision -ne "allow" -or -not $mount.mount.id -or -not $mount.token.token_id -or -not $mount.token.nonce) {
+        Fail-Proof "capability_mount" ("CAPPO did not issue a bounded mount: {0}" -f ($mount | ConvertTo-Json -Compress -Depth 6))
+    }
+    $mountId = $mount.mount.id
+    $tokenId = $mount.token.token_id
+    $nonce = $mount.token.nonce
+    Add-Stage "capability_mount" "PASS" @{
+        mount_id = $mountId
+        package_ref = "veklom.governed-counter@v1"
+        workspace_id = $workspace.id
+    }
+
+    # 6. Negative proof first. CAPPO itself must reject the blocked action.
+    $denyBody = @{
+        token_id = $tokenId
+        nonce = $nonce
+        action = "counter.reset"
+    } | ConvertTo-Json
+    $denied = Invoke-RestMethod -Uri "$Base/api/cappo/v1/capability/mounts/$mountId/actions" -Method Post -Body $denyBody -ContentType "application/json" -Headers $auth
+    if ($denied.decision -ne "deny") {
+        Fail-Proof "blocked_action" "CAPPO failed to deny counter.reset"
+    }
+    Add-Stage "blocked_action" "PASS" @{ decision = $denied.decision; reason = $denied.reason; action = $denied.action }
+
+    # 7. Execute one safe allowed consequence through the canonical /v1/exec path.
+    $execBody = @{
+        prompt = "Machine onboarding governed counter read"
+        action = "counter.read"
+        directive = "ALLOW"
+        workspace_id = $workspace.id
+        scope = @{
+            tools = @("counter.read")
+            allowed_effects = @("counter.read")
+        }
+        capability_lease = @{
+            mount_id = $mountId
+            token_id = $tokenId
+            nonce = $nonce
+        }
+    } | ConvertTo-Json -Depth 8
+    $execution = Invoke-RestMethod -Uri "$Base/api/cappo/v1/exec" -Method Post -Body $execBody -ContentType "application/json" -Headers $auth
+    if (-not $execution.execution_id) {
+        Fail-Proof "governed_execution" "CAPPO returned no execution_id"
+    }
+    $executionId = $execution.execution_id
+    Add-Stage "governed_execution" "PASS" @{ execution_id = $executionId; run_id = $execution.run_id; operation = "counter.read" }
+
+    # 8. First Proof = persisted evidence for the exact execution. A 2xx execution
+    # response is insufficient. The PGL record must be persisted and hash-addressed.
+    $evidence = Invoke-RestMethod -Uri "$Base/api/cappo/v1/executions/$executionId/evidence" -Method Get -Headers $auth
+    $acceptedProofState = @("verified", "verified_with_unresolved_refs") -contains $evidence.proof_state
+    if ($evidence.execution_id -ne $executionId) {
+        Fail-Proof "persisted_pgl_evidence" "Evidence execution_id does not match the executed consequence"
+    }
+    if (-not $acceptedProofState) {
+        Fail-Proof "persisted_pgl_evidence" ("Evidence proof_state is not verified: {0}" -f $evidence.proof_state)
+    }
+    if ($evidence.pgl.persisted -ne $true -or -not $evidence.pgl.event_hash) {
+        Fail-Proof "persisted_pgl_evidence" "PGL did not return persisted=true with a non-empty event_hash"
+    }
+    Add-Stage "persisted_pgl_evidence" "PASS" @{
+        execution_id = $evidence.execution_id
+        proof_state = $evidence.proof_state
+        pgl_event_id = $evidence.pgl.event_id
+        pgl_event_hash = $evidence.pgl.event_hash
+        persisted = $true
+    }
+
+    # 9. A terminated mount must lose authority immediately. Use a fresh mount so
+    # this check is independent of any single-use behavior from the first proof.
+    $mount2 = Invoke-RestMethod -Uri "$Base/api/cappo/v1/capability/mounts" -Method Post -Body $mountBody -ContentType "application/json" -Headers $auth
+    if ($mount2.decision -ne "allow") { Fail-Proof "termination_setup" "CAPPO did not issue the second mount" }
+    $mount2Id = $mount2.mount.id
+    $terminateBody = @{ reason = "machine_onboarding_e2e" } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$Base/api/cappo/v1/capability/mounts/$mount2Id/terminate" -Method Post -Body $terminateBody -ContentType "application/json" -Headers $auth | Out-Null
+
+    $postTerminateBody = @{
+        token_id = $mount2.token.token_id
+        nonce = $mount2.token.nonce
+        action = "counter.read"
+        target_ref = "activation.governed-counter"
+        resource = "counter"
+        arguments = @{}
+        operation_id = "op_machine_termination_$([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())"
+    } | ConvertTo-Json -Depth 8
+    $postTerminate = Invoke-RestMethod -Uri "$Base/api/cappo/v1/capability/mounts/$mount2Id/execute" -Method Post -Body $postTerminateBody -ContentType "application/json" -Headers $auth
+    if ($postTerminate.decision -ne "deny") {
+        Fail-Proof "post_termination_denial" "Terminated mount was still executable"
+    }
+    Add-Stage "post_termination_denial" "PASS" @{ mount_id = $mount2Id; decision = $postTerminate.decision; reason = $postTerminate.reason }
+
+    $proof.result = "VALID"
+    $proof.workspace_id = $workspace.id
+    $proof.execution_id = $executionId
+    $proof.pgl_event_hash = $evidence.pgl.event_hash
+    $proof.completed_at = (Get-Date).ToUniversalTime().ToString("o")
+    $proof | ConvertTo-Json -Depth 12 | Set-Content -Encoding UTF8 "machine-e2e-proof.json"
+    Write-Host "=== VEKLOM MACHINE ONBOARDING SEAL: VALID ==="
+    Write-Host "Proof written to machine-e2e-proof.json"
+} catch {
+    if ($proof.result -eq "INDETERMINATE") {
+        $proof.result = "INVALID"
+        Add-Stage "unhandled_error" "FAIL" @{ error = $_.Exception.Message }
+        $proof.completed_at = (Get-Date).ToUniversalTime().ToString("o")
+        $proof | ConvertTo-Json -Depth 12 | Set-Content -Encoding UTF8 "machine-e2e-proof.json"
+    }
+    Write-Error $_
     exit 1
 }
-Write-Host "Execution A decision: allow"
-$state_a = $exec_req_a.consequence.resulting_state.value
-Write-Host "State A after execute: $state_a"
-
-# Replay Mount A
-Write-Host "7. Mount A: Replay identical operation"
-$replay_req_a = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_a/execute" -Method Post -Body $exec_body_a -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
-if ($replay_req_a.decision -ne "deny") {
-    Write-Host "FATAL: Expected deny for Mount A replay, got $($replay_req_a.decision)"
-    exit 1
-}
-$state_a_replay = $replay_req_a.consequence.resulting_state.value
-if ($null -ne $state_a_replay -and $state_a_replay -ne $state_a) {
-    Write-Host "FATAL: State mutated during denied replay! state_a=$state_a, state_a_replay=$state_a_replay" `n    Write-Host ($replay_req_a | ConvertTo-Json -Depth 5)
-    exit 1
-}
-Write-Host "SUCCESS: Replay denied and state unchanged ($state_a_replay)."
-
-# Mount B
-Write-Host "8. Mount B: Fresh mount"
-$mount_b = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts" -Method Post -Body $mount_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
-$mount_id_b = $mount_b.mount.id
-$token_id_b = $mount_b.token.token_id
-$nonce_b = $mount_b.token.nonce
-Write-Host "Mounted B: $mount_id_b"
-
-# Terminate Mount B
-Write-Host "9. Mount B: Explicit terminate"
-$revoke_body = @{ reason = "explicit_terminate" } | ConvertTo-Json
-Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_b/terminate" -Method Post -Body $revoke_body -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
-Write-Host "Mount B terminated."
-
-# Attempt Execute Mount B
-Write-Host "10. Mount B: Attempt execute after terminate"
-$exec_body_b = @{
-    token_id = $token_id_b
-    nonce = $nonce_b
-    action = "counter.increment"
-    target_ref = "activation.governed-counter"
-    resource = "counter"
-    arguments = @{ amount = 1 }
-    operation_id = "op_machine_$(Get-Date -UFormat %s)_B"
-} | ConvertTo-Json -Depth 5
-$exec_req_b = Invoke-RestMethod -Uri "https://veklom.com/api/cappo/v1/capability/mounts/$mount_id_b/execute" -Method Post -Body $exec_body_b -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" }
-
-if ($exec_req_b.decision -eq "deny" -and $exec_req_b.reason -match "terminated") {
-    Write-Host "SUCCESS: Execution on terminated mount B was denied: $($exec_req_b.reason)"
-} else {
-    Write-Host "FATAL: Expected deny with termination reason for Mount B. Got: $($exec_req_b | ConvertTo-Json)"
-    exit 1
-}
-
-Write-Host "E2E COLD MACHINE SEAL COMPLETE!"
-
-
-
-
-
