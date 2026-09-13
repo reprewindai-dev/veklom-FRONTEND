@@ -31,7 +31,7 @@ export default function ExecutionIdentityV1Control() {
     setLoading(true);
     setError(null);
     try {
-      // Pull from the live BYOS PGL certificate endpoint (JWT-authenticated)
+      // Pull from the same-origin CAPPO identity route (JWT-authenticated)
       const data = await api<IdentityBundle>("/api/v1/pgl/certificate");
       setIdentity(data);
     } catch (e: any) {
@@ -83,7 +83,7 @@ export default function ExecutionIdentityV1Control() {
         <div className="flex-1">
           <label className="block text-[9px] font-black tracking-widest uppercase text-cos-muted mb-2">SOURCE:</label>
           <div className="w-full bg-cos-surface border border-cos-border rounded-md px-3 py-2 text-xs font-mono text-cos-muted">
-            api.veklom.com → /api/v1/pgl/certificate
+            CAPPO identity proxy → /api/v1/pgl/certificate
           </div>
         </div>
         <button
@@ -106,7 +106,7 @@ export default function ExecutionIdentityV1Control() {
       {!identity && !error && (
         <div className="bg-cos-surface border border-cos-border rounded-xl p-5 text-center">
           <p className="text-[10px] font-mono text-cos-muted uppercase tracking-widest">
-            Click "Fetch Identity" to pull a live PGL certificate from api.veklom.com
+            Click "Fetch Identity" to pull a live PGL certificate through the CAPPO identity proxy
           </p>
         </div>
       )}
