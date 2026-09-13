@@ -1,0 +1,226 @@
+{
+  "run_id": "19579c43-4d58-4a80-86cb-8834a1cdf3ac",
+  "run_timestamp": "2026-09-12T23:30:51.985232+00:00",
+  "completed_at": "2026-09-12T23:31:53.326043+00:00",
+  "test": "VDB-MOBILITY-P1",
+  "claim": "A governed state package can leave execution domain A, survive termination of that runtime, materialize on execution domain B, and continue only after B obtains fresh current authority.",
+  "ordering_timestamps": {
+    "M0_b_clean": "2026-09-12T23:30:52.031204+00:00",
+    "M1_a_epoch1": "2026-09-12T23:30:52.283497+00:00",
+    "M2_a_mutation": "2026-09-12T23:30:52.345181+00:00",
+    "M3_package_sealed": "2026-09-12T23:30:52.361554+00:00",
+    "M4_package_verified": "2026-09-12T23:30:52.361776+00:00",
+    "M5_a_terminated": "2026-09-12T23:30:53.363563+00:00",
+    "M5_a_unavailable": "2026-09-12T23:31:42.402661+00:00",
+    "M6_package_transferred": "2026-09-12T23:31:42.403454+00:00",
+    "M10_b_fresh_authority": "2026-09-12T23:31:53.095276+00:00"
+  },
+  "A": {
+    "runtime_id": "Host_A",
+    "boot_id": "add8c35c-d35d-4971-a2fb-4104f0a6432c",
+    "authority_epoch": 1,
+    "input_state_root": "sha256:4c766f5a53b93946506762e2b7e4a8e0fbf03b3e4a27d68d635e6c4f8968b667",
+    "output_state_root": "sha256:23cd6bbad9a801fdc42f8362d8eae9727930b67a4068f65b0cc5c2ce2a70fe3f"
+  },
+  "PACKAGE": {
+    "package_hash": "sha256:975ae1f267f7497050e133c8fea77b0d717a57dc4f7684422778d51e2e79ab0b",
+    "manifest_hash": "sha256:6fe8a62b767dadb0d33dd1c9582f4a6d556539912070e3ba468fb55662bf8b7d",
+    "chunk_hashes": [
+      "sha256:23cd6bbad9a801fdc42f8362d8eae9727930b67a4068f65b0cc5c2ce2a70fe3f"
+    ],
+    "state_version": 1,
+    "state_root": "sha256:23cd6bbad9a801fdc42f8362d8eae9727930b67a4068f65b0cc5c2ce2a70fe3f",
+    "previous_receipt": "bb27414e71582d2d9536b3f8be4a032925fc39c36ef310e3b60b0f61ff89b148"
+  },
+  "A_TERMINATION": {
+    "timestamp": "2026-09-12T23:30:53.363563+00:00",
+    "unavailable_confirmed_at": "2026-09-12T23:31:42.402661+00:00",
+    "terminated_unavailable": true,
+    "state_path_unavailable": true,
+    "mode": "P2HOST_MODE"
+  },
+  "B": {
+    "runtime_id": "Host_B",
+    "boot_id": "2832bc75-da74-4828-9686-3f39b4a55b85",
+    "rejected_A_authority": true,
+    "new_authority_epoch": 2,
+    "imported_package_hash": "sha256:975ae1f267f7497050e133c8fea77b0d717a57dc4f7684422778d51e2e79ab0b",
+    "input_state_root": "sha256:23cd6bbad9a801fdc42f8362d8eae9727930b67a4068f65b0cc5c2ce2a70fe3f",
+    "output_state_root": "sha256:af4cfde9c1e155c78460a5210ab871fa15fff834199c5fc6d5cc3327289dcdf2",
+    "source_runtime_contacted": false
+  },
+  "receipts": [
+    {
+      "receipt_id": "d8b1a773-4cbb-459b-b97f-05376babbfbf",
+      "capability_id": "cap-mobility-p1",
+      "epoch": 1,
+      "replica_id": "Host_A",
+      "generation": 0,
+      "result_digest": "d6ae7ddad8fdbad7cd6502e5fd31448c0697f74a7b01f5da75988b8a5c2c820f",
+      "previous_receipt_hash": "",
+      "timestamp": "2026-09-12T19:30:50.943900+00:00",
+      "receipt_hash": "bb27414e71582d2d9536b3f8be4a032925fc39c36ef310e3b60b0f61ff89b148"
+    },
+    {
+      "receipt_id": "e4a47bc2-9c2b-458b-bc85-43b223354be2",
+      "capability_id": "cap-mobility-p1",
+      "epoch": 2,
+      "replica_id": "Host_B",
+      "generation": 1,
+      "result_digest": "d6ae7ddad8fdbad7cd6502e5fd31448c0697f74a7b01f5da75988b8a5c2c820f",
+      "previous_receipt_hash": "bb27414e71582d2d9536b3f8be4a032925fc39c36ef310e3b60b0f61ff89b148",
+      "timestamp": "2026-09-12T19:31:51.973299+00:00",
+      "receipt_hash": "1ec8e85ba013c4fe66a32b5c8501b0d2b2c998f8a04c8247beedb220d8079c14"
+    }
+  ],
+  "local_events": [
+    {
+      "step": "M0",
+      "event_type": "B_CLEAN_VERIFIED",
+      "ts": "2026-09-12T23:30:52.031221+00:00",
+      "boot_id": "2832bc75-da74-4828-9686-3f39b4a55b85",
+      "generation": 0
+    },
+    {
+      "step": "M1",
+      "event_type": "EPOCH_TRANSITION",
+      "ts": "2026-09-12T23:30:52.283516+00:00",
+      "node": "A",
+      "epoch": 1
+    },
+    {
+      "step": "M2",
+      "event_type": "GEN_ADVANCE",
+      "ts": "2026-09-12T23:30:52.345201+00:00",
+      "node": "A",
+      "generation": 1,
+      "digest": "fe7c6820ee773e317aca75666f0d2d9eab0a765dbeb1730ebddf5a97014ba109"
+    },
+    {
+      "step": "M3",
+      "event_type": "PACKAGE_SEALED",
+      "ts": "2026-09-12T23:30:52.361575+00:00",
+      "package_hash": "sha256:975ae1f267f7497050e133c8fea77b0d717a57dc4f7684422778d51e2e79ab0b",
+      "manifest_hash": "sha256:6fe8a62b767dadb0d33dd1c9582f4a6d556539912070e3ba468fb55662bf8b7d",
+      "chunk_hashes": [
+        "sha256:23cd6bbad9a801fdc42f8362d8eae9727930b67a4068f65b0cc5c2ce2a70fe3f"
+      ],
+      "state_version": 1,
+      "state_root": "sha256:23cd6bbad9a801fdc42f8362d8eae9727930b67a4068f65b0cc5c2ce2a70fe3f",
+      "previous_receipt": "bb27414e71582d2d9536b3f8be4a032925fc39c36ef310e3b60b0f61ff89b148"
+    },
+    {
+      "step": "M4",
+      "event_type": "PACKAGE_INTEGRITY_VERIFIED",
+      "ts": "2026-09-12T23:30:52.361791+00:00",
+      "package_hash": "sha256:975ae1f267f7497050e133c8fea77b0d717a57dc4f7684422778d51e2e79ab0b",
+      "chunks_ok": 1
+    },
+    {
+      "step": "M5",
+      "event_type": "SOURCE_TERMINATED",
+      "ts": "2026-09-12T23:31:42.403316+00:00",
+      "node": "A",
+      "terminated_at": "2026-09-12T23:30:53.363563+00:00",
+      "unavailable_confirmed_at": "2026-09-12T23:31:42.402661+00:00",
+      "unreachable": true,
+      "state_path_gone": true,
+      "mode": "P2HOST_MODE",
+      "boot_id_at_seal": "add8c35c-d35d-4971-a2fb-4104f0a6432c"
+    },
+    {
+      "step": "M6",
+      "event_type": "PACKAGE_TRANSFERRED",
+      "ts": "2026-09-12T23:31:42.403506+00:00",
+      "source": "sealed vdb-package artifact",
+      "destination": "Host_B",
+      "package_hash": "sha256:975ae1f267f7497050e133c8fea77b0d717a57dc4f7684422778d51e2e79ab0b"
+    },
+    {
+      "step": "M7",
+      "event_type": "MATERIALIZATION_DENY",
+      "ts": "2026-09-12T23:31:42.403944+00:00",
+      "attack": "tampered_chunk",
+      "result": "DENY"
+    },
+    {
+      "step": "M7",
+      "event_type": "MATERIALIZATION_DENY",
+      "ts": "2026-09-12T23:31:42.404152+00:00",
+      "attack": "tampered_manifest",
+      "result": "DENY"
+    },
+    {
+      "step": "M8",
+      "event_type": "AUTHORITY_DENY",
+      "ts": "2026-09-12T23:31:42.572666+00:00",
+      "attack": "source_authority_on_destination",
+      "result": "DENY",
+      "reason": "DEBUG ENCLAVE PUBKEY: 4YKB2BRHz3vpxEHs-yj3DTQCcsSYPNpxvUFaDJzlOE0\nDENY: runtime mismatch (auth:Host_A != curr:Host_B)"
+    },
+    {
+      "step": "M9",
+      "event_type": "AUTHORITY_DENY",
+      "ts": "2026-09-12T23:31:42.609018+00:00",
+      "attack": "stale_epoch",
+      "result": "DENY",
+      "reason": "Active lease held by Host_A"
+    },
+    {
+      "step": "M10",
+      "event_type": "EPOCH_TRANSITION",
+      "ts": "2026-09-12T23:31:53.095294+00:00",
+      "from": "Host_A",
+      "to": "Host_B",
+      "old_epoch": 1,
+      "new_epoch": 2
+    },
+    {
+      "step": "M10",
+      "event_type": "EXEC_ALLOW",
+      "ts": "2026-09-12T23:31:53.095300+00:00",
+      "node": "B",
+      "epoch": 2,
+      "result": "GOLDEN_EAGLE_99"
+    },
+    {
+      "step": "M11",
+      "event_type": "MATERIALIZATION_ALLOW",
+      "ts": "2026-09-12T23:31:53.099087+00:00",
+      "node": "B",
+      "state_version": 1,
+      "package_hash": "sha256:975ae1f267f7497050e133c8fea77b0d717a57dc4f7684422778d51e2e79ab0b",
+      "source_runtime_contacted": false
+    },
+    {
+      "step": "M12",
+      "event_type": "EXEC_ALLOW",
+      "ts": "2026-09-12T23:31:53.279541+00:00",
+      "node": "B",
+      "epoch": 2,
+      "state_version": 2
+    }
+  ],
+  "adversarial_results": {
+    "tampered_chunk_denied": true,
+    "tampered_manifest_denied": true,
+    "source_authority_rejected": true,
+    "stale_epoch_rejected": true
+  },
+  "mobility_invariants": {
+    "SOURCE_RUNTIME_UNAVAILABLE": true,
+    "SOURCE_STATE_PATH_UNAVAILABLE": true,
+    "PACKAGE_SELF_CONTAINED": true,
+    "PACKAGE_INTEGRITY": true,
+    "TAMPERED_CHUNK_DENIED": true,
+    "TAMPERED_MANIFEST_DENIED": true,
+    "SOURCE_AUTHORITY_REJECTED_ON_B": true,
+    "STALE_EPOCH_REJECTED": true,
+    "FRESH_DESTINATION_AUTHORITY": true,
+    "STATE_ROOT_CONTINUITY": true,
+    "STATE_VERSION_CONTINUITY": true,
+    "NO_SOURCE_RUNTIME_DEPENDENCY": true,
+    "PROVENANCE_CONTINUITY": true,
+    "P2HOST_SEAL_UNCHANGED": true
+  }
+}

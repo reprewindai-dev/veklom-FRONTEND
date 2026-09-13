@@ -1,0 +1,382 @@
+{
+  "run_id": "5737342f-1504-44aa-93f4-3fcd38383c5a",
+  "bundle_hash": "1d2ae342c23c1581138e3c7e9ba96a908473d33d42b9c4cb1961e234f8c1cbfa",
+  "workload_evidence": {
+    "run_id": "5737342f-1504-44aa-93f4-3fcd38383c5a",
+    "run_timestamp": "2026-09-12T22:45:03.243964+00:00",
+    "completed_at": "2026-09-12T22:46:24.503052+00:00",
+    "nodes": {
+      "cappo": "http://192.168.77.1:8766",
+      "node_a": "http://192.168.77.11:8765",
+      "node_b": "http://192.168.77.12:8765",
+      "node_c": "http://localhost:8768"
+    },
+    "receipts": [
+      {
+        "receipt_id": "2ff1a17d-abdd-44ec-ae7e-f33ba2dac5f9",
+        "capability_id": "cap-p2v-test",
+        "epoch": 1,
+        "replica_id": "Host_A",
+        "generation": 0,
+        "result_digest": "d6ae7ddad8fdbad7cd6502e5fd31448c0697f74a7b01f5da75988b8a5c2c820f",
+        "previous_receipt_hash": "",
+        "timestamp": "2026-09-12T18:45:02.843919+00:00",
+        "receipt_hash": "d0eb3f6b21257f678180dbfaef9fd2dac3bc97ed6b0d34816e0610b6f1f052b4"
+      },
+      {
+        "receipt_id": "4e1b1910-5399-465f-b911-775e275102a1",
+        "capability_id": "cap-p2v-test",
+        "epoch": 2,
+        "replica_id": "Host_B",
+        "generation": 1,
+        "result_digest": "d6ae7ddad8fdbad7cd6502e5fd31448c0697f74a7b01f5da75988b8a5c2c820f",
+        "previous_receipt_hash": "d0eb3f6b21257f678180dbfaef9fd2dac3bc97ed6b0d34816e0610b6f1f052b4",
+        "timestamp": "2026-09-12T18:46:04.661921+00:00",
+        "receipt_hash": "65b10bc4ee805910cd3d8ca66d0a80910f226ade8af4f0394d678df86517d508"
+      }
+    ],
+    "pgl": [
+      {
+        "entry_id": "e868a539-8f21-4c9f-8aba-7d8ef5eba61e",
+        "event_type": "EPOCH_TRANSITION",
+        "timestamp": "2026-09-12T22:45:03.327810+00:00",
+        "previous_hash": "",
+        "package_id": "cap-p2v-test",
+        "previous_host": null,
+        "new_host": "Host_A",
+        "previous_epoch": 0,
+        "new_epoch": 1,
+        "generation": 0,
+        "expires_at": 1789253163.325452,
+        "entry_hash": "a643aac746e1fdbf8673e30373b29c4dfd455d846d33340d85410fe54a3554b1"
+      },
+      {
+        "entry_id": "62327d70-e17f-4b0e-9e5c-8568ca02610c",
+        "event_type": "EXEC_ALLOW",
+        "timestamp": "2026-09-12T22:45:03.368290+00:00",
+        "previous_hash": "a643aac746e1fdbf8673e30373b29c4dfd455d846d33340d85410fe54a3554b1",
+        "package_id": "cap-p2v-test",
+        "host": "Host_A",
+        "epoch": 1,
+        "authority_digest": "e707c90ec3b85b6bbaf8050ce4ec3e05e702ee74647d802145a4c824bb743f87",
+        "expires_at": 1789253163.325452,
+        "entry_hash": "056d5077304b356b7f8e63ea0ba67a452b20cd5e6c4d61ffa9c0db6a8753bd9e"
+      },
+      {
+        "entry_id": "dbce3ca7-d428-4ff4-baf5-7a4376df08ef",
+        "event_type": "FENCE_DENY",
+        "timestamp": "2026-09-12T22:45:03.776694+00:00",
+        "previous_hash": "056d5077304b356b7f8e63ea0ba67a452b20cd5e6c4d61ffa9c0db6a8753bd9e",
+        "package_id": "cap-p2v-test",
+        "requesting_host": "Host_B",
+        "active_host": "Host_A",
+        "lease_expires_at": 1789253163.325452,
+        "reason": "Active lease held by Host_A",
+        "entry_hash": "835408ec6cc202620821612d2c0870e6274c39f1628dcc8a8562c8abf1795e65"
+      },
+      {
+        "entry_id": "42f40806-8364-4592-94d0-3ea3589cb3bd",
+        "event_type": "EPOCH_TRANSITION",
+        "timestamp": "2026-09-12T22:46:04.786084+00:00",
+        "previous_hash": "835408ec6cc202620821612d2c0870e6274c39f1628dcc8a8562c8abf1795e65",
+        "package_id": "cap-p2v-test",
+        "previous_host": "Host_A",
+        "new_host": "Host_B",
+        "previous_epoch": 1,
+        "new_epoch": 2,
+        "generation": 1,
+        "expires_at": 1789253224.778015,
+        "entry_hash": "15099281644f063c6dc4ad5354066ea7d8feb540eee0a26a670c1128ebec0d2f"
+      },
+      {
+        "entry_id": "b035f84e-9ba9-4715-9768-d41c7c0be72b",
+        "event_type": "EXEC_ALLOW",
+        "timestamp": "2026-09-12T22:46:04.810790+00:00",
+        "previous_hash": "15099281644f063c6dc4ad5354066ea7d8feb540eee0a26a670c1128ebec0d2f",
+        "package_id": "cap-p2v-test",
+        "host": "Host_B",
+        "epoch": 2,
+        "authority_digest": "726377d5c179e4e0cd91a5684c52d13e7915cdc4dd8963d75f92e57eecb108a1",
+        "expires_at": 1789253224.778015,
+        "entry_hash": "82ea2f02adef0b58f8772761ec0c9da0d20dd8cb9dee7c0bac844ada797a2fb3"
+      },
+      {
+        "entry_id": "43566bb5-9a21-45a5-9548-a373addcf76b",
+        "event_type": "LEASE_RENEW",
+        "timestamp": "2026-09-12T22:46:05.080084+00:00",
+        "previous_hash": "82ea2f02adef0b58f8772761ec0c9da0d20dd8cb9dee7c0bac844ada797a2fb3",
+        "package_id": "cap-p2v-test",
+        "host": "Host_B",
+        "epoch": 2,
+        "generation": 1,
+        "expires_at": 1789253225.064062,
+        "entry_hash": "88f74972add85e739db54c9cce7ff7d8e3cc3a53076cbdb91aad73ccd2fdc6f0"
+      },
+      {
+        "entry_id": "7b8dec82-7249-4530-98b7-cbbe72b30e94",
+        "event_type": "EXEC_ALLOW",
+        "timestamp": "2026-09-12T22:46:05.119131+00:00",
+        "previous_hash": "88f74972add85e739db54c9cce7ff7d8e3cc3a53076cbdb91aad73ccd2fdc6f0",
+        "package_id": "cap-p2v-test",
+        "host": "Host_B",
+        "epoch": 2,
+        "authority_digest": "0f1c012cdeb661948bbcae68b0eea87c8c9c81119798dc42a95990e0f2983b05",
+        "expires_at": 1789253225.064062,
+        "entry_hash": "fb93b41370b66e875f065228aa25719c6c130e7f671752cd64e5fcc426784cfd"
+      },
+      {
+        "entry_id": "6e87252d-7dc4-4cc2-9834-999534fc94c3",
+        "event_type": "STALE_DENY",
+        "timestamp": "2026-09-12T22:46:09.591685+00:00",
+        "previous_hash": "fb93b41370b66e875f065228aa25719c6c130e7f671752cd64e5fcc426784cfd",
+        "package_id": "cap-p2v-test",
+        "requesting_host": "Host_A",
+        "active_host": "Host_B",
+        "reason": "STALE_OWNER: active=Host_B requester=Host_A",
+        "entry_hash": "c32af997c5e91c6b8d60a722710359a5f5001e5d1938f48c2dd9e609240736cb"
+      },
+      {
+        "entry_id": "88176e9a-144f-421e-999c-a1ebc0d0d802",
+        "event_type": "FENCE_DENY",
+        "timestamp": "2026-09-12T22:46:20.119658+00:00",
+        "previous_hash": "c32af997c5e91c6b8d60a722710359a5f5001e5d1938f48c2dd9e609240736cb",
+        "package_id": "cap-p2v-test",
+        "requesting_host": "Host_A",
+        "active_host": "Host_B",
+        "lease_expires_at": 1789253225.064062,
+        "reason": "Active lease held by Host_B",
+        "entry_hash": "79ec3c1597d5762787f3abd54d065b90e0f79f5b7825cc9e6842b8810b1ede99"
+      },
+      {
+        "entry_id": "ad2b3692-efc5-4c54-8887-ffe18f50c064",
+        "event_type": "EXEC_ALLOW",
+        "timestamp": "2026-09-12T22:46:22.189352+00:00",
+        "previous_hash": "79ec3c1597d5762787f3abd54d065b90e0f79f5b7825cc9e6842b8810b1ede99",
+        "package_id": "cap-p2v-test",
+        "host": "Host_B",
+        "epoch": 2,
+        "authority_digest": "8db5f93e0d0ad0c459f4a2eabb29d834617cb6a95ff1d7b72bce669f45ca7d1c",
+        "expires_at": 1789253225.064062,
+        "entry_hash": "770a4b42b17bf9efdc7ae8c6b9643da7a39ada8daf52abf40125c234a18fcbdd"
+      },
+      {
+        "entry_id": "0e054a48-eca4-4a38-a8eb-70bf23ae5283",
+        "event_type": "ENCLAVE_DENY",
+        "timestamp": "2026-09-12T22:46:24.481664+00:00",
+        "previous_hash": "770a4b42b17bf9efdc7ae8c6b9643da7a39ada8daf52abf40125c234a18fcbdd",
+        "package_id": "cap-p2v-test",
+        "host": "Host_C",
+        "epoch": 2,
+        "reason": "DEBUG ENCLAVE PUBKEY: vqGfQf9XQln6wQSZWz7QoNx_PwjfwIstKg51qCN3E50\nDENY: runtime mismatch (auth:Host_B != curr:Host_C)",
+        "entry_hash": "a47799e9d290cec43acb9c9e535556452bd7b7ae127d9d065f9eb2efd93e4859"
+      }
+    ],
+    "local_events": [
+      {
+        "step": "SETUP",
+        "event_type": "STATE_PUSHED",
+        "ts": "2026-09-12T22:45:03.296942+00:00",
+        "node": "A",
+        "generation": 0
+      },
+      {
+        "step": "T1",
+        "event_type": "ALLOW",
+        "ts": "2026-09-12T22:45:03.664661+00:00",
+        "node": "A",
+        "epoch": 1
+      },
+      {
+        "step": "T1",
+        "event_type": "GEN_ADVANCE",
+        "ts": "2026-09-12T22:45:03.680403+00:00",
+        "node": "A",
+        "generation": 1
+      },
+      {
+        "step": "T3",
+        "event_type": "STATE_VERIFIED",
+        "ts": "2026-09-12T22:45:03.713455+00:00",
+        "node": "B",
+        "digest": "b1b1a7fb64828c3dd01315e69943621126f54eb9027617baa61fad01557b20bb"
+      },
+      {
+        "step": "PRE-T5",
+        "event_type": "CAPPO_LEASE_STATE",
+        "ts": "2026-09-12T22:45:03.757364+00:00",
+        "package_id": "cap-p2v-test",
+        "active_host": "Host_A",
+        "current_epoch": 1,
+        "last_known_generation": 0,
+        "lease_expires_at": 1789253163.325452,
+        "cappo_server_now": 1789253103.755565,
+        "remaining_seconds": 59.57,
+        "lease_is_valid": true
+      },
+      {
+        "step": "T5",
+        "event_type": "FENCE_DENY",
+        "ts": "2026-09-12T22:45:03.782423+00:00",
+        "node": "B",
+        "reason": "Active lease held by Host_A"
+      },
+      {
+        "step": "T4",
+        "event_type": "REAL_VNIC_CUT",
+        "ts": "2026-09-12T22:45:30.496348+00:00",
+        "node": "A",
+        "mode": "P2HOST_MODE",
+        "topology_cut": {
+          "evidence_origin": "HYPERV_HOST_OBSERVER",
+          "observer_mode": "LIVE",
+          "simulated": false,
+          "host_boot_id": "PHYSICAL_WINDOWS_HOST",
+          "timestamp_start": "2026-09-12T22:45:30.496247+00:00",
+          "vnic_cut_verified": true,
+          "Veklom-A": {
+            "VM_Name": "Veklom-A",
+            "VM_ID": "0887386f-dc61-4a66-a575-4df70bfccb0f",
+            "VM_State": "Running",
+            "vNIC_MAC": "00155D890132",
+            "Switch_ID": "f849043e-33dc-4cfd-af0f-1b6ffac1e714",
+            "VHDX_Path": "C:\\Users\\antho\\.windsurf\\virtualdb\\configA_70B94EDB-DA82-4675-A159-7019392A63EF.avhdx",
+            "VHDX_Hash": "2470c790c10e78f0209324c3c12fa283bd964f51db83a59f548c9cb8b961631e"
+          },
+          "Veklom-B": {
+            "VM_Name": "Veklom-B",
+            "VM_ID": "bbc64294-b3d3-43e7-866c-bdbfa8d59d57",
+            "VM_State": "Running",
+            "vNIC_MAC": "00155D890133",
+            "Switch_ID": "50c05956-58ce-4706-9c25-a7b0e6c5a492",
+            "VHDX_Path": "C:\\Users\\antho\\.windsurf\\virtualdb\\configB_0E8742DE-1D73-426C-8CBB-CAF9662F0A07.avhdx",
+            "VHDX_Hash": "bbae8346d42c3585b4f04ec2fd510635adbc2084708875b2ac1df6d1371f3306"
+          }
+        }
+      },
+      {
+        "step": "T6",
+        "event_type": "LEASE_EXPIRED",
+        "ts": "2026-09-12T22:46:04.760349+00:00",
+        "node": "A"
+      },
+      {
+        "step": "T7",
+        "event_type": "EPOCH_TRANSITION",
+        "ts": "2026-09-12T22:46:05.052006+00:00",
+        "from": "A",
+        "to": "B",
+        "old_epoch": 1,
+        "new_epoch": 2
+      },
+      {
+        "step": "T7",
+        "event_type": "RECEIPT_CHAIN_VALID",
+        "ts": "2026-09-12T22:46:05.052027+00:00",
+        "a_hash": "d0eb3f6b21257f67",
+        "b_prev": "d0eb3f6b21257f67"
+      },
+      {
+        "step": "T8",
+        "event_type": "ALLOW",
+        "ts": "2026-09-12T22:46:05.388815+00:00",
+        "node": "B"
+      },
+      {
+        "step": "T9",
+        "event_type": "NODE_RESTORED",
+        "ts": "2026-09-12T22:46:20.093379+00:00",
+        "node": "A",
+        "reachable": true,
+        "mode": "P2HOST_MODE",
+        "topology_reconnect": {
+          "evidence_origin": "HYPERV_HOST_OBSERVER",
+          "observer_mode": "LIVE",
+          "simulated": false,
+          "host_boot_id": "PHYSICAL_WINDOWS_HOST",
+          "timestamp_start": "2026-09-12T22:46:15.076168+00:00",
+          "vnic_cut_verified": true,
+          "Veklom-A": {
+            "VM_Name": "Veklom-A",
+            "VM_ID": "0887386f-dc61-4a66-a575-4df70bfccb0f",
+            "VM_State": "Running",
+            "vNIC_MAC": "00155D890132",
+            "Switch_ID": "0a8c9d13-1b38-4f04-a901-5325db6e64f9",
+            "VHDX_Path": "C:\\Users\\antho\\.windsurf\\virtualdb\\configA_70B94EDB-DA82-4675-A159-7019392A63EF.avhdx",
+            "VHDX_Hash": "2470c790c10e78f0209324c3c12fa283bd964f51db83a59f548c9cb8b961631e"
+          },
+          "Veklom-B": {
+            "VM_Name": "Veklom-B",
+            "VM_ID": "bbc64294-b3d3-43e7-866c-bdbfa8d59d57",
+            "VM_State": "Running",
+            "vNIC_MAC": "00155D890133",
+            "Switch_ID": "ef28afbd-b311-4069-8484-7d2b8d45bd3b",
+            "VHDX_Path": "C:\\Users\\antho\\.windsurf\\virtualdb\\configB_0E8742DE-1D73-426C-8CBB-CAF9662F0A07.avhdx",
+            "VHDX_Hash": "bbae8346d42c3585b4f04ec2fd510635adbc2084708875b2ac1df6d1371f3306"
+          }
+        }
+      },
+      {
+        "step": "T10",
+        "event_type": "STALE_DENY",
+        "ts": "2026-09-12T22:46:20.123705+00:00",
+        "node": "A",
+        "reason": "Active lease held by Host_B"
+      },
+      {
+        "step": "T11",
+        "event_type": "ENCLAVE_DENY",
+        "ts": "2026-09-12T22:46:24.484739+00:00",
+        "node": "C",
+        "reason": "DEBUG ENCLAVE PUBKEY: vqGfQf9XQln6wQSZWz7QoNx_PwjfwIstKg51qCN3E50\nDENY: runtime mismatch (auth:Host_B != curr:Host_C)"
+      },
+      {
+        "step": "T12",
+        "event_type": "PGL_CHAIN_VALID",
+        "ts": "2026-09-12T22:46:24.503037+00:00",
+        "entries": 11
+      }
+    ],
+    "release_invariants": {
+      "NO_SHARED_VOLUME": true,
+      "NO_SIMULATED_HEALTH_FLAG": true,
+      "NO_SAME_PROCESS_REPLICA": true,
+      "NO_MANUAL_APP_RECONFIG": true,
+      "NO_SECOND_WRITER": true,
+      "NO_LOST_ACKNOWLEDGED_WRITE": true,
+      "NO_UNEXPLAINED_EVIDENCE_GAP": true,
+      "SEPARATE_GUEST_KERNELS": "REQUIRES_HOST_TOPOLOGY_VERIFICATION",
+      "SEPARATE_VHDX": "REQUIRES_HOST_TOPOLOGY_VERIFICATION",
+      "SEPARATE_VNIC": "REQUIRES_HOST_TOPOLOGY_VERIFICATION",
+      "REAL_NETWORK_PATH_CUT": "REQUIRES_HOST_TOPOLOGY_VERIFICATION"
+    }
+  },
+  "host_topology_evidence": {
+    "evidence_origin": "HYPERV_HOST_OBSERVER",
+    "observer_mode": "LIVE",
+    "simulated": false,
+    "host_boot_id": "PHYSICAL_WINDOWS_HOST",
+    "timestamp_start": "2026-09-12T22:44:59.151887+00:00",
+    "vnic_cut_verified": true,
+    "Veklom-A": {
+      "VM_Name": "Veklom-A",
+      "VM_ID": "0887386f-dc61-4a66-a575-4df70bfccb0f",
+      "VM_State": "Running",
+      "vNIC_MAC": "00155D890132",
+      "Switch_ID": "ca951b88-e5f5-4a17-9a37-a5f886929fdb",
+      "VHDX_Path": "C:\\Users\\antho\\.windsurf\\virtualdb\\configA_70B94EDB-DA82-4675-A159-7019392A63EF.avhdx",
+      "VHDX_Hash": "2470c790c10e78f0209324c3c12fa283bd964f51db83a59f548c9cb8b961631e"
+    },
+    "Veklom-B": {
+      "VM_Name": "Veklom-B",
+      "VM_ID": "bbc64294-b3d3-43e7-866c-bdbfa8d59d57",
+      "VM_State": "Running",
+      "vNIC_MAC": "00155D890133",
+      "Switch_ID": "c45c5a2a-e37d-4c36-ad3b-368f5c676eff",
+      "VHDX_Path": "C:\\Users\\antho\\.windsurf\\virtualdb\\configB_0E8742DE-1D73-426C-8CBB-CAF9662F0A07.avhdx",
+      "VHDX_Hash": "bbae8346d42c3585b4f04ec2fd510635adbc2084708875b2ac1df6d1371f3306"
+    },
+    "run_id": "5737342f-1504-44aa-93f4-3fcd38383c5a",
+    "disconnect_timestamp": "2026-09-12T22:45:30.496247+00:00",
+    "reconnect_timestamp": "2026-09-12T22:46:15.076168+00:00"
+  }
+}

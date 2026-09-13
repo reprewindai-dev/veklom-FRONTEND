@@ -18,14 +18,19 @@ export function GovernHarness() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = async () => {
+    if (!apiKey.trim()) {
+      setError('Governance Key is required to inspect security boundaries. Test key fallbacks are disabled.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
       const res = await fetch('https://api.veklom.com/api/v1/security/stats', {
         headers: {
-          'Authorization': `Bearer ${apiKey || 'byos_test_key'}`,
-          'X-API-Key': apiKey || 'byos_test_key',
+          'Authorization': `Bearer ${apiKey.trim()}`,
+          'X-API-Key': apiKey.trim(),
         }
       });
 
@@ -79,8 +84,8 @@ export function GovernHarness() {
               </div>
               <button 
                 onClick={fetchStats}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-cos-surface2 border border-cos-border text-cos-text font-mono uppercase tracking-wider text-[10px] py-2.5 rounded hover:border-cos-accent transition-all"
+                disabled={isLoading || !apiKey.trim()}
+                className="w-full flex items-center justify-center gap-2 bg-cos-surface2 border border-cos-border text-cos-text font-mono uppercase tracking-wider text-[10px] py-2.5 rounded hover:border-cos-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isLoading ? <RefreshCw size={14} className="animate-spin" /> : <Search size={14} />}
                 {isLoading ? 'Scanning...' : 'Fetch Threat Stats'}

@@ -29,6 +29,9 @@ const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/
 const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");
 const PGL_URL = (process.env.PGL_URL || "https://pgl.veklom.com").replace(/\/$/, "");
 const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/$/, "");
+const VLINK_URL = (
+  process.env.VLINK_URL || "http://127.0.0.1:3000"
+).replace(/\/$/, "");
 
 const nextConfig = {
   output: "standalone",
@@ -133,7 +136,7 @@ const nextConfig = {
         { source: "/api/v1/capi/:path*",   destination: `${CAPI_URL}/api/v1/capi/:path*` },
 
         // ── VLink ─────────────────────────────────────────────────────────────
-        { source: "/vlink/connect/:path*", destination: "http://host.docker.internal:3000/:path*" },
+        { source: "/vlink/connect/:path*", destination: `${VLINK_URL}/:path*` },
 
         // ── Downstream services ───────────────────────────────────────────────
         { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },
