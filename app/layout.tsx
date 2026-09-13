@@ -73,6 +73,8 @@ export const metadata: Metadata = {
     "x402:discovery": "/.well-known/x402.json",
     "veklom:id-wallet": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     "veklom:service": "control-plane",
+    "machine:discovery": "/machine",
+    "machine:mcp": "/mcp/manifest.json",
   },
 };
 

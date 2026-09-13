@@ -168,6 +168,7 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
                 <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
+                <Link href="/machine" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">For Machines</Link>
                 <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</Link>
                 <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</Link>
               </div>
