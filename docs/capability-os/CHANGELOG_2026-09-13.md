@@ -54,6 +54,6 @@ Still not complete in this reconciliation:
 - host-side cloudflared ingress configuration;
 - full cold-client consequence journey and product acceptance battery.
 
-Branch: `devin/1789292377-cos-pass1b`
+Branch: `devin/1789292427-cos-pass1b-final`
 
 Evidence tier: source-only/local build, not deployed-verified.
