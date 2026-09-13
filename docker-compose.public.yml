@@ -10,6 +10,7 @@ services:
         CAPPO_URL: ${CAPPO_BACKEND_URL:-${CAPPO_URL:-http://host.docker.internal:8002}}
         CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
         PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
+        VLINK_URL: ${VLINK_URL:-http://host.docker.internal:3000}
         NEXT_PUBLIC_API_BASE_URL: ""
     image: veklom-frontend:main
     container_name: veklom-frontend
@@ -26,6 +27,7 @@ services:
       CAPPO_URL: ${CAPPO_BACKEND_URL:-${CAPPO_URL:-http://host.docker.internal:8002}}
       CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
       PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
+      VLINK_URL: ${VLINK_URL:-http://host.docker.internal:3000}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

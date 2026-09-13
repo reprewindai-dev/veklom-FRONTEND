@@ -12,7 +12,7 @@ function topLevelFieldCount(payload: unknown) {
 function MobilityLedgerSteps({
   entries,
 }: {
-  entries: Array<{ bundle: SealedBundleStatus; payload: unknown }>;
+  entries: Array<{ bundle: SealedBundleStatus; payload?: unknown }>;
 }) {
   return (
     <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -35,6 +35,8 @@ export async function SealedEvidenceLedger({
 }) {
   const allPresent = bundles.length === 3 && bundles.every((bundle) => bundle.present);
   const parsedBundles = allPresent ? await readSealedBundlePayloads(bundles) : [];
+  const parsedByFile = new Map(parsedBundles.map((entry) => [entry.bundle.file, entry]));
+  const allValid = allPresent && parsedBundles.length === 3 && parsedBundles.every((entry) => entry.valid);
 
   return (
     <section className="relative mx-auto w-full max-w-[1480px] px-5 pb-20 sm:px-8 md:pb-28 lg:px-10">
@@ -64,12 +66,14 @@ export async function SealedEvidenceLedger({
                   <td className="py-4 pr-4 text-theme-inkDim">{bundle.program}</td>
                   <td className="py-4 pr-4 font-mono text-xs text-theme-inkDim">{bundle.file}</td>
                   <td className="py-4 pr-4">
-                    {bundle.present ? (
+                    {bundle.present && parsedByFile.get(bundle.file)?.valid !== false ? (
                       <span className="inline-flex rounded-full border border-theme-verified/25 bg-theme-verified/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.12em] text-theme-verified">Present</span>
                     ) : (
                       <span className="inline-flex flex-col items-start gap-1">
                         <span className="rounded-full border border-theme-border bg-theme-bg px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.12em] text-theme-inkDim">Needs proof</span>
-                        <span className="text-xs text-theme-inkDim">Not published on this deployment</span>
+                        <span className="text-xs text-theme-inkDim">
+                          {parsedByFile.get(bundle.file)?.error ?? "Not published on this deployment"}
+                        </span>
                       </span>
                     )}
                   </td>
@@ -94,8 +98,10 @@ export async function SealedEvidenceLedger({
 
         <div className="mt-10 border-t border-theme-border pt-8">
           <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">M0–M13 mobility ledger</h3>
-          {allPresent ? (
+          {allValid ? (
             <MobilityLedgerSteps entries={parsedBundles} />
+          ) : allPresent ? (
+            <p className="mt-4 text-sm leading-7 text-theme-inkDim">Ledger steps render from the sealed bundles once each published bundle is valid JSON.</p>
           ) : (
             <p className="mt-4 text-sm leading-7 text-theme-inkDim">Ledger steps render from the sealed bundles once they are published here.</p>
           )}

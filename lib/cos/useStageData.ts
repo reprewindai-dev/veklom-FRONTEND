@@ -31,7 +31,7 @@ interface StageDataOptions {
   autoGet?: boolean;
 }
 
-function keyFor(endpoint: StageEndpoint) {
+function keyFor(endpoint: Pick<StageEndpoint, "method" | "path">) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
@@ -66,6 +66,35 @@ function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallReco
     proof: deriveProofStatus(observation, sandbox),
     observation,
   };
+}
+
+export function recordsForStage(
+  stage: StageDefinition,
+  records: Record<string, StageCallRecord>,
+  additionalRecords: Record<string, StageCallRecord>,
+  sandbox: boolean,
+): StageCallRecord[] {
+  const declared = stage.endpoints
+    .filter((endpoint) => !endpoint.path.includes("{"))
+    .map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox));
+  const declaredKeys = new Set(stage.endpoints.map((endpoint) => keyFor(endpoint)));
+  const concrete = Object.entries({ ...records, ...additionalRecords })
+    .filter(([key]) => !declaredKeys.has(key))
+    .map(([, record]) => record);
+  return [...declared, ...concrete];
+}
+
+export function aggregateStageProof(records: StageCallRecord[]): ProofStatus {
+  if (records.some((record) => record.proof === "Degraded" || record.observation.kind === "failed")) {
+    return "Degraded";
+  }
+  if (records.length > 0 && records.every((record) => record.proof === "Verified")) {
+    return "Verified";
+  }
+  if (records.some((record) => record.proof === "Verified" || record.proof === "Present")) {
+    return "Present";
+  }
+  return "Needs proof";
 }
 
 export function useStageData(stageId: StageDefinition["id"], options: StageDataOptions = {}) {
@@ -184,23 +213,12 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   }, [call, options.autoGet, stage]);
 
   const recordsList = useMemo(
-    () => {
-      return [
-        ...stage.endpoints.map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
-        ...Object.values(additionalRecords),
-      ];
-    },
+    () => recordsForStage(stage, records, additionalRecords, sandbox),
     [additionalRecords, records, sandbox, stage],
   );
 
   const stageProof = useMemo<ProofStatus>(() => {
-    if (recordsList.some((record) => record.observation.kind === "no-route")) return "Not started";
-    if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
-    if (recordsList.some((record) => record.proof === "Verified")) return "Verified";
-    if (recordsList.some((record) => record.proof === "Present")) return "Present";
-    if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
-    if (recordsList.every((record) => record.proof === "Not started")) return "Not started";
-    return "Needs proof";
+    return aggregateStageProof(recordsList);
   }, [recordsList]);
 
   const hasLoading = Object.values(loading).some(Boolean);
