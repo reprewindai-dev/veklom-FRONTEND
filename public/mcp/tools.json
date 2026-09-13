@@ -82,7 +82,45 @@
       },
       "auth_required": true,
       "status": "active",
-      "limitations": ["Requires valid Veklom session. Headless machine enrollment via Device Flow is in integration.", "Bounded by policy engine limits"]
+      "limitations": [
+        "Requires valid Veklom session. Headless machine enrollment via Device Flow is in integration.",
+        "Bounded by policy engine limits"
+      ],
+      "invocation_contract": {
+        "authenticate": {
+          "method": "POST",
+          "route": "https://command.veklom.com/api/v1/auth/github/exchange",
+          "auth": "None",
+          "body": { "github_username": "machine_agent" },
+          "description": "Exchange identity for execution bearer token."
+        },
+        "request_mount": {
+          "method": "POST",
+          "route": "https://veklom.com/api/cappo/v1/capability/mounts",
+          "auth": { "type": "bearer" },
+          "body": { "package_id": "core/governed-counter" },
+          "description": "Request bounded capability mount. Returns mount_id."
+        },
+        "execute": {
+          "method": "POST",
+          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/execute",
+          "auth": { "type": "bearer" },
+          "body": { "effect_id": "increment", "payload": { "amount": 1 } },
+          "description": "Execute governed action on mount. Returns receipt."
+        },
+        "get_receipt": {
+          "method": "GET",
+          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}",
+          "auth": { "type": "bearer" },
+          "description": "Retrieve resulting state and evidence."
+        },
+        "revoke": {
+          "method": "DELETE",
+          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}",
+          "auth": { "type": "bearer" },
+          "description": "Revoke authority mount."
+        }
+      }
     }
   ]
 }

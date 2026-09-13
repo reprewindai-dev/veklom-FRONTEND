@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { MachineAppShell } from "@/components/shell/MachineAppShell";
 
@@ -96,6 +96,36 @@ export default function McpPage() {
                   <td className="px-4 py-3">false</td>
                   <td className="px-4 py-3 text-theme-verified">active</td>
                   <td className="px-4 py-3 text-theme-inkDim">Reads the cryptographic claims registry.</td>
+                </tr>
+                <tr className="hover:bg-theme-bg">
+                  <td className="px-4 py-3 font-bold text-theme-accent">read_conformance</td>
+                  <td className="px-4 py-3">false</td>
+                  <td className="px-4 py-3 text-theme-verified">active</td>
+                  <td className="px-4 py-3 text-theme-inkDim">Reads the protocol conformance matrix.</td>
+                </tr>
+                <tr className="hover:bg-theme-bg">
+                  <td className="px-4 py-3 font-bold text-theme-accent">read_evidence_index</td>
+                  <td className="px-4 py-3">false</td>
+                  <td className="px-4 py-3 text-theme-verified">active</td>
+                  <td className="px-4 py-3 text-theme-inkDim">Reads the index of settled cryptographic evidence.</td>
+                </tr>
+                <tr className="hover:bg-theme-bg">
+                  <td className="px-4 py-3 font-bold text-theme-accent">read_openapi</td>
+                  <td className="px-4 py-3">false</td>
+                  <td className="px-4 py-3 text-theme-verified">active</td>
+                  <td className="px-4 py-3 text-theme-inkDim">Reads the OpenAPI specification for the node.</td>
+                </tr>
+                <tr className="hover:bg-theme-bg">
+                  <td className="px-4 py-3 font-bold text-theme-accent">read_llms</td>
+                  <td className="px-4 py-3">false</td>
+                  <td className="px-4 py-3 text-theme-verified">active</td>
+                  <td className="px-4 py-3 text-theme-inkDim">Reads the standard llms.txt index.</td>
+                </tr>
+                <tr className="hover:bg-theme-bg">
+                  <td className="px-4 py-3 font-bold text-theme-accent">read_llms_full</td>
+                  <td className="px-4 py-3">false</td>
+                  <td className="px-4 py-3 text-theme-verified">active</td>
+                  <td className="px-4 py-3 text-theme-inkDim">Reads the expanded llms-full.txt context.</td>
                 </tr>
                 <tr className="hover:bg-theme-bg">
                   <td className="px-4 py-3 font-bold text-theme-accent">run_governed_machine_demo</td>
