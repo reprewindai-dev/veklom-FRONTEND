@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from"next/link";
 import { usePathname, useRouter } from"next/navigation";
@@ -368,10 +368,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
  </span>
  </div>
  <p className="mt-2 text-[10.5px] leading-snug text-ink-500">
- Every request evaluated by policy on Local Hardware. AWS burst gated by tenant rule.
+ Every request evaluated by policy on Hetzner. AWS burst gated by tenant rule.
  </p>
  <div className="mt-2.5 flex items-center gap-1.5">
- <Pill tone="amber">Local Hardware</Pill>
+ <Pill tone="amber">Hetzner</Pill>
  <Pill tone="cyan">AWS</Pill>
  </div>
  </div>
@@ -393,4 +393,3 @@ function tierColor(t: string) {
  default: return"#8892AB";
  }
 }
-

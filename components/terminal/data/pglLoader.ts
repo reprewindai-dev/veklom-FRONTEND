@@ -1,4 +1,4 @@
-﻿export interface PGLAgent {
+export interface PGLAgent {
   agent: string;
   pgl_id: string;
   run_id: string;
@@ -230,11 +230,11 @@ export interface WorkspaceOverview {
     p50: number;
   }>;
   routing: {
-    Local Hardware_percent: number;
+    hetzner_percent: number;
     aws_percent: number;
     primary_region: string;
     burst_region: string;
-    history: Array<{ t: string; Local Hardware: number; aws: number }>;
+    history: Array<{ t: string; hetzner: number; aws: number }>;
     regions: Array<{ label: string; value: string; sub: string; route: string }>;
   };
   updated_at: string;
@@ -303,5 +303,4 @@ export const fetchWorkspaceOverview = async (): Promise<WorkspaceOverview | null
     return null;
   }
 };
-
 

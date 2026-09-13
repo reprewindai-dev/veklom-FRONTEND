@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -295,7 +295,7 @@ interface BYOAgentHubProps {
 }
 
 export function BYOAgentHub({ isCompleted }: BYOAgentHubProps) {
-  const [activeFramework, setActiveFramework] = useState<'crewai' | 'langchain' | 'autogen' | 'Edge'>('crewai');
+  const [activeFramework, setActiveFramework] = useState<'crewai' | 'langchain' | 'autogen' | 'vercel'>('crewai');
   const [activeFrameworkLanguage, setActiveFrameworkLanguage] = useState<'python' | 'javascript'>('python');
   const [activeMainTab, setActiveMainTab] = useState<'byo' | 'deploy'>('byo');
   const [copiedAction, setCopiedAction] = useState(false);
@@ -306,8 +306,8 @@ export function BYOAgentHub({ isCompleted }: BYOAgentHubProps) {
   // User Parametric Configurations
   const [repoName, setRepoName] = useState('reprewindai-dev/veklom-byos-backend');
   const [serverIp, setServerIp] = useState('5.78.135.11');
-  const [sshKeyName, setSshKeyName] = useState('Local Hardware_SSH_KEY');
-  const [appDir, setAppDir] = useState('/data/Docker/applications/n13gp1nhrcdp0hvazvbnlxru');
+  const [sshKeyName, setSshKeyName] = useState('HETZNER_SSH_KEY');
+  const [appDir, setAppDir] = useState('/data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru');
   const [containerName, setContainerName] = useState('n13gp1nhrcdp0hvazvbnlxru-213557155694');
   const [containerPort, setContainerPort] = useState('8092');
 
@@ -393,11 +393,11 @@ const userProxy = new PGLAgentWrapper(
 
 await userProxy.initiateChat(assistant, { message: 'Verify ledger' });`
     },
-    Edge: {
+    vercel: {
       python: `from veklom import pgl_middleware
-from Edge_ai import generate_text
+from vercel_ai import generate_text
 
-# 1. Python AI SDK Gateway middleware
+# 1. Python Vercel AI SDK Gateway middleware
 result = generate_text(
     model="llama3.2:1b",
     middleware=pgl_middleware(
@@ -409,7 +409,7 @@ result = generate_text(
       javascript: `import { generateText } from 'ai';
 import { pglMiddleware } from '@veklom/sdk';
 
-// 1. Inbound zero-trust audit wrapper for AI SDK
+// 1. Inbound zero-trust audit wrapper for Vercel AI SDK
 const { text } = await generateText({
   model: openai('llama3.2:1b'),
   middleware: pglMiddleware({
@@ -433,7 +433,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Deploy to Veklom Local Hardware Node
+      - name: Deploy to Veklom Hetzner Node
         uses: appleboy/ssh-action@master
         with:
           host: ${serverIp}
@@ -447,7 +447,7 @@ jobs:
             docker rm ${containerName} || true
             docker run -d \\
               --name ${containerName} \\
-              --network Docker \\
+              --network coolify \\
               --env-file ${appDir}/.env \\
               -p ${containerPort}:${containerPort} \\
               veklom-local:latest`;
@@ -458,9 +458,9 @@ jobs:
     const steps = [
       `[GITHUB-CI] Fetching repository commit 1a2b3c4d for ${repoName}...`,
       `[GITHUB-CI] Verified configuration, authenticating with Veklom Server (${serverIp})...`,
-      `[Local Hardware-SSH] Opening secure tunnel using SSH key linked to secret \${{ secrets.${sshKeyName} }}... Connected.`,
-      `[Local Hardware-SSH] Pulling latest main branch changes into application directory: ${appDir}...`,
-      `[Local Hardware-SSH] Executing Docker container build: veklom-local:latest...`,
+      `[HETZNER-SSH] Opening secure tunnel using SSH key linked to secret \${{ secrets.${sshKeyName} }}... Connected.`,
+      `[HETZNER-SSH] Pulling latest main branch changes into application directory: ${appDir}...`,
+      `[HETZNER-SSH] Executing Docker container build: veklom-local:latest...`,
       `[DOCKER-BUILD] Building layers... (Step 1/5) FROM python:3.11-slim... Done.`,
       `[DOCKER-BUILD] Building layers... (Step 2/5) COPY requirements.txt . && RUN pip install -r requirements.txt... Done.`,
       `[DOCKER-BUILD] Building layers... (Step 3/5) COPY . .... Done.`,
@@ -540,13 +540,13 @@ jobs:
           {/* Subtabs and language switcher */}
           <div className="flex justify-between items-center border-b border-white/5 pb-2 text-[9px] font-bold select-none">
             <div className="flex gap-1.5">
-              {(['crewai', 'langchain', 'autogen', 'Edge'] as const).map(fw => (
+              {(['crewai', 'langchain', 'autogen', 'vercel'] as const).map(fw => (
                 <button
                   key={fw}
                   onClick={() => setActiveFramework(fw)}
                   className={`px-2 py-0.5 border rounded-sm uppercase cursor-pointer transition-all ${activeFramework === fw ? 'bg-[#b8860b]/10 border-[#b8860b] text-[#b8860b] font-bold' : 'border-white/5 text-white/40 hover:text-white/70'}`}
                 >
-                  {fw === 'Edge' ? 'AI SDK' : fw}
+                  {fw === 'vercel' ? 'Vercel AI SDK' : fw}
                 </button>
               ))}
             </div>
@@ -583,7 +583,7 @@ jobs:
       ) : (
         <div className="space-y-3 flex-grow">
           <p className="text-[10.5px] text-white/60 leading-relaxed font-sans select-none">
-            Push code directly to your GitHub repository to trigger automated mainnet deployments to your Local Hardware VPS node under Traefik.
+            Push code directly to your GitHub repository to trigger automated mainnet deployments to your Hetzner VPS node under Traefik.
           </p>
 
           {/* Collapsible Configuration Form Panel */}
@@ -608,7 +608,7 @@ jobs:
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[8px] text-white/40 uppercase font-bold">Local Hardware Node IP</label>
+                  <label className="text-[8px] text-white/40 uppercase font-bold">Hetzner Node IP</label>
                   <input
                     type="text"
                     value={serverIp}
@@ -657,8 +657,8 @@ jobs:
                     onClick={() => {
                       setRepoName('reprewindai-dev/veklom-byos-backend');
                       setServerIp('5.78.135.11');
-                      setSshKeyName('Local Hardware_SSH_KEY');
-                      setAppDir('/data/Docker/applications/n13gp1nhrcdp0hvazvbnlxru');
+                      setSshKeyName('HETZNER_SSH_KEY');
+                      setAppDir('/data/coolify/applications/n13gp1nhrcdp0hvazvbnlxru');
                       setContainerName('n13gp1nhrcdp0hvazvbnlxru-213557155694');
                       setContainerPort('8092');
                     }}
@@ -725,4 +725,3 @@ jobs:
     </div>
   );
 }
-

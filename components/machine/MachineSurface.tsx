@@ -25,7 +25,6 @@ type RuntimeProof = {
 };
 
 const machineRoutes = [
-  ["/machine/contract.json", "contract.json", "Machine onboarding contract"],
   ["/machine/claims.json", "claims.json", "Claim registry"],
   ["/machine/conformance.json", "conformance.json", "Conformance matrix"],
   ["/machine/evidence-index.json", "evidence-index.json", "Evidence index"],

@@ -1,4 +1,4 @@
-﻿// Shared, truth-locked helpers for the canonical VNP beacon topology.
+// Shared, truth-locked helpers for the canonical VNP beacon topology.
 //
 // Source of truth: GET /api/v1/beacon/topology (same-origin proxy to the
 // canonical backend / vnp.veklom.com). The response is nested under a
@@ -9,7 +9,7 @@
 export const TOPOLOGY_ENDPOINT = "/api/v1/beacon/topology";
 export const CANONICAL_TOPOLOGY_URL = "https://vnp.veklom.com/api/v1/beacon/topology";
 
-// The five canonical physical VNP nodes (all Local Hardware). These are the only
+// The five canonical physical VNP nodes (all Hetzner). These are the only
 // valid sites; they are NOT hardcoded as "Live".
 export const CANONICAL_NODE_REGIONS = [
   "us-ashburn",
@@ -154,4 +154,3 @@ export function proofStateClasses(state: ProofState): string {
       return "text-slate-300 bg-slate-500/10 border-slate-500/30";
   }
 }
-

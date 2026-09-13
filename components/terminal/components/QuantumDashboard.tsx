@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState } from 'react';
 
 export default function QuantumDashboard() {
@@ -180,7 +180,7 @@ export default function QuantumDashboard() {
                         </div>
                      </div>
                   )) : (
-                     <div className="text-cyan-500/50">Probing Local Hardware network...</div>
+                     <div className="text-cyan-500/50">Probing Hetzner network...</div>
                   )}
                </div>
             </div>
@@ -365,4 +365,3 @@ export default function QuantumDashboard() {
     </div>
   );
 }
-

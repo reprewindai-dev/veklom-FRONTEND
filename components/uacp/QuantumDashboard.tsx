@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 "use client";
 import React, { useEffect, useState, useRef } from 'react';
 import { KalmanFilter } from '@/lib/substrate/engines/KalmanFilter';
@@ -238,7 +238,7 @@ export function QuantumDashboard() {
                         </div>
                      </div>
                   )) : (
-                     <div className="text-cyan-500/50">Probing Local Hardware network...</div>
+                     <div className="text-cyan-500/50">Probing Hetzner network...</div>
                   )}
                </div>
             </div>
@@ -447,5 +447,4 @@ export function QuantumDashboard() {
     </div>
   );
 }
-
 

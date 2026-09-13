@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ShieldAlert, Cpu, Server, Lock, Layers, Zap, CheckCircle2, ArrowRight, GitBranch, Key, FileText, Database, ShieldCheck, Code, RefreshCw, UserCheck, Activity } from 'lucide-react';
 
 export const ThesisEvaluationView: React.FC = () => {
@@ -423,10 +423,10 @@ export const ThesisEvaluationView: React.FC = () => {
 
  <div className="bg-theme-surface p-4 rounded-xl border border-theme-border space-y-2">
  <div className="text-emerald-400 font-bold flex items-center gap-2">
- <Lock className="w-4 h-4" /> Local Hardware & Docker Global Deployment
+ <Lock className="w-4 h-4" /> Hetzner & Coolify Global Deployment
  </div>
  <p className="text-slate-300 text-2xs leading-relaxed">
- Targeting Local Hardware Cloud dedicated nodes managed via Docker container orchestrator. Ensures low microsecond latency, explicit regional data sovereignty, container health monitoring, and automated failover.
+ Targeting Hetzner Cloud dedicated nodes managed via Coolify container orchestrator. Ensures low microsecond latency, explicit regional data sovereignty, container health monitoring, and automated failover.
  </p>
  <div className="pt-2">
  <span className="px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-3xs">
@@ -441,5 +441,4 @@ export const ThesisEvaluationView: React.FC = () => {
  </div>
  );
 };
-
 
