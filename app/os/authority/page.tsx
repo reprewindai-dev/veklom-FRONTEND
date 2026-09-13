@@ -21,7 +21,8 @@ function identityCondition(value: Record<string, unknown>): ActivityCondition | 
   if (typeof raw !== "string") return undefined;
   const normalized = raw.toLowerCase();
   if (["active", "mounted"].includes(normalized)) return "active";
-  if (["revoked", "expired", "suspended", "terminated", "failed"].includes(normalized)) return "failed";
+  if (normalized === "suspended") return "degraded";
+  if (["revoked", "expired", "terminated", "failed"].includes(normalized)) return "failed";
   if (["issued", "created", "present"].includes(normalized)) return "present";
   return undefined;
 }
