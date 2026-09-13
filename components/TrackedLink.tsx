@@ -12,7 +12,7 @@ type TrackedLinkProps = Omit<ComponentProps<typeof Link>, "children"> & {
 
 declare global {
   interface Window {
-    gtag?: (...args: unknown[]) => void;
+    gtag?: (...args: any[]) => void;
   }
 }
 

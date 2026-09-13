@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Clock3, Command, Cpu, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
@@ -40,7 +41,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="relative z-10 flex min-h-screen w-full flex-col">
         <header className="relative flex min-h-[76px] items-center justify-between gap-4 border-b border-cos-border/80 bg-cos-bg/70 px-4 shadow-[0_12px_35px_-28px_rgba(0,229,255,0.8)] backdrop-blur-2xl lg:px-7">
           <div className="pointer-events-none absolute inset-x-0 bottom-[-1px] h-px bg-gradient-to-r from-transparent via-cos-accent/55 to-transparent" />
-          <div className="flex items-center gap-5"><VeklomLogo /></div>
+          <div className="flex items-center gap-5">
+            <VeklomLogo />
+            <Link href="/get" className="hidden text-xs text-cos-steel transition hover:text-cos-accent lg:inline-flex">Get</Link>
+          </div>
           <div className="flex items-center gap-2 text-xs">
             <ProdSandboxToggle sandbox={sandbox} onChange={setSandbox} />
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>

@@ -1,5 +1,6 @@
 import { Key } from "lucide-react";
 import { ProofBadge } from "./ProofBadge";
+import type { ProofStatus } from "@/lib/cos/capabilities";
 
 export function KeyAuthorityCard({ 
   title, 
@@ -10,7 +11,7 @@ export function KeyAuthorityCard({
   title: string;
   keyId: string;
   role: string;
-  status?: "Verified" | "Needs proof" | "Present" | "Degraded" | "Not started" | "Manual step" | "Simulated";
+  status?: ProofStatus;
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-cos-border bg-cos-surface p-4">

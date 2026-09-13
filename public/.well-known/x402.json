@@ -7,7 +7,7 @@
   "identity": {
     "veklom_id_app": "6a20f24cc341f72c2f573eb5",
     "veklom_id_wallet": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
-    "verification_domain": "veklom-id.vercel.app"
+    "verification_domain": "id.veklom.com"
   },
   "routes": [
     {
@@ -46,6 +46,6 @@
     "mcp_sse": "https://api.veklom.com/mcp/sse",
     "llms_txt": "https://api.veklom.com/llms.txt",
     "openapi": "https://api.veklom.com/openapi.json",
-    "veklom_id": "https://veklom-id.vercel.app"
+    "veklom_id": "https://id.veklom.com"
   }
 }

@@ -41,8 +41,11 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href="/os" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
-                Open Capability OS <span className="transition-transform group-hover:translate-x-1">→</span>
+              <Link href="/get" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                Get Veklom <span className="transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+              <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">
+                Open Capability OS
               </Link>
               <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect proof</Link>
               <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</Link>

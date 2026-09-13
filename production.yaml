@@ -1,0 +1,18 @@
+production:
+  domain: veklom.com
+  origin_type: windows-local
+  host: BigCappo
+  tunnel_id: 0061f2f2-3eaf-4fb6-add3-5916f8cc651c
+  tunnel_runtime: native-windows-cloudflared
+  frontend:
+    container: veklom-frontend
+    port: 3002
+  vlink:
+    port: 3000
+  mcp:
+    port: 8811
+  api:
+    port: 8088
+  deprecated_origins:
+    - coolify
+    - docker-cloudflared-sidecar
