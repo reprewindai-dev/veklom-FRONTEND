@@ -55,7 +55,7 @@ while ($null -eq $token) {
             Write-Host "FATAL: Access Denied by user."
             exit 1
         } else {
-            Write-Host "FATAL HTTP ERROR: $($err_resp.StatusCode.value__)"
+            Write-Host "FATAL HTTP ERROR: $($err_resp.StatusCode.value__) - $( (New-Object System.IO.StreamReader($err_resp.GetResponseStream())).ReadToEnd() )"
             exit 1
         }
     }
