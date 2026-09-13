@@ -88,37 +88,67 @@
       ],
       "invocation_contract": {
         "authenticate": {
-          "method": "POST",
-          "route": "https://command.veklom.com/api/v1/auth/github/exchange",
-          "auth": "None",
-          "body": { "github_username": "machine_agent" },
-          "description": "Exchange identity for execution bearer token."
+          "description": "Start Device Flow. Human approves on GitHub. Then poll to get Bearer token with workspace claim.",
+          "start_route": "https://command.veklom.com/api/v1/auth/device/code",
+          "poll_route": "https://command.veklom.com/api/v1/auth/device/token",
+          "response_schema": {
+            "type": "object",
+            "required": ["access_token", "token_type", "expires_in", "audience"],
+            "properties": {
+              "access_token": { "type": "string" },
+              "token_type": { "const": "Bearer" },
+              "expires_in": { "type": "integer" },
+              "audience": { "type": "string" }
+            }
+          }
         },
         "request_mount": {
           "method": "POST",
           "route": "https://veklom.com/api/cappo/v1/capability/mounts",
           "auth": { "type": "bearer" },
-          "body": { "package_id": "core/governed-counter" },
-          "description": "Request bounded capability mount. Returns mount_id."
+          "body": {
+            "package_ref": "veklom.governed-counter@v1",
+            "execution_scope": { "workspace": "default", "project": "demo" },
+            "requested_action_scope": {
+              "reads": ["counter.read"],
+              "writes": ["counter.increment"],
+              "blocked": ["counter.reset"]
+            }
+          },
+          "response_schema": {
+            "required": ["mount_id", "state", "expires_at", "scope", "execution_identity", "governance_decision"]
+          },
+          "description": "Request bounded capability mount. Returns mount_id, token_id, and nonce."
         },
         "execute": {
           "method": "POST",
           "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/execute",
           "auth": { "type": "bearer" },
-          "body": { "effect_id": "increment", "payload": { "amount": 1 } },
-          "description": "Execute governed action on mount. Returns receipt."
-        },
-        "get_receipt": {
-          "method": "GET",
-          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}",
-          "auth": { "type": "bearer" },
-          "description": "Retrieve resulting state and evidence."
+          "body": {
+            "token_id": "string",
+            "nonce": "string",
+            "action": "counter.increment",
+            "target_ref": "activation.governed-counter",
+            "resource": "counter",
+            "arguments": {},
+            "operation_id": "string"
+          },
+          "description": "Execute governed action on mount. Returns receipt_id and resulting_state."
         },
         "revoke": {
-          "method": "DELETE",
-          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}",
+          "method": "POST",
+          "route": "https://veklom.com/api/cappo/v1/capability/mounts/{mount_id}/terminate",
           "auth": { "type": "bearer" },
+          "body": {
+            "reason": "machine_test_completed"
+          },
           "description": "Revoke authority mount."
+        },
+        "replay_assertion": {
+          "request": "repeat the exact execute request using the revoked mount_id",
+          "expected_http_status": 403,
+          "expected_status": "DENIED",
+          "expected_reason": "mount_revoked"
         }
       }
     }

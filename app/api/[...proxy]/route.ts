@@ -105,12 +105,18 @@ async function proxyRequest(req: NextRequest) {
 
  console.log(`[PROXY DEBUG] path=${path}, forward=${forwardPath}, exec=${isCappoExecPath(forwardPath)}, id=${isCappoIdentityPath(forwardPath)}`);
 
- if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
-   if (req.headers.has("authorization")) {
-     console.log("[PROXY DEBUG] Passing authorization header directly to CAPPO");
-     headers.set("authorization", req.headers.get("authorization")!);
-   }
-   }
+    if (isCappoExecPath(forwardPath) || isCappoIdentityPath(forwardPath)) {
+      const exchange = await exchangeCappoAssertion(req);
+      if (exchange.kind === "success") {
+        headers.set("authorization", `Bearer ${exchange.token}`);
+      } else if (exchange.kind === "missing-workspace") {
+        return NextResponse.json(exchange.body, { status: 403 });
+      } else if (exchange.kind === "unauthenticated") {
+        return NextResponse.json({ detail: { error: "UNAUTHENTICATED" } }, { status: 401 });
+      } else {
+        return NextResponse.json({ detail: { error: "CAPPO_UNAVAILABLE" } }, { status: 502 });
+      }
+    }
    } else if (path.startsWith("/api/capi/")) {
  targetBase = CAPI_RUNTIME_URL;
  forwardPath = path.replace(/^\/api\/capi/,"/api/v1/capi");

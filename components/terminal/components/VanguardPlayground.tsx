@@ -333,34 +333,67 @@ export default function VanguardPlayground() {
 
     try {
       const token = getToken();
-      const res = await fetch('/api/v1/capi/execute', {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      setLogs(prev => [...prev, "[GATEWAY] Requesting CAPPO capability mount..."]);
+      const mountRes = await fetch('/api/cappo/v1/capability/mounts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers,
         body: JSON.stringify({
-          agent_id: currentAgent,
-          pgl_id: "valid_pgl", 
-          target_protocol: "mcp",
-          action: currentAction,
-          payload: parsedPayload
+          package_ref: "veklom.governed-counter@v1",
+          execution_scope: { workspace: "default", project: "demo" },
+          requested_action_scope: {
+            reads: ["counter.read"],
+            writes: ["counter.increment"],
+            blocked: ["counter.reset"]
+          }
         })
       });
 
-      const payload = await res.json().catch(() => ({}));
+      const mountPayload = await mountRes.json().catch(() => ({}));
+      if (!mountRes.ok) {
+        throw new Error(mountPayload.detail || "Failed to mount capability");
+      }
+
+      const mountId = mountPayload.mount_id;
+      const tokenId = mountPayload.token_id || "demo-token-id";
+      const nonce = mountPayload.nonce || "demo-nonce";
+      
+      setLogs(prev => [...prev, `[GATEWAY] Mount acquired: ${mountId}`]);
+      setLogs(prev => [...prev, "[GATEWAY] Executing governed action on mount..."]);
+
+      const execRes = await fetch(`/api/cappo/v1/capability/mounts/${mountId}/execute`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          token_id: tokenId,
+          nonce: nonce,
+          action: currentAction || "counter.increment",
+          target_ref: "activation.governed-counter",
+          resource: "counter",
+          arguments: parsedPayload,
+          operation_id: `op_${Date.now()}`
+        })
+      });
+
+      const payload = await execRes.json().catch(() => ({}));
+      
+      // Attempt to trace any internal gateway logs if provided
       const traceArr = traceFromPayload(payload);
       setTrace(traceArr);
       setCurrentStep(traceArr.length);
       traceArr.forEach(ph => setLogs(prev => [...prev, `[GATEWAY] Phase ${ph.phase}: ${ph.summary}`]));
 
-      if (!res.ok || payload?.status === 'error') {
+      if (!execRes.ok || payload?.status === 'error') {
         const proofId = extractProofId(payload);
         setExecutionState('blocked');
         setLastActionStatus(proofId ? 'Backend blocked execution with proof' : 'Backend rejected execution; proof id missing');
         setFloatingValue(null);
         appendBackendEvidence(payload, 'GOVERNED_RUN_BLOCKED', proofId ? 'BLOCKED' : 'NEEDS_PROOF');
-        throw new Error(payload?.error || payload?.detail || `cAPI execute failed: HTTP ${res.status}`);
+        throw new Error(payload?.error || payload?.detail || `CAPPO execute failed: HTTP ${execRes.status}`);
       }
 
       const proofId = extractProofId(payload);
@@ -376,7 +409,7 @@ export default function VanguardPlayground() {
         setExecutionState('blocked');
         setLastActionStatus('Needs backend receipt or evidence hash');
         setFloatingValue(null);
-        setLogs(prev => [...prev, '[SYSTEM] cAPI returned without a backend proof identifier. Marking this run Needs proof.']);
+        setLogs(prev => [...prev, '[SYSTEM] CAPPO returned without a backend proof identifier. Marking this run Needs proof.']);
       }
     } catch (error) {
       setLogs(prev => [...prev, `[SYSTEM] Execution failed: ${error}`]);
