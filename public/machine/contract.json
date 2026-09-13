@@ -37,7 +37,8 @@
     },
     "node": {
       "concurrent_executions": 50
-    }
+    },
+    "payload_max_bytes": 524288
   },
   "commerce": {
     "free_execution": {
