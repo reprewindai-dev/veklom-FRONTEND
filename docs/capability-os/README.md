@@ -2,17 +2,18 @@
 
 Status: **Architecture/product handoff source for frontend work**
 
-Baseline frontend commit: `d3807f391904a35eb45e8f77b0d8c448aaa14cb8` (`feat: wire truthful governed execution proof (#73)`).
+Current reconciliation baseline: **2026-09-13 Capability OS reconciliation**. Historical August handoff documents remain useful for provenance, but any navigation, ownership or BYOS statement that conflicts with the 2026-09-13 canonical handoff is superseded.
 
 This directory exists so nobody has to reconstruct Capability OS architecture from branch names, old design briefs, README claims, or memory.
 
 ## Read these in order
 
-1. [`CANONICAL_HANDOFF.md`](./CANONICAL_HANDOFF.md) — frozen product, ownership, routing, truth-state, UX and backend responsibility contract.
-2. [`CHANGELOG_2026-08-22.md`](./CHANGELOG_2026-08-22.md) — original convergence, responsibility corrections and known drift.
-3. [`CHANGELOG_2026-08-23.md`](./CHANGELOG_2026-08-23.md) — cAPI security-boundary remediation, frontend route-audit decisions, SEKED clarification and current production-DDL status.
-4. [`API_PATH_AUDIT_2026-08-23.md`](./API_PATH_AUDIT_2026-08-23.md) — point-in-time frontend route audit, phantom-route remediation taxonomy, SEKED classification and the rule that missing endpoints must never look like empty success.
-5. [`HANDOFF_CHECKLIST.md`](./HANDOFF_CHECKLIST.md) — required reconciliation report before a developer continues Capability OS work.
+1. [`CANONICAL_HANDOFF.md`](./CANONICAL_HANDOFF.md) — current product, ownership, routing, truth-state, UX and backend responsibility contract.
+2. [`CHANGELOG_2026-09-13.md`](./CHANGELOG_2026-09-13.md) — lifecycle-registry reconciliation, BYOS retirement cleanup and cold-client access changes.
+3. [`CHANGELOG_2026-08-22.md`](./CHANGELOG_2026-08-22.md) — historical convergence and responsibility corrections.
+4. [`CHANGELOG_2026-08-23.md`](./CHANGELOG_2026-08-23.md) — historical cAPI security-boundary remediation and route audit.
+5. [`API_PATH_AUDIT_2026-08-23.md`](./API_PATH_AUDIT_2026-08-23.md) — point-in-time route audit; retain its rule that missing endpoints must never look like empty success.
+6. [`HANDOFF_CHECKLIST.md`](./HANDOFF_CHECKLIST.md) — required reconciliation report before a developer continues Capability OS work.
 
 ## Documentation rule
 
@@ -30,7 +31,7 @@ For runtime claims:
 4. independently retrievable evidence/provenance
 5. documentation
 
-For the **target Capability OS responsibility model**, `CANONICAL_HANDOFF.md` is the frozen implementation contract until intentionally superseded by a documented architecture decision.
+For the **target Capability OS responsibility model**, `CANONICAL_HANDOFF.md` is the current implementation contract until intentionally superseded by a documented architecture decision.
 
 ## Core principle
 

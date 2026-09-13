@@ -12,11 +12,10 @@
 
 const LOCKERPHYCER_URL = (
   process.env.LOCKERPHYCER_URL ||
-  (process.env.NODE_ENV === "production"
-    ? "http://host.docker.internal:8092"
-    : "http://127.0.0.1:8092")
+  "http://127.0.0.1:8092"
 ).replace(/\/$/, "");
 
+const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
 const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
 const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
 const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
@@ -91,6 +90,13 @@ const nextConfig = {
       { source: "/workspace/signup", destination: "/signup", permanent: true },
       { source: "/workspace/dashboard", destination: "/os", permanent: true },
       { source: "/onboarding/pgl", destination: "/os/onboarding", permanent: true },
+      { source: "/os/command", destination: "/os/tracker", permanent: true },
+      { source: "/os/capabilities", destination: "/os", permanent: true },
+      { source: "/os/workflows", destination: "/os/blueprint", permanent: true },
+      { source: "/os/executions", destination: "/os/execute", permanent: true },
+      { source: "/os/governed-compute", destination: "/os/computeless", permanent: true },
+      { source: "/os/settings", destination: "/os", permanent: true },
+      { source: "/os/terminal", destination: "/os", permanent: true },
       { source: "/dashboard", destination: "/os", permanent: false },
       { source: "/wallet", destination: "/os", permanent: false },
       { source: "/wallet/:path*", destination: "/os", permanent: false },
@@ -125,7 +131,7 @@ const nextConfig = {
         { source: "/api/v1/capi/:path*",   destination: `${CAPI_URL}/api/v1/capi/:path*` },
 
         // ── VLink ─────────────────────────────────────────────────────────────
-        { source: "/vlink/connect/:path*", destination: "http://host.docker.internal:3000/:path*" },
+        { source: "/vlink/connect/:path*", destination: `${VLINK_URL}/:path*` },
 
         // ── Downstream services ───────────────────────────────────────────────
         { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },

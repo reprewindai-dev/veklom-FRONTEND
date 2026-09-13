@@ -3,6 +3,43 @@ import { getStage, stages } from "@/lib/cos/stages";
 import { resolveStageBaseUrl, resolveStageTransportPath } from "@/lib/cos/useStageData";
 
 describe("Capability OS stage transport", () => {
+  it("uses canonical lifecycle labels and omits decommissioned endpoint ownership", () => {
+    expect(stages.map((stage) => stage.id)).toEqual([
+      "computeless",
+      "capabilities",
+      "mount",
+      "blueprint",
+      "govern",
+      "authority",
+      "execute",
+      "evidence",
+      "measure",
+      "settle",
+      "tracker",
+      "terminal",
+    ]);
+    expect(stages.map((stage) => stage.label)).toEqual([
+      "Compute-less",
+      "Capabilities",
+      "Mount",
+      "Blueprint",
+      "Govern",
+      "Authority",
+      "Execute",
+      "Evidence",
+      "Measure",
+      "Settle",
+      "Tracker",
+      "Terminal",
+    ]);
+    expect(stages.flatMap((stage) => stage.endpoints).map((endpoint) => endpoint.path))
+      .not.toContain("/api/v1/platform/pulse");
+    expect(stages.flatMap((stage) => stage.endpoints).map((endpoint) => endpoint.path))
+      .not.toContain("/api/v1/x402/verify");
+    expect(stages.flatMap((stage) => stage.endpoints).map((endpoint) => endpoint.path))
+      .not.toContain("/api/v1/x402/{receipt_id}/proof");
+  });
+
   it("keeps the visible Mount contract on CAPPO canonical /v1 paths", () => {
     const mount = getStage("mount");
     expect(mount.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual([

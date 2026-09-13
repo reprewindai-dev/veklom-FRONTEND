@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "byos" | "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer";
+export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -30,29 +30,17 @@ export interface CanonicalBackendConfig {
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
 export function canonicalBackends(): CanonicalBackendConfig[] {
-  const byosUrl = process.env.BACKEND_URL || "https://api.veklom.com";
   const capiUrl = CAPI_RUNTIME_URL;
   const cappoUrl = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
   const ledgerUrl = process.env.LEDGER_URL || "https://ledger.veklom.com";
   const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
-  const pglUrl = process.env.PGL_URL || `${byosUrl}/api/v1/pgl/proxy`;
+  const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
   const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
   const apexUrl = process.env.APEX_URL || "https://apex.veklom.com";
   const abideUrl = process.env.ABIDE_URL || "https://abide.veklom.com";
   const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
 
   return [
-    {
-      id: "byos",
-      label: "veklom BYOS backend",
-      repo: "veklom-byos-backend",
-      role: "sovereign-control-plane",
-      baseUrl: trimTrailingSlash(byosUrl),
-      healthPath: "/health",
-      overviewPath: "/api/v1/workspace/overview/live",
-      sourceOfTruthPath: "/api/v1/source-of-truth/snapshot",
-      authMode: "forward-bearer",
-    },
     {
       id: "capi",
       label: CAPI_RUNTIME_LABEL,
@@ -96,17 +84,17 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     },
     {
       id: "genome",
-      label: "Genome Ledger (PGL)",
-      repo: "veklom-byos-backend",
-      role: "sovereign-control-plane",
+      label: "Project Genome Ledger (PGL)",
+      repo: "gnomledger",
+      role: "ledger",
       baseUrl: trimTrailingSlash(pglUrl),
       healthPath: "/health",
-      overviewPath: "/api/v1/genome/status",
-      authMode: "forward-bearer",
+      overviewPath: undefined,
+      authMode: "none",
     },
     {
       id: "vnp",
-      label: "Value Network Protocol (VNP)",
+      label: "Veklom Nexus Protocol (VNP)",
       repo: "veklom-vnp",
       role: "execution-engine",
       baseUrl: trimTrailingSlash(vnpUrl),
@@ -126,7 +114,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     },
     {
       id: "abide",
-      label: "Abide Sovereign Agentic Control Plane",
+      label: "ABIDE",
       repo: "ABIDE",
       role: "sovereign-control-plane",
       baseUrl: trimTrailingSlash(abideUrl),
@@ -136,7 +124,7 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
     },
     {
       id: "lockerphycer",
-      label: "Lockerphycer Security Core",
+      label: "LockerPhycer Security Core",
       repo: "lockerphycer",
       role: "execution-engine",
       baseUrl: trimTrailingSlash(lockerphycerUrl),

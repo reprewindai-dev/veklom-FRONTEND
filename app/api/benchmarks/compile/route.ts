@@ -1,56 +1,61 @@
-import { NextResponse } from"next/server";
-import { callVeklomChat } from"@/lib/veklom-client";
-import { canonicalBackends, canonicalBackendUrl } from"@/lib/canonical-backends";
+import { NextResponse } from "next/server";
+import { callVeklomChat } from "@/lib/veklom-client";
+import { canonicalBackends, canonicalBackendUrl } from "@/lib/canonical-backends";
 
 export async function POST(req: Request) {
- try {
- const { codeText, apiName, category } = await req.json();
+  try {
+    const { codeText, apiName, category } = await req.json();
 
- if (!codeText || !apiName) {
- return NextResponse.json({ detail:"Missing required fields." }, { status: 400 });
- }
+    if (!codeText || !apiName) {
+      return NextResponse.json({ detail: "Missing required fields." }, { status: 400 });
+    }
 
- // Connect to live cappo-backend and veklom-byos-backend-2 MCP routers
- const backends = canonicalBackends();
- const byosBackend = backends.find((b) => b.id ==="byos");
- const cappoBackend = backends.find((b) => b.id ==="cappo");
+    // Use active canonical services only. BYOS is decommissioned and must not
+    // remain a validation or fallback dependency.
+    const backends = canonicalBackends();
+    const capiBackend = backends.find((backend) => backend.id === "capi");
+    const cappoBackend = backends.find((backend) => backend.id === "cappo");
 
- const byosMcpUrl = byosBackend ? canonicalBackendUrl(byosBackend,"/mcp") :"https://api.veklom.com/mcp";
- const cappoMcpUrl = cappoBackend ? canonicalBackendUrl(cappoBackend,"/mcp") :"https://cappo.veklom.com/mcp";
+    const capiMcpUrl = capiBackend
+      ? canonicalBackendUrl(capiBackend, "/mcp")
+      : "https://capi.veklom.com/mcp";
+    const cappoMcpUrl = cappoBackend
+      ? canonicalBackendUrl(cappoBackend, "/mcp")
+      : "https://cappo.veklom.com/mcp";
 
- // Call the compiler
- const systemPrompt = `You are the Apex Blueprint V4 Compiler. 
-You must compile the user's raw API source code into a source-backed protocol manifest.
-Ensure synthetic blueprints are NOT shipped; only source-backed protocol manifests are used.
-Your output must be strict JSON that represents the synthesis verification result. Include latencyMs, driftScore, uniquenessFactor, comprehensionScore, and aiFeedback. Use MCP routers at ${byosMcpUrl} and ${cappoMcpUrl} for validation.`;
+    const systemPrompt = `You are the Apex Blueprint V4 Compiler.
+Compile the user's raw API source code into a source-backed protocol manifest.
+Do not claim runtime validation merely because a service URL is configured.
+Do not fabricate benchmark or verification values.
+Return strict JSON. If required evidence is unavailable, mark the corresponding value or verification state as unknown/not_verified.
+The active connection/authority references are cAPI ${capiMcpUrl} and CAPPO ${cappoMcpUrl}; these references do not themselves prove either service was contacted by this request.`;
 
- const result = await callVeklomChat({
- systemPrompt,
- userPrompt: `Compile this API named '${apiName}' (Category: ${category}):\n\n${codeText}`,
- model:"qwen2.5-coder:1.5b",
- });
+    const result = await callVeklomChat({
+      systemPrompt,
+      userPrompt: `Compile this API named '${apiName}' (Category: ${category}):\n\n${codeText}`,
+      model: "qwen2.5-coder:1.5b",
+    });
 
- let jsonResult;
- try {
- jsonResult = JSON.parse(result.text.replace(/```json/g,"").replace(/```/g,""));
- } catch (e) {
- jsonResult = {
- syntheticVerificationResult: {
- latencyMs: 120,
- driftScore: 0,
- uniquenessFactor: 95,
- comprehensionScore: 100,
- aiFeedback:"Compiled source-backed protocol manifest successfully via live MCP routers."
- }
- };
- }
-
- return NextResponse.json({
- syntheticVerificationResult: jsonResult.syntheticVerificationResult || jsonResult
- });
-
- } catch (error: any) {
- console.error("Compiler error:", error);
- return NextResponse.json({ detail: error.message }, { status: 500 });
- }
+    try {
+      const parsed = JSON.parse(result.text.replace(/```json/g, "").replace(/```/g, ""));
+      return NextResponse.json({
+        verification_state: "NOT_VERIFIED",
+        source: "COMPILER_OUTPUT",
+        result: parsed,
+      });
+    } catch {
+      return NextResponse.json(
+        {
+          verification_state: "NOT_VERIFIED",
+          source: "COMPILER_OUTPUT_UNPARSEABLE",
+          detail: "Compiler output was not valid JSON; no verification result was synthesized.",
+        },
+        { status: 502 },
+      );
+    }
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : "Compiler request failed";
+    console.error("Compiler error:", error);
+    return NextResponse.json({ detail, verification_state: "NOT_VERIFIED" }, { status: 500 });
+  }
 }

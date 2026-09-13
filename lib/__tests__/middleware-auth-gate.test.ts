@@ -1,9 +1,8 @@
 /**
  * @jest-environment node
  *
- * The /os gate must be satisfiable by a browser. A Bearer header cannot be attached
- * to a top-level navigation, so navigations are gated on the session marker cookie
- * and API calls are gated on the header.
+ * Browser navigation to the Capability OS is public, while private API and
+ * administrative surfaces remain gated.
  */
 import { NextRequest } from "next/server";
 import { middleware } from "../../middleware";
@@ -33,17 +32,22 @@ function apiCall(path: string, authorization?: string) {
 }
 
 describe("middleware auth gate", () => {
-  it("redirects an unauthenticated navigation to /login with returnTo", async () => {
-    const response = await middleware(navigation("/os/mount"));
-    expect(response.status).toBe(307);
-    const location = new URL(response.headers.get("location") as string);
-    expect(location.pathname).toBe("/login");
-    expect(location.searchParams.get("returnTo")).toBe("/os/mount");
+  it("allows a cold client to navigate to /os", async () => {
+    const response = await middleware(navigation("/os"));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
   });
 
-  it("does not answer a navigation with 401, which a browser could never satisfy", async () => {
-    const response = await middleware(navigation("/os"));
+  it("allows a cold client to navigate to an /os child route", async () => {
+    const response = await middleware(navigation("/os/mount"));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("leaves /proof ungated", async () => {
+    const response = await middleware(navigation("/proof"));
     expect(response.status).not.toBe(401);
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it("allows a navigation carrying the session marker", async () => {
