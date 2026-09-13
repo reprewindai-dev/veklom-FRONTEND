@@ -28,8 +28,8 @@ export default function LandingPage() {
         <section className="relative mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1480px] items-center gap-12 px-5 py-16 sm:px-8 md:py-20 lg:grid-cols-[1.04fr_.96fr] lg:gap-16 lg:px-10 xl:py-24">
           <div className="relative z-10 max-w-[760px]">
             <div className="mb-8 flex flex-wrap items-center gap-3">
-              <LiveSignal label="Capability OS · early access" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Governed compute infrastructure</span>
+              <LiveSignal label="Core V1 Protocol: Sealed & Deployed" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Public Delivery Layer Active</span>
             </div>
 
             <h1 className="text-[clamp(4rem,8.6vw,8.8rem)] font-semibold leading-[0.82] tracking-[-0.075em] text-theme-ink">
