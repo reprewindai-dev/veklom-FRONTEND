@@ -67,7 +67,6 @@ async function probe(service: ServiceSpec) {
 }
 
 export async function GET() {
-  const byos = process.env.BACKEND_URL || process.env.VEKLOM_BACKEND_URL || "https://api.veklom.com";
   const lockerphycer = process.env.LOCKERPHYCER_URL || "http://127.0.0.1:8092";
   const capi = process.env.CAPI_URL || "https://capi.veklom.com";
   const cappo = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
@@ -77,7 +76,7 @@ export async function GET() {
     {
       id: "lockerphycer",
       label: "LockerPhycer",
-      role: "Governed security, key, identity and execution-host boundary",
+      role: "Authentication/session, key security and governed containment boundary",
       url: join(lockerphycer, "/health"),
     },
     {
@@ -89,12 +88,12 @@ export async function GET() {
     {
       id: "capi",
       label: "cAPI",
-      role: "Cross-service connection layer",
+      role: "Governed connection and capability-discovery layer",
       url: join(capi, "/health"),
     },
     {
       id: "pgl",
-      label: "Gnomledger / PGL",
+      label: "GnomLedger / PGL",
       role: "Durable evidence and provenance",
       url: join(pgl, "/health"),
     },
