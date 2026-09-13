@@ -32,6 +32,7 @@ const machineRoutes = [
   ["/mcp/manifest.json", "mcp/manifest.json", "MCP manifest"],
   ["/mcp/tools.json", "mcp/tools.json", "MCP tool registry"],
   ["/llms.txt", "llms.txt", "Machine-readable orientation"],
+  ["/llms-full.txt", "llms-full.txt", "Expanded machine orientation"],
 ];
 
 function tone(healthy: boolean) {
