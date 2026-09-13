@@ -6,15 +6,21 @@ import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
 import { PaymentChallenge } from "@/components/cos/StageParts";
-import { classifyPayload } from "@/lib/cos/proof";
+import { PlanGraphCanvas } from "@/components/cos/PlanGraphCanvas";
+import type { GpcCompileResponse } from "@/lib/cos/gpc";
+
+function isGpcCompileResponse(value: unknown): value is GpcCompileResponse {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<GpcCompileResponse>;
+  return typeof candidate.id === "string"
+    && typeof candidate.status === "string"
+    && Boolean(candidate.graph && Array.isArray(candidate.graph.nodes) && Array.isArray(candidate.graph.edges));
+}
 
 export default function BlueprintPage() {
   const stage = getStage("blueprint");
   const data = useStageData("blueprint", { autoGet: true });
-  const plan = Object.values(data.payloads).find((value) => (
-    value && typeof value === "object" && !Array.isArray(value) && !("x402_version" in value)
-      && classifyPayload(value).observation.kind === "source-of-truth"
-  ));
+  const plan = Object.values(data.payloads).find(isGpcCompileResponse);
   const challenge = Object.values(data.payloads).find((value) => (
     value && typeof value === "object" && "x402_version" in value
   ));
@@ -36,7 +42,18 @@ export default function BlueprintPage() {
         <Pillar title="Authority" proof={data.stageProof}><HonestEmpty title="Blueprint authority not returned" route="GET /api/v1/gpc/stats" detail="The registry has not returned an authority binding." /></Pillar>
       </div>
       <div className="space-y-4">
-        <Pillar title="Evidence" proof={data.stageProof}><HonestEmpty title="No compiled plan evidence" route="POST /api/v1/gpc/compile" detail="A plan must be returned before it can be inspected." /></Pillar>
+        <Pillar title="Evidence" proof={data.stageProof}>
+          {plan?.graph?.nodes?.length ? (
+            <div className="space-y-4">
+              <PlanGraphCanvas graph={plan.graph} />
+              <dl className="grid gap-3 sm:grid-cols-3">
+                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Plan ID</dt><dd className="mt-1 break-all font-mono text-xs text-cos-text">{plan.id}</dd></div>
+                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Status</dt><dd className="mt-1 font-mono text-xs text-cos-text">{plan.status}</dd></div>
+                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Proof hash</dt><dd className="mt-1 break-all font-mono text-xs text-cos-text">{plan.proof_hash ?? "Not returned"}</dd></div>
+              </dl>
+            </div>
+          ) : <HonestEmpty title="No compiled plan evidence" route="POST /api/v1/gpc/compile" detail="A plan must be returned before it can be inspected." />}
+        </Pillar>
         <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Blueprint drift not measured" route="GET /api/v1/gpc/stats" detail="No drift signal was returned by the blueprint routes." /></Pillar>
       </div>
     </SectionShell>

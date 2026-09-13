@@ -38,6 +38,11 @@ const CosGovernNode = React.memo(({ data, selected, isConnectable }: any) => {
       <div className="text-xs font-black uppercase tracking-wider mb-1">
         {data.label}
       </div>
+      {data.subtitle ? (
+        <div className="mb-1 text-[9px] leading-4 opacity-80">
+          {data.subtitle}
+        </div>
+      ) : null}
       <div className="text-[9px] font-mono opacity-70 tracking-widest uppercase">
         {data.node_type}
       </div>
