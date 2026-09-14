@@ -1,6 +1,8 @@
 import {
   clearSessionCapabilityLease,
   clearSessionConsequence,
+  applyExecuteResponse,
+  applyTerminateResponse,
   readSessionCapabilityLease,
   readSessionConsequence,
   storeSessionCapabilityLease,
@@ -9,6 +11,44 @@ import {
 
 describe("session capability lease handoff", () => {
   beforeEach(() => sessionStorage.clear());
+
+  const lease = {
+    mountId: "mnt_1",
+    tokenId: "tok_1",
+    nonce: "nonce_1",
+  };
+
+  it("keeps execute allows mounted until CAPPO reports consequence termination", () => {
+    expect(applyExecuteResponse(lease, { decision: "allow" })).toEqual(lease);
+    expect(applyExecuteResponse(lease, {
+      decision: "allow",
+      consequence: { terminated: true },
+    })).toEqual({
+      ...lease,
+      terminated: true,
+      terminatedBy: "cappo:task_complete",
+    });
+  });
+
+  it("records explicit and already-terminated revoke outcomes", () => {
+    expect(applyTerminateResponse(lease, {
+      decision: "allow",
+      reason: "explicit_terminate",
+    })).toEqual({
+      ...lease,
+      terminated: true,
+      terminatedBy: "explicit_terminate",
+    });
+    const completedLease = {
+      ...lease,
+      terminated: true,
+      terminatedBy: "cappo:task_complete",
+    };
+    expect(applyTerminateResponse(completedLease, {
+      decision: "deny",
+      reason: "already_terminated",
+    })).toEqual(completedLease);
+  });
 
   it("hands the single-use lease from Mount to Execute without rendering it", () => {
     const lease = { mountId: "mnt_1", tokenId: "tok_1", nonce: "nonce_1" };
@@ -33,6 +73,7 @@ describe("session capability lease handoff", () => {
         executionId: "exec_2",
         expiresAt: "2026-09-14T00:00:00Z",
         terminated: true,
+        terminatedBy: "cappo:task_complete",
       }),
     );
     expect(readSessionCapabilityLease()).toEqual({
@@ -47,6 +88,7 @@ describe("session capability lease handoff", () => {
       executionId: "exec_2",
       expiresAt: "2026-09-14T00:00:00Z",
       terminated: true,
+      terminatedBy: "cappo:task_complete",
     });
   });
 

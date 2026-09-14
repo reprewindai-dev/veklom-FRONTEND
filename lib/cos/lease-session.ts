@@ -16,6 +16,7 @@ export type SessionCapabilityLease = {
   executionId?: string;
   expiresAt?: string;
   terminated?: boolean;
+  terminatedBy?: string;
   grants?: SessionCapabilityLeaseGrants;
 };
 
@@ -72,6 +73,7 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
       if (typeof value[key] === "string") lease[key] = value[key];
     }
     if (typeof value.terminated === "boolean") lease.terminated = value.terminated;
+    if (typeof value.terminatedBy === "string") lease.terminatedBy = value.terminatedBy;
     if (value.grants && typeof value.grants === "object" && !Array.isArray(value.grants)) {
       const grants: SessionCapabilityLeaseGrants = {};
       for (const key of ["reads", "writes", "blocked"] as const) {
@@ -86,6 +88,47 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
   } catch {
     return null;
   }
+}
+
+export function applyExecuteResponse(
+  lease: SessionCapabilityLease,
+  response: Record<string, unknown>,
+): SessionCapabilityLease {
+  const consequence = response.consequence;
+  if (
+    consequence
+    && typeof consequence === "object"
+    && !Array.isArray(consequence)
+    && (consequence as Record<string, unknown>).terminated === true
+  ) {
+    return {
+      ...lease,
+      terminated: true,
+      terminatedBy: "cappo:task_complete",
+    };
+  }
+  return lease;
+}
+
+export function applyTerminateResponse(
+  lease: SessionCapabilityLease,
+  response: Record<string, unknown>,
+): SessionCapabilityLease {
+  if (response.decision === "allow") {
+    return {
+      ...lease,
+      terminated: true,
+      terminatedBy: "explicit_terminate",
+    };
+  }
+  if (response.decision === "deny" && response.reason === "already_terminated") {
+    return {
+      ...lease,
+      terminated: true,
+      terminatedBy: lease.terminatedBy ?? "cappo:task_complete",
+    };
+  }
+  return lease;
 }
 
 export function clearSessionCapabilityLease() {

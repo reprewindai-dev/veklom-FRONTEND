@@ -16,6 +16,8 @@ import {
   readSessionConsequence,
   storeSessionCapabilityLease,
   storeSessionConsequence,
+  applyExecuteResponse,
+  applyTerminateResponse,
   type SessionCapabilityLease,
   type SessionConsequenceDenial,
   type SessionConsequenceRecord,
@@ -133,6 +135,9 @@ export default function ExecutePage() {
   const anchoring = asRecord(successfulResponse?.anchoring);
   const receiptId = asString(consequencePayload?.receipt_id);
   const executionId = asString(authority?.execution_id) ?? lease?.executionId;
+  const lastRevoke = [...(consequence?.denials ?? [])]
+    .reverse()
+    .find((item) => item.attempt === "revoke");
   const phases: TracePhase[] = [
     { id: "authorize", name: "Authorize", status: lease ? "complete" : "pending", kind: "authority" },
     {
@@ -257,8 +262,8 @@ export default function ExecutePage() {
     }
     if (attempt === "retry" && decision === "allow") setReplayInvariantViolation(true);
     persistResponse(response, nextDenials);
-    if (decision === "allow") {
-      const nextLease = { ...lease, terminated: true };
+    const nextLease = applyExecuteResponse(lease, response);
+    if (nextLease !== lease) {
       storeSessionCapabilityLease(nextLease);
       setLease(nextLease);
     }
@@ -266,32 +271,32 @@ export default function ExecutePage() {
   }
 
   async function revokeAuthority() {
-    if (!lease || lease.terminated) return;
+    if (!lease) return;
     setBusyAction("revoke");
     const result = await callCappo<JsonRecord>(
       endpoint("POST", `/v1/capability/mounts/${lease.mountId}/terminate`, cappoBase),
       { reason: "explicit_terminate" },
     );
-    if (result.data && responseDecision(result.data) === "allow") {
-      const nextLease = { ...lease, terminated: true };
-      storeSessionCapabilityLease(nextLease);
-      setLease(nextLease);
-    }
     const response = result.data ?? {
       decision: "error",
       reason: `HTTP ${result.record.status ?? "unreachable"}`,
     };
-    const denials = result.data
-      ? consequence?.denials ?? []
-      : [
-        ...(consequence?.denials ?? []),
-        {
-          attempt: "revoke" as const,
-          decision: "error",
-          reason: asString(response.reason) ?? "No reason returned",
-          at: new Date().toISOString(),
-        },
-      ];
+    const nextLease = result.data
+      ? applyTerminateResponse(lease, response)
+      : lease;
+    if (nextLease !== lease) {
+      storeSessionCapabilityLease(nextLease);
+      setLease(nextLease);
+    }
+    const denials = [
+      ...(consequence?.denials ?? []),
+      {
+        attempt: "revoke" as const,
+        decision: asString(response.decision) ?? "error",
+        reason: asString(response.reason) ?? "No reason returned",
+        at: new Date().toISOString(),
+      },
+    ];
     setLastResponse(response);
     storeSessionConsequence({
       mountId: lease.mountId,
@@ -356,7 +361,7 @@ export default function ExecutePage() {
             <button type="button" onClick={() => executeCounter("execute")} disabled={Boolean(busyAction) || !mountIsLive || !targetRef} className="inline-flex items-center gap-2 rounded-lg bg-cos-accent px-3 py-2 text-xs font-semibold text-cos-bg disabled:opacity-50">
               <SquareTerminal size={13} /> Execute counter.increment
             </button>
-            <button type="button" onClick={revokeAuthority} disabled={Boolean(busyAction) || !mountIsLive} className="inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50">
+            <button type="button" onClick={revokeAuthority} disabled={Boolean(busyAction) || !lease} className="inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50">
               <ShieldCheck size={13} /> Revoke authority
             </button>
             <button type="button" onClick={() => executeCounter("retry")} disabled={Boolean(busyAction) || !(hasAttemptedExecute || lease.terminated)} className="inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50">
@@ -378,7 +383,8 @@ export default function ExecutePage() {
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Execution ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(executionId)}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Nonce consumed</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(authority?.nonce_consumed)}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Expires at</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(lease.expiresAt)}</div></div>
-            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Mount state</div><div className="mt-2 font-mono text-xs text-cos-text">{lease.terminated ? "terminated" : "mounted"}</div></div>
+            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Mount state</div><div className="mt-2 font-mono text-xs text-cos-text">{lease.terminated ? `terminated (${lease.terminatedBy ?? "unknown"})` : "mounted"}</div></div>
+            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Last revoke</div><div className="mt-2 font-mono text-xs text-cos-text">{lastRevoke ? `Revoke: ${lastRevoke.decision.toUpperCase()} · ${lastRevoke.reason}` : "Not returned"}</div></div>
           </div>
         </Pillar>
       </div>
