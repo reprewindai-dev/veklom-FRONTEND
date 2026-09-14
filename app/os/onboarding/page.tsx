@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { api } from "@/lib/api";
+import { storeSessionCapabilityLease } from "@/lib/cos/lease-session";
 import { Button, ErrorBox } from "@/components/ui";
 import { motion, AnimatePresence } from "motion/react";
 import dynamic from "next/dynamic";
@@ -129,6 +130,8 @@ export default function PGLOnboardingPage() {
 
     try {
       if (step === 0) {
+        const identity = await api<{ id: string; email?: string }>("/api/v1/auth/me");
+        setOperatorId(identity.id);
         await api("/api/v1/pgl/onboarding/operator-identity", {
           body: { operator_name: operator.name, email: operator.email },
         });
@@ -175,6 +178,46 @@ export default function PGLOnboardingPage() {
             payload: { wallet_address: wallet.address },
           },
         });
+        const mount = await api<{
+          decision?: string;
+          mount?: { id?: string };
+          token?: {
+            token_id?: string;
+            nonce?: string;
+            execution_id?: string;
+            expires_at?: string;
+          };
+        }>("/api/cappo/v1/capability/mounts", {
+          body: {
+            package_ref: "veklom.governed-counter@v1",
+            execution_scope: { workspace: "default", project: "onboarding" },
+            requested_action_scope: {
+              reads: ["counter.read"],
+              writes: ["counter.increment"],
+              blocked: ["counter.reset"],
+            },
+            ttl_seconds: 300,
+          },
+        });
+        if (
+          mount.decision === "allow"
+          && mount.mount?.id
+          && mount.token?.token_id
+          && mount.token.nonce
+        ) {
+          storeSessionCapabilityLease({
+            mountId: mount.mount.id,
+            tokenId: mount.token.token_id,
+            nonce: mount.token.nonce,
+            packageRef: "veklom.governed-counter@v1",
+            targetRef: "activation.governed-counter",
+            workspace: "default",
+            project: "onboarding",
+            resource: "onboarding-proof",
+            executionId: mount.token.execution_id,
+            expiresAt: mount.token.expires_at,
+          });
+        }
         await api("/api/v1/pgl/onboarding/complete", { body: {} });
         setOnboardingCompleted(true);
         return;
@@ -464,7 +507,7 @@ export default function PGLOnboardingPage() {
               {step === 3 && "Select the capabilities and rigid safety rails."}
               {step === 4 && "Anchor the cryptographic genesis block."}
               {step === 5 && "Link an optional funding source for autonomous executions."}
-              {step === 6 && "Run a localized proof to verify chain integrity."}
+              {step === 6 && "Request a bounded CAPPO mount for the onboarding proof."}
             </p>
           </motion.div>
 

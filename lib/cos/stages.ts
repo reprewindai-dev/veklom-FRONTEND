@@ -126,7 +126,7 @@ export const stages: StageDefinition[] = [
     purpose: "Inspect actual governed work, execution state, and consequence results.",
     owner: "CAPPO authority / Governed Compute execution",
     endpoints: [
-      { method: "POST", path: "/v1/exec", classification: "present", response: "execution response and execution id", baseUrl: backend("cappo") },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/execute", classification: "present", response: "governed consequence response and receipt", baseUrl: backend("cappo") },
     ],
   },
   {
