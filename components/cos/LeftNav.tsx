@@ -36,7 +36,7 @@ const icons = {
   terminal: Command,
 } as const;
 
-export function LeftNav({ onTerminal }: { onTerminal: () => void }) {
+export function LeftNav({ onTerminal, sandbox }: { onTerminal: () => void; sandbox: boolean }) {
   const pathname = usePathname();
   const renderItem = (stage: StageDefinition) => {
     const Icon = icons[stage.id as keyof typeof icons] || CircleDollarSign;
@@ -50,7 +50,7 @@ export function LeftNav({ onTerminal }: { onTerminal: () => void }) {
     );
   };
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-cos-border bg-cos-bg/90 px-3 py-5 lg:block">
+    <aside className={`hidden w-60 shrink-0 border-r border-cos-border bg-cos-bg/90 px-3 py-5 lg:block ${sandbox ? "border-l-2 border-l-cos-warn" : ""}`}>
       <div className="mb-4 px-3 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-steel">Capability lifecycle</div>
       <nav className="space-y-1">{spineStages.map(renderItem)}</nav>
       <div className="my-5 border-t border-cos-border" />

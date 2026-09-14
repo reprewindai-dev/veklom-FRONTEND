@@ -56,6 +56,7 @@ export function resolveStageBaseUrl(
 }
 
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
+  void sandbox;
   const observation: ProofObservation = endpoint.classification === "absent"
     ? { kind: "no-route" }
     : { kind: "not-called" };
@@ -63,7 +64,7 @@ function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallReco
     method: endpoint.method,
     path: endpoint.path,
     classification: endpoint.classification,
-    proof: deriveProofStatus(observation, sandbox),
+    proof: deriveProofStatus(observation),
     observation,
   };
 }
@@ -171,7 +172,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         status: 200,
         latencyMs,
         observation: classification.observation,
-        proof: deriveProofStatus(classification.observation, sandbox),
+        proof: deriveProofStatus(classification.observation),
         error: classification.reason,
       };
       setRecords((current) => ({ ...current, [key]: record }));
@@ -196,7 +197,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
           status,
           latencyMs,
           observation,
-          proof: deriveProofStatus(observation, sandbox),
+          proof: deriveProofStatus(observation),
           paymentRequired: true,
         };
         setRecords((current) => ({ ...current, [key]: record }));
@@ -211,7 +212,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         status,
         latencyMs,
         observation,
-        proof: deriveProofStatus(observation, sandbox),
+        proof: deriveProofStatus(observation),
         error: message,
       };
       setRecords((current) => ({ ...current, [key]: record }));

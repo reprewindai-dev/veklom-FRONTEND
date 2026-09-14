@@ -10,6 +10,7 @@ import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage, type StageEndpoint } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
 import { targetRefFor } from "@/lib/cos/capability-targets";
+import { ScopeTag } from "@/components/cos/EnvironmentFrame";
 import {
   readSessionCapabilityLease,
   readSessionConsequence,
@@ -290,7 +291,7 @@ export default function ExecutePage() {
               <div className="mt-2 break-all font-mono text-cos-text">{displayValue(lease.packageRef)}</div>
               <div className="mt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Mount</div>
               <div className="mt-2 break-all font-mono text-cos-text">{lease.mountId}</div>
-              <div className="mt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Scope</div>
+              <div className="mt-3 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel"><span>Scope</span><ScopeTag project={lease.project} /></div>
               <div className="mt-2 font-mono text-cos-text">{lease.workspace ?? "Not returned"} / {lease.project ?? "Not returned"} / {resource}</div>
             </div>
             <div className="rounded-lg border border-cos-border bg-cos-bg/35 p-3 text-xs">

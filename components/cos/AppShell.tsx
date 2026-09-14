@@ -11,15 +11,22 @@ import { VeklomActivityCue } from "./VeklomActivityCue";
 import { ProofBadge } from "./ProofBadge";
 import { CommandPalette } from "./CommandPalette";
 import { TerminalConsole } from "./TerminalConsole";
-import { SandboxProvider } from "@/lib/cos/sandbox";
+import { readEnvironmentIsSandbox, SandboxProvider } from "@/lib/cos/sandbox";
 import { ProdSandboxToggle } from "./ProdSandboxToggle";
+import { EnvironmentFrame } from "./EnvironmentFrame";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, loading } = useAuth();
-  const [sandbox, setSandbox] = useState(true);
+  const [sandbox, setSandbox] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [clock, setClock] = useState("");
+  useEffect(() => {
+    const syncEnvironment = () => setSandbox(readEnvironmentIsSandbox());
+    syncEnvironment();
+    window.addEventListener("veklom.environment.changed", syncEnvironment);
+    return () => window.removeEventListener("veklom.environment.changed", syncEnvironment);
+  }, []);
   useEffect(() => {
     const tick = () => setClock(new Date().toISOString().slice(11, 19) + " UTC");
     tick(); const timer = setInterval(tick, 1000); return () => clearInterval(timer);
@@ -34,7 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const identity = loading ? "Loading identity" : me?.email || me?.name || "Requester identity unavailable";
   return (
     <SandboxProvider value={sandbox}>
-    <div className="cos-shell relative flex min-h-screen overflow-hidden bg-cos-bg font-sans text-cos-text">
+    <div className={`cos-shell relative flex min-h-screen overflow-hidden bg-cos-bg font-sans text-cos-text ${sandbox ? "ring-2 ring-inset ring-cos-warn/40" : ""}`}>
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_78%_0%,rgb(var(--theme-accent)/0.13),transparent_29%),radial-gradient(circle_at_16%_92%,rgb(var(--theme-accent)/0.055),transparent_27%),linear-gradient(180deg,var(--theme-bg)_0%,var(--theme-bg)_100%)]" />
       <div className="pointer-events-none fixed inset-0 -z-0 bg-cos-grid bg-[size:56px_56px] opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent_78%)]" />
       <div className="relative z-10 flex min-h-screen w-full flex-col">
@@ -50,7 +57,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="hidden items-center gap-1 rounded-full border border-cos-border px-3 py-2 font-mono text-[10px] text-cos-steel xl:flex"><Clock3 size={13} />{clock}</span>
           </div>
         </header>
-        <div className="flex min-h-0 flex-1"><LeftNav onTerminal={() => setTerminalOpen(true)} /><main className="min-w-0 flex-1 overflow-y-auto">{children}</main></div>
+        <EnvironmentFrame />
+        <div className="flex min-h-0 flex-1"><LeftNav onTerminal={() => setTerminalOpen(true)} sandbox={sandbox} /><main className="min-w-0 flex-1 overflow-y-auto">{children}</main></div>
       </div>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <TerminalConsole open={terminalOpen} onClose={() => setTerminalOpen(false)} />
