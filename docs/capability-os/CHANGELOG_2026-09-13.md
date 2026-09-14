@@ -8,7 +8,7 @@ The primary Capability OS spine is now:
 
 `Capabilities → Mount → Blueprint → Govern → Authority → Execute → Evidence → Measure → Settle → Tracker`
 
-Compute-less remains cross-cutting. Terminal is an alternate shell control over the same governed routes and is not a second execution path.
+Runtime diagnostics remains cross-cutting. Terminal is an alternate shell control over the same governed routes and is not a second execution path.
 
 The historical Command / Workflows / Executions / Governed Compute / Settings placeholder pages are redirects only and must not be repopulated as a second product model.
 
@@ -38,6 +38,12 @@ The endpoint registry is source-backed and typed, but endpoint configuration alo
 
 The public proof claim ledger distinguishes local adversarial harness evidence from deployed/production proof. CAPPO route-proof work that is still on an unmerged backend branch must remain labeled accordingly.
 
+## Pass 1B source and glyph audit
+
+- Audited lifecycle endpoint ownership and handler presence against pinned service source.
+- Replaced inherited `live` registry classes with `present`, `needs_proof`, and `absent`, including qualifications for ambiguous or non-durable routes.
+- Added the blueprint plan graph projection and lifecycle activity cues only where returned state supports them.
+
 ## Deferred product work
 
 Still not complete in this reconciliation:
@@ -47,3 +53,15 @@ Still not complete in this reconciliation:
 - publication of the three sealed mobility evidence bundles and M0–M13 rendering;
 - host-side cloudflared ingress configuration;
 - full cold-client consequence journey and product acceptance battery.
+
+Branch: `devin/1789292427-cos-pass1b-final`
+
+Evidence tier: source-only/local build, not deployed-verified.
+
+## Governed Counter cold-user loop
+
+The authenticated Mount → Execute → Evidence → Revoke → Retry surface now carries
+one bounded CAPPO governed-counter lease across the OS pages, preserves the
+returned consequence receipt and denial history in the tab session, and routes
+VLink `/pair/*` links to the configured VLink service. This remains a source-only
+and local-build change; deployed runtime behavior is not verified here.

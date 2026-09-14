@@ -70,7 +70,7 @@ async function proxyRequest(req: NextRequest) {
     if (
       isCappoExecPath(forwardPath) ||
       isCappoIdentityPath(forwardPath) ||
-      forwardPath.startsWith("/v1/capability/mounts") ||
+      forwardPath.startsWith("/v1/capability/") ||
       forwardPath.startsWith("/v1/executions/")
     ) {
       if (req.headers.has("authorization")) {

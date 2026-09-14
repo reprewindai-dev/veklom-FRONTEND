@@ -3,12 +3,6 @@
 import { useEffect } from"react";
 import { useAuth } from"@/lib/auth-context";
 
-declare global {
- interface Window {
- gtag?: (...args: any[]) => void;
- }
-}
-
 export default function GoogleAnalyticsUserSync() {
  const { me, tier } = useAuth();
 

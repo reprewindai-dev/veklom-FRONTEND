@@ -30,6 +30,13 @@ export type SealedBundleStatus = {
   sha256?: string;
 };
 
+export type SealedBundlePayload = {
+  bundle: SealedBundleStatus;
+  payload?: unknown;
+  valid: boolean;
+  error?: string;
+};
+
 function bundlePath(file: string) {
   return path.join(process.cwd(), "public", "proofs", file);
 }
@@ -56,11 +63,21 @@ export async function readSealedBundles(): Promise<SealedBundleStatus[]> {
 
 export async function readSealedBundlePayloads(
   bundles: SealedBundleStatus[],
-): Promise<Array<{ bundle: SealedBundleStatus; payload: unknown }>> {
+): Promise<SealedBundlePayload[]> {
   return Promise.all(
-    bundles.map(async (bundle) => ({
-      bundle,
-      payload: JSON.parse(await readFile(bundlePath(bundle.file), "utf8")) as unknown,
-    })),
+    bundles.map(async (bundle) => {
+      try {
+        const payload = JSON.parse(await readFile(bundlePath(bundle.file), "utf8")) as unknown;
+        return { bundle, payload, valid: true };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          return { bundle, valid: false, error: "Bundle file is no longer available" };
+        }
+        if (error instanceof SyntaxError) {
+          return { bundle, valid: false, error: "Bundle present but not valid JSON" };
+        }
+        return { bundle, valid: false, error: "Bundle could not be parsed" };
+      }
+    }),
   );
 }

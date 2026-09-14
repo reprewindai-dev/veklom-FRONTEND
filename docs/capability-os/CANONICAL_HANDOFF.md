@@ -73,8 +73,10 @@ Meaning:
 
 Cross-cutting surfaces:
 
-- **Compute-less** — connected compute/runtime supply and bounded execution environments. It is not a second lifecycle.
+- **Runtime diagnostics** — source-declared compute/runtime diagnostics; it is not a second lifecycle.
 - **Terminal** — expert button/overlay over the same governed paths. It is never an authority bypass.
+
+The former Command / Capabilities-stub / Workflows / Executions / Governed Compute / Settings / Terminal-route shell model is SUPERSEDED (removed in devin/1789290468-cos-reconciliation; legacy URLs 301 to lifecycle routes). Do not reintroduce it.
 
 `DISCOVERABLE != INVOCABLE`
 

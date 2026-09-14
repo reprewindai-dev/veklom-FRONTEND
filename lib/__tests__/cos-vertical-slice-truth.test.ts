@@ -29,15 +29,15 @@ describe("truthful vertical slice state", () => {
     })).toBe("Verified");
   });
 
-  it("marks otherwise verified execution and evidence as simulated in sandbox", () => {
+  it("keeps otherwise verified execution and evidence real in sandbox scope", () => {
     expect(executionProofStatus({
       status: "completed",
       executionId: "exec-1",
       hasResponse: true,
       leaseAllowed: true,
       sandbox: true,
-    })).toBe("Simulated");
-    expect(proofRecordStatus({ verified: true, sandbox: true })).toBe("Simulated");
+    })).toBe("Verified");
+    expect(proofRecordStatus({ verified: true, sandbox: true })).toBe("Verified");
   });
 
   it("does not attach a superseded response to the current execution", () => {

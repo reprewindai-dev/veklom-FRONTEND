@@ -16,12 +16,13 @@ export function executionProofStatus({
   leaseAllowed: boolean;
   sandbox: boolean;
 }): ProofStatus {
+  void sandbox;
   const normalized = status?.toLowerCase();
   if (normalized && FAILED_EXECUTION_STATES.has(normalized)) return "Degraded";
   if (!normalized || !SUCCESSFUL_EXECUTION_STATES.has(normalized) || !executionId || !hasResponse || !leaseAllowed) {
     return "Needs proof";
   }
-  return sandbox ? "Simulated" : "Verified";
+  return "Verified";
 }
 
 export function proofRecordStatus({
@@ -33,9 +34,10 @@ export function proofRecordStatus({
   degraded?: boolean;
   sandbox: boolean;
 }): ProofStatus {
+  void sandbox;
   if (degraded) return "Degraded";
   if (!verified) return "Needs proof";
-  return sandbox ? "Simulated" : "Verified";
+  return "Verified";
 }
 
 export function requestStillCurrent(

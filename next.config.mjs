@@ -132,6 +132,7 @@ const nextConfig = {
 
         // ── VLink ─────────────────────────────────────────────────────────────
         { source: "/vlink/connect/:path*", destination: `${VLINK_URL}/:path*` },
+        { source: "/pair/:path*", destination: `${VLINK_URL}/pair/:path*` },
 
         // ── Downstream services ───────────────────────────────────────────────
         { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },

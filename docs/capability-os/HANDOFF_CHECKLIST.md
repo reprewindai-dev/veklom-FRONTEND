@@ -92,7 +92,11 @@ Historical shell routes are redirects only and must not become a second product 
 - `/os/settings` → `/os`
 - `/os/terminal` → `/os` (Terminal is opened from the shell control)
 
+The former Command / Capabilities-stub / Workflows / Executions / Governed Compute / Settings / Terminal-route shell model is SUPERSEDED (removed in devin/1789290468-cos-reconciliation; legacy URLs 301 to lifecycle routes). Do not reintroduce it.
+
 ## 6. Truth-state behavior
+
+Static registry classes are present / needs_proof / absent only; never encode live/verified statically.
 
 For the object/page being changed, describe rendering for:
 

@@ -44,7 +44,7 @@ For visible UI changes, also run the app locally and inspect the affected route.
 ## Architecture & Deployment
 
 - **Decoupled Architecture**: This frontend runs entirely independently of the FastAPI backend. Do not attempt to merge it into the backend repo.
-- **Coolify Deployment**: When deploying to Coolify, ensure `NEXT_PUBLIC_API_BASE_URL` is set to `https://api.veklom.com`.
+- **Deployment authority**: Docker on the user's Windows host with Cloudflare Tunnel/Pages only.
 
 ## Commit And Push
 

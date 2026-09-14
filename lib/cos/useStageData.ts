@@ -2,36 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
-import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { classifyPayload, deriveProofStatus } from "./proof";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
 import { useSandboxMode } from "./sandbox";
-
-export function resolveStageTransportPath(
-  stageId: StageDefinition["id"],
-  path: string,
-): string {
-  if (stageId === "mount" || isCappoProxyPath(path)) {
-    return `/api/cappo${path}`;
-  }
-  return path;
-}
-
-export function resolveStageBaseUrl(
-  stageId: StageDefinition["id"],
-  sandbox: boolean,
-  endpointBaseUrl?: string,
-  sandboxBaseUrl?: string,
-  endpointPath?: string,
-): string | undefined {
-  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
-    return undefined;
-  }
-  if (!sandbox) return undefined;
-  return sandboxBaseUrl || endpointBaseUrl;
-}
 
 export interface StageCallRecord {
   method: StageEndpoint["method"];
@@ -55,11 +31,41 @@ interface StageDataOptions {
   autoGet?: boolean;
 }
 
-function keyFor(endpoint: StageEndpoint) {
+function keyFor(endpoint: Pick<StageEndpoint, "method" | "path">) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
+function pathMatchesTemplate(template: string, concrete: string): boolean {
+  const templateParts = template.split("/");
+  const concreteParts = concrete.split("/");
+  return templateParts.length === concreteParts.length
+    && templateParts.every((part, index) => (
+      (part.startsWith("{") && part.endsWith("}")) || part === concreteParts[index]
+    ));
+}
+
+export function resolveStageTransportPath(
+  stageId: StageDefinition["id"],
+  path: string,
+): string {
+  if (stageId === "mount" || isCappoProxyPath(path)) return `/api/cappo${path}`;
+  return path;
+}
+
+export function resolveStageBaseUrl(
+  stageId: StageDefinition["id"],
+  sandbox: boolean,
+  endpointBaseUrl?: string,
+  sandboxBaseUrl?: string,
+  endpointPath?: string,
+): string | undefined {
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) return undefined;
+  if (!sandbox) return undefined;
+  return sandboxBaseUrl || endpointBaseUrl;
+}
+
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
+  void sandbox;
   const observation: ProofObservation = endpoint.classification === "absent"
     ? { kind: "no-route" }
     : { kind: "not-called" };
@@ -67,9 +73,68 @@ function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallReco
     method: endpoint.method,
     path: endpoint.path,
     classification: endpoint.classification,
-    proof: deriveProofStatus(observation, sandbox),
+    proof: deriveProofStatus(observation),
     observation,
   };
+}
+
+export function recordsForStage(
+  stage: StageDefinition,
+  records: Record<string, StageCallRecord>,
+  additionalRecords: Record<string, StageCallRecord>,
+  sandbox: boolean,
+): StageCallRecord[] {
+  const allRecords = { ...records, ...additionalRecords };
+  const declaredKeys = new Set(stage.endpoints.map((endpoint) => keyFor(endpoint)));
+  const concrete = Object.entries(allRecords)
+    .filter(([key]) => !declaredKeys.has(key))
+    .map(([, record]) => record);
+  const concreteTemplateKeys = new Set(
+    stage.endpoints
+      .filter((endpoint) => endpoint.path.includes("{"))
+      .filter((endpoint) => concrete.some((record) => (
+        record.method === endpoint.method && pathMatchesTemplate(endpoint.path, record.path)
+      )))
+      .map((endpoint) => keyFor(endpoint)),
+  );
+  const declared = stage.endpoints
+    .filter((endpoint) => !concreteTemplateKeys.has(keyFor(endpoint)))
+    .map((endpoint) => allRecords[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox));
+  return [...declared, ...concrete];
+}
+
+export function applicableRecords(
+  stage: StageDefinition,
+  records: StageCallRecord[],
+): StageCallRecord[] {
+  const templateKeys = new Set(
+    stage.endpoints
+      .filter((endpoint) => endpoint.path.includes("{"))
+      .map((endpoint) => keyFor(endpoint)),
+  );
+  return records.filter((record) => !(
+    templateKeys.has(keyFor(record))
+    && record.observation.kind === "not-called"
+  ));
+}
+
+export function aggregateStageProof(records: StageCallRecord[]): ProofStatus {
+  if (records.some((record) => record.proof === "Degraded" || record.observation.kind === "failed")) {
+    return "Degraded";
+  }
+  if (records.some((record) => record.proof === "Simulated")) {
+    return "Simulated";
+  }
+  if (records.length > 0 && records.every((record) => record.observation.kind === "no-route")) {
+    return "Not started";
+  }
+  if (records.length > 0 && records.every((record) => record.proof === "Verified")) {
+    return "Verified";
+  }
+  if (records.some((record) => record.proof === "Verified" || record.proof === "Present")) {
+    return "Present";
+  }
+  return "Needs proof";
 }
 
 export function useStageData(stageId: StageDefinition["id"], options: StageDataOptions = {}) {
@@ -124,7 +189,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         status: 200,
         latencyMs,
         observation: classification.observation,
-        proof: deriveProofStatus(classification.observation, sandbox),
+        proof: deriveProofStatus(classification.observation),
         error: classification.reason,
       };
       setRecords((current) => ({ ...current, [key]: record }));
@@ -149,7 +214,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
           status,
           latencyMs,
           observation,
-          proof: deriveProofStatus(observation, sandbox),
+          proof: deriveProofStatus(observation),
           paymentRequired: true,
         };
         setRecords((current) => ({ ...current, [key]: record }));
@@ -164,7 +229,7 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
         status,
         latencyMs,
         observation,
-        proof: deriveProofStatus(observation, sandbox),
+        proof: deriveProofStatus(observation),
         error: message,
       };
       setRecords((current) => ({ ...current, [key]: record }));
@@ -188,24 +253,13 @@ export function useStageData(stageId: StageDefinition["id"], options: StageDataO
   }, [call, options.autoGet, stage]);
 
   const recordsList = useMemo(
-    () => {
-      return [
-        ...stage.endpoints.map((endpoint) => records[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox)),
-        ...Object.values(additionalRecords),
-      ];
-    },
+    () => recordsForStage(stage, records, additionalRecords, sandbox),
     [additionalRecords, records, sandbox, stage],
   );
 
   const stageProof = useMemo<ProofStatus>(() => {
-    if (recordsList.some((record) => record.observation.kind === "no-route")) return "Not started";
-    if (recordsList.some((record) => record.proof === "Simulated")) return "Simulated";
-    if (recordsList.some((record) => record.proof === "Verified")) return "Verified";
-    if (recordsList.some((record) => record.proof === "Present")) return "Present";
-    if (recordsList.some((record) => record.proof === "Degraded")) return "Degraded";
-    if (recordsList.every((record) => record.proof === "Not started")) return "Not started";
-    return "Needs proof";
-  }, [recordsList]);
+    return aggregateStageProof(applicableRecords(stage, recordsList));
+  }, [recordsList, stage]);
 
   const hasLoading = Object.values(loading).some(Boolean);
   return { stage, records: recordsList, payloads, loading: hasLoading, call, stageProof };
