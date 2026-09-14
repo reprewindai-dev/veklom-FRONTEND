@@ -57,3 +57,11 @@ Still not complete in this reconciliation:
 Branch: `devin/1789292427-cos-pass1b-final`
 
 Evidence tier: source-only/local build, not deployed-verified.
+
+## Governed Counter cold-user loop
+
+The authenticated Mount → Execute → Evidence → Revoke → Retry surface now carries
+one bounded CAPPO governed-counter lease across the OS pages, preserves the
+returned consequence receipt and denial history in the tab session, and routes
+VLink `/pair/*` links to the configured VLink service. This remains a source-only
+and local-build change; deployed runtime behavior is not verified here.
