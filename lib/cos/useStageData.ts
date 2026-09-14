@@ -35,6 +35,15 @@ function keyFor(endpoint: Pick<StageEndpoint, "method" | "path">) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
+function pathMatchesTemplate(template: string, concrete: string): boolean {
+  const templateParts = template.split("/");
+  const concreteParts = concrete.split("/");
+  return templateParts.length === concreteParts.length
+    && templateParts.every((part, index) => (
+      (part.startsWith("{") && part.endsWith("}")) || part === concreteParts[index]
+    ));
+}
+
 export function resolveStageTransportPath(
   _stageId: StageDefinition["id"],
   path: string,
@@ -76,13 +85,21 @@ export function recordsForStage(
   sandbox: boolean,
 ): StageCallRecord[] {
   const allRecords = { ...records, ...additionalRecords };
-  const declared = stage.endpoints.map(
-    (endpoint) => allRecords[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox),
-  );
   const declaredKeys = new Set(stage.endpoints.map((endpoint) => keyFor(endpoint)));
   const concrete = Object.entries(allRecords)
     .filter(([key]) => !declaredKeys.has(key))
     .map(([, record]) => record);
+  const concreteTemplateKeys = new Set(
+    stage.endpoints
+      .filter((endpoint) => endpoint.path.includes("{"))
+      .filter((endpoint) => concrete.some((record) => (
+        record.method === endpoint.method && pathMatchesTemplate(endpoint.path, record.path)
+      )))
+      .map((endpoint) => keyFor(endpoint)),
+  );
+  const declared = stage.endpoints
+    .filter((endpoint) => !concreteTemplateKeys.has(keyFor(endpoint)))
+    .map((endpoint) => allRecords[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox));
   return [...declared, ...concrete];
 }
 

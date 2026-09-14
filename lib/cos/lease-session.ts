@@ -99,13 +99,14 @@ export function clearSessionCapabilityLease() {
 }
 
 export type SessionConsequenceDenial = {
-  attempt: "execute" | "retry" | "forbidden_action";
+  attempt: "execute" | "retry" | "forbidden_action" | "revoke";
   decision: string;
   reason: string;
   at: string;
 };
 
 export type SessionConsequenceRecord = {
+  mountId: string;
   response: Record<string, unknown>;
   lastAllowedResponse?: Record<string, unknown>;
   recordedAt: string;
@@ -127,7 +128,7 @@ export function storeSessionConsequence(
   }
 }
 
-export function readSessionConsequence(): SessionConsequenceRecord | null {
+export function readSessionConsequence(mountId?: string): SessionConsequenceRecord | null {
   if (typeof window === "undefined" || !window.sessionStorage) return null;
   let raw: string | null;
   try {
@@ -139,7 +140,9 @@ export function readSessionConsequence(): SessionConsequenceRecord | null {
   try {
     const value = JSON.parse(raw) as Partial<SessionConsequenceRecord>;
     if (
-      !value.response
+      typeof value.mountId !== "string"
+      || (mountId !== undefined && value.mountId !== mountId)
+      || !value.response
       || typeof value.response !== "object"
       || Array.isArray(value.response)
       || typeof value.recordedAt !== "string"
@@ -151,12 +154,14 @@ export function readSessionConsequence(): SessionConsequenceRecord | null {
       && (item as SessionConsequenceDenial).attempt !== undefined
       && ((item as SessionConsequenceDenial).attempt === "execute"
         || (item as SessionConsequenceDenial).attempt === "retry"
-        || (item as SessionConsequenceDenial).attempt === "forbidden_action")
+        || (item as SessionConsequenceDenial).attempt === "forbidden_action"
+        || (item as SessionConsequenceDenial).attempt === "revoke")
       && typeof (item as SessionConsequenceDenial).decision === "string"
       && typeof (item as SessionConsequenceDenial).reason === "string"
       && typeof (item as SessionConsequenceDenial).at === "string"
     ));
     return {
+      mountId: value.mountId,
       response: value.response as Record<string, unknown>,
       lastAllowedResponse: value.lastAllowedResponse && typeof value.lastAllowedResponse === "object" && !Array.isArray(value.lastAllowedResponse)
         ? value.lastAllowedResponse as Record<string, unknown>

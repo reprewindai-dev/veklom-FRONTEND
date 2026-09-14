@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { api } from "@/lib/api";
-import { storeSessionCapabilityLease, type SessionCapabilityLeaseGrants } from "@/lib/cos/lease-session";
+import { clearSessionConsequence, storeSessionCapabilityLease, type SessionCapabilityLeaseGrants } from "@/lib/cos/lease-session";
 import { Button, ErrorBox } from "@/components/ui";
 import { motion, AnimatePresence } from "motion/react";
 import dynamic from "next/dynamic";
@@ -206,6 +206,7 @@ export default function PGLOnboardingPage() {
           && mount.token?.token_id
           && mount.token.nonce
         ) {
+          clearSessionConsequence();
           storeSessionCapabilityLease({
             mountId: mount.mount.id,
             tokenId: mount.token.token_id,

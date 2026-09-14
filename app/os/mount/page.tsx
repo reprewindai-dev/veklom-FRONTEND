@@ -12,6 +12,7 @@ import { ProofBadge } from "@/components/cos/ProofBadge";
 import { VeklomActivityCue, type ActivityCondition } from "@/components/cos/VeklomActivityCue";
 import { useAuth } from "@/lib/auth-context";
 import {
+  clearSessionConsequence,
   clearSessionCapabilityLease,
   readSessionCapabilityLease,
   storeSessionCapabilityLease,
@@ -194,6 +195,7 @@ export default function MountPage() {
           executionId: asString(returnedToken?.execution_id),
           expiresAt: asString(returnedToken?.expires_at),
         };
+        clearSessionConsequence();
         storeSessionCapabilityLease(lease);
         setHeldLease(lease);
       }

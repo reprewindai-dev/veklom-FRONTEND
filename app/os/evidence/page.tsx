@@ -23,8 +23,8 @@ function displayValue(value: unknown): string {
 export default function EvidencePage() {
   const stage = getStage("evidence");
   const data = useStageData("evidence", { autoGet: true });
-  const consequence = readSessionConsequence();
   const lease = readSessionCapabilityLease();
+  const consequence = readSessionConsequence(lease?.mountId);
   const hasEvidence = Object.keys(data.payloads).length > 0;
   const phaseStatus = data.loading ? "current" : hasEvidence ? "complete" : "pending";
   const response = consequence?.lastAllowedResponse ?? consequence?.response;

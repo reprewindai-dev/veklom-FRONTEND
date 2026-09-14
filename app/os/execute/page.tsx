@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Ban, CheckCircle2, CircleAlert, RotateCcw, ShieldCheck, SquareTerminal } from "lucide-react";
 import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
@@ -58,13 +58,21 @@ function proofFor(
 
 function appendDenial(
   existing: SessionConsequenceRecord | null,
+  mountId: string,
   denial: SessionConsequenceDenial,
 ): SessionConsequenceRecord {
   return {
+    mountId,
     response: existing?.response ?? {},
     recordedAt: existing?.recordedAt ?? new Date().toISOString(),
     denials: [...(existing?.denials ?? []), denial],
   };
+}
+
+function newOperationId() {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `op-${Date.now()}`;
 }
 
 function displayValue(value: unknown): string {
@@ -77,19 +85,39 @@ export default function ExecutePage() {
   const data = useStageData("execute");
   const cappoBase = stage.endpoints[0]?.baseUrl;
   const [lease, setLease] = useState<SessionCapabilityLease | null>(() => readSessionCapabilityLease());
-  const [consequence, setConsequence] = useState<SessionConsequenceRecord | null>(() => readSessionConsequence());
-  const [lastResponse, setLastResponse] = useState<JsonRecord | undefined>(() => readSessionConsequence()?.response);
+  const [consequence, setConsequence] = useState<SessionConsequenceRecord | null>(() => {
+    const currentLease = readSessionCapabilityLease();
+    return readSessionConsequence(currentLease?.mountId);
+  });
+  const [lastResponse, setLastResponse] = useState<JsonRecord | undefined>(() => {
+    const currentLease = readSessionCapabilityLease();
+    return readSessionConsequence(currentLease?.mountId)?.response;
+  });
   const [busyAction, setBusyAction] = useState<"forbidden_action" | "execute" | "revoke" | "retry" | null>(null);
   const [lastLatency, setLastLatency] = useState<number>();
   const [lastStatus, setLastStatus] = useState<number>();
   const [replayInvariantViolation, setReplayInvariantViolation] = useState(false);
-  const [operationId] = useState(() => {
-    const persisted = readSessionConsequence()?.response?.operation_id;
-    if (typeof persisted === "string") return persisted;
-    return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `op-${Date.now()}`;
+  const [operationId, setOperationId] = useState(() => {
+    const currentLease = readSessionCapabilityLease();
+    const persisted = readSessionConsequence(currentLease?.mountId)?.response?.operation_id;
+    return typeof persisted === "string" ? persisted : newOperationId();
   });
+
+  useEffect(() => {
+    const syncLease = () => setLease(readSessionCapabilityLease());
+    syncLease();
+    window.addEventListener("veklom.capability_lease.changed", syncLease);
+    return () => window.removeEventListener("veklom.capability_lease.changed", syncLease);
+  }, []);
+
+  useEffect(() => {
+    const nextConsequence = readSessionConsequence(lease?.mountId);
+    setConsequence(nextConsequence);
+    setLastResponse(nextConsequence?.response);
+    const persisted = nextConsequence?.response?.operation_id;
+    setOperationId(typeof persisted === "string" ? persisted : newOperationId());
+    setReplayInvariantViolation(false);
+  }, [lease?.mountId]);
 
   const targetRef = lease?.targetRef ?? (lease?.packageRef ? targetRefFor(lease.packageRef) : undefined);
   const resource = lease?.resource ?? "counter";
@@ -138,7 +166,9 @@ export default function ExecutePage() {
   }
 
   function persistResponse(response: JsonRecord, denials = consequence?.denials ?? []) {
+    if (!lease) return;
     const record = {
+      mountId: lease.mountId,
       response,
       lastAllowedResponse: responseDecision(response) === "allow"
         ? response
@@ -146,7 +176,7 @@ export default function ExecutePage() {
       denials,
     };
     storeSessionConsequence(record);
-    setConsequence(readSessionConsequence());
+    setConsequence(lease ? readSessionConsequence(lease.mountId) : null);
     setLastResponse(response);
   }
 
@@ -173,13 +203,14 @@ export default function ExecutePage() {
       reason: asString(response.reason) ?? "No reason returned",
       at: new Date().toISOString(),
     };
-    const next = appendDenial(consequence, denial);
+    const next = appendDenial(consequence, lease.mountId, denial);
     storeSessionConsequence({
+      mountId: lease.mountId,
       response: result.data ? lastResponse ?? {} : response,
       lastAllowedResponse: consequence?.lastAllowedResponse,
       denials: next.denials,
     });
-    setConsequence(readSessionConsequence());
+    setConsequence(readSessionConsequence(lease.mountId));
     setLastResponse(response);
     setBusyAction(null);
   }
@@ -194,6 +225,7 @@ export default function ExecutePage() {
       decision: "pending",
     };
     storeSessionConsequence({
+      mountId: lease.mountId,
       response: pending,
       lastAllowedResponse: consequence?.lastAllowedResponse,
       denials: consequence?.denials ?? [],
@@ -241,17 +273,34 @@ export default function ExecutePage() {
       endpoint("POST", `/v1/capability/mounts/${lease.mountId}/terminate`, cappoBase),
       { reason: "explicit_terminate" },
     );
-    if (result.data) {
+    if (result.data && responseDecision(result.data) === "allow") {
       const nextLease = { ...lease, terminated: true };
       storeSessionCapabilityLease(nextLease);
       setLease(nextLease);
-      storeSessionConsequence({
-        response: lastResponse ?? consequence?.response ?? { operation_id: operationId, decision: "pending" },
-        lastAllowedResponse: consequence?.lastAllowedResponse,
-        denials: consequence?.denials ?? [],
-      });
-      setConsequence(readSessionConsequence());
     }
+    const response = result.data ?? {
+      decision: "error",
+      reason: `HTTP ${result.record.status ?? "unreachable"}`,
+    };
+    const denials = result.data
+      ? consequence?.denials ?? []
+      : [
+        ...(consequence?.denials ?? []),
+        {
+          attempt: "revoke" as const,
+          decision: "error",
+          reason: asString(response.reason) ?? "No reason returned",
+          at: new Date().toISOString(),
+        },
+      ];
+    setLastResponse(response);
+    storeSessionConsequence({
+      mountId: lease.mountId,
+      response,
+      lastAllowedResponse: consequence?.lastAllowedResponse,
+      denials,
+    });
+    setConsequence(readSessionConsequence(lease.mountId));
     setBusyAction(null);
   }
 
