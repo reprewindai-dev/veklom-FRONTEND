@@ -52,8 +52,7 @@ function proofFor(
 ): ProofStatus {
   if (replayInvariantViolation) return "Degraded";
   if (responseDecision(response) !== "allow") return "Needs proof";
-  const anchoring = asRecord(response?.anchoring);
-  return anchoring?.status === "confirmed" ? "Verified" : "Present";
+  return "Live";
 }
 
 function appendDenial(
