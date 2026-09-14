@@ -82,11 +82,13 @@ export default function ExecutePage() {
   const [lastLatency, setLastLatency] = useState<number>();
   const [lastStatus, setLastStatus] = useState<number>();
   const [replayInvariantViolation, setReplayInvariantViolation] = useState(false);
-  const [operationId] = useState(() => (
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+  const [operationId] = useState(() => {
+    const persisted = readSessionConsequence()?.response?.operation_id;
+    if (typeof persisted === "string") return persisted;
+    return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
-      : `op-${Date.now()}`
-  ));
+      : `op-${Date.now()}`;
+  });
 
   const targetRef = lease?.targetRef ?? (lease?.packageRef ? targetRefFor(lease.packageRef) : undefined);
   const resource = lease?.resource ?? "counter";
@@ -159,22 +161,25 @@ export default function ExecutePage() {
         resource,
       },
     );
-    if (result.data) {
-      const denial = {
-        attempt: "forbidden_action" as const,
-        decision: asString(result.data.decision) ?? "Not returned",
-        reason: asString(result.data.reason) ?? "No reason returned",
-        at: new Date().toISOString(),
-      };
-      const next = appendDenial(consequence, denial);
-      storeSessionConsequence({
-        response: lastResponse ?? {},
-        lastAllowedResponse: consequence?.lastAllowedResponse,
-        denials: next.denials,
-      });
-      setConsequence(readSessionConsequence());
-      setLastResponse(result.data);
-    }
+    const response = result.data ?? {
+      decision: "error",
+      reason: `HTTP ${result.record.status ?? "unreachable"}`,
+      operation_id: operationId,
+    };
+    const denial = {
+      attempt: "forbidden_action" as const,
+      decision: asString(response.decision) ?? "error",
+      reason: asString(response.reason) ?? "No reason returned",
+      at: new Date().toISOString(),
+    };
+    const next = appendDenial(consequence, denial);
+    storeSessionConsequence({
+      response: result.data ? lastResponse ?? {} : response,
+      lastAllowedResponse: consequence?.lastAllowedResponse,
+      denials: next.denials,
+    });
+    setConsequence(readSessionConsequence());
+    setLastResponse(response);
     setBusyAction(null);
   }
 
@@ -204,24 +209,26 @@ export default function ExecutePage() {
         operation_id: operationId,
       },
     );
-    if (result.data) {
-      const decision = responseDecision(result.data);
-      const nextDenials = [...(consequence?.denials ?? [])];
-      if (attempt === "retry" && decision === "deny") {
-        nextDenials.push({
-          attempt: "retry",
-          decision: "deny",
-          reason: asString(result.data.reason) ?? "No reason returned",
-          at: new Date().toISOString(),
-        });
-      }
-      if (attempt === "retry" && decision === "allow") setReplayInvariantViolation(true);
-      persistResponse(result.data, nextDenials);
-      if (decision === "allow") {
-        const nextLease = { ...lease, terminated: true };
-        storeSessionCapabilityLease(nextLease);
-        setLease(nextLease);
-      }
+    const response = result.data ?? {
+      decision: "error",
+      reason: `HTTP ${result.record.status ?? "unreachable"}`,
+    };
+    const decision = responseDecision(response);
+    const nextDenials = [...(consequence?.denials ?? [])];
+    if (attempt === "retry" || !result.data) {
+      nextDenials.push({
+        attempt,
+        decision: result.data ? decision ?? "error" : "error",
+        reason: asString(response.reason) ?? "No reason returned",
+        at: new Date().toISOString(),
+      });
+    }
+    if (attempt === "retry" && decision === "allow") setReplayInvariantViolation(true);
+    persistResponse(response, nextDenials);
+    if (decision === "allow") {
+      const nextLease = { ...lease, terminated: true };
+      storeSessionCapabilityLease(nextLease);
+      setLease(nextLease);
     }
     setBusyAction(null);
   }
@@ -288,9 +295,9 @@ export default function ExecutePage() {
             </div>
             <div className="rounded-lg border border-cos-border bg-cos-bg/35 p-3 text-xs">
               <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Granted writes</div>
-              <div className="mt-2 font-mono text-cos-text">counter.increment</div>
+              <div className="mt-2 font-mono text-cos-text">{lease.grants?.writes?.length ? lease.grants.writes.join(", ") : "Not returned"}</div>
               <div className="mt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Blocked</div>
-              <div className="mt-2 font-mono text-cos-text">counter.reset</div>
+              <div className="mt-2 font-mono text-cos-text">{lease.grants?.blocked?.length ? lease.grants.blocked.join(", ") : "Not returned"}</div>
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -303,7 +310,7 @@ export default function ExecutePage() {
             <button type="button" onClick={revokeAuthority} disabled={Boolean(busyAction) || !mountIsLive} className="inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50">
               <ShieldCheck size={13} /> Revoke authority
             </button>
-            <button type="button" onClick={() => executeCounter("retry")} disabled={Boolean(busyAction) || !hasAttemptedExecute} className="inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50">
+            <button type="button" onClick={() => executeCounter("retry")} disabled={Boolean(busyAction) || !(hasAttemptedExecute || lease.terminated)} className="inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50">
               <RotateCcw size={13} /> Retry same operation
             </button>
           </div>

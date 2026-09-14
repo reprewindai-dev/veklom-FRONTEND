@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { api } from "@/lib/api";
-import { storeSessionCapabilityLease } from "@/lib/cos/lease-session";
+import { storeSessionCapabilityLease, type SessionCapabilityLeaseGrants } from "@/lib/cos/lease-session";
 import { Button, ErrorBox } from "@/components/ui";
 import { motion, AnimatePresence } from "motion/react";
 import dynamic from "next/dynamic";
@@ -180,12 +180,13 @@ export default function PGLOnboardingPage() {
         });
         const mount = await api<{
           decision?: string;
-          mount?: { id?: string };
+          mount?: { id?: string; grants?: SessionCapabilityLeaseGrants };
           token?: {
             token_id?: string;
             nonce?: string;
             execution_id?: string;
             expires_at?: string;
+            grants?: SessionCapabilityLeaseGrants;
           };
         }>("/api/cappo/v1/capability/mounts", {
           body: {
@@ -214,6 +215,7 @@ export default function PGLOnboardingPage() {
             workspace: "default",
             project: "onboarding",
             resource: "onboarding-proof",
+            grants: mount.mount?.grants ?? mount.token?.grants,
             executionId: mount.token.execution_id,
             expiresAt: mount.token.expires_at,
           });
