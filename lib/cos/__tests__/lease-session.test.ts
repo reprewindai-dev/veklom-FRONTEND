@@ -72,6 +72,7 @@ describe("session capability lease handoff", () => {
 
   it("stores, reads, and clears the last consequence and denial history", () => {
     storeSessionConsequence({
+      mountId: "mnt_1",
       response: {
         decision: "allow",
         consequence: { receipt_id: "receipt_1", terminated: true },
@@ -83,13 +84,14 @@ describe("session capability lease handoff", () => {
         at: "2026-09-13T00:00:00Z",
       }],
     });
-    const record = readSessionConsequence();
+    const record = readSessionConsequence("mnt_1");
     expect(record?.response).toEqual({
       decision: "allow",
       consequence: { receipt_id: "receipt_1", terminated: true },
     });
     expect(record?.denials).toHaveLength(1);
     expect(record?.recordedAt).toEqual(expect.any(String));
+    expect(readSessionConsequence("mnt_other")).toBeNull();
     clearSessionConsequence();
     expect(readSessionConsequence()).toBeNull();
   });

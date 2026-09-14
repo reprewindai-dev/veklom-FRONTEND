@@ -106,7 +106,7 @@ describe("Capability OS stage aggregation", () => {
     expect(aggregateStageProof(records)).toBe("Present");
   });
 
-  it("appends a deduplicated concrete record after declared non-template rows", () => {
+  it("replaces a templated row with its concrete record", () => {
     const definition = stage([
       { method: "GET", path: "/v1/mounts", classification: "present", response: "mounts" },
       { method: "GET", path: "/v1/mounts/{mount_id}", classification: "present", response: "mount" },
@@ -123,7 +123,6 @@ describe("Capability OS stage aggregation", () => {
 
     expect(records.map(({ path }) => path)).toEqual([
       "/v1/mounts",
-      "/v1/mounts/{mount_id}",
       "/v1/mounts/mnt_123",
     ]);
   });

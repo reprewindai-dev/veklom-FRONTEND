@@ -13,6 +13,7 @@ import { ProofBadge } from "./ProofBadge";
 import { CommandPalette } from "./CommandPalette";
 import { TerminalConsole } from "./TerminalConsole";
 import { readEnvironmentIsSandbox, SandboxProvider } from "@/lib/cos/sandbox";
+import { readSessionCapabilityLease, type SessionCapabilityLease } from "@/lib/cos/lease-session";
 import { ProdSandboxToggle } from "./ProdSandboxToggle";
 import { EnvironmentFrame } from "./EnvironmentFrame";
 
@@ -22,6 +23,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [clock, setClock] = useState("");
+  const [lease, setLease] = useState<SessionCapabilityLease | null>(() => readSessionCapabilityLease());
+  useEffect(() => {
+    const syncLease = () => setLease(readSessionCapabilityLease());
+    syncLease();
+    window.addEventListener("veklom.capability_lease.changed", syncLease);
+    return () => window.removeEventListener("veklom.capability_lease.changed", syncLease);
+  }, []);
   useEffect(() => {
     const syncEnvironment = () => setSandbox(readEnvironmentIsSandbox());
     syncEnvironment();
@@ -54,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <ProdSandboxToggle sandbox={sandbox} onChange={setSandbox} />
-            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Needs proof" /></div>
+            {lease && !lease.terminated ? <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Runtime <ProofBadge status="Present" /></div> : null}
             <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><VeklomActivityCue kind="system" condition={loading ? "active" : me ? "present" : "failed"} size={18} showCaption={false} /><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
             <ThemeToggle />
             <button onClick={() => setPaletteOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>

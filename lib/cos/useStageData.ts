@@ -2,36 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
-import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { classifyPayload, deriveProofStatus } from "./proof";
+import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
 import { getStage, type StageDefinition, type StageEndpoint } from "./stages";
 import type { ProofObservation } from "./proof";
 import type { ProofStatus } from "./capabilities";
 import { useSandboxMode } from "./sandbox";
-
-export function resolveStageTransportPath(
-  stageId: StageDefinition["id"],
-  path: string,
-): string {
-  if (stageId === "mount" || isCappoProxyPath(path)) {
-    return `/api/cappo${path}`;
-  }
-  return path;
-}
-
-export function resolveStageBaseUrl(
-  stageId: StageDefinition["id"],
-  sandbox: boolean,
-  endpointBaseUrl?: string,
-  sandboxBaseUrl?: string,
-  endpointPath?: string,
-): string | undefined {
-  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) {
-    return undefined;
-  }
-  if (!sandbox) return undefined;
-  return sandboxBaseUrl || endpointBaseUrl;
-}
 
 export interface StageCallRecord {
   method: StageEndpoint["method"];
@@ -59,6 +35,35 @@ function keyFor(endpoint: Pick<StageEndpoint, "method" | "path">) {
   return `${endpoint.method} ${endpoint.path}`;
 }
 
+function pathMatchesTemplate(template: string, concrete: string): boolean {
+  const templateParts = template.split("/");
+  const concreteParts = concrete.split("/");
+  return templateParts.length === concreteParts.length
+    && templateParts.every((part, index) => (
+      (part.startsWith("{") && part.endsWith("}")) || part === concreteParts[index]
+    ));
+}
+
+export function resolveStageTransportPath(
+  stageId: StageDefinition["id"],
+  path: string,
+): string {
+  if (stageId === "mount" || isCappoProxyPath(path)) return `/api/cappo${path}`;
+  return path;
+}
+
+export function resolveStageBaseUrl(
+  stageId: StageDefinition["id"],
+  sandbox: boolean,
+  endpointBaseUrl?: string,
+  sandboxBaseUrl?: string,
+  endpointPath?: string,
+): string | undefined {
+  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) return undefined;
+  if (!sandbox) return undefined;
+  return sandboxBaseUrl || endpointBaseUrl;
+}
+
 function initialRecord(endpoint: StageEndpoint, sandbox: boolean): StageCallRecord {
   void sandbox;
   const observation: ProofObservation = endpoint.classification === "absent"
@@ -80,13 +85,21 @@ export function recordsForStage(
   sandbox: boolean,
 ): StageCallRecord[] {
   const allRecords = { ...records, ...additionalRecords };
-  const declared = stage.endpoints.map(
-    (endpoint) => allRecords[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox),
-  );
   const declaredKeys = new Set(stage.endpoints.map((endpoint) => keyFor(endpoint)));
   const concrete = Object.entries(allRecords)
     .filter(([key]) => !declaredKeys.has(key))
     .map(([, record]) => record);
+  const concreteTemplateKeys = new Set(
+    stage.endpoints
+      .filter((endpoint) => endpoint.path.includes("{"))
+      .filter((endpoint) => concrete.some((record) => (
+        record.method === endpoint.method && pathMatchesTemplate(endpoint.path, record.path)
+      )))
+      .map((endpoint) => keyFor(endpoint)),
+  );
+  const declared = stage.endpoints
+    .filter((endpoint) => !concreteTemplateKeys.has(keyFor(endpoint)))
+    .map((endpoint) => allRecords[keyFor(endpoint)] ?? initialRecord(endpoint, sandbox));
   return [...declared, ...concrete];
 }
 
