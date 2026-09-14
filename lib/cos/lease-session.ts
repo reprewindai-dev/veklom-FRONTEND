@@ -1,3 +1,9 @@
+export type SessionCapabilityLeaseGrants = {
+  reads?: string[];
+  writes?: string[];
+  blocked?: string[];
+};
+
 export type SessionCapabilityLease = {
   mountId: string;
   tokenId: string;
@@ -10,6 +16,7 @@ export type SessionCapabilityLease = {
   executionId?: string;
   expiresAt?: string;
   terminated?: boolean;
+  grants?: SessionCapabilityLeaseGrants;
 };
 
 const KEY = "veklom.capability_lease";
@@ -57,6 +64,16 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
       if (typeof value[key] === "string") lease[key] = value[key];
     }
     if (typeof value.terminated === "boolean") lease.terminated = value.terminated;
+    if (value.grants && typeof value.grants === "object" && !Array.isArray(value.grants)) {
+      const grants: SessionCapabilityLeaseGrants = {};
+      for (const key of ["reads", "writes", "blocked"] as const) {
+        const entries = value.grants[key];
+        if (Array.isArray(entries)) {
+          grants[key] = entries.filter((entry): entry is string => typeof entry === "string");
+        }
+      }
+      if (Object.keys(grants).length) lease.grants = grants;
+    }
     return lease;
   } catch {
     return null;
@@ -73,7 +90,7 @@ export function clearSessionCapabilityLease() {
 }
 
 export type SessionConsequenceDenial = {
-  attempt: "retry" | "forbidden_action";
+  attempt: "execute" | "retry" | "forbidden_action";
   decision: string;
   reason: string;
   at: string;
@@ -123,7 +140,8 @@ export function readSessionConsequence(): SessionConsequenceRecord | null {
       Boolean(item)
       && typeof item === "object"
       && (item as SessionConsequenceDenial).attempt !== undefined
-      && ((item as SessionConsequenceDenial).attempt === "retry"
+      && ((item as SessionConsequenceDenial).attempt === "execute"
+        || (item as SessionConsequenceDenial).attempt === "retry"
         || (item as SessionConsequenceDenial).attempt === "forbidden_action")
       && typeof (item as SessionConsequenceDenial).decision === "string"
       && typeof (item as SessionConsequenceDenial).reason === "string"

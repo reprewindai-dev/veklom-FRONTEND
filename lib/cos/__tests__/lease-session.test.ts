@@ -50,6 +50,26 @@ describe("session capability lease handoff", () => {
     });
   });
 
+  it("parses only array-shaped grant fields", () => {
+    sessionStorage.setItem(
+      "veklom.capability_lease",
+      JSON.stringify({
+        mountId: "mnt_3",
+        tokenId: "tok_3",
+        nonce: "nonce_3",
+        grants: {
+          reads: ["counter.read"],
+          writes: "counter.increment",
+          blocked: ["counter.reset", 42],
+        },
+      }),
+    );
+    expect(readSessionCapabilityLease()?.grants).toEqual({
+      reads: ["counter.read"],
+      blocked: ["counter.reset"],
+    });
+  });
+
   it("stores, reads, and clears the last consequence and denial history", () => {
     storeSessionConsequence({
       response: {

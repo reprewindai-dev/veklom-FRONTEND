@@ -16,6 +16,7 @@ import {
   readSessionCapabilityLease,
   storeSessionCapabilityLease,
   type SessionCapabilityLease,
+  type SessionCapabilityLeaseGrants,
 } from "@/lib/cos/lease-session";
 import { targetRefFor } from "@/lib/cos/capability-targets";
 
@@ -52,6 +53,16 @@ function endpoint(method: StageEndpoint["method"], path: string, baseUrl?: strin
 function listValue(value: string): string[] | undefined {
   const values = value.split(",").map((item) => item.trim()).filter(Boolean);
   return values.length ? values : undefined;
+}
+
+function returnedGrants(value: unknown): SessionCapabilityLeaseGrants | undefined {
+  const source = asRecord(value);
+  if (!source) return undefined;
+  const grants: SessionCapabilityLeaseGrants = {};
+  for (const key of ["reads", "writes", "blocked"] as const) {
+    if (Array.isArray(source[key])) grants[key] = asStringList(source[key]);
+  }
+  return Object.keys(grants).length ? grants : undefined;
 }
 
 function mountCondition(state: string | undefined): ActivityCondition | undefined {
@@ -161,6 +172,8 @@ export default function MountPage() {
           workspace,
           project,
           resource,
+          grants: returnedGrants(asRecord(result.data.mount)?.grants)
+            ?? returnedGrants(asRecord(result.data.token)?.grants),
           executionId: asString(returnedToken?.execution_id),
           expiresAt: asString(returnedToken?.expires_at),
         };
