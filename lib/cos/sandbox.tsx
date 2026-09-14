@@ -2,15 +2,20 @@
 
 import { createContext, useContext } from "react";
 
-const SandboxContext = createContext(true);
+export const SANDBOX_PROJECT = "sandbox";
+
+const SandboxContext = createContext(false);
 
 export const SandboxProvider = SandboxContext.Provider;
 
 export function useSandboxMode() {
   return useContext(SandboxContext);
 }
-
 export function readEnvironmentIsSandbox(): boolean {
   if (typeof window === "undefined") return false;
-  return window.localStorage.getItem("veklom.environment") === "sandbox";
+  try {
+    return window.localStorage.getItem("veklom.environment") === "sandbox";
+  } catch {
+    return false;
+  }
 }

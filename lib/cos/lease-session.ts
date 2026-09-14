@@ -21,11 +21,19 @@ export type SessionCapabilityLease = {
 
 const KEY = "veklom.capability_lease";
 const CONSEQUENCE_KEY = "veklom.capability_consequence";
+const LEASE_CHANGED_EVENT = "veklom.capability_lease.changed";
+
+function notifyLeaseChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(LEASE_CHANGED_EVENT));
+  }
+}
 
 export function storeSessionCapabilityLease(lease: SessionCapabilityLease) {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
     sessionStorage.setItem(KEY, JSON.stringify(lease));
+    notifyLeaseChanged();
   } catch {
     // Storage may be unavailable in a restricted browser context.
   }
@@ -84,6 +92,7 @@ export function clearSessionCapabilityLease() {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
     sessionStorage.removeItem(KEY);
+    notifyLeaseChanged();
   } catch {
     // Storage may be unavailable in a restricted browser context.
   }

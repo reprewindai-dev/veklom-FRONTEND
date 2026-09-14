@@ -34,8 +34,8 @@ describe("Capability OS proof derivation", () => {
     expect(deriveProofStatus(signed.observation)).toBe("Live");
   });
 
-  it("marks sandbox source observations as Simulated but preserves failures", () => {
-    expect(deriveProofStatus({ kind: "source-of-truth", status: 200 }, true)).toBe("Simulated");
+  it("keeps sandbox source observations real but preserves failures", () => {
+    expect(deriveProofStatus({ kind: "source-of-truth", status: 200 }, true)).toBe("Verified");
     expect(deriveProofStatus({ kind: "failed", status: 500 }, true)).toBe("Degraded");
   });
 
