@@ -11,6 +11,7 @@ const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL |
 const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
 const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, "");
 const LOCKERPHYCER_SECRET = process.env.LOCKERPHYCER_SECRET_KEY || "";
+const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -90,6 +91,11 @@ async function proxyRequest(req: NextRequest) {
       );
     }
     targetBase = LOCKERPHYCER_URL;
+  } else if (
+    path.startsWith("/api/v1/vlinks") ||
+    path.startsWith("/api/v1/webhooks")
+  ) {
+    targetBase = VLINK_URL;
   } else if (
     path.startsWith("/api/v1/webmcp") ||
     path.startsWith("/webmcp") ||
