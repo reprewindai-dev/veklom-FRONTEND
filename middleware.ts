@@ -97,7 +97,7 @@ export async function middleware(request: NextRequest) {
 
   if (hostname === 'veklom.dev' || hostname === 'www.veklom.dev') {
     if (url.pathname === '/') {
-      url.pathname = '/dev';
+      url.pathname = '/proof';
       return NextResponse.rewrite(url);
     }
   }

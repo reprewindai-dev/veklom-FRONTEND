@@ -109,10 +109,7 @@ const nextConfig = {
     return {
       beforeFiles: [
         // ── LockerPhycer: identity authority ──────────────────────────────────
-        { source: "/api/v1/auth/:path*",      destination: `${LOCKERPHYCER_URL}/api/v1/auth/:path*` },
         { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
-        { source: "/api/v1/workspace/:path*", destination: `${LOCKERPHYCER_URL}/api/v1/workspace/:path*` },
-
         // ── Health / protocol sourced from LockerPhycer ───────────────────────
         { source: "/health/",       destination: `${LOCKERPHYCER_URL}/health/` },
         { source: "/status/",       destination: `${LOCKERPHYCER_URL}/health/` },
