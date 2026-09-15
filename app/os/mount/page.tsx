@@ -22,6 +22,7 @@ import {
 import { targetRefFor } from "@/lib/cos/capability-targets";
 import { SANDBOX_PROJECT, useSandboxMode } from "@/lib/cos/sandbox";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
+import type { ProofStatus } from "@/lib/cos/capabilities";
 
 type JsonRecord = Record<string, unknown>;
 type PackagePayload = {
@@ -86,7 +87,7 @@ function Anchoring({ value }: { value?: MountResponse["anchoring"] }) {
   return <div className="rounded-lg border border-cos-border bg-cos-bg/40 p-3"><div className="flex items-center justify-between gap-3"><span className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Anchoring</span><span className="font-mono text-xs text-cos-text">{status}</span></div>{value?.anchor_id ? <p className="mt-2 break-all font-mono text-[10px] text-cos-muted">anchor_id: {value.anchor_id}</p> : null}{value?.detail ? <p className="mt-2 text-xs leading-5 text-cos-muted">{value.detail}</p> : null}</div>;
 }
 
-function TokenDescriptor({ token, proof }: { token?: JsonRecord; proof: "Verified" | "Needs proof" | "Present" | "Degraded" | "Not started" | "Manual step" | "Simulated" }) {
+function TokenDescriptor({ token, proof }: { token?: JsonRecord; proof: ProofStatus }) {
   if (!token) return <HonestEmpty title="No token descriptor returned" route="POST /v1/capability/mounts" detail="The backend did not return a token descriptor for this mount state." />;
   const scope = asRecord(token.scope);
   const grants = asRecord(token.grants);
