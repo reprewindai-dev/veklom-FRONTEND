@@ -1,0 +1,16 @@
+﻿{
+    "version":  "machine-onboarding-e2e.v1",
+    "started_at":  "2026-09-15T01:14:53.5503097Z",
+    "stages":  [
+                   {
+                       "name":  "unhandled_error",
+                       "status":  "FAIL",
+                       "at":  "2026-09-15T01:14:57.7894365Z",
+                       "evidence":  {
+                                        "error":  "Unable to connect to the remote server"
+                                    }
+                   }
+               ],
+    "result":  "INVALID",
+    "completed_at":  "2026-09-15T01:14:57.7986190Z"
+}

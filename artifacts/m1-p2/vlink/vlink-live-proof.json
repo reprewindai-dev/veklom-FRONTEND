@@ -1,0 +1,12 @@
+{
+  "version": "vlink-live-proof.v1",
+  "started_at": "2026-09-15T03:03:09.013667+00:00",
+  "public_base_url": "https://veklom.com",
+  "status": "INVALID",
+  "steps": {},
+  "failure": {
+    "type": "JSONDecodeError",
+    "message": "Expecting value: line 1 column 1 (char 0)"
+  },
+  "completed_at": "2026-09-15T03:03:09.328150+00:00"
+}

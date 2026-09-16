@@ -20,7 +20,6 @@ const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "ht
 const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
 const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
 const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");
-const PGL_URL = (process.env.PGL_URL || "https://pgl.veklom.com").replace(/\/$/, "");
 const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/$/, "");
 
 const nextConfig = {
@@ -125,7 +124,6 @@ const nextConfig = {
         { source: "/api/v1/vnp/:path*",    destination: `${VNP_URL}/api/v1/vnp/:path*` },
 
         // ── PGL: evidence ledger ──────────────────────────────────────────────
-        { source: "/api/v1/ledger/:path*", destination: `${PGL_URL}/api/v1/ledger/:path*` },
 
         // ── cAPI: capability registry ─────────────────────────────────────────
         { source: "/api/v1/capi/:path*",   destination: `${CAPI_URL}/api/v1/capi/:path*` },

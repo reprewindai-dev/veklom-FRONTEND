@@ -1,0 +1,18 @@
+{
+  "version": "human-signup-live-proof.v2",
+  "started_at": "2026-09-14T08:22:38.487574+00:00",
+  "public_base_url": "https://veklom.com",
+  "test_email_sha256": "1a5120bc756c23f2ba7d4b8778a919c420da74aaff37614421f7bd05fffe97fb",
+  "status": "INVALID",
+  "steps": {
+    "signup": {
+      "register_status": 503,
+      "success_message_visible": false
+    }
+  },
+  "failure": {
+    "type": "RuntimeError",
+    "message": "Public registration did not return 201"
+  },
+  "completed_at": "2026-09-14T08:22:54.894575+00:00"
+}

@@ -1,0 +1,31 @@
+schema: veklom.routing.v1
+environment: production
+routes:
+  discovery:
+    public: https://veklom.com/machine
+    owner: discovery-plane
+    required: true
+  tool_manifest:
+    public: https://veklom.com/mcp/tools.json
+    owner: discovery-plane
+    required: true
+  capability_issuer:
+    public: https://api.veklom.com/capabilities
+    owner: authority-plane
+    required: true
+  policy_engine:
+    internal: https://policy.internal.veklom/decide
+    owner: governance-plane
+    required: true
+  executor:
+    public: https://capi.veklom.com/execute
+    owner: execution-plane
+    required: true
+  receipt_verifier:
+    public: https://api.veklom.com/verify
+    owner: evidence-plane
+    required: true
+  revocation:
+    public: https://api.veklom.com/revocations
+    owner: authority-plane
+    required: true

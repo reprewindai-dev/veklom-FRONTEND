@@ -8,7 +8,8 @@ import {
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
-const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
+const PGL_URL = (process.env.PGL_URL || "").replace(/\/+$/, "");
+const PGL_LEDGER_API_KEY = process.env.PGL_LEDGER_API_KEY || "";
 const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, "");
 const LOCKERPHYCER_SECRET = process.env.LOCKERPHYCER_SECRET_KEY || "";
 const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
@@ -80,9 +81,20 @@ async function proxyRequest(req: NextRequest) {
   } else if (path.startsWith("/api/capi/")) {
     targetBase = CAPI_RUNTIME_URL;
     forwardPath = path.replace(/^\/api\/capi/, "/api/v1/capi");
-  } else if (path.startsWith("/api/ledger/")) {
+  } else if (path.startsWith("/api/v1/ledger/")) {
+    if (!PGL_URL || !PGL_LEDGER_API_KEY) {
+      return NextResponse.json(
+        { error: "PGL evidence adapter is not configured" },
+        { status: 503 },
+      );
+    }
     targetBase = PGL_URL;
-    forwardPath = path.replace(/^\/api\/ledger/, "/api/v1/ledger");
+    forwardPath = path === "/api/v1/ledger/agents"
+      ? "/api/v1/agents/"
+      : path.replace(/^\/api\/v1\/ledger/, "/api/v1/ledger");
+    headers.delete("authorization");
+    headers.delete("cookie");
+    headers.set("x-api-key", PGL_LEDGER_API_KEY);
   } else if (path.startsWith("/api/v1/locker") || path.startsWith("/api/v1/auth")) {
     if (!LOCKERPHYCER_URL) {
       return NextResponse.json(

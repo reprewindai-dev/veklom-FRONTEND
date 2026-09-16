@@ -76,7 +76,9 @@ interface PGLStatus {
   } | null;
 }
 
-export default function PGLOnboardingPage() {
+export { default } from "./FourStepOnboarding";
+
+export function LegacySevenStepOnboardingPage() {
   const router = useRouter();
   const status = useApi<PGLStatus>("/api/v1/pgl/status");
   const [step, setStep] = useState(0);

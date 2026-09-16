@@ -1,0 +1,2 @@
+import fs from 'fs';
+console.log(fs.readFileSync('app/api/[...proxy]/route.ts', 'utf8').split('\n').filter(l => l.includes('targetBase')).join('\n'));

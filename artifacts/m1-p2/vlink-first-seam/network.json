@@ -1,0 +1,48 @@
+{
+  "captured_at": "2026-09-14T01:53:27.653418+00:00",
+  "base_url": "https://veklom.com",
+  "events": [
+    {
+      "timestamp": "2026-09-14T01:53:25.245900+00:00",
+      "method": "POST",
+      "url": "https://veklom.com/api/v1/vlinks",
+      "request_post_data": "{\"workspaceId\":\"default\",\"environment\":\"development\",\"displayName\":\"My first VLink\",\"sourceType\":\"ai-client\"}",
+      "status": 201,
+      "response_body": {
+        "vlink": {
+          "version": "1.0",
+          "vlinkId": "vlk_d422728c717a444d",
+          "workspaceId": "default",
+          "environment": "development",
+          "displayName": "My first VLink",
+          "sourceType": "ai-client",
+          "mode": "observe",
+          "endpoints": {
+            "openaiCompatibleBaseUrl": "https://veklom.com/vlinks/vlk_d422728c717a444d/v1",
+            "webhookIngressUrl": "https://veklom.com/api/v1/vlinks/vlk_d422728c717a444d/webhook",
+            "mcpEndpoint": "https://veklom.com/mcp/v1",
+            "activityViewerUrl": "https://veklom.com/?vlink=vlk_d422728c717a444d"
+          },
+          "connectionStatus": "created",
+          "enrollmentStatus": "unpaired",
+          "createdAt": "2026-09-14T01:53:25.161Z",
+          "updatedAt": "2026-09-14T01:53:25.161Z"
+        },
+        "enrollmentGrant": {
+          "grantId": "enr_e92f87bdfeeddaf4",
+          "vlinkId": "vlk_d422728c717a444d",
+          "token": "<redacted>",
+          "issuedAt": "2026-09-14T01:53:25.166Z",
+          "expiresAt": "2026-09-14T02:08:25.166Z"
+        },
+        "manifestUrl": "/api/v1/vlinks/vlk_d422728c717a444d/manifest"
+      },
+      "response_headers": {
+        "cf-cache-status": "DYNAMIC",
+        "content-type": "application/json; charset=utf-8",
+        "cf-ray": "a3abc208f827abbe-YYZ",
+        "server": "cloudflare"
+      }
+    }
+  ]
+}

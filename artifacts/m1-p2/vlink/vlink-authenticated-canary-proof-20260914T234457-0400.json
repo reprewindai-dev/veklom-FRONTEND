@@ -1,0 +1,65 @@
+{
+  "schema": "veklom.m1-p2.vlink-canary-proof.v1",
+  "classification": "VERIFIED_CANARY",
+  "sealed": false,
+  "captured_at": "2026-09-14T23:44:57.5719586-04:00",
+  "scope": "isolated local Docker canary; not the public M1/P2 seal",
+  "security": {
+    "contains_credentials": false,
+    "redacted_fields": [
+      "email",
+      "password",
+      "verification_token",
+      "device_code",
+      "user_code",
+      "approval_code",
+      "access_token"
+    ]
+  },
+  "source": {
+    "frontend": {
+      "branch": "canary/m1-p2-final-seal",
+      "head": "b30a0f17dd9cf870aa40eba438ad5b11e7b008a0",
+      "worktree_changes_in_test": false
+    },
+    "vlink": {
+      "branch": "canary/m1-p2-final-seal",
+      "head": "1ffd783ada76274fb3b2c99d7d166bbdcb392c0f",
+      "worktree_changes_in_test": true,
+      "image": "sha256:16e11638f2427e1edebb99195271478900d3f3b18a87d727842a641b78df0c42"
+    },
+    "lockerphycer": {
+      "branch": "canary/m1-p2-final-seal",
+      "head": "3ea94a13de43aaa52147d07e8dc75bf6a06c8f29",
+      "worktree_changes_in_test": true,
+      "image": "sha256:ee0af313fc0cf44c80884b2b34474131ec8f6b93ba2d326e140930625430442b"
+    }
+  },
+  "runtime": {
+    "network": "veklom-canary-internal",
+    "lockerphycer_origin": "http://127.0.0.1:18092",
+    "vlink_origin": "http://127.0.0.1:13000"
+  },
+  "entities": {
+    "workspace_id": "65daf16e-3d9d-4427-8ed4-5eec370d6ad5",
+    "vlink_id": "vlk_4e68084be2bcb2b1"
+  },
+  "checks": [
+    { "name": "register", "status": 201, "result": "PASS" },
+    { "name": "verify", "status": 200, "result": "PASS" },
+    { "name": "login", "status": 200, "result": "PASS" },
+    { "name": "workspace_create", "status": 200, "result": "PASS" },
+    { "name": "profile_workspace_match", "value": true, "result": "PASS" },
+    { "name": "vlink_create", "status": 201, "result": "PASS" },
+    { "name": "pair", "status": 201, "result": "PASS" },
+    { "name": "exchange_before_approval", "status": 409, "result": "PASS" },
+    { "name": "approve", "status": 200, "result": "PASS" },
+    { "name": "exchange_after_approval", "status": 200, "result": "PASS" },
+    { "name": "unauthenticated_use", "status": 401, "result": "PASS" },
+    { "name": "scoped_use", "status": 200, "result": "PASS" },
+    { "name": "revoke", "status": 200, "result": "PASS" },
+    { "name": "replay_after_revoke", "status": 401, "result": "PASS" }
+  ],
+  "verdict": "VALID_CANARY",
+  "remaining_gate": "Repeat through public Cloudflare routes with a real human verification and approval flow, then complete the governed Capability OS production-runtime proof and final physical M1/P2 proof."
+}
