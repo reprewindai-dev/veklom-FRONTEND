@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer";
+export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "abide" | "lockerphycer";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -36,7 +36,6 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
   const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
   const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
   const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
-  const apexUrl = process.env.APEX_URL || "https://apex.veklom.com";
   const abideUrl = process.env.ABIDE_URL || "https://abide.veklom.com";
   const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
 
@@ -103,18 +102,8 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       authMode: "none",
     },
     {
-      id: "apex",
-      label: "Apex Blueprint",
-      repo: "ApexBlueprintV4",
-      role: "policy-oracle",
-      baseUrl: trimTrailingSlash(apexUrl),
-      healthPath: "/health",
-      overviewPath: undefined,
-      authMode: "none",
-    },
-    {
       id: "abide",
-      label: "ABIDE",
+      label: "ABIDE Blueprint / Contract Compiler",
       repo: "ABIDE",
       role: "sovereign-control-plane",
       baseUrl: trimTrailingSlash(abideUrl),
