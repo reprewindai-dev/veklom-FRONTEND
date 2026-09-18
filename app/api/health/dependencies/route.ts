@@ -1,19 +1,15 @@
 import { NextResponse } from"next/server";
 import { dependencyHttpStatus, summarizeDependencyStatuses } from"@/lib/dependency-status";
+import { runtimeDependencies, type RuntimeDependency } from"@/lib/runtime-dependencies";
 
-type Dependency = {
- name: string;
- url: string | undefined;
-};
-
-async function checkDependency(dependency: Dependency) {
+async function checkDependency(dependency: RuntimeDependency) {
  if (!dependency.url) {
  return { name: dependency.name, status:"unconfigured" as const };
  }
 
  const controller = new AbortController();
  const timeout = setTimeout(() => controller.abort(), 3_000);
- const url = `${dependency.url.replace(/\/+$/,"")}/health`;
+ const url = `${dependency.url.replace(/\/+$/,"")}${dependency.healthPath || "/health"}`;
 
  try {
  const response = await fetch(url, {
@@ -34,13 +30,7 @@ async function checkDependency(dependency: Dependency) {
 }
 
 export async function GET() {
- const dependencies = await Promise.all([
- checkDependency({ name:"byos", url: process.env.BACKEND_URL }),
- checkDependency({ name:"capi", url: process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL }),
- checkDependency({ name:"gnomledger", url: process.env.GNOMLEDGER_URL }),
- checkDependency({ name:"lockerphycer", url: process.env.LOCKERPHYCER_URL }),
- checkDependency({ name:"abide", url: process.env.ABIDE_URL }),
- ]);
+ const dependencies = await Promise.all(runtimeDependencies().map(checkDependency));
 
  const summary = summarizeDependencyStatuses(dependencies);
 

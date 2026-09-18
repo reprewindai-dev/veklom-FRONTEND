@@ -37,7 +37,7 @@ describe("CAPPO proxy boundary", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("maps an invalid BYOS session to 401 without contacting CAPPO", async () => {
+  it("passes an invalid caller bearer to CAPPO and preserves its 401", async () => {
     const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ error: "invalid token" }), {
         status: 401,
@@ -47,8 +47,11 @@ describe("CAPPO proxy boundary", () => {
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/runs", {
       method: "GET",
       headers: {
-        authorization: "Bearer byos-session-token",
+        authorization: "Bearer lockerphycer-session-token",
         cookie: "veklom.session=present",
+        "x-api-key": "browser-key-must-not-forward",
+        "x-workspace-id": "client-controlled-workspace",
+        "x-veklom-requester-id": "client-controlled-requester",
       },
     });
 
@@ -56,11 +59,13 @@ describe("CAPPO proxy boundary", () => {
 
     expect(response.status).toBe(401);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://api.veklom.com/api/v1/auth/cappo-token");
-    expect(fetchSpy.mock.calls[0]?.[1]).toEqual(expect.objectContaining({
-      method: "POST",
-      headers: expect.any(Headers),
-    }));
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/runs");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(upstreamHeaders.get("authorization")).toBe("Bearer lockerphycer-session-token");
+    expect(upstreamHeaders.get("cookie")).toBeNull();
+    expect(upstreamHeaders.get("x-api-key")).toBeNull();
+    expect(upstreamHeaders.get("x-workspace-id")).toBeNull();
+    expect(upstreamHeaders.get("x-veklom-requester-id")).toBeNull();
   });
 
   it("maps a missing workspace to 403 without contacting CAPPO", async () => {
@@ -72,7 +77,7 @@ describe("CAPPO proxy boundary", () => {
     );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/runs", {
       method: "GET",
-      headers: { authorization: "Bearer byos-session-token" },
+      headers: { authorization: "Bearer lockerphycer-session-token" },
     });
 
     const response = await proxyModule.GET(request);
@@ -84,24 +89,17 @@ describe("CAPPO proxy boundary", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("exchanges execution identity before forwarding without an internal CAPPO key", async () => {
-    const fetchSpy = jest.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "cappo-assertion" }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ status: "payment-required" }), {
-          status: 402,
-          headers: { "content-type": "application/json" },
-        }),
-      );
+  it("forwards execution identity directly without an internal CAPPO key", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ status: "payment-required" }), {
+        status: 402,
+        headers: { "content-type": "application/json" },
+      }),
+    );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/exec", {
       method: "POST",
       headers: {
-        authorization: "Bearer byos-session-token",
+        authorization: "Bearer lockerphycer-session-token",
         "x-api-key": "browser-key-must-not-forward",
         "content-type": "application/json",
       },
@@ -111,33 +109,25 @@ describe("CAPPO proxy boundary", () => {
     const response = await proxyModule.POST(request);
 
     expect(response.status).toBe(402);
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://api.veklom.com/api/v1/auth/cappo-token");
-    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/v1/exec");
-    const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/exec");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
-    expect(upstreamHeaders.get("authorization")).toBe("Bearer cappo-assertion");
+    expect(upstreamHeaders.get("authorization")).toBe("Bearer lockerphycer-session-token");
     expect(upstreamHeaders.get("cookie")).toBeNull();
   });
 
   it("proxies the authenticated agents collection through CAPPO", async () => {
-    const fetchSpy = jest.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "cappo-assertion" }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ agents: [] }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ agents: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
     );
     const request = new NextRequest("https://control.veklom.com/api/cappo/api/v1/agents", {
       method: "GET",
       headers: {
-        authorization: "Bearer byos-session-token",
+        authorization: "Bearer lockerphycer-session-token",
         cookie: "veklom.session=present",
       },
     });
@@ -145,38 +135,34 @@ describe("CAPPO proxy boundary", () => {
     const response = await proxyModule.GET(request);
 
     expect(response.status).toBe(200);
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://api.veklom.com/api/v1/auth/cappo-token");
-    const exchangeHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
-    expect(exchangeHeaders.get("authorization")).toBe("Bearer byos-session-token");
-    expect(exchangeHeaders.get("cookie")).toBe("veklom.session=present");
-    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/api/v1/agents");
-    const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/api/v1/agents");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
     expect(upstreamHeaders.get("x-workspace-id")).toBeNull();
     expect(upstreamHeaders.get("x-veklom-requester-id")).toBeNull();
-    expect(upstreamHeaders.get("authorization")).toBe("Bearer cappo-assertion");
+    expect(upstreamHeaders.get("authorization")).toBe("Bearer lockerphycer-session-token");
     expect(upstreamHeaders.get("cookie")).toBeNull();
   });
 
-  it("fails closed when the BYOS assertion exchange is unavailable", async () => {
-    const fetchSpy = jest.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ error: "unavailable" }), {
-          status: 503,
-          headers: { "content-type": "application/json" },
-        }),
-      );
+  it("preserves an unavailable response from CAPPO", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "unavailable" }), {
+        status: 503,
+        headers: { "content-type": "application/json" },
+      }),
+    );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/runs", {
       method: "GET",
-      headers: { authorization: "Bearer byos-session-token" },
+      headers: { authorization: "Bearer lockerphycer-session-token" },
     });
 
     const response = await proxyModule.GET(request);
 
-    expect(response.status).toBe(502);
-    expect(await response.json()).toEqual({ error: "CAPPO_ASSERTION_UNAVAILABLE" });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "unavailable" });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/runs");
   });
 
   it("forwards public CAPPO discovery paths without credentials", async () => {
@@ -233,24 +219,17 @@ describe("CAPPO proxy boundary", () => {
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
   });
 
-  it("passes CAPPO payment responses through unchanged after exchange", async () => {
+  it("passes CAPPO payment responses through unchanged", async () => {
     const paymentBody = JSON.stringify({ x402Version: 1, accepts: [] });
-    const fetchSpy = jest.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "cappo-assertion" }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(paymentBody, {
-          status: 402,
-          headers: { "content-type": "application/json", "x-payment-required": "true" },
-        }),
-      );
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(paymentBody, {
+        status: 402,
+        headers: { "content-type": "application/json", "x-payment-required": "true" },
+      }),
+    );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/exec", {
       method: "POST",
-      headers: { authorization: "Bearer byos-session-token" },
+      headers: { authorization: "Bearer lockerphycer-session-token" },
       body: JSON.stringify({ capability: "demo" }),
     });
 

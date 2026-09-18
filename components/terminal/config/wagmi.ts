@@ -1,6 +1,6 @@
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { base, mainnet } from '@reown/appkit/networks'
+import { base, mainnet, arbitrum, polygon, bsc, optimism, avalanche } from '@reown/appkit/networks'
 import { QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient()
@@ -16,8 +16,25 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 
+// Custom networks for Monad and Arq since they might not be built-in
+const monad = {
+  id: 10143,
+  name: 'Monad Testnet',
+  network: 'monad',
+  nativeCurrency: { name: 'Monad', symbol: 'MONAD', decimals: 18 },
+  rpcUrls: { default: { http: ['https://testnet-rpc.monad.xyz'] } },
+}
+
+const arq = {
+  id: 864,
+  name: 'Arq',
+  network: 'arq',
+  nativeCurrency: { name: 'ARQ', symbol: 'ARQ', decimals: 18 },
+  rpcUrls: { default: { http: ['https://rpc.arq.network'] } },
+}
+
 // x402 requires base mainnet
-export const networks = [base, mainnet] as any;
+export const networks = [base, mainnet, arbitrum, polygon, bsc, optimism, avalanche, monad, arq] as any;
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
