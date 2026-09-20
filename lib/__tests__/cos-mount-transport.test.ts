@@ -1,6 +1,11 @@
 import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
+import { CAPI_RUNTIME_LABEL, CAPI_RUNTIME_URL } from "@/lib/capi-runtime";
 import { getStage, stages } from "@/lib/cos/stages";
-import { resolveStageBaseUrl, resolveStageTransportPath } from "@/lib/cos/useStageData";
+import {
+  isCapiInterlinkPath,
+  resolveStageBaseUrl,
+  resolveStageTransportPath,
+} from "@/lib/cos/useStageData";
 
 describe("Capability OS stage transport", () => {
   it("uses canonical lifecycle labels and omits decommissioned endpoint ownership", () => {
@@ -42,6 +47,9 @@ describe("Capability OS stage transport", () => {
 
   it("keeps the visible Mount contract on CAPPO canonical /v1 paths", () => {
     const mount = getStage("mount");
+    expect(mount.owner).toBe(`${CAPI_RUNTIME_LABEL} Interlink bridge`);
+    expect(mount.endpoints.slice(0, 4).every((endpoint) => endpoint.baseUrl === CAPI_RUNTIME_URL)).toBe(true);
+    expect(mount.endpoints[4]?.baseUrl).toContain("cappo");
     expect(mount.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual([
       "GET /v1/capability/packages",
       "POST /v1/capability/mounts",
@@ -51,11 +59,24 @@ describe("Capability OS stage transport", () => {
     ]);
   });
 
-  it("sends every CAPPO stage call through the same-origin proxy", () => {
-    const cappoPaths = [
+  it("sends Discovery, Mount, and action calls through cAPI Interlink", () => {
+    const interlinkPaths = [
       "/v1/capability/packages",
       "/v1/capability/mounts",
+      "/v1/capability/mounts/mnt_123",
       "/v1/capability/mounts/mnt_123/actions",
+    ];
+
+    for (const path of interlinkPaths) {
+      expect(resolveStageTransportPath("mount", path)).toBe(`/api/capi/interlink${path}`);
+    }
+
+    expect(resolveStageTransportPath("execute", "/v1/capability/mounts/mnt_123/actions"))
+      .toBe("/api/capi/interlink/v1/capability/mounts/mnt_123/actions");
+  });
+
+  it("keeps authority, execute, terminate, and readback on CAPPO", () => {
+    const cappoPaths = [
       "/v1/executions/exec_123/evidence",
       "/v1/executions/exec_123/measurements",
       "/v1/exec",
@@ -64,10 +85,13 @@ describe("Capability OS stage transport", () => {
       "/api/v1/agents",
       "/api/v1/platform/pulse",
       "/.well-known/x402",
+      "/v1/capability/mounts/mnt_123/terminate",
+      "/v1/capability/mounts/mnt_123/execute",
+      "/v1/capability/targets/target_123/state",
     ];
 
     for (const path of cappoPaths) {
-      expect(resolveStageTransportPath("mount", path)).toBe(`/api/cappo${path}`);
+      expect(resolveStageTransportPath("execute", path)).toBe(`/api/cappo${path}`);
     }
 
     expect(resolveStageTransportPath("measure", "/v1/vnp/metrics"))
@@ -77,6 +101,11 @@ describe("Capability OS stage transport", () => {
   it("rewrites every declared CAPPO endpoint across all stages", () => {
     for (const stage of stages) {
       for (const endpoint of stage.endpoints) {
+        if (isCapiInterlinkPath(endpoint.path)) {
+          expect(resolveStageTransportPath(stage.id, endpoint.path))
+            .toBe(`/api/capi/interlink${endpoint.path}`);
+          continue;
+        }
         if (!isCappoProxyPath(endpoint.path)) continue;
         expect(resolveStageTransportPath(stage.id, endpoint.path))
           .toBe(`/api/cappo${endpoint.path}`);

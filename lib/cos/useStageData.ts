@@ -44,11 +44,18 @@ function pathMatchesTemplate(template: string, concrete: string): boolean {
     ));
 }
 
+export function isCapiInterlinkPath(path: string): boolean {
+  if (path === "/v1/capability/packages" || path === "/v1/capability/mounts") return true;
+  if (/^\/v1\/capability\/mounts\/[^/]+$/.test(path)) return true;
+  return /^\/v1\/capability\/mounts\/[^/]+\/actions$/.test(path);
+}
+
 export function resolveStageTransportPath(
   stageId: StageDefinition["id"],
   path: string,
 ): string {
-  if (stageId === "mount" || isCappoProxyPath(path)) return `/api/cappo${path}`;
+  if (isCapiInterlinkPath(path)) return `/api/capi/interlink${path}`;
+  if (isCappoProxyPath(path)) return `/api/cappo${path}`;
   return path;
 }
 
@@ -59,7 +66,7 @@ export function resolveStageBaseUrl(
   sandboxBaseUrl?: string,
   endpointPath?: string,
 ): string | undefined {
-  if (stageId === "mount" || (endpointPath && isCappoProxyPath(endpointPath))) return undefined;
+  if (stageId === "mount" || (endpointPath && (isCapiInterlinkPath(endpointPath) || isCappoProxyPath(endpointPath)))) return undefined;
   if (!sandbox) return undefined;
   return sandboxBaseUrl || endpointBaseUrl;
 }

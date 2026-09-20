@@ -13,6 +13,14 @@ function stateRecord(value: unknown): JsonRecord | undefined {
   return asRecord(record?.state) ?? record;
 }
 
+export function targetStateReadbackPath(
+  targetRef: string,
+  resource: string,
+  mountId: string,
+): string {
+  return `/v1/capability/targets/${encodeURIComponent(targetRef)}/state?resource=${encodeURIComponent(resource)}&mount_id=${encodeURIComponent(mountId)}`;
+}
+
 export function compareReadback(
   resultingState: unknown,
   readback: unknown,
