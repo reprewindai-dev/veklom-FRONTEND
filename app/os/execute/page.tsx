@@ -11,6 +11,7 @@ import { getStage, type StageEndpoint } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
 import { targetRefFor } from "@/lib/cos/capability-targets";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
+import { api } from "@/lib/api";
 import {
   readSessionCapabilityLease,
   readSessionConsequence,
@@ -23,7 +24,15 @@ import {
   type SessionConsequenceRecord,
   type SessionTargetReadback,
 } from "@/lib/cos/lease-session";
-import { anchoringLabel, anchoringProof, compareReadback, targetStateReadbackPath } from "@/lib/cos/readback";
+import {
+  compareReadback,
+  pglChainVerifyPath,
+  pglProof,
+  pglProofLabel,
+  pglProofPath,
+  targetStateReadbackPath,
+  type PglProofLookup,
+} from "@/lib/cos/readback";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 
 type JsonRecord = Record<string, unknown>;
@@ -52,10 +61,11 @@ function responseDecision(response: JsonRecord | undefined): string | undefined 
 function proofFor(
   response: JsonRecord | undefined,
   replayInvariantViolation = false,
+  pglLookup?: PglProofLookup,
 ): ProofStatus {
   if (replayInvariantViolation) return "Degraded";
   if (responseDecision(response) !== "allow") return "Needs proof";
-  return anchoringProof(response?.anchoring);
+  return pglProof(response?.anchoring, pglLookup);
 }
 
 function appendDenial(
@@ -67,6 +77,7 @@ function appendDenial(
     mountId,
     response: existing?.response ?? {},
     readback: existing?.readback,
+    pglProof: existing?.pglProof,
     recordedAt: existing?.recordedAt ?? new Date().toISOString(),
     denials: [...(existing?.denials ?? []), denial],
   };
@@ -96,7 +107,7 @@ export default function ExecutePage() {
     const currentLease = readSessionCapabilityLease();
     return readSessionConsequence(currentLease?.mountId)?.response;
   });
-  const [busyAction, setBusyAction] = useState<"forbidden_action" | "execute" | "revoke" | "retry" | "readback" | null>(null);
+  const [busyAction, setBusyAction] = useState<"forbidden_action" | "execute" | "revoke" | "retry" | "readback" | "pgl" | null>(null);
   const [lastLatency, setLastLatency] = useState<number>();
   const [lastStatus, setLastStatus] = useState<number>();
   const [replayInvariantViolation, setReplayInvariantViolation] = useState(false);
@@ -189,6 +200,7 @@ export default function ExecutePage() {
         ? response
         : consequence?.lastAllowedResponse,
       readback: persistedReadback,
+      pglProof: consequence?.pglProof,
       denials,
     };
     storeSessionConsequence(record);
@@ -225,6 +237,7 @@ export default function ExecutePage() {
       response: result.data ? lastResponse ?? {} : response,
       lastAllowedResponse: consequence?.lastAllowedResponse,
       readback: consequence?.readback,
+      pglProof: consequence?.pglProof,
       denials: next.denials,
     });
     setConsequence(readSessionConsequence(lease.mountId));
@@ -246,6 +259,7 @@ export default function ExecutePage() {
       response: pending,
       lastAllowedResponse: consequence?.lastAllowedResponse,
       readback: consequence?.readback,
+      pglProof: consequence?.pglProof,
       denials: consequence?.denials ?? [],
     });
     const result = await callCappo<JsonRecord>(
@@ -303,8 +317,56 @@ export default function ExecutePage() {
       response: current?.response ?? lastResponse ?? {},
       lastAllowedResponse: current?.lastAllowedResponse,
       readback: readbackResponse,
+      pglProof: current?.pglProof,
       denials: current?.denials ?? [],
     });
+    setConsequence(readSessionConsequence(lease.mountId));
+    setBusyAction(null);
+  }
+
+  async function verifyPglProof() {
+    const eventHash = asString(anchoring?.pgl_event_hash);
+    if (!lease || eventHash === undefined) return;
+    setBusyAction("pgl");
+    const checkedAt = new Date().toISOString();
+    try {
+      const lookup = await api.get<PglProofLookup>(pglProofPath(eventHash));
+      const agentId = asString(anchoring?.pgl_agent_id);
+      let chain: PglProofLookup["chain"];
+      if (agentId) {
+        try {
+          chain = await api.get<PglProofLookup["chain"]>(pglChainVerifyPath(agentId));
+        } catch (error) {
+          chain = {
+            error: error instanceof Error ? error.message : "PGL chain verification failed",
+          };
+        }
+      }
+      const current = readSessionConsequence(lease.mountId);
+      storeSessionConsequence({
+        mountId: lease.mountId,
+        response: current?.response ?? lastResponse ?? {},
+        lastAllowedResponse: current?.lastAllowedResponse,
+        readback: current?.readback,
+        pglProof: {
+          ...lookup,
+          ...(agentId ? { agent_id: agentId, chain } : {}),
+          checked_at: checkedAt,
+        },
+        denials: current?.denials ?? [],
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "PGL proof lookup failed";
+      const current = readSessionConsequence(lease.mountId);
+      storeSessionConsequence({
+        mountId: lease.mountId,
+        response: current?.response ?? lastResponse ?? {},
+        lastAllowedResponse: current?.lastAllowedResponse,
+        readback: current?.readback,
+        pglProof: { error: message, checked_at: checkedAt },
+        denials: current?.denials ?? [],
+      });
+    }
     setConsequence(readSessionConsequence(lease.mountId));
     setBusyAction(null);
   }
@@ -342,6 +404,7 @@ export default function ExecutePage() {
       response,
       lastAllowedResponse: consequence?.lastAllowedResponse,
       readback: consequence?.readback,
+      pglProof: consequence?.pglProof,
       denials,
     });
     setConsequence(readSessionConsequence(lease.mountId));
@@ -374,9 +437,9 @@ export default function ExecutePage() {
   }
 
   return (
-    <SectionShell stage={stage} proof={proofFor(successfulResponse, replayInvariantViolation)} records={data.records}>
+    <SectionShell stage={stage} proof={proofFor(successfulResponse, replayInvariantViolation, consequence?.pglProof)} records={data.records}>
       <div className="space-y-4">
-        <Pillar title="Work" proof={proofFor(lastResponse, replayInvariantViolation)}>
+        <Pillar title="Work" proof={proofFor(lastResponse, replayInvariantViolation, consequence?.pglProof)}>
           <PhaseTrace phases={phases} />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-cos-border bg-cos-bg/35 p-3 text-xs">
@@ -415,10 +478,10 @@ export default function ExecutePage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Latency</div><div className="mt-2 font-mono text-xs text-cos-text">{lastLatency === undefined ? "Not returned" : `${lastLatency} ms`}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">HTTP status</div><div className="mt-2 font-mono text-xs text-cos-text">{lastStatus ?? "Not returned"}</div></div>
-            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={anchoringProof(anchoring)} /><span className="font-mono text-xs text-cos-text">{anchoringLabel(anchoring)}</span></div></div>
+            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={pglProof(anchoring, consequence?.pglProof)} /><span className="font-mono text-xs text-cos-text">{pglProofLabel(anchoring, consequence?.pglProof)}</span></div></div>
           </div>
         </Pillar>
-        <Pillar title="Authority" proof={successfulResponse ? proofFor(successfulResponse) : "Needs proof"}>
+        <Pillar title="Authority" proof={successfulResponse ? proofFor(successfulResponse, false, consequence?.pglProof) : "Needs proof"}>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Execution ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(executionId)}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Nonce consumed</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(authority?.nonce_consumed)}</div></div>
@@ -429,9 +492,9 @@ export default function ExecutePage() {
         </Pillar>
       </div>
       <div className="space-y-4">
-        <Pillar title="Evidence" proof={successfulResponse ? proofFor(successfulResponse, replayInvariantViolation) : "Needs proof"}>
+        <Pillar title="Evidence" proof={successfulResponse ? proofFor(successfulResponse, replayInvariantViolation, consequence?.pglProof) : "Needs proof"}>
           {lastResponse && targetRef ? <div className="mb-4 rounded-xl border border-cos-accent/25 bg-cos-accent/[0.035] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm text-cos-text">Independent re-read</h3><p className="mt-1 text-xs text-cos-muted">Reads the mounted target state without consuming authority.</p><div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-cos-steel">{readbackProject ? <ScopeTag project={readbackProject} /> : null}<span>project: {readbackProject ?? "Not returned"}</span></div></div><ProofBadge status={readbackProof} /></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Readback value</div><div className="mt-2 text-2xl font-semibold text-cos-text">{displayValue(readbackState?.value)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Readback version</div><div className="mt-2 font-mono text-xl text-cos-text">{displayValue(readbackState?.version)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Execute resulting value</div><div className="mt-2 text-2xl font-semibold text-cos-text">{displayValue(resultingState?.value)}</div></div></div>{readbackError ? <p className="mt-3 rounded border border-cos-warn/40 bg-cos-warn/5 p-2 font-mono text-xs text-cos-warn">{readbackError}</p> : null}<button type="button" onClick={readTargetState} disabled={Boolean(busyAction)} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-cos-accent/40 px-3 py-2 text-xs text-cos-accent disabled:opacity-50">{busyAction === "readback" ? "Reading…" : "Re-read target state"}</button></div> : null}
-          {successfulResponse ? <div className="space-y-3"><div className="flex items-center gap-2"><ProofBadge status={proofFor(successfulResponse, replayInvariantViolation)} /><span className="font-mono text-xs text-cos-text">Receipt returned by CAPPO</span></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Counter value</div><div className="mt-2 text-3xl font-semibold text-cos-text">{displayValue(resultingState?.previous_value)} → {displayValue(resultingState?.value)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Version</div><div className="mt-2 font-mono text-xl text-cos-text">{displayValue(resultingState?.version)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(receiptId)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchor ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.anchor_id)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring status</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={anchoringProof(anchoring)} /><span className="font-mono text-xs text-cos-text">{anchoringLabel(anchoring)}</span></div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.content_hash)}</div></div></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Consequence state</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.state)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Terminated</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.terminated)}</div></div></div><Link href="/os/evidence" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">Continue to Evidence <ArrowRight size={13} /></Link></div> : <HonestEmpty title="No consequence receipt returned" route="POST /v1/capability/mounts/{mount_id}/execute" detail="The receipt, anchor, and resulting state appear only after CAPPO returns an allowed consequence." />}
+          {successfulResponse ? <div className="space-y-3"><div className="flex items-center gap-2"><ProofBadge status={proofFor(successfulResponse, replayInvariantViolation, consequence?.pglProof)} /><span className="font-mono text-xs text-cos-text">Receipt returned by CAPPO</span></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Counter value</div><div className="mt-2 text-3xl font-semibold text-cos-text">{displayValue(resultingState?.previous_value)} → {displayValue(resultingState?.value)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Version</div><div className="mt-2 font-mono text-xl text-cos-text">{displayValue(resultingState?.version)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(receiptId)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchor ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.anchor_id)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">PGL agent</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.pgl_agent_id)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring status</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={pglProof(anchoring, consequence?.pglProof)} /><span className="font-mono text-xs text-cos-text">{pglProofLabel(anchoring, consequence?.pglProof)}</span><button type="button" onClick={verifyPglProof} disabled={Boolean(busyAction) || typeof anchoring?.pgl_event_hash !== "string"} className="inline-flex items-center gap-2 rounded-lg border border-cos-accent/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-cos-accent disabled:opacity-50">{busyAction === "pgl" ? "Verifying…" : "Verify in PGL"}</button></div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">PGL event hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.pgl_event_hash)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.content_hash)}</div></div></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Consequence state</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.state)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Terminated</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.terminated)}</div></div></div><Link href="/os/evidence" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">Continue to Evidence <ArrowRight size={13} /></Link></div> : <HonestEmpty title="No consequence receipt returned" route="POST /v1/capability/mounts/{mount_id}/execute" detail="The receipt, anchor, and resulting state appear only after CAPPO returns an allowed consequence." />}
         </Pillar>
         <Pillar title="Drift" proof={consequence?.denials.length ? "Present" : "Needs proof"}>
           {consequence?.denials.length ? <div className="space-y-2">{consequence.denials.map((denial, index) => <div key={`${denial.at}-${index}`} className="rounded-lg border border-cos-border bg-cos-bg/35 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="font-mono uppercase text-cos-text">{denial.attempt}</span><span className="font-mono text-cos-warn">{denial.decision}</span></div><div className="mt-2 text-cos-muted">{denial.reason}</div><div className="mt-2 font-mono text-[10px] text-cos-steel">{denial.at}</div></div>)}</div> : <HonestEmpty title="No denial drift recorded" route="POST /v1/capability/mounts/{mount_id}/actions" detail="Blocked-action and replay decisions appear here when CAPPO returns them." />}

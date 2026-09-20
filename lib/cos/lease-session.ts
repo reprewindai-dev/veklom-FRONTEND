@@ -1,3 +1,5 @@
+import type { PglProofLookup } from "@/lib/cos/readback";
+
 export type SessionCapabilityLeaseGrants = {
   reads?: string[];
   writes?: string[];
@@ -161,6 +163,7 @@ export type SessionConsequenceRecord = {
   response: Record<string, unknown>;
   lastAllowedResponse?: Record<string, unknown>;
   readback?: SessionTargetReadback;
+  pglProof?: PglProofLookup;
   recordedAt: string;
   denials: SessionConsequenceDenial[];
 };
@@ -220,6 +223,9 @@ export function readSessionConsequence(mountId?: string): SessionConsequenceReco
         : undefined,
       readback: value.readback && typeof value.readback === "object" && !Array.isArray(value.readback)
         ? value.readback as SessionTargetReadback
+        : undefined,
+      pglProof: value.pglProof && typeof value.pglProof === "object" && !Array.isArray(value.pglProof)
+        ? value.pglProof as PglProofLookup
         : undefined,
       recordedAt: value.recordedAt,
       denials,

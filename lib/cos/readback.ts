@@ -44,18 +44,111 @@ export function compareReadback(
 
 export function anchoringProof(
   anchoring: unknown,
-): Extract<ProofStatus, "Verified" | "Degraded" | "Needs proof"> {
+): Extract<ProofStatus, "Live" | "Degraded" | "Needs proof"> {
   const status = asRecord(anchoring)?.status;
-  if (status === "confirmed") return "Verified";
+  if (status === "confirmed") return "Live";
   if (status === "pending_reconciliation") return "Degraded";
   return "Needs proof";
 }
 
 export function anchoringLabel(anchoring: unknown): string {
   const status = asRecord(anchoring)?.status;
-  if (status === "confirmed") return "PGL persisted";
+  if (status === "confirmed") return "PGL persisted (CAPPO-reported)";
   if (status === "pending_reconciliation") return "PGL append unconfirmed";
   return "PGL status not confirmed";
+}
+
+export type PglProofLookup = {
+  event_hash?: string;
+  persisted?: boolean;
+  status?: string;
+  cryptographic_verification?: string;
+  chain?: {
+    status?: string;
+    valid?: boolean;
+    checked_events?: number;
+    latest_event_hash?: string;
+    error?: string;
+    [key: string]: unknown;
+  };
+  agent_id?: string;
+  error?: string;
+  checked_at?: string;
+  [key: string]: unknown;
+};
+
+export function pglProofPath(eventHash: string): string {
+  return `/api/pgl/ledger/proof/${encodeURIComponent(eventHash)}`;
+}
+
+export function pglChainVerifyPath(agentId: string): string {
+  return `/api/pgl/ledger/agents/${encodeURIComponent(agentId)}/verify`;
+}
+
+export function pglProof(
+  anchoring: unknown,
+  lookup: unknown,
+): Extract<ProofStatus, "Verified" | "Live" | "Degraded" | "Needs proof"> {
+  const anchoringRecord = asRecord(anchoring);
+  if (anchoringRecord?.status !== "confirmed") {
+    return anchoringProof(anchoring);
+  }
+  const lookupRecord = asRecord(lookup);
+  if (!lookupRecord) return "Live";
+  if (
+    lookupRecord.error
+    || lookupRecord.persisted !== true
+    || typeof anchoringRecord.pgl_event_hash !== "string"
+    || lookupRecord.event_hash !== anchoringRecord.pgl_event_hash
+  ) {
+    return "Degraded";
+  }
+  const chainRecord = asRecord(lookupRecord.chain);
+  if (!chainRecord) return "Live";
+  if (
+    chainRecord.error
+    || chainRecord.status !== "verified"
+    || chainRecord.valid !== true
+  ) {
+    return "Degraded";
+  }
+  return "Verified";
+}
+
+export function pglProofLabel(anchoring: unknown, lookup: unknown): string {
+  const anchoringRecord = asRecord(anchoring);
+  if (anchoringRecord?.status !== "confirmed") {
+    return anchoringLabel(anchoring);
+  }
+  const lookupRecord = asRecord(lookup);
+  if (!lookupRecord) return "Independent PGL lookup not run";
+  if (typeof lookupRecord.error === "string" && lookupRecord.error) {
+    return `Independent PGL lookup mismatch/failed: ${lookupRecord.error}`;
+  }
+  if (lookupRecord.persisted !== true) {
+    return "Independent PGL lookup mismatch/failed: persisted flag was not true";
+  }
+  if (
+    typeof anchoringRecord.pgl_event_hash !== "string"
+    || lookupRecord.event_hash !== anchoringRecord.pgl_event_hash
+  ) {
+    return "Independent PGL lookup mismatch/failed: event hash did not match CAPPO event hash";
+  }
+  const chainRecord = asRecord(lookupRecord.chain);
+  if (!chainRecord) return "PGL hash independently recorded (chain not verified)";
+  if (
+    chainRecord.error
+    || chainRecord.status !== "verified"
+    || chainRecord.valid !== true
+  ) {
+    const reason = typeof chainRecord.error === "string" && chainRecord.error
+      ? chainRecord.error
+      : typeof chainRecord.status === "string" && chainRecord.status
+        ? chainRecord.status
+        : "unknown";
+    return `PGL chain verification failed: ${reason}`;
+  }
+  return "PGL hash recorded and agent chain verified";
 }
 
 export function mountStatusProof(
