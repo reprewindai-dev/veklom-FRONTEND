@@ -49,3 +49,11 @@ export function anchoringLabel(anchoring: unknown): string {
   if (status === "pending_reconciliation") return "PGL append unconfirmed";
   return "PGL status not confirmed";
 }
+
+export function mountStatusProof(
+  records: ReadonlyArray<{ method: string; path: string; proof: ProofStatus }>,
+): ProofStatus {
+  return records.find((record) => (
+    record.method === "GET" && record.path.startsWith("/v1/capability/mounts/")
+  ))?.proof ?? "Present";
+}

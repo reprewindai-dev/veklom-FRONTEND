@@ -39,6 +39,9 @@ export default function EvidencePage() {
   const readbackProof = compareReadback(resultingState, readback);
   const responseScope = asRecord(response?.scope);
   const responseProject = typeof responseScope?.project === "string" ? responseScope.project : undefined;
+  const readbackProject = typeof readback?.project === "string"
+    ? readback.project
+    : lease?.project ?? responseProject;
 
   return (
     <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
@@ -70,7 +73,7 @@ export default function EvidencePage() {
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.content_hash)}</div></div>
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Terminated</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(nestedConsequence?.terminated)}</div></div>
                 <div className="sm:col-span-2"><div className="font-mono text-[9px] uppercase text-cos-steel">Resulting state</div><pre className="mt-2 overflow-x-auto rounded border border-cos-border bg-cos-bg p-3 font-mono text-[10px] text-cos-text">{JSON.stringify(resultingState ?? {}, null, 2)}</pre></div>
-                <div><div className="font-mono text-[9px] uppercase text-cos-steel">Independent readback</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={readbackProof} /><span className="font-mono text-xs text-cos-text">value {displayValue(readbackState?.value)} · version {displayValue(readbackState?.version)}</span></div></div>
+                <div><div className="font-mono text-[9px] uppercase text-cos-steel">Independent readback</div><div className="mt-2 flex flex-wrap items-center gap-2">{readbackProject ? <ScopeTag project={readbackProject} /> : null}<span className="font-mono text-[10px] uppercase tracking-[0.12em] text-cos-steel">project: {readbackProject ?? "Not returned"}</span></div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={readbackProof} /><span className="font-mono text-xs text-cos-text">value {displayValue(readbackState?.value)} · version {displayValue(readbackState?.version)}</span></div></div>
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Execute resulting value</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(resultingState?.value)}</div></div>
                 {readbackError ? <div className="sm:col-span-2 rounded border border-cos-warn/40 bg-cos-warn/5 p-2 font-mono text-xs text-cos-warn">{readbackError}</div> : null}
                 <div className="sm:col-span-2 font-mono text-[10px] text-cos-steel">Denials recorded: {consequence.denials.length}</div>

@@ -122,6 +122,7 @@ describe("session capability lease handoff", () => {
       readback: {
         target_ref: "activation.governed-counter",
         resource: "counter",
+        project: "sandbox",
         state: { resource: "counter", value: 1, version: 1 },
       },
       denials: [{
@@ -137,6 +138,7 @@ describe("session capability lease handoff", () => {
       consequence: { receipt_id: "receipt_1", terminated: true },
     });
     expect(record?.denials).toHaveLength(1);
+    expect(record?.readback?.project).toBe("sandbox");
     expect(record?.readback?.state).toEqual({ resource: "counter", value: 1, version: 1 });
     expect(record?.recordedAt).toEqual(expect.any(String));
     expect(readSessionConsequence("mnt_other")).toBeNull();
