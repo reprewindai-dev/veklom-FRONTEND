@@ -3,6 +3,7 @@ import {
   anchoringProof,
   compareReadback,
   mountStatusProof,
+  pglChainVerifyPath,
   pglProof,
   pglProofLabel,
   pglProofPath,
@@ -52,7 +53,7 @@ describe("Capability OS readback and anchoring proof", () => {
     expect(pglProofLabel(anchoring, undefined)).toBe("Independent PGL lookup not run");
   });
 
-  it("verifies a persisted PGL lookup only when the hashes match", () => {
+  it("keeps a matching persisted hash Live until the agent chain is verified", () => {
     const anchoring = { status: "confirmed", pgl_event_hash: "pgl_abc" };
     const lookup = {
       event_hash: "pgl_abc",
@@ -60,13 +61,52 @@ describe("Capability OS readback and anchoring proof", () => {
       status: "RECORDED_HASH_MATCH",
       cryptographic_verification: "NOT_VERIFIED",
     };
-    expect(pglProof(anchoring, lookup)).toBe("Verified");
+    expect(pglProof(anchoring, lookup)).toBe("Live");
     expect(pglProofLabel(anchoring, lookup)).toBe(
-      "PGL hash independently recorded (existence, not chain-verified)",
+      "PGL hash independently recorded (chain not verified)",
     );
     expect(pglProof(anchoring, { ...lookup, event_hash: "pgl_other" })).toBe("Degraded");
     expect(pglProofLabel(anchoring, { ...lookup, event_hash: "pgl_other" })).toContain(
       "event hash did not match",
+    );
+  });
+
+  it("verifies a matching persisted hash with a valid agent chain", () => {
+    const anchoring = { status: "confirmed", pgl_event_hash: "pgl_abc" };
+    const lookup = {
+      event_hash: "pgl_abc",
+      persisted: true,
+      chain: { status: "verified", valid: true },
+    };
+    expect(pglProof(anchoring, lookup)).toBe("Verified");
+    expect(pglProofLabel(anchoring, lookup)).toBe(
+      "PGL hash recorded and agent chain verified",
+    );
+  });
+
+  it("degrades when the PGL agent chain is blocked", () => {
+    const anchoring = { status: "confirmed", pgl_event_hash: "pgl_abc" };
+    const lookup = {
+      event_hash: "pgl_abc",
+      persisted: true,
+      chain: { status: "blocked", valid: false },
+    };
+    expect(pglProof(anchoring, lookup)).toBe("Degraded");
+    expect(pglProofLabel(anchoring, lookup)).toBe(
+      "PGL chain verification failed: blocked",
+    );
+  });
+
+  it("degrades when the PGL agent chain reports an error", () => {
+    const anchoring = { status: "confirmed", pgl_event_hash: "pgl_abc" };
+    const lookup = {
+      event_hash: "pgl_abc",
+      persisted: true,
+      chain: { error: "HTTP 502" },
+    };
+    expect(pglProof(anchoring, lookup)).toBe("Degraded");
+    expect(pglProofLabel(anchoring, lookup)).toBe(
+      "PGL chain verification failed: HTTP 502",
     );
   });
 
@@ -100,5 +140,11 @@ describe("Capability OS readback and anchoring proof", () => {
 
   it("encodes public PGL proof lookup paths", () => {
     expect(pglProofPath("event/hash")).toBe("/api/pgl/ledger/proof/event%2Fhash");
+  });
+
+  it("encodes PGL agent chain verification paths", () => {
+    expect(pglChainVerifyPath("agent/cappo")).toBe(
+      "/api/pgl/ledger/agents/agent%2Fcappo/verify",
+    );
   });
 });

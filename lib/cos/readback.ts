@@ -63,6 +63,15 @@ export type PglProofLookup = {
   persisted?: boolean;
   status?: string;
   cryptographic_verification?: string;
+  chain?: {
+    status?: string;
+    valid?: boolean;
+    checked_events?: number;
+    latest_event_hash?: string;
+    error?: string;
+    [key: string]: unknown;
+  };
+  agent_id?: string;
   error?: string;
   checked_at?: string;
   [key: string]: unknown;
@@ -70,6 +79,10 @@ export type PglProofLookup = {
 
 export function pglProofPath(eventHash: string): string {
   return `/api/pgl/ledger/proof/${encodeURIComponent(eventHash)}`;
+}
+
+export function pglChainVerifyPath(agentId: string): string {
+  return `/api/pgl/ledger/agents/${encodeURIComponent(agentId)}/verify`;
 }
 
 export function pglProof(
@@ -87,6 +100,15 @@ export function pglProof(
     || lookupRecord.persisted !== true
     || typeof anchoringRecord.pgl_event_hash !== "string"
     || lookupRecord.event_hash !== anchoringRecord.pgl_event_hash
+  ) {
+    return "Degraded";
+  }
+  const chainRecord = asRecord(lookupRecord.chain);
+  if (!chainRecord) return "Live";
+  if (
+    chainRecord.error
+    || chainRecord.status !== "verified"
+    || chainRecord.valid !== true
   ) {
     return "Degraded";
   }
@@ -112,7 +134,21 @@ export function pglProofLabel(anchoring: unknown, lookup: unknown): string {
   ) {
     return "Independent PGL lookup mismatch/failed: event hash did not match CAPPO event hash";
   }
-  return "PGL hash independently recorded (existence, not chain-verified)";
+  const chainRecord = asRecord(lookupRecord.chain);
+  if (!chainRecord) return "PGL hash independently recorded (chain not verified)";
+  if (
+    chainRecord.error
+    || chainRecord.status !== "verified"
+    || chainRecord.valid !== true
+  ) {
+    const reason = typeof chainRecord.error === "string" && chainRecord.error
+      ? chainRecord.error
+      : typeof chainRecord.status === "string" && chainRecord.status
+        ? chainRecord.status
+        : "unknown";
+    return `PGL chain verification failed: ${reason}`;
+  }
+  return "PGL hash recorded and agent chain verified";
 }
 
 export function mountStatusProof(
