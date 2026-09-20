@@ -125,6 +125,11 @@ describe("session capability lease handoff", () => {
         project: "sandbox",
         state: { resource: "counter", value: 1, version: 1 },
       },
+      pglProof: {
+        event_hash: "pgl_abc",
+        persisted: true,
+        checked_at: "2026-09-13T00:00:00Z",
+      },
       denials: [{
         attempt: "retry",
         decision: "deny",
@@ -140,6 +145,11 @@ describe("session capability lease handoff", () => {
     expect(record?.denials).toHaveLength(1);
     expect(record?.readback?.project).toBe("sandbox");
     expect(record?.readback?.state).toEqual({ resource: "counter", value: 1, version: 1 });
+    expect(record?.pglProof).toEqual({
+      event_hash: "pgl_abc",
+      persisted: true,
+      checked_at: "2026-09-13T00:00:00Z",
+    });
     expect(record?.recordedAt).toEqual(expect.any(String));
     expect(readSessionConsequence("mnt_other")).toBeNull();
     clearSessionConsequence();
