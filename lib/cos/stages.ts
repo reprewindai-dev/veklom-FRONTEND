@@ -127,6 +127,7 @@ export const stages: StageDefinition[] = [
     owner: "CAPPO authority / Governed Compute execution",
     endpoints: [
       { method: "POST", path: "/v1/capability/mounts/{mount_id}/execute", classification: "present", response: "governed consequence response and receipt", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/targets/{target_ref}/state", classification: "present", response: "independent target state readback (no authority consumed)", baseUrl: backend("cappo") },
     ],
   },
   {
@@ -140,6 +141,7 @@ export const stages: StageDefinition[] = [
       { method: "GET", path: "/v1/audit/verify", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "ledger verification result", baseUrl: backend("cappo") },
       { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "agent ledger entries", baseUrl: backend("cappo") },
       { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "agent chain verification result", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/targets/{target_ref}/state", classification: "present", response: "independent target state readback (no authority consumed)", baseUrl: backend("cappo") },
     ],
   },
   {

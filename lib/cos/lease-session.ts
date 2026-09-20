@@ -152,6 +152,7 @@ export type SessionConsequenceRecord = {
   mountId: string;
   response: Record<string, unknown>;
   lastAllowedResponse?: Record<string, unknown>;
+  readback?: Record<string, unknown>;
   recordedAt: string;
   denials: SessionConsequenceDenial[];
 };
@@ -208,6 +209,9 @@ export function readSessionConsequence(mountId?: string): SessionConsequenceReco
       response: value.response as Record<string, unknown>,
       lastAllowedResponse: value.lastAllowedResponse && typeof value.lastAllowedResponse === "object" && !Array.isArray(value.lastAllowedResponse)
         ? value.lastAllowedResponse as Record<string, unknown>
+        : undefined,
+      readback: value.readback && typeof value.readback === "object" && !Array.isArray(value.readback)
+        ? value.readback as Record<string, unknown>
         : undefined,
       recordedAt: value.recordedAt,
       denials,
