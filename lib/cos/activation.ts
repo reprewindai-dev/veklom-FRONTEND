@@ -92,7 +92,7 @@ function nonEmpty(values?: string[]): string[] {
  * observation; write activation must wait for a real signed observer.
  */
 export async function discoverActivationPackage(): Promise<ActivationPackage> {
-  const packages = await api<ActivationPackage[]>("/api/cappo/v1/capability/packages", {
+  const packages = await api<ActivationPackage[]>("/api/capi/interlink/capability/packages", {
     method: "GET",
   });
   const candidate = packages.find(
@@ -117,7 +117,7 @@ export async function requestActivationLease(
     throw new ActivationUnavailableError("The selected capability is not suitable for Activation v1.");
   }
 
-  const result = await api<MountResponse>("/api/cappo/v1/capability/mounts", {
+  const result = await api<MountResponse>("/api/capi/interlink/capability/mounts", {
     method: "POST",
     body: {
       package_ref: capability.id,
@@ -161,7 +161,7 @@ export async function requestActivationLease(
  */
 export async function proveActivationDenial(lease: ActivationLease): Promise<ActivationDenial> {
   const result = await api<ActionResponse>(
-    `/api/cappo/v1/capability/mounts/${encodeURIComponent(lease.mountId)}/actions`,
+    `/api/capi/interlink/capability/mounts/${encodeURIComponent(lease.mountId)}/actions`,
     {
       method: "POST",
       body: {

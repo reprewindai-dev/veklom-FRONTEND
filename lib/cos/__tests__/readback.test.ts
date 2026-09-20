@@ -1,4 +1,10 @@
-import { anchoringLabel, anchoringProof, compareReadback, mountStatusProof } from "../readback";
+import {
+  anchoringLabel,
+  anchoringProof,
+  compareReadback,
+  mountStatusProof,
+  targetStateReadbackPath,
+} from "../readback";
 
 describe("Capability OS readback and anchoring proof", () => {
   const resultingState = { resource: "counter", value: 1, version: 1 };
@@ -42,5 +48,13 @@ describe("Capability OS readback and anchoring proof", () => {
       { method: "GET", path: "/v1/capability/mounts/mnt_1", proof: "Verified" },
     ])).toBe("Verified");
     expect(mountStatusProof([])).toBe("Present");
+  });
+
+  it("scopes target readback by mount_id rather than client project", () => {
+    const path = targetStateReadbackPath("counter/target", "counter value", "mnt/1");
+    expect(path).toBe(
+      "/v1/capability/targets/counter%2Ftarget/state?resource=counter%20value&mount_id=mnt%2F1",
+    );
+    expect(path).not.toContain("project=");
   });
 });

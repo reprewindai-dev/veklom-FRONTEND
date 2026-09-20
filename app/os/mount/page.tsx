@@ -100,7 +100,8 @@ export default function MountPage() {
   const data = useStageData("mount", { autoGet: true });
   const { me } = useAuth();
   const sandbox = useSandboxMode();
-  const cappoBase = stage.endpoints[0]?.baseUrl;
+  const capiBase = stage.endpoints[0]?.baseUrl;
+  const cappoBase = stage.endpoints[4]?.baseUrl;
   const packagePayload = data.payloads["GET /v1/capability/packages"];
   const packages = (Array.isArray(packagePayload) ? packagePayload : []) as PackagePayload[];
   const [packageRef, setPackageRef] = useState("");
@@ -167,7 +168,7 @@ export default function MountPage() {
     setBusy(true);
     setActionResponse(undefined);
     setRequestedScope({ workspace, project, reads: listValue(reads) ?? [], writes: listValue(writes) ?? [], blocked: listValue(blocked) ?? [], ttl_seconds: Number(ttl) });
-    const result = await data.call<MountResponse>(endpoint("POST", "/v1/capability/mounts", cappoBase), { package_ref: packageRef, execution_scope: { workspace, project }, requested_action_scope: { reads: listValue(reads), writes: listValue(writes), blocked: listValue(blocked) ?? [] }, ttl_seconds: Number(ttl) });
+    const result = await data.call<MountResponse>(endpoint("POST", "/v1/capability/mounts", capiBase), { package_ref: packageRef, execution_scope: { workspace, project }, requested_action_scope: { reads: listValue(reads), writes: listValue(writes), blocked: listValue(blocked) ?? [] }, ttl_seconds: Number(ttl) });
     if (result.data) {
       setMountResponse(result.data);
       const returnedMount = asRecord(result.data.mount);
@@ -207,7 +208,7 @@ export default function MountPage() {
   async function refreshStatus() {
     if (!mountId) return;
     setBusy(true);
-    const result = await data.call<MountResponse>(endpoint("GET", `/v1/capability/mounts/${mountId}`, cappoBase));
+    const result = await data.call<MountResponse>(endpoint("GET", `/v1/capability/mounts/${mountId}`, capiBase));
     if (result.data) setMountResponse(result.data);
     setBusy(false);
   }
@@ -215,7 +216,7 @@ export default function MountPage() {
     event.preventDefault();
     if (!mountId || !token || !action) return;
     setBusy(true);
-    const result = await data.call<JsonRecord>(endpoint("POST", `/v1/capability/mounts/${mountId}/actions`, cappoBase), { token_id: token.token_id, nonce: token.nonce, action, resource: targetRef ? resource : undefined });
+    const result = await data.call<JsonRecord>(endpoint("POST", `/v1/capability/mounts/${mountId}/actions`, capiBase), { token_id: token.token_id, nonce: token.nonce, action, resource: targetRef ? resource : undefined });
     if (result.data) setActionResponse(result.data);
     setBusy(false);
   }

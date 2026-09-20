@@ -18,6 +18,7 @@ import {
   readSessionCapabilityLease,
   clearSessionCapabilityLease,
 } from "./lease-session";
+import { getToken } from "@/lib/api";
 
 export interface VisitorScope {
   workspace: string;
@@ -157,8 +158,12 @@ export function getCandidateCappoUrls(): string[] {
 async function dispatchCappoRequest(
   endpointPath: string,
   options: RequestInit,
+  transport: "cappo" | "interlink" = "cappo",
 ): Promise<{ status: number; data: any; headers: Headers }> {
-  const candidates = getCandidateCappoUrls();
+  const candidates = transport === "interlink"
+    ? ["/api/capi/interlink"]
+    : getCandidateCappoUrls();
+  const bearer = transport === "interlink" ? getToken() : null;
   let lastError: Error | null = null;
   let lastResponse: { status: number; data: any; headers: Headers } | null = null;
 
@@ -174,6 +179,7 @@ async function dispatchCappoRequest(
           "Content-Type": "application/json",
           "Accept": "application/json",
           "X-Workspace-ID": "public-preview",
+          ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
           ...(options.headers || {}),
         },
       });
@@ -221,10 +227,14 @@ export async function requestVisitorCapabilityMount(
     ttl_seconds: 300,
   };
 
-  const { status, data } = await dispatchCappoRequest("/v1/capability/mounts", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  const { status, data } = await dispatchCappoRequest(
+    "/capability/mounts",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    "interlink",
+  );
 
   if (status !== 200) {
     const detail = data?.detail || data?.error || `HTTP ${status}`;

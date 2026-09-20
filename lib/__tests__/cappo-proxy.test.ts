@@ -8,9 +8,13 @@ type ProxyModule = typeof import("@/app/api/[...proxy]/route");
 describe("CAPPO proxy boundary", () => {
   let proxyModule: ProxyModule;
   const originalBackendUrl = process.env.CAPPO_BACKEND_URL;
+  const originalCapiBackendUrl = process.env.CAPI_BACKEND_URL;
+  const originalCapiApiKey = process.env.CAPI_API_KEY;
 
   beforeAll(() => {
     process.env.CAPPO_BACKEND_URL = "https://cappo.test";
+    process.env.CAPI_BACKEND_URL = "https://capi.test";
+    process.env.CAPI_API_KEY = "capi-admin-key";
     jest.isolateModules(() => {
       proxyModule = require("@/app/api/[...proxy]/route") as ProxyModule;
     });
@@ -23,6 +27,10 @@ describe("CAPPO proxy boundary", () => {
   afterAll(() => {
     if (originalBackendUrl === undefined) delete process.env.CAPPO_BACKEND_URL;
     else process.env.CAPPO_BACKEND_URL = originalBackendUrl;
+    if (originalCapiBackendUrl === undefined) delete process.env.CAPI_BACKEND_URL;
+    else process.env.CAPI_BACKEND_URL = originalCapiBackendUrl;
+    if (originalCapiApiKey === undefined) delete process.env.CAPI_API_KEY;
+    else process.env.CAPI_API_KEY = originalCapiApiKey;
   });
 
   it("refuses an unlisted CAPPO path without contacting an upstream", async () => {
@@ -259,5 +267,34 @@ describe("CAPPO proxy boundary", () => {
     expect(response.status).toBe(402);
     expect(await response.json()).toEqual(JSON.parse(paymentBody));
     expect(response.headers.get("x-payment-required")).toBe("true");
+  });
+
+  it("forwards Interlink bearers without a cAPI admin key", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ packages: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const request = new NextRequest(
+      "https://control.veklom.com/api/capi/interlink/capability/packages",
+      {
+        method: "GET",
+        headers: {
+          authorization: "Bearer lockerphycer-session",
+          "x-api-key": "browser-key-must-not-forward",
+        },
+      },
+    );
+
+    const response = await proxyModule.GET(request);
+
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0])
+      .toBe("https://capi.test/api/v1/capi/interlink/capability/packages");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(upstreamHeaders.get("authorization")).toBe("Bearer lockerphycer-session");
+    expect(upstreamHeaders.get("x-api-key")).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import { canonicalBackends } from "@/lib/canonical-backends";
+import { CAPI_RUNTIME_LABEL, CAPI_RUNTIME_URL } from "@/lib/capi-runtime";
 
 /**
  * present = handler found in owning service source at the pinned SHA; needs_proof = declared but unverified/qualified; absent = no handler found.
@@ -73,12 +74,12 @@ export const stages: StageDefinition[] = [
     label: "Mount",
     route: "/os/mount",
     purpose: "Compatibility surface for binding a capability package to a scoped, expiring execution boundary.",
-    owner: "CAPPO consequence authority",
+    owner: `${CAPI_RUNTIME_LABEL} Interlink bridge`,
     endpoints: [
-      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "mount decision, scope, and token descriptor", baseUrl: backend("cappo") },
-      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "present", response: "persisted mount lifecycle status", baseUrl: backend("cappo") },
-      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "present", response: "action allow or deny decision", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "mount decision, scope, and token descriptor", baseUrl: CAPI_RUNTIME_URL },
+      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "present", response: "persisted mount lifecycle status", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "present", response: "action allow or deny decision", baseUrl: CAPI_RUNTIME_URL },
       { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "present", response: "mount termination decision", baseUrl: backend("cappo") },
     ],
   },

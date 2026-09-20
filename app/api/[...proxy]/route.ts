@@ -71,6 +71,7 @@ async function requirePrincipal(req: NextRequest): Promise<NextResponse | null> 
 async function proxyRequest(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
+  const isCapiInterlinkRoute = path.startsWith("/api/capi/interlink/");
 
   const headers = new Headers(req.headers);
   headers.delete("host");
@@ -180,7 +181,12 @@ async function proxyRequest(req: NextRequest) {
     headers.set("x-api-key", PGL_LEDGER_API_KEY);
   } else if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET && !hasBearerIdentity) {
     headers.set("Authorization", `Bearer ${LOCKERPHYCER_SECRET}`);
-  } else if (targetBase === CAPI_RUNTIME_URL && !hasBearerIdentity && CAPI_ADMIN_KEY) {
+  } else if (
+    targetBase === CAPI_RUNTIME_URL &&
+    !isCapiInterlinkRoute &&
+    !hasBearerIdentity &&
+    CAPI_ADMIN_KEY
+  ) {
     headers.set("x-api-key", CAPI_ADMIN_KEY);
   }
 
