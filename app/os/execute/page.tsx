@@ -22,6 +22,7 @@ import {
   type SessionConsequenceDenial,
   type SessionConsequenceRecord,
 } from "@/lib/cos/lease-session";
+import { anchoringLabel, anchoringProof, compareReadback } from "@/lib/cos/readback";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 
 type JsonRecord = Record<string, unknown>;
@@ -54,7 +55,7 @@ function proofFor(
 ): ProofStatus {
   if (replayInvariantViolation) return "Degraded";
   if (responseDecision(response) !== "allow") return "Needs proof";
-  return "Live";
+  return anchoringProof(response?.anchoring);
 }
 
 function appendDenial(
@@ -65,6 +66,7 @@ function appendDenial(
   return {
     mountId,
     response: existing?.response ?? {},
+    readback: existing?.readback,
     recordedAt: existing?.recordedAt ?? new Date().toISOString(),
     denials: [...(existing?.denials ?? []), denial],
   };
@@ -94,7 +96,7 @@ export default function ExecutePage() {
     const currentLease = readSessionCapabilityLease();
     return readSessionConsequence(currentLease?.mountId)?.response;
   });
-  const [busyAction, setBusyAction] = useState<"forbidden_action" | "execute" | "revoke" | "retry" | null>(null);
+  const [busyAction, setBusyAction] = useState<"forbidden_action" | "execute" | "revoke" | "retry" | "readback" | null>(null);
   const [lastLatency, setLastLatency] = useState<number>();
   const [lastStatus, setLastStatus] = useState<number>();
   const [replayInvariantViolation, setReplayInvariantViolation] = useState(false);
@@ -133,6 +135,10 @@ export default function ExecutePage() {
   const resultingState = asRecord(consequencePayload?.resulting_state);
   const authority = asRecord(successfulResponse?.authority);
   const anchoring = asRecord(successfulResponse?.anchoring);
+  const readback = consequence?.readback;
+  const readbackState = asRecord(readback?.state);
+  const readbackError = asString(readback?.error);
+  const readbackProof = compareReadback(resultingState, readback);
   const receiptId = asString(consequencePayload?.receipt_id);
   const executionId = asString(authority?.execution_id) ?? lease?.executionId;
   const lastRevoke = [...(consequence?.denials ?? [])]
@@ -169,7 +175,11 @@ export default function ExecutePage() {
     return result;
   }
 
-  function persistResponse(response: JsonRecord, denials = consequence?.denials ?? []) {
+  function persistResponse(
+    response: JsonRecord,
+    denials = consequence?.denials ?? [],
+    persistedReadback = consequence?.readback,
+  ) {
     if (!lease) return;
     const record = {
       mountId: lease.mountId,
@@ -177,6 +187,7 @@ export default function ExecutePage() {
       lastAllowedResponse: responseDecision(response) === "allow"
         ? response
         : consequence?.lastAllowedResponse,
+      readback: persistedReadback,
       denials,
     };
     storeSessionConsequence(record);
@@ -212,6 +223,7 @@ export default function ExecutePage() {
       mountId: lease.mountId,
       response: result.data ? lastResponse ?? {} : response,
       lastAllowedResponse: consequence?.lastAllowedResponse,
+      readback: consequence?.readback,
       denials: next.denials,
     });
     setConsequence(readSessionConsequence(lease.mountId));
@@ -232,6 +244,7 @@ export default function ExecutePage() {
       mountId: lease.mountId,
       response: pending,
       lastAllowedResponse: consequence?.lastAllowedResponse,
+      readback: consequence?.readback,
       denials: consequence?.denials ?? [],
     });
     const result = await callCappo<JsonRecord>(
@@ -261,12 +274,37 @@ export default function ExecutePage() {
       });
     }
     if (attempt === "retry" && decision === "allow") setReplayInvariantViolation(true);
-    persistResponse(response, nextDenials);
+    persistResponse(response, nextDenials, consequence?.readback);
     const nextLease = applyExecuteResponse(lease, response);
     if (nextLease !== lease) {
       storeSessionCapabilityLease(nextLease);
       setLease(nextLease);
     }
+    setBusyAction(null);
+  }
+
+  async function readTargetState() {
+    if (!lease || !targetRef) return;
+    setBusyAction("readback");
+    const result = await callCappo<JsonRecord>(
+      endpoint(
+        "GET",
+        `/v1/capability/targets/${encodeURIComponent(targetRef)}/state?resource=${encodeURIComponent(resource)}`,
+        cappoBase,
+      ),
+    );
+    const readbackResponse = result.data ?? {
+      error: result.record.error ?? `HTTP ${result.record.status ?? "unreachable"}`,
+    };
+    const current = readSessionConsequence(lease.mountId);
+    storeSessionConsequence({
+      mountId: lease.mountId,
+      response: current?.response ?? lastResponse ?? {},
+      lastAllowedResponse: current?.lastAllowedResponse,
+      readback: readbackResponse,
+      denials: current?.denials ?? [],
+    });
+    setConsequence(readSessionConsequence(lease.mountId));
     setBusyAction(null);
   }
 
@@ -302,6 +340,7 @@ export default function ExecutePage() {
       mountId: lease.mountId,
       response,
       lastAllowedResponse: consequence?.lastAllowedResponse,
+      readback: consequence?.readback,
       denials,
     });
     setConsequence(readSessionConsequence(lease.mountId));
@@ -375,7 +414,7 @@ export default function ExecutePage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Latency</div><div className="mt-2 font-mono text-xs text-cos-text">{lastLatency === undefined ? "Not returned" : `${lastLatency} ms`}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">HTTP status</div><div className="mt-2 font-mono text-xs text-cos-text">{lastStatus ?? "Not returned"}</div></div>
-            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(anchoring?.status)}</div></div>
+            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={anchoringProof(anchoring)} /><span className="font-mono text-xs text-cos-text">{anchoringLabel(anchoring)}</span></div></div>
           </div>
         </Pillar>
         <Pillar title="Authority" proof={successfulResponse ? proofFor(successfulResponse) : "Needs proof"}>
@@ -390,7 +429,8 @@ export default function ExecutePage() {
       </div>
       <div className="space-y-4">
         <Pillar title="Evidence" proof={successfulResponse ? proofFor(successfulResponse, replayInvariantViolation) : "Needs proof"}>
-          {successfulResponse ? <div className="space-y-3"><div className="flex items-center gap-2"><ProofBadge status={proofFor(successfulResponse, replayInvariantViolation)} /><span className="font-mono text-xs text-cos-text">Receipt returned by CAPPO</span></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Counter value</div><div className="mt-2 text-3xl font-semibold text-cos-text">{displayValue(resultingState?.previous_value)} → {displayValue(resultingState?.value)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Version</div><div className="mt-2 font-mono text-xl text-cos-text">{displayValue(resultingState?.version)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(receiptId)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchor ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.anchor_id)}</div></div></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Consequence state</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.state)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Terminated</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.terminated)}</div></div></div><Link href="/os/evidence" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">Continue to Evidence <ArrowRight size={13} /></Link></div> : <HonestEmpty title="No consequence receipt returned" route="POST /v1/capability/mounts/{mount_id}/execute" detail="The receipt, anchor, and resulting state appear only after CAPPO returns an allowed consequence." />}
+          {lastResponse && targetRef ? <div className="mb-4 rounded-xl border border-cos-accent/25 bg-cos-accent/[0.035] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm text-cos-text">Independent re-read</h3><p className="mt-1 text-xs text-cos-muted">Reads the mounted target state without consuming authority.</p></div><ProofBadge status={readbackProof} /></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Readback value</div><div className="mt-2 text-2xl font-semibold text-cos-text">{displayValue(readbackState?.value)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Readback version</div><div className="mt-2 font-mono text-xl text-cos-text">{displayValue(readbackState?.version)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Execute resulting value</div><div className="mt-2 text-2xl font-semibold text-cos-text">{displayValue(resultingState?.value)}</div></div></div>{readbackError ? <p className="mt-3 rounded border border-cos-warn/40 bg-cos-warn/5 p-2 font-mono text-xs text-cos-warn">{readbackError}</p> : null}<button type="button" onClick={readTargetState} disabled={Boolean(busyAction)} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-cos-accent/40 px-3 py-2 text-xs text-cos-accent disabled:opacity-50">{busyAction === "readback" ? "Reading…" : "Re-read target state"}</button></div> : null}
+          {successfulResponse ? <div className="space-y-3"><div className="flex items-center gap-2"><ProofBadge status={proofFor(successfulResponse, replayInvariantViolation)} /><span className="font-mono text-xs text-cos-text">Receipt returned by CAPPO</span></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Counter value</div><div className="mt-2 text-3xl font-semibold text-cos-text">{displayValue(resultingState?.previous_value)} → {displayValue(resultingState?.value)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Version</div><div className="mt-2 font-mono text-xl text-cos-text">{displayValue(resultingState?.version)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(receiptId)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchor ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.anchor_id)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring status</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={anchoringProof(anchoring)} /><span className="font-mono text-xs text-cos-text">{anchoringLabel(anchoring)}</span></div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.content_hash)}</div></div></div><div className="grid gap-3 sm:grid-cols-2"><div><div className="font-mono text-[9px] uppercase text-cos-steel">Consequence state</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.state)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">Terminated</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(consequencePayload?.terminated)}</div></div></div><Link href="/os/evidence" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">Continue to Evidence <ArrowRight size={13} /></Link></div> : <HonestEmpty title="No consequence receipt returned" route="POST /v1/capability/mounts/{mount_id}/execute" detail="The receipt, anchor, and resulting state appear only after CAPPO returns an allowed consequence." />}
         </Pillar>
         <Pillar title="Drift" proof={consequence?.denials.length ? "Present" : "Needs proof"}>
           {consequence?.denials.length ? <div className="space-y-2">{consequence.denials.map((denial, index) => <div key={`${denial.at}-${index}`} className="rounded-lg border border-cos-border bg-cos-bg/35 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="font-mono uppercase text-cos-text">{denial.attempt}</span><span className="font-mono text-cos-warn">{denial.decision}</span></div><div className="mt-2 text-cos-muted">{denial.reason}</div><div className="mt-2 font-mono text-[10px] text-cos-steel">{denial.at}</div></div>)}</div> : <HonestEmpty title="No denial drift recorded" route="POST /v1/capability/mounts/{mount_id}/actions" detail="Blocked-action and replay decisions appear here when CAPPO returns them." />}

@@ -37,7 +37,7 @@ function keyFor(endpoint: Pick<StageEndpoint, "method" | "path">) {
 
 function pathMatchesTemplate(template: string, concrete: string): boolean {
   const templateParts = template.split("/");
-  const concreteParts = concrete.split("/");
+  const concreteParts = concrete.split("?")[0].split("/");
   return templateParts.length === concreteParts.length
     && templateParts.every((part, index) => (
       (part.startsWith("{") && part.endsWith("}")) || part === concreteParts[index]
