@@ -24,6 +24,7 @@ import { SANDBOX_PROJECT, useSandboxMode } from "@/lib/cos/sandbox";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 import { mountStatusProof } from "@/lib/cos/readback";
+import { HandToVLink } from "@/components/cos/HandToVLink";
 
 type JsonRecord = Record<string, unknown>;
 type PackagePayload = {
@@ -41,6 +42,7 @@ type MountResponse = {
   anchoring?: { status?: string; anchor_id?: string | null; detail?: string | null };
   mount?: JsonRecord;
   token?: JsonRecord;
+  holder_credential?: string;
 };
 
 function asRecord(value: unknown): JsonRecord | undefined {
@@ -181,9 +183,8 @@ export default function MountPage() {
         && returnedMountId
         && tokenId
         && nonce
-        && targetRef
-        && resource
       ) {
+        const holderCredential = asString(result.data.holder_credential);
         const lease: SessionCapabilityLease = {
           mountId: returnedMountId,
           tokenId,
@@ -197,6 +198,7 @@ export default function MountPage() {
             ?? returnedGrants(asRecord(result.data.token)?.grants),
           executionId: asString(returnedToken?.execution_id),
           expiresAt: asString(returnedToken?.expires_at),
+          ...(holderCredential ? { holderCredential } : {}),
         };
         clearSessionConsequence();
         storeSessionCapabilityLease(lease);
@@ -241,7 +243,9 @@ export default function MountPage() {
       <form onSubmit={requestMount} className="space-y-4 rounded-xl border border-cos-border bg-cos-bg/35 p-4"><div className="flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h3 className="text-sm font-medium text-cos-text">Discover and request a mount</h3></div><label className="block text-xs text-cos-muted">Capability package<select value={packageRef} onChange={(event) => setPackageRef(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required><option value="">Select a returned package</option>{packages.map((item) => <option key={item.id} value={item.id}>{item.id} — {item.title}</option>)}</select></label>{selectedPackage ? <div className="rounded-lg border border-cos-border bg-cos-surface2/50 p-3 text-xs leading-5 text-cos-muted"><strong className="text-cos-text">{selectedPackage.purpose}</strong><div className="mt-2">Package blocked actions: {selectedPackage.blocked?.length ? selectedPackage.blocked.join(", ") : "None returned."}</div></div> : null}<div className="grid gap-3 sm:grid-cols-2"><label className="text-xs text-cos-muted">Workspace<input value={workspace} onChange={(event) => setWorkspace(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /><span className="mt-1 block text-[10px] text-cos-steel">Must equal the workspace scope of your session token</span></label><label className="text-xs text-cos-muted">Project<input value={project} onChange={(event) => setProject(event.target.value)} readOnly={sandbox} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text read-only:cursor-not-allowed read-only:opacity-70" required /><span className="mt-1 block text-[10px] text-cos-steel">{sandbox ? "Sandbox scope is fixed to project=sandbox" : "Enter the project scope for this mount"}</span></label><label className="text-xs text-cos-muted">Requested reads<input value={reads} onChange={(event) => setReads(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Requested writes<input value={writes} onChange={(event) => setWrites(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Requested blocked actions<input value={blocked} onChange={(event) => setBlocked(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label>{targetRef ? <label className="text-xs text-cos-muted">Counter resource<input value={resource} onChange={(event) => setResource(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /></label> : null}<label className="text-xs text-cos-muted">Requested TTL (seconds)<input type="number" min="1" value={ttl} onChange={(event) => setTtl(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /></label></div><button type="submit" disabled={busy || !packages.length} className="rounded-lg bg-cos-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Requesting…" : "Request mount"}</button></form>
       {heldLeaseScopeMismatch ? <p className="mt-3 text-xs text-cos-warn">Held mount is in {heldLease?.project ?? "unknown"} scope; revoke it or switch back</p> : null}
       {heldLease && !mountResponse ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-cos-accent/25 bg-cos-accent/[0.035] p-3 text-xs text-cos-muted"><span>Held mount <code className="font-mono text-cos-text">{heldLease.mountId}</code> · package <code className="font-mono text-cos-text">{heldLease.packageRef ?? "Not returned"}</code></span><button type="button" onClick={refreshStatus} disabled={busy} className="rounded border border-cos-border px-3 py-2 text-cos-text disabled:opacity-50">Refresh persisted status</button></div> : null}
+      {heldLease?.holderCredential ? <p className="mt-2 text-xs text-cos-muted">Machine holder credential issued (held in this browser session only; never re-fetchable from CAPPO)</p> : null}
       {heldLease && !heldLease.terminated ? <div className="mt-4"><Link href="/os/execute" className="inline-flex items-center rounded-lg border border-cos-accent/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">Continue to Execute →</Link></div> : null}
+      {heldLease && !heldLease.terminated && (heldLease.holderCredential || heldLease.vlinkHandoff) ? <div className="mt-4"><HandToVLink lease={heldLease} onChange={setHeldLease} /></div> : null}
       {!packages.length ? <div className="mt-4"><HonestEmpty title="No capability packages returned" route="GET /v1/capability/packages" detail="Mount requests stay unavailable until CAPPO returns a package catalog." /></div> : null}
       {mountResponse ? <div className="mt-4 space-y-4"><div className={`rounded-xl border p-4 ${mountResponse.decision === "allow" ? "border-cos-verified/30 bg-cos-verified/5" : "border-cos-warn/30 bg-cos-warn/5"}`}><div className="flex items-center gap-2">{mountResponse.decision === "allow" ? <CheckCircle2 size={16} className="text-cos-verified" /> : <ShieldAlert size={16} className="text-cos-warn" />}<ScopeTag project={responseProject} /><span className="font-mono text-xs uppercase tracking-[0.14em] text-cos-text">{mountResponse.decision ?? "Not returned"} · {mountResponse.reason ?? "No reason returned"}</span>{mountCondition(lifecycleState) ? <VeklomActivityCue kind="authority" condition={mountCondition(lifecycleState)} startedAt={asString(token?.issued_at) ? new Date(String(token?.issued_at)) : asString(mount?.created_at) ? new Date(String(mount?.created_at)) : undefined} size={18} showCaption={false} /> : null}</div><div className="mt-3"><Anchoring value={mountResponse.anchoring} /></div></div>{lifecycleState && lifecycleState !== "mounted" ? <FailureNotice detail={`Mount is ${lifecycleState}. CAPPO returned no live token descriptor for this state.`} /> : null}</div> : null}
     </Pillar></div>

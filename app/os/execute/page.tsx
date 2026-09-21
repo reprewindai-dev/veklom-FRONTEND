@@ -440,6 +440,11 @@ export default function ExecutePage() {
     <SectionShell stage={stage} proof={proofFor(successfulResponse, replayInvariantViolation, consequence?.pglProof)} records={data.records}>
       <div className="space-y-4">
         <Pillar title="Work" proof={proofFor(lastResponse, replayInvariantViolation, consequence?.pglProof)}>
+          {lease.vlinkHandoff ? (
+            <div className="mb-4 rounded-lg border border-cos-accent/30 bg-cos-accent/[0.035] p-3 text-xs text-cos-muted">
+              Held by VLink lease {lease.vlinkHandoff.leaseId} — machine may act through VLink; this browser still holds the human token
+            </div>
+          ) : null}
           <PhaseTrace phases={phases} />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-cos-border bg-cos-bg/35 p-3 text-xs">

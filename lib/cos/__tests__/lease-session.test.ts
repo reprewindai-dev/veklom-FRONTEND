@@ -1,4 +1,5 @@
 import {
+  clearHolderCredential,
   clearSessionCapabilityLease,
   clearSessionConsequence,
   applyExecuteResponse,
@@ -110,6 +111,45 @@ describe("session capability lease handoff", () => {
       reads: ["counter.read"],
       blocked: ["counter.reset"],
     });
+  });
+
+  it("round-trips the holder credential and VLink handoff", () => {
+    const handoffLease = {
+      ...lease,
+      holderCredential: "vlm_mnt_1.secret",
+      vlinkHandoff: {
+        vlinkId: "vlink_1",
+        leaseId: "lease_1",
+        status: "active",
+        handedAt: "2026-09-14T00:00:00Z",
+      },
+    };
+    storeSessionCapabilityLease(handoffLease);
+    expect(readSessionCapabilityLease()).toEqual(handoffLease);
+  });
+
+  it("clears only the holder credential from the stored lease", () => {
+    const handoffLease = {
+      ...lease,
+      holderCredential: "vlm_mnt_1.secret",
+      project: "sandbox",
+      vlinkHandoff: {
+        vlinkId: "vlink_1",
+        leaseId: "lease_1",
+        status: "active",
+        handedAt: "2026-09-14T00:00:00Z",
+      },
+    };
+    storeSessionCapabilityLease(handoffLease);
+    clearHolderCredential();
+    expect(readSessionCapabilityLease()).toEqual({
+      mountId: handoffLease.mountId,
+      tokenId: handoffLease.tokenId,
+      nonce: handoffLease.nonce,
+      project: handoffLease.project,
+      vlinkHandoff: handoffLease.vlinkHandoff,
+    });
+    expect(readSessionCapabilityLease()).not.toHaveProperty("holderCredential");
   });
 
   it("stores, reads, and clears the last consequence and denial history", () => {

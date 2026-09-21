@@ -6,6 +6,13 @@ export type SessionCapabilityLeaseGrants = {
   blocked?: string[];
 };
 
+export type SessionVLinkHandoff = {
+  vlinkId: string;
+  leaseId: string;
+  status: string;
+  handedAt: string;
+};
+
 export type SessionCapabilityLease = {
   mountId: string;
   tokenId: string;
@@ -20,6 +27,8 @@ export type SessionCapabilityLease = {
   terminated?: boolean;
   terminatedBy?: string;
   grants?: SessionCapabilityLeaseGrants;
+  holderCredential?: string;
+  vlinkHandoff?: SessionVLinkHandoff;
 };
 
 const KEY = "veklom.capability_lease";
@@ -76,6 +85,26 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
     }
     if (typeof value.terminated === "boolean") lease.terminated = value.terminated;
     if (typeof value.terminatedBy === "string") lease.terminatedBy = value.terminatedBy;
+    if (typeof value.holderCredential === "string") {
+      lease.holderCredential = value.holderCredential;
+    }
+    const vlinkHandoff = value.vlinkHandoff;
+    if (
+      vlinkHandoff
+      && typeof vlinkHandoff === "object"
+      && !Array.isArray(vlinkHandoff)
+      && typeof vlinkHandoff.vlinkId === "string"
+      && typeof vlinkHandoff.leaseId === "string"
+      && typeof vlinkHandoff.status === "string"
+      && typeof vlinkHandoff.handedAt === "string"
+    ) {
+      lease.vlinkHandoff = {
+        vlinkId: vlinkHandoff.vlinkId,
+        leaseId: vlinkHandoff.leaseId,
+        status: vlinkHandoff.status,
+        handedAt: vlinkHandoff.handedAt,
+      };
+    }
     if (value.grants && typeof value.grants === "object" && !Array.isArray(value.grants)) {
       const grants: SessionCapabilityLeaseGrants = {};
       for (const key of ["reads", "writes", "blocked"] as const) {
@@ -141,6 +170,13 @@ export function clearSessionCapabilityLease() {
   } catch {
     // Storage may be unavailable in a restricted browser context.
   }
+}
+
+export function clearHolderCredential() {
+  const lease = readSessionCapabilityLease();
+  if (!lease) return;
+  const { holderCredential: _holderCredential, ...withoutCredential } = lease;
+  storeSessionCapabilityLease(withoutCredential);
 }
 
 export type SessionConsequenceDenial = {
