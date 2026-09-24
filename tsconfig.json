@@ -40,6 +40,8 @@
     "node_modules",
     "**/*.test.ts",
     "**/*.test.tsx",
+    // Legacy Playwright draft is not wired to the current app or CI test command.
+    "tests/e2e.spec.ts",
     "components/terminal/data/veklom-agents",
     "components/terminal/main.tsx",
     "components/terminal/setupTests.ts",
