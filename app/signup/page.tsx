@@ -6,6 +6,7 @@ import { useRouter } from"next/navigation";
 import { useAuth } from"@/lib/auth-context";
 import { Button, ErrorBox, SuccessBox, GithubButton } from"@/components/ui";
 import { AuthLayout } from"@/components/AuthLayout";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const MIN_PW = 8;
 
@@ -62,6 +63,11 @@ export default function SignupPage() {
  }).catch(console.error);
 
  const { autoSignedIn } = await signup(email, pw, name || undefined);
+ trackAnalyticsEvent("sign_up", {
+   method: "email",
+   journey_stage: "identity",
+   outcome: "success",
+ });
  if (autoSignedIn) {
  setOk("Account created. Taking you to your workspace onboarding...");
  router.replace("/os/onboarding");
