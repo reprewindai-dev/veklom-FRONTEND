@@ -1,21 +1,43 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
+
+const PUBLIC_URLS = [
+  "",
+  "/consequence-authority",
+  "/architecture",
+  "/proof",
+  "/conformance",
+  "/docs",
+  "/machine",
+  "/get",
+  "/trust",
+  "/security",
+  "/api",
+  "/cappo",
+  "/capi",
+  "/vlink",
+  "/lockerphycer",
+  "/guardian",
+  "/pgl",
+  "/eee",
+  "/vcgb",
+  "/vnp",
+  "/spine",
+  "/privacy",
+  "/terms",
+  "/acceptable-use",
+  "/cookies",
+  "/dpa",
+  "/subprocessors",
+] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
- const baseUrl = 'https://veklom.com'
- 
- const url = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : baseUrl
+  const baseUrl = process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://veklom.com";
 
- return [
- { url: `${url}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
- { url: `${url}/overview`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
- { url: `${url}/vnp`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
- { url: `${url}/os/onboarding`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
- { url: `${url}/gpc`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
- { url: `${url}/spine`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
- { url: `${url}/trust`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
- { url: `${url}/compliance`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
- { url: `${url}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
- { url: `${url}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 },
- { url: `${url}/legal`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 }
- ]
+  // Do not manufacture freshness. Google only uses lastmod when it is
+  // consistently accurate, and ignores priority/changefreq.
+  return PUBLIC_URLS.map((path) => ({
+    url: `${baseUrl}${path}`,
+  }));
 }
