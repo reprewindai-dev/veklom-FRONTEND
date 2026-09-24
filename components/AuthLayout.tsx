@@ -5,10 +5,10 @@ import { ShieldCheck, Network, Lock, Activity } from"lucide-react";
 import { LogoWordmark } from"./Logo";
 
 const HIGHLIGHTS = [
- { icon: Network, title:"Smart routing", desc:"Every prompt routed across providers by policy and cost." },
- { icon: ShieldCheck, title:"Governed by default", desc:"HIPAA, SOC2, PCI-DSS, GDPR — evidence on every call." },
- { icon: Lock, title:"Sovereign perimeter", desc:"Your keys, your region, your audit trail. No leakage." },
- { icon: Activity, title:"Live observability", desc:"Spend, latency, and policy interceptions in real time." },
+ { icon: Network, title:"Bounded capability", desc:"Scope machine access by identity, action, target, and lifecycle." },
+ { icon: ShieldCheck, title:"Governed by default", desc:"Revocation, replay resistance, and fail-closed authorization on governed paths." },
+ { icon: Lock, title:"Separated secrets", desc:"Keep downstream credentials behind explicit workspace and capability boundaries." },
+ { icon: Activity, title:"Evidence-led", desc:"Keep authorization, execution, and observed outcome as separate facts." },
 ];
 
 export function AuthLayout({
@@ -29,15 +29,15 @@ export function AuthLayout({
  <div className="absolute inset-0 -z-10 brand-glow opacity-40" />
  <div className="flex items-center gap-3">
  <LogoWordmark height={30} />
- <span className="text-[10px] text-ink-400 uppercase tracking-[0.2em] border-l border-border pl-3">Control Plane</span>
+ <span className="text-[10px] text-ink-400 uppercase tracking-[0.2em] border-l border-border pl-3">Capability OS</span>
  </div>
 
  <div className="max-w-md animate-fade-up">
  <h2 className="text-3xl font-semibold leading-tight text-gradient">
- The sovereign AI control plane.
+ Governed machine action, without ambient authority.
  </h2>
  <p className="text-sm text-ink-400 mt-3">
- Watch every prompt routed, policed, and audited — on your perimeter, your keys, your region.
+ Connect automation to real systems while keeping identity, authority, consequence, and evidence explicit.
  </p>
 
  <ul className="mt-8 space-y-4">
@@ -56,7 +56,7 @@ export function AuthLayout({
  </div>
 
  <div className="text-[11px] text-ink-600">
- © {new Date().getFullYear()} Veklom · Sovereign AI Hub
+ © {new Date().getFullYear()} Veklom · Capability OS
  </div>
  </section>
 
