@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, CircleAlert, Github, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
+import { trackAnalyticsEvent } from "@/lib/analytics";
 type GithubStatus = {
   configured: boolean;
   present?: Record<string, boolean>;
@@ -59,6 +60,11 @@ export function LoginForm() {
 
     try {
       await login(email, password);
+      trackAnalyticsEvent("login", {
+        method: "email",
+        journey_stage: "identity",
+        outcome: "success",
+      });
       router.replace(safeDestination());
       router.refresh();
     } catch (cause) {
