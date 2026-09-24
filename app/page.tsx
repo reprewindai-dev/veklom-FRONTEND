@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import { TrackedLink } from "@/components/TrackedLink";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { AmbientField, AuthorityOrb, LiveSignal, StageLabel } from "@/components/brand/PremiumPrimitives";
 import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
@@ -41,14 +41,14 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href="/get" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+              <TrackedLink href="/get" eventName="get_veklom_start" ctaLabel="Get Veklom" ctaLocation="home_hero" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
                 Get Veklom <span className="transition-transform group-hover:translate-x-1">→</span>
-              </Link>
-              <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">
+              </TrackedLink>
+              <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">
                 Open Capability OS
-              </Link>
-              <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect proof</Link>
-              <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</Link>
+              </TrackedLink>
+              <TrackedLink href="/proof" eventName="proof_inspect" ctaLabel="Inspect proof" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect proof</TrackedLink>
+              <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</TrackedLink>
             </div>
 
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
@@ -76,12 +76,12 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <Link href="/vlink/connect/" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink now" ctaLocation="home_vlink" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
                   Try VLink now <span className="transition-transform group-hover:translate-x-1">→</span>
-                </Link>
-                <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20 hover:bg-theme-surface">
+                </TrackedLink>
+                <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Scan to connect" ctaLocation="home_vlink" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20 hover:bg-theme-surface">
                   Scan to connect <span className="text-theme-inkDim">→</span>
-                </Link>
+                </TrackedLink>
               </div>
             </div>
           </div>
@@ -167,10 +167,10 @@ export default function LandingPage() {
                 <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Use what is available now. Inspect what is proven. Build from a bounded capability.</h2>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</Link>
-                <Link href="/machine" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">For Machines</Link>
-                <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</Link>
-                <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</Link>
+                <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</TrackedLink>
+                <TrackedLink href="/machine" eventName="machine_surface_open" ctaLabel="For Machines" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">For Machines</TrackedLink>
+                <TrackedLink href="/proof" eventName="proof_inspect" ctaLabel="Inspect proof" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</TrackedLink>
+                <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</TrackedLink>
               </div>
             </div>
           </div>
