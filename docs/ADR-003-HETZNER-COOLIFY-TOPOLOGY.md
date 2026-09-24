@@ -1,7 +1,7 @@
-# ADR-003: Hetzner Coolify Topology
+# ADR-003: Hetzner Coolify Topology (Superseded)
 
 ## Status
-Approved
+Superseded on 2026-09-24 by `reprewindai-dev/veklom-ops-command/CURRENT_ARCHITECTURE_LOCK.md`. Retained as historical architecture evidence; do not use as a current deployment instruction.
 
 ## Context
 Previous VNP deployment proposals relied on fictional deployments across AWS Lambda, EventBridge, GCP, Oracle Cloud, Northflank, Tokyo, or Helsinki. This led to fragmented infrastructure assumptions and unrealistic node representations. The actual physical infrastructure is entirely based on Hetzner servers managed by Coolify.

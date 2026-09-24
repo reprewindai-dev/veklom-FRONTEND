@@ -1,4 +1,7 @@
-# Veklom Canonical Architecture
+# Historical Veklom Architecture Snapshot (Superseded)
+
+> [!WARNING]
+> Superseded on 2026-09-24 by `reprewindai-dev/veklom-ops-command/CURRENT_ARCHITECTURE_LOCK.md`. This snapshot contains retired BYOS/Control Plane and Hetzner/Coolify assumptions. It is preserved for historical context only and must not guide current implementation or deployment.
 
 ## 1. Overview
 This document represents the unified architectural truth lock for the Veklom platform. It establishes the mandatory boundaries for components across all repositories, enforcing that "Connection is the Product" and ensuring that no single component attempts to bypass the strict separation of concerns.
