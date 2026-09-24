@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { PremiumLogo } from "@/components/brand/PremiumPrimitives";
 
 const navItems = [
+  ["/consequence-authority", "Consequence Authority"],
   ["/proof", "Proof"],
   ["/architecture", "Architecture"],
   ["/conformance", "Conformance"],
@@ -22,6 +23,7 @@ const footerGroups = [
       ["/get", "Get Veklom"],
       
       ["/lockerphycer", "LockerPhycer"],
+      ["/consequence-authority", "Consequence Authority"],
       ["/cappo", "CAPPO"],
       ["/capi", "cAPI"],
       ["/vlink", "VLink"],
