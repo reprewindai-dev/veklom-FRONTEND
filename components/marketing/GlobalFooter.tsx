@@ -14,6 +14,7 @@ const groups = [
     links: [
       
       ["/lockerphycer", "LockerPhycer"],
+      ["/consequence-authority", "Consequence Authority"],
       ["/cappo", "CAPPO"],
       ["/capi", "cAPI"],
       ["/vlink", "VLink"],
