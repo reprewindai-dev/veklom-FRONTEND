@@ -262,6 +262,7 @@ def provenance():
             public_ip = ipr.text.strip()
     except Exception:
         pass
+    runtime = discover_public_runtime()
     return {
         "captured_at_utc": now(),
         "runner": {"provider": "GitHub Actions hosted runner",
@@ -277,9 +278,11 @@ def provenance():
         "target": {"origin": ORIGIN, "hostname": "veklom.com", "dns_ipv4_ipv6": dns,
                    "tls": tls, "tls_verification": "Python requests default certificate validation",
                    "cf_rays": sorted(CF_RAYS), "http_trace": HTTP_TRACE},
-        "source_commit_sha": os.getenv("GITHUB_SHA"),
+        "verifier_commit_sha": os.getenv("GITHUB_SHA"),
+        "target_source_sha": runtime.get("source_sha"),
+        "runtime_deployment_sha": runtime.get("deployment_sha"),
         "verifier_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "runtime": discover_public_runtime(),
+        "runtime": runtime,
     }
 
 
@@ -440,7 +443,7 @@ def main():
         evidence["checks"] = CHECKS
         evidence["finished_at_utc"] = evidence.get("finished_at_utc") or now()
         evidence["provenance"] = evidence.get("provenance") or provenance()
-        evidence["source_commit_sha"] = os.getenv("GITHUB_SHA")
+        evidence["verifier_commit_sha"] = os.getenv("GITHUB_SHA")
         evidence.setdefault("receipt_id", None)
         evidence.setdefault("event_hash", None)
         ARTIFACT.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n",
