@@ -180,10 +180,10 @@ export default function OnboardingPage() {
     setError(null);
     setLedger({ status: "Not started" });
     try {
-      // Keep the proxied PGL path canonical. A trailing slash makes FastAPI
-      // emit an absolute redirect to its private Docker hostname, which a
-      // public HTTPS browser must never follow.
-      const response = await api.post<AgentResponse>("/api/pgl/agents", {
+      // GnomLedger creates agents at POST /api/v1/. Keep the same-origin proxy
+      // at /api/pgl/ so the browser never follows a redirect to the ledger's
+      // private Docker hostname.
+      const response = await api.post<AgentResponse>("/api/pgl/", {
         agent_name: agentName,
         creator: me.email,
         jurisdiction,
