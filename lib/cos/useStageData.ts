@@ -54,7 +54,9 @@ export function resolveStageTransportPath(
   stageId: StageDefinition["id"],
   path: string,
 ): string {
-  if (isCapiInterlinkPath(path)) return `/api/capi/interlink${path}`;
+  if (isCapiInterlinkPath(path)) {
+    return `/api/capi/interlink/capability${path.replace(/^\/v1\/capability/, "")}`;
+  }
   if (isCappoProxyPath(path)) return `/api/cappo${path}`;
   return path;
 }
