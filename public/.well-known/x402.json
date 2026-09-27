@@ -7,15 +7,9 @@
   "identity": {
     "veklom_id_app": "6a20f24cc341f72c2f573eb5",
     "veklom_id_wallet": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
-    "verification_domain": "id.veklom.com"
+    "verification_domain": "veklom.com"
   },
   "routes": [
-    {
-      "route": "POST /api/v1/ai/inference",
-      "price": "$0.008",
-      "description": "Policy-gated AI inference. Ollama-first, auto-escalates to Groq/Gemini/OpenAI.",
-      "tags": ["ai", "inference", "governed", "policy", "veklom"]
-    },
     {
       "route": "POST /api/v1/gpc/compile",
       "price": "$0.015",
@@ -23,29 +17,29 @@
       "tags": ["gpc", "compile", "plan", "governance", "veklom"]
     },
     {
-      "route": "POST /api/v1/pipelines/trigger",
-      "price": "$0.025",
-      "description": "Trigger a governed pipeline with budget caps and kill switches.",
-      "tags": ["pipeline", "trigger", "orchestration", "veklom"]
-    },
-    {
-      "route": "GET /api/v1/evidence/export",
+      "route": "POST /v1/capability/mounts",
       "price": "$0.005",
-      "description": "Export SHA-256 sealed audit evidence for governed execution.",
-      "tags": ["evidence", "audit", "sha256", "proof", "veklom"]
+      "description": "Request a governed capability mount with single-use execution nonce.",
+      "tags": ["capability", "mount", "authority", "veklom"]
     },
     {
-      "route": "GET /api/v1/compliance/report",
+      "route": "POST /v1/capability/mounts/{mount_id}/actions",
       "price": "$0.010",
-      "description": "Generate compliance report across SOC2, HIPAA, GDPR, ISO 27001, EU AI Act.",
-      "tags": ["compliance", "soc2", "hipaa", "gdpr", "report", "veklom"]
+      "description": "Evaluate and commit a governed action against invariant policy.",
+      "tags": ["action", "consequence", "governance", "veklom"]
+    },
+    {
+      "route": "GET /v1/audit/verify",
+      "price": "$0.005",
+      "description": "Verify cryptographic proof and ledger integrity for committed consequence.",
+      "tags": ["audit", "proof", "ledger", "pgl", "veklom"]
     }
   ],
   "discovery": {
-    "bazaar": "https://bazaar.cdp.coinbase.com",
-    "mcp_sse": "https://api.veklom.com/mcp/sse",
-    "llms_txt": "https://api.veklom.com/llms.txt",
-    "openapi": "https://api.veklom.com/openapi.json",
-    "veklom_id": "https://id.veklom.com"
+    "openapi": "https://cappo.veklom.com/openapi.json",
+    "mcp": "https://cappo.veklom.com/mcp",
+    "llms_txt": "https://veklom.com/llms.txt",
+    "machine": "https://veklom.com/machine",
+    "packages": "https://cappo.veklom.com/v1/capability/packages"
   }
 }

@@ -102,6 +102,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (url.pathname === '/mcp') {
+    const accept = request.headers.get('accept') || '';
+    if (
+      request.method === 'POST' ||
+      accept.includes('application/json') ||
+      accept.includes('text/event-stream')
+    ) {
+      url.pathname = '/api/mcp';
+      return NextResponse.rewrite(url);
+    }
+  }
+
   // Execution identity is validated by CAPPO on execution.
   // The frontend middleware does not need to enforce capabilities per path right now.
 

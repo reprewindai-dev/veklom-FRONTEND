@@ -1,37 +1,30 @@
 {
-  "_note": "This is a Veklom convenience document, NOT an MCP standard discovery URI.",
-  "mcpEndpoint": "https://cappo.veklom.com/mcp",
-  "protocolVersion": "2026-07-28",
+  "_note": "Veklom WebMCP Discovery and Endpoint Registry",
+  "mcpEndpoint": "https://veklom.com/mcp",
+  "rpcEndpoint": "https://veklom.com/api/mcp",
+  "protocolVersion": "2024-11-05",
+  "supportedTransports": ["streamable-http", "sse"],
   "paths": {
-    "server/discover": "https://cappo.veklom.com/mcp",
-    "tools/list": "https://cappo.veklom.com/mcp"
+    "server/discover": "https://veklom.com/mcp",
+    "tools/list": "https://veklom.com/mcp",
+    "tools/call": "https://veklom.com/mcp"
+  },
+  "corridors": {
+    "webmcp": "https://veklom.com/mcp",
+    "openapi": "https://cappo.veklom.com/openapi.json",
+    "vlink_pairing": "https://vlink.veklom.com",
+    "x402_commerce": "https://veklom.com/.well-known/x402.json"
   },
   "auth": {
+    "type": "ephemeral_capability_lease",
+    "sandbox_auth_required": false,
     "protectedResourceMetadata": "https://veklom.com/.well-known/oauth-authorization-server"
   },
   "payment": {
-    "pricingEndpoint": "https://cappo.veklom.com/api/v1/x402/config"
+    "pricingEndpoint": "https://cappo.veklom.com/api/v1/x402/config",
+    "walletCorridor": "https://veklom.com/machine/wallet"
   },
   "extensions": {
     "pgl": "https://pgl.veklom.com/a2a/v1"
-  },
-  "exampleDiscoverResponse": {
-    "supportedVersions": ["2026-07-28"],
-    "capabilities": {
-      "tools": {},
-      "resources": {},
-      "extensions": {
-        "com.veklom/covenant-governance": {},
-        "com.veklom/x402-payments": {},
-        "io.modelcontextprotocol/tasks": {}
-      }
-    },
-    "_meta": {
-      "io.modelcontextprotocol/serverInfo": {
-        "name": "Veklom Nexus",
-        "version": "2.4.1",
-        "description": "Sovereign AI hub with governed agent execution and multi-backend runtime."
-      }
-    }
   }
 }

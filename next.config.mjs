@@ -114,6 +114,7 @@ const nextConfig = {
         { source: "/health/",       destination: `${LOCKERPHYCER_URL}/health/` },
         { source: "/status/",       destination: `${LOCKERPHYCER_URL}/health/` },
         { source: "/protocol.json", destination: `${LOCKERPHYCER_URL}/protocol.json` },
+        { source: "/machine/openapi.json", destination: `${CAPPO_URL}/openapi.json` },
 
         // ── CAPPO: consequence authority ──────────────────────────────────────
         { source: "/api/v1/cappo/:path*",  destination: `${CAPPO_URL}/api/v1/cappo/:path*` },

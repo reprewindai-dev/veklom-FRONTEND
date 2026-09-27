@@ -1,22 +1,32 @@
-﻿{
+{
   "name": "veklom-web-mcp",
   "version": "1.0.0",
   "surface": "machine",
   "product": "Veklom Capability OS",
-  "description": "Machine-readable discovery surface for governed machine action.",
+  "description": "Machine-readable discovery and executable tool substrate for governed consequence authority.",
+  "transports": ["streamable-http", "sse"],
   "routes": {
     "html": "/mcp",
+    "rpc": "/api/mcp",
+    "mcp_stream": "/mcp",
     "manifest": "/mcp/manifest.json",
     "tools": "/mcp/tools.json",
     "machine": "/machine",
     "claims": "/machine/claims.json",
     "conformance": "/machine/conformance.json",
     "evidence_index": "/machine/evidence-index.json",
-    "openapi": "/machine/openapi.json"
+    "openapi": "/machine/openapi.json",
+    "x402": "/.well-known/x402.json"
+  },
+  "corridors": {
+    "webmcp": "https://veklom.com/mcp",
+    "openapi": "https://cappo.veklom.com/openapi.json",
+    "vlink_pairing": "https://vlink.veklom.com",
+    "x402_commerce": "https://veklom.com/.well-known/x402.json"
   },
   "claims_boundary": {
     "p5_c0": "closed",
-    "liveness": "not_claimed",
-    "g1": "deferred"
+    "liveness": "closed",
+    "g1": "closed"
   }
 }
