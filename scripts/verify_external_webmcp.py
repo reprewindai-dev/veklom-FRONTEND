@@ -201,36 +201,61 @@ def find_receipt(obj):
 
 
 def discover_public_runtime():
-    url = ORIGIN + "/api/proof/live"
-    try:
-        response = request("GET", url)
-        if response.status_code != 200:
-            return {"http_status": response.status_code, "deployment_sha": None,
-                    "source_sha": None, "observed_at": None}
-        data = response.json()
-        sha_keys = ("deployment_sha", "deploy_sha", "runtime_sha", "commit_sha",
-                    "source_sha", "git_sha", "revision")
-        sha_pattern = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
-        candidates = []
-        def walk(obj):
-            if isinstance(obj, dict):
-                for key, value in obj.items():
-                    if key.lower() in sha_keys and isinstance(value, str) and sha_pattern.fullmatch(value):
-                        candidates.append((key.lower(), value.lower()))
-                    walk(value)
-            elif isinstance(obj, list):
-                for value in obj:
-                    walk(value)
-        walk(data)
-        deployment = next((v for k, v in candidates if k in
-                           ("deployment_sha", "deploy_sha", "runtime_sha", "commit_sha", "git_sha", "revision")), None)
-        source = next((v for k, v in candidates if k == "source_sha"), None)
-        return {"http_status": response.status_code, "deployment_sha": deployment,
-                "source_sha": source, "observed_at": data.get("observedAt")}
-    except Exception:
-        return {"http_status": None, "deployment_sha": None, "source_sha": None,
-                "observed_at": None}
+    """Read source/image identity advertised by two public frontend routes.
 
+    These are runtime self-reports, not signatures or independent registry proofs.
+    Keep Git source SHA and Docker image ID separate; they are different identities.
+    """
+    endpoints = {
+        "proof": ORIGIN + "/api/proof/live",
+        "health": ORIGIN + "/api/health",
+    }
+    observations = {}
+    for name, url in endpoints.items():
+        try:
+            response = request("GET", url)
+            data = response.json() if response.status_code == 200 else {}
+            observations[name] = {
+                "http_status": response.status_code,
+                "source_commit_sha": data.get("sourceCommitSha") or data.get("commit"),
+                "runtime_image_id": data.get("runtimeImageId"),
+                "observed_at": data.get("observedAt") or data.get("timestamp"),
+            }
+        except Exception as exc:
+            observations[name] = {
+                "http_status": None,
+                "source_commit_sha": None,
+                "runtime_image_id": None,
+                "observed_at": None,
+                "error_type": type(exc).__name__,
+            }
+
+    sha_pattern = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
+    image_pattern = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
+
+    def valid_values(field, pattern):
+        return {
+            name: value.lower()
+            for name, observation in observations.items()
+            if isinstance((value := observation.get(field)), str)
+            and pattern.fullmatch(value)
+        }
+
+    source_values = valid_values("source_commit_sha", sha_pattern)
+    image_values = valid_values("runtime_image_id", image_pattern)
+    source_unique = set(source_values.values())
+    image_unique = set(image_values.values())
+    identity_conflict = len(source_unique) > 1 or len(image_unique) > 1
+    source_sha = next(iter(source_unique)) if len(source_unique) == 1 else None
+    runtime_image_id = next(iter(image_unique)) if len(image_unique) == 1 else None
+    return {
+        "observations": observations,
+        "source_commit_sha": source_sha,
+        "runtime_image_id": runtime_image_id,
+        "identity_conflict": identity_conflict,
+        "identity_complete": bool(source_sha and runtime_image_id and not identity_conflict),
+        "identity_basis": "public_runtime_self_report_not_cryptographically_attested",
+    }
 
 def provenance():
     hosts = {"veklom.com"}
@@ -279,8 +304,10 @@ def provenance():
                    "tls": tls, "tls_verification": "Python requests default certificate validation",
                    "cf_rays": sorted(CF_RAYS), "http_trace": HTTP_TRACE},
         "verifier_commit_sha": os.getenv("GITHUB_SHA"),
-        "target_source_sha": runtime.get("source_sha"),
-        "runtime_deployment_sha": runtime.get("deployment_sha"),
+        "target_source_commit_sha": runtime.get("source_commit_sha"),
+        "runtime_image_id": runtime.get("runtime_image_id"),
+        "runtime_identity_conflict": runtime.get("identity_conflict"),
+        "runtime_identity_complete": runtime.get("identity_complete"),
         "verifier_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "runtime": runtime,
     }
@@ -402,13 +429,18 @@ def main():
                          "state_values": {"before": v0, "after_allowed": v1,
                                           "after_forbidden": v2, "after_replay": v3},
                          "provenance": provenance_data})
-        missing_runtime_sha = not provenance_data["runtime"].get("deployment_sha")
-        if missing_runtime_sha:
-            evidence["status"] = "LIFECYCLE_PASS_RUNTIME_SHA_NOT_PUBLISHED"
-            print("[INCOMPLETE] Public runtime endpoint did not expose a verifiable deployment SHA.")
-        else:
-            evidence["status"] = "PASS"
-        return 2 if missing_runtime_sha else 0
+        runtime = provenance_data["runtime"]
+        if runtime.get("identity_conflict"):
+            evidence["status"] = "FAIL_RUNTIME_IDENTITY_CONFLICT"
+            print("[FAIL] Public health and proof routes reported conflicting source/image identities.")
+            return 1
+        if not runtime.get("identity_complete"):
+            evidence["status"] = "LIFECYCLE_PASS_RUNTIME_IDENTITY_NOT_PUBLISHED"
+            print("[INCOMPLETE] Lifecycle passed, but public routes did not consistently report a source commit SHA and Docker image ID.")
+            return 2
+        evidence["status"] = "LIFECYCLE_PASS_RUNTIME_IDENTITY_REPORTED_UNATTESTED"
+        print("[INCOMPLETE] Lifecycle and matching runtime identities were observed, but the public values are runtime self-reports, not cryptographically attested provenance.")
+        return 2
     except StopRun as exc:
         evidence.update({"status": "FAIL", "failure": str(exc),
                          "finished_at_utc": now()})
