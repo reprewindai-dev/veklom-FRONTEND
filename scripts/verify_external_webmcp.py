@@ -253,7 +253,11 @@ def discover_public_runtime():
         "source_commit_sha": source_sha,
         "runtime_image_id": runtime_image_id,
         "identity_conflict": identity_conflict,
-        "identity_complete": bool(source_sha and runtime_image_id and not identity_conflict),
+        "identity_complete": bool(
+            source_sha and runtime_image_id and not identity_conflict
+            and set(source_values) == set(endpoints)
+            and set(image_values) == set(endpoints)
+        ),
         "identity_basis": "public_runtime_self_report_not_cryptographically_attested",
     }
 
