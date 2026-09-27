@@ -5,6 +5,20 @@ import { NextRequest } from "next/server";
 import { GET } from "@/app/api/auth/github/callback/route";
 
 describe("GitHub OAuth callback public origin", () => {
+  it("keeps OAuth error returns on the public site when Next sees its container host", async () => {
+    const request = new NextRequest(
+      "http://0.0.0.0:3002/api/auth/github/callback?error=access_denied",
+      { headers: { "x-forwarded-host": "0.0.0.0:3002", "x-forwarded-proto": "https" } },
+    );
+
+    const response = await GET(request);
+    const location = new URL(response.headers.get("location")!);
+
+    expect(location.origin).toBe("https://veklom.com");
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("github_error")).toBe("access_denied");
+  });
+
   it("does not redirect the browser to the private frontend container origin", async () => {
     const request = new NextRequest(
       "http://0.0.0.0:3002/api/auth/github/callback?code=sample-code&state=sample-state",
