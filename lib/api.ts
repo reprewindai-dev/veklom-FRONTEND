@@ -130,6 +130,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/login",
   "/signup",
   "/forgot-password",
+  "/reset-password",
   "/get",
   "/proof",
   "/architecture",
