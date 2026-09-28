@@ -1,0 +1,48 @@
+name: External WebMCP consequence reproduction
+
+on:
+  push:
+    branches:
+      - codex/external-webmcp-reproduction-20260927
+    paths:
+      - scripts/verify_external_webmcp.py
+      - .github/workflows/external-webmcp-reproduction.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/verify_external_webmcp.py
+      - .github/workflows/external-webmcp-reproduction.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-webmcp-reproduction-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  reproduce:
+    name: Fresh-host public WebMCP lifecycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out verifier source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned HTTP client
+        run: python -m pip install --disable-pip-version-check requests==2.32.4
+      - name: Run complete public lifecycle
+        run: python scripts/verify_external_webmcp.py
+      - name: Preserve sanitized provenance and lifecycle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-webmcp-evidence-${{ github.run_id }}
+          path: external-webmcp-evidence.json
+          if-no-files-found: warn
+          retention-days: 90

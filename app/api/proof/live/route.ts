@@ -101,11 +101,25 @@ export async function GET() {
 
   const results = await Promise.all(services.map(probe));
   const healthy = results.filter((item) => item.healthy).length;
+  const sourceCommitCandidate = process.env.VEKLOM_SOURCE_COMMIT_SHA
+    ?? process.env.SOURCE_COMMIT_SHA
+    ?? process.env.GITHUB_SHA
+    ?? process.env.VERCEL_GIT_COMMIT_SHA
+    ?? "";
+  const sourceCommitSha = /^[0-9a-f]{40}([0-9a-f]{24})?$/i.test(sourceCommitCandidate)
+    ? sourceCommitCandidate.toLowerCase()
+    : null;
+  const runtimeImageCandidate = process.env.VEKLOM_RUNTIME_IMAGE_ID ?? "";
+  const runtimeImageId = /^sha256:[0-9a-f]{64}$/i.test(runtimeImageCandidate)
+    ? runtimeImageCandidate.toLowerCase()
+    : null;
 
   return NextResponse.json(
     {
       source: "LIVE_BACKEND_PROBES",
       synthetic: false,
+      sourceCommitSha,
+      runtimeImageId,
       observedAt: new Date().toISOString(),
       summary: {
         healthy,
