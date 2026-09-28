@@ -36,7 +36,7 @@ export function LoginForm() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/v1/auth/github/config-status", { cache: "no-store", headers: { Accept: "application/json" } })
+    fetch("/api/auth/github/status", { cache: "no-store", headers: { Accept: "application/json" } })
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
