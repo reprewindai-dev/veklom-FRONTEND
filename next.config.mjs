@@ -112,6 +112,8 @@ const nextConfig = {
         { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
         // First-party, cookieless funnel analytics (events, config, link, admin funnel)
         { source: "/api/v1/analytics/:path*", destination: `${LOCKERPHYCER_URL}/api/v1/analytics/:path*` },
+        // Stripe webhook: a rewrite streams the raw body byte-for-byte, which the signature check needs
+        { source: "/api/v1/billing/stripe/webhook", destination: `${LOCKERPHYCER_URL}/api/v1/billing/stripe/webhook` },
         // ── Health / protocol sourced from LockerPhycer ───────────────────────
         { source: "/health/",       destination: `${LOCKERPHYCER_URL}/health/` },
         { source: "/status/",       destination: `${LOCKERPHYCER_URL}/health/` },
