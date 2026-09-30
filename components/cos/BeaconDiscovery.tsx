@@ -7,8 +7,30 @@ import { useStageData } from "@/lib/cos/useStageData";
 import { HonestEmpty } from "@/components/cos/SectionPillars";
 import { Field } from "@/components/cos/StageParts";
 import { ProofBadge } from "@/components/cos/ProofBadge";
+import { VeklomActivityCue } from "@/components/cos/VeklomActivityCue";
+import { beaconStats, NO_DATA, NO_DATA_TOOLTIP, type BeaconStat } from "@/lib/cos/beacon-stats";
+import { SANDBOX_COPY, useSandboxMode } from "@/lib/cos/sandbox";
 
 type Beacon = Record<string, unknown>;
+
+export function BeaconStatStrip({ stats }: { stats: BeaconStat[] }) {
+  return (
+    <dl data-testid="beacon-stats" className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {stats.map((stat) => (
+        <div key={stat.id} className="rounded-xl border border-cos-border bg-cos-bg/35 px-4 py-3">
+          <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">{stat.label}</dt>
+          <dd
+            className="mt-1 text-2xl font-semibold text-cos-text"
+            title={stat.value === NO_DATA ? NO_DATA_TOOLTIP : stat.source}
+            data-stat={stat.id}
+          >
+            {stat.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 type Verification = { valid?: boolean; reason?: string; kid?: string };
 
 function endpoint(method: StageEndpoint["method"], path: string, baseUrl?: string): StageEndpoint {
@@ -30,6 +52,8 @@ export function BeaconDiscovery() {
     ? (Array.isArray((beaconsPayload as { beacons?: unknown }).beacons) ? (beaconsPayload as { beacons: Beacon[] }).beacons : [])
     : [];
   const keysPayload = data.payloads["GET /.well-known/capability-beacon-keys"];
+  const sandbox = useSandboxMode();
+  const stats = beaconStats(beaconsPayload, verification);
 
   useEffect(() => {
     for (const beacon of beacons) {
@@ -55,6 +79,11 @@ export function BeaconDiscovery() {
         </div>
         <ProofBadge status={data.stageProof} />
       </div>
+      <div className="mt-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-cos-accent" data-testid="beacon-listening">
+        <VeklomActivityCue kind="discovery" condition={data.loading ? "active" : beaconsPayload ? "present" : "unknown"} size={18} showCaption={false} />
+        {sandbox ? SANDBOX_COPY.beaconHeader : SANDBOX_COPY.liveBeaconHeader}
+      </div>
+      <BeaconStatStrip stats={stats} />
       {!beacons.length ? <div className="mt-5"><HonestEmpty title="No beacon set returned" route="GET /v1/capability/beacons" detail="No capability advertisement is displayed until CAPPO returns one." /></div> : <div className="mt-5 space-y-3">{beacons.map((beacon) => {
         const packageRef = stringValue(beacon.package_ref);
         const result = verification[packageRef];

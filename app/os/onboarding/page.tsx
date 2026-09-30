@@ -6,6 +6,8 @@ import { ArrowRight, Check, Circle, Database, Fingerprint, Layers3, Play, Shield
 import { useRouter } from "next/navigation";
 import { api, ApiError, setTokens } from "@/lib/api";
 import { Button, ErrorBox } from "@/components/ui";
+import { LiveOnlyNotice } from "@/components/cos/LiveOnly";
+import { useSandboxMode } from "@/lib/cos/sandbox";
 
 const STEPS = [
   { id: "identity", label: "Operator Identity" },
@@ -91,6 +93,9 @@ function Field({
 
 export default function OnboardingPage() {
   const router = useRouter();
+  // Workspace binding (LockerPhycer) and agent-genome registration (PGL) have no
+  // sandbox scope in the owning services, so they are Live only.
+  const sandbox = useSandboxMode();
   const [step, setStep] = useState(0);
   const [me, setMe] = useState<Me | null>(null);
   const [identityLoaded, setIdentityLoaded] = useState(false);
@@ -156,6 +161,7 @@ export default function OnboardingPage() {
 
   async function createWorkspace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (sandbox) return;
     setBusy(true);
     setError(null);
     try {
@@ -175,6 +181,7 @@ export default function OnboardingPage() {
 
   async function registerAgent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (sandbox) return;
     if (!boundWorkspaceId || !me) return;
     setBusy(true);
     setError(null);
@@ -299,7 +306,8 @@ export default function OnboardingPage() {
                   <Field label="Name" value={workspaceName} onChange={(value) => { setWorkspaceName(value); if (!slugTouched) setWorkspaceSlug(slugify(value)); }} placeholder="Operating workspace" />
                   <Field label="Slug" value={workspaceSlug} onChange={(value) => { setSlugTouched(true); setWorkspaceSlug(slugify(value)); }} placeholder="operating-workspace" />
                 </div>
-                <Button type="submit" loading={busy} disabled={!workspaceName || !workspaceSlug}>Bind workspace</Button>
+                {sandbox ? <LiveOnlyNotice action="Bind workspace" reason="LockerPhycer POST /api/v1/workspace has no sandbox scope; a workspace created here would be live." /> : null}
+                <Button type="submit" loading={busy} disabled={sandbox || !workspaceName || !workspaceSlug}>{sandbox ? "Bind workspace · Live only" : "Bind workspace"}</Button>
               </form>
             )}
             <p className="text-xs leading-6 text-cos-muted">Authentication established who you are. This step binds the session to a workspace. It grants no capability — authority is only issued by CAPPO at mount time.</p>
@@ -322,7 +330,8 @@ export default function OnboardingPage() {
               <Field label="Safety rules (comma-separated)" value={safetyRules} onChange={setSafetyRules} required={false} />
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" loading={busy} disabled={!boundWorkspaceId || !agentName || !me}>Register agent genome</Button>
+              {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="PGL POST /api/pgl/agents/ writes to the live ledger and has no sandbox scope." /> : null}
+              <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me}>{sandbox ? "Register agent genome · Live only" : "Register agent genome"}</Button>
               {agent ? <Button type="button" onClick={continueStep} disabled={!agent} variant="outline">Continue</Button> : null}
             </div>
             {agent ? (

@@ -68,11 +68,13 @@ describe("Capability OS stage transport", () => {
     ];
 
     for (const path of interlinkPaths) {
-      expect(resolveStageTransportPath("mount", path)).toBe(`/api/capi/interlink${path}`);
+      expect(resolveStageTransportPath("mount", path)).toBe(
+        `/api/capi/interlink/capability${path.replace(/^\/v1\/capability/, "")}`,
+      );
     }
 
     expect(resolveStageTransportPath("execute", "/v1/capability/mounts/mnt_123/actions"))
-      .toBe("/api/capi/interlink/v1/capability/mounts/mnt_123/actions");
+      .toBe("/api/capi/interlink/capability/mounts/mnt_123/actions");
   });
 
   it("keeps authority, execute, terminate, and readback on CAPPO", () => {
@@ -103,7 +105,7 @@ describe("Capability OS stage transport", () => {
       for (const endpoint of stage.endpoints) {
         if (isCapiInterlinkPath(endpoint.path)) {
           expect(resolveStageTransportPath(stage.id, endpoint.path))
-            .toBe(`/api/capi/interlink${endpoint.path}`);
+            .toBe(`/api/capi/interlink/capability${endpoint.path.replace(/^\/v1\/capability/, "")}`);
           continue;
         }
         if (!isCappoProxyPath(endpoint.path)) continue;
