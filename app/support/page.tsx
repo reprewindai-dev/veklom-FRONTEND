@@ -25,7 +25,7 @@ export default function Page() {
         },
         {
           title: "Runtime diagnostics",
-          body: "For service/runtime issues, include the affected Veklom plane when known: BYOS, LockerPhycer, CAPPO, cAPI, PGL/Gnomledger, VLink, VNP or Guardian. Health/reachability information is visible on the public status/proof surfaces without exposing internal credentials.",
+          body: "For service/runtime issues, include the affected Veklom plane when known: BYOS, Identity, Authority, Connections, Evidence, VLink, VNP or Guardian. Health/reachability information is visible on the public status/proof surfaces without exposing internal credentials.",
         },
         {
           title: "Evidence",

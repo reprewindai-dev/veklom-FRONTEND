@@ -7,7 +7,7 @@ export default function Page() {
     <PolicyPage
       eyebrow="Legal & trust"
       title="Sessions exist to prove presence, not widen authority."
-      intro="Veklom uses a small set of session and security cookies for authentication, OAuth integrity and protected navigation. The hard authorization decision remains with the backend and CAPPO; a browser cookie is not a capability grant."
+      intro="Veklom uses a small set of session and security cookies for authentication, OAuth integrity and protected navigation. The hard authorization decision remains with the backend and Veklom's authorization layer; a browser cookie is not a capability grant."
       sections={[
         {
           title: "Backend session cookies",

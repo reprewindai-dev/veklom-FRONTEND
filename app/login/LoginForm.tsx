@@ -75,7 +75,7 @@ export function LoginForm() {
           Backend-issued session
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-[-.055em] text-theme-ink sm:text-5xl">Enter Capability OS.</h1>
-        <p className="mt-4 max-w-md text-sm leading-7 text-theme-inkDim">Authentication resolves against the LockerPhycer identity and session authority. GitHub and password sign-in converge on the same workspace-bound session.</p>
+        <p className="mt-4 max-w-md text-sm leading-7 text-theme-inkDim">Authentication resolves against Veklom's Identity and session authority. GitHub and password sign-in converge on the same workspace-bound session.</p>
       </div>
 
       {error && (

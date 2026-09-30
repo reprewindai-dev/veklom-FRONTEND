@@ -191,7 +191,7 @@ export default function ActivationPage() {
                 <Activity className="h-9 w-9 text-theme-accent" />
                 <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">01 · Discover</div>
                 <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Start with a capability that actually exists.</h2>
-                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Activation asks CAPPO for its live capability-package registry and selects a package that exposes both an allowed read and a blocked action. If none exists, the experience stops instead of inventing one.</p>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Activation asks Veklom's Authority layer for its live capability-package registry and selects a package that exposes both an allowed read and a blocked action. If none exists, the experience stops instead of inventing one.</p>
                 <ActionButton onClick={connect} busy={busy}>{busy ? "Discovering live registry…" : "Discover live capability"}</ActionButton>
               </div>
             )}
@@ -201,7 +201,7 @@ export default function ActivationPage() {
                 <KeyRound className="h-9 w-9 text-theme-accent" />
                 <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">02 · Bind authority</div>
                 <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Make the allowed action smaller than the machine.</h2>
-                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO selected <strong className="text-theme-ink">{capability.title}</strong>. The lease requests one permitted operation and one explicit negative boundary for this workspace.</p>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Authority selected <strong className="text-theme-ink">{capability.title}</strong>. The lease requests one permitted operation and one explicit negative boundary for this workspace.</p>
 
                 <div className="mt-8 grid gap-4 sm:grid-cols-2">
                   <label className="text-xs font-medium text-theme-ink">
@@ -220,7 +220,7 @@ export default function ActivationPage() {
                   <div className="rounded-2xl border border-theme-danger/20 bg-theme-danger/5 p-4"><div className="text-[9px] uppercase tracking-[.18em] text-theme-inkDim">Blocked</div><div className="mt-2 break-all font-mono text-[11px] text-theme-danger">{capability.blocked?.[0]}</div></div>
                 </div>
 
-                <ActionButton onClick={grant} busy={busy}>{busy ? "Requesting bounded lease…" : "Request CAPPO lease"}</ActionButton>
+                <ActionButton onClick={grant} busy={busy}>{busy ? "Requesting bounded lease…" : "Request Authority lease"}</ActionButton>
               </div>
             )}
 
@@ -229,7 +229,7 @@ export default function ActivationPage() {
                 <ShieldAlert className="h-9 w-9 text-theme-danger" />
                 <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">03 · Prove denial</div>
                 <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Attack the boundary before trusting the allow.</h2>
-                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">The same backend-issued lease is deliberately asked to perform <strong className="text-theme-danger">{lease.deniedAction}</strong>. The journey advances only if CAPPO itself returns a denial before consequence.</p>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">The same backend-issued lease is deliberately asked to perform <strong className="text-theme-danger">{lease.deniedAction}</strong>. The journey advances only if Authority itself returns a denial before consequence.</p>
                 <div className="mt-7"><JsonProof value={{ mount_id: lease.mountId, package_ref: lease.packageRef, challenge_action: lease.deniedAction, mount_anchor_id: lease.anchorId ?? null }} /></div>
                 <ActionButton onClick={challenge} busy={busy} danger>{busy ? "Testing negative boundary…" : "Attempt blocked action"}</ActionButton>
               </div>
@@ -240,7 +240,7 @@ export default function ActivationPage() {
                 <ShieldCheck className="h-10 w-10 text-theme-verified" />
                 <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">04 · Governed execution</div>
                 <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">The forbidden action failed. Now use the authority once.</h2>
-                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO returned <strong className="text-theme-ink">{denial.reason}</strong>. The still-bounded lease now executes the permitted operation <strong className="text-theme-verified">{lease.allowedAction}</strong> through the canonical governed path.</p>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Authority returned <strong className="text-theme-ink">{denial.reason}</strong>. The still-bounded lease now executes the permitted operation <strong className="text-theme-verified">{lease.allowedAction}</strong> through the canonical governed path.</p>
                 <div className="mt-7"><JsonProof value={denial} /></div>
                 <ActionButton onClick={execute} busy={busy}>{busy ? "Executing governed operation…" : "Run permitted operation"}</ActionButton>
               </div>
@@ -251,7 +251,7 @@ export default function ActivationPage() {
                 <FileSearch className="h-10 w-10 text-theme-accent" />
                 <div className="mt-8 text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">05 · Inspect evidence</div>
                 <h2 className="mt-4 text-4xl font-semibold leading-[.97] tracking-[-.055em] text-theme-ink md:text-6xl">Execution exists. That still is not proof.</h2>
-                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">CAPPO returned execution ID <strong className="text-theme-ink">{execution.executionId}</strong>. Activation now retrieves the persisted evidence for that exact execution and requires the backend verifier to accept it.</p>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-theme-inkDim">Authority returned execution ID <strong className="text-theme-ink">{execution.executionId}</strong>. Activation now retrieves the persisted evidence for that exact execution and requires the backend verifier to accept it.</p>
                 <div className="mt-7"><JsonProof value={{ execution_id: execution.executionId, run_id: execution.runId ?? null, operation: execution.operation, capability_lease: execution.response.capability_lease ?? null }} /></div>
                 <ActionButton onClick={inspectEvidence} busy={busy}>{busy ? "Verifying persisted evidence…" : "Inspect persisted evidence"}</ActionButton>
               </div>

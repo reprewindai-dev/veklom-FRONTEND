@@ -23,7 +23,7 @@ export default function LoginPage() {
           <section className="hidden lg:block">
             <StageLabel>Governed entry</StageLabel>
             <h2 className="mt-7 max-w-2xl text-6xl font-semibold leading-[.92] tracking-[-.06em] text-theme-ink xl:text-7xl">Your session opens the workspace. It does not widen authority.</h2>
-            <p className="mt-7 max-w-xl text-base leading-8 text-theme-inkDim">Veklom keeps identity, access and consequence authority as separate layers. Signing in establishes who you are and which workspace you belong to. CAPPO still decides what any machine execution is allowed to cause.</p>
+            <p className="mt-7 max-w-xl text-base leading-8 text-theme-inkDim">Veklom keeps identity, access and consequence authority as separate layers. Signing in establishes who you are and which workspace you belong to. Veklom's authorization layer still decides what any machine execution is allowed to cause.</p>
 
             <div className="mt-12 max-w-xl overflow-hidden rounded-[28px] border border-theme-border bg-theme-surface/75 backdrop-blur">
               {rails.map(([title, body], index) => (
