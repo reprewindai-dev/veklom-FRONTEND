@@ -13,9 +13,9 @@ const groups = [
     title: "Capability OS",
     links: [
       
-      ["/lockerphycer", "LockerPhycer"],
-      ["/cappo", "CAPPO"],
-      ["/capi", "cAPI"],
+      ["/lockerphycer", "Identity"],
+      ["/cappo", "Authority"],
+      ["/capi", "Connections"],
       ["/vlink", "VLink"],
       ["/guardian", "Guardian"],
     ],
@@ -23,7 +23,7 @@ const groups = [
   {
     title: "Evidence & Network",
     links: [
-      ["/pgl", "PGL / Gnomledger"],
+      ["/pgl", "Evidence"],
       ["/eee", "EEE"],
       ["/vnp", "VNP"],
       ["/vcgb", "VCGB"],

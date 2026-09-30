@@ -21,9 +21,9 @@ const footerGroups = [
     links: [
       ["/get", "Get Veklom"],
       
-      ["/lockerphycer", "LockerPhycer"],
-      ["/cappo", "CAPPO"],
-      ["/capi", "cAPI"],
+      ["/lockerphycer", "Identity"],
+      ["/cappo", "Authority"],
+      ["/capi", "Connections"],
       ["/vlink", "VLink"],
       ["/guardian", "Guardian"],
     ],
@@ -31,7 +31,7 @@ const footerGroups = [
   {
     title: "Evidence & Network",
     links: [
-      ["/pgl", "PGL / Gnomledger"],
+      ["/pgl", "Evidence"],
       ["/eee", "EEE"],
       ["/vnp", "VNP"],
       ["/vcgb", "VCGB"],
