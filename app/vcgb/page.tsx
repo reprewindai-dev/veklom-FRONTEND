@@ -13,7 +13,7 @@ export default function Page() {
       body="VCGB is Veklom's adversarial capability-governance benchmark concept: a proof instrument for testing whether a system makes the correct decision and contains the real-world effect under hostile inputs. It is not presented as a core production runtime plane."
       role="Adversarial benchmark / conformance instrument"
       state="SPEC"
-      stateDetail="The frontend and documentation surface exist, but the current canonical runtime repositories do not expose a VCGB service with the same source/runtime depth as CAPPO, VNP, EEE, PGL or LockerPhycer. Until that changes, VCGB belongs in the proof lab, not the live runtime diagram."
+      stateDetail="The frontend and documentation surface exist, but the current canonical runtime repositories do not expose a VCGB service with the same source/runtime depth as Authority, VNP, EEE, Evidence or Identity. Until that changes, VCGB belongs in the proof lab, not the live runtime diagram."
       owns={[
         "The benchmark vocabulary for evaluating ALLOW / DENY and effect-boundary correctness.",
         "Adversarial scenarios that can be applied to a capability-governance implementation.",
@@ -22,7 +22,7 @@ export default function Page() {
       doesNotOwn={[
         "VCGB is not a production execution service and does not sit in the consequence path.",
         "A benchmark page is not proof that every scenario has been executed against the current deployment.",
-        "CAPPO, LockerPhycer, VLink, VNP and EEE each keep their own runtime/proof responsibilities.",
+        "Authority, Identity, VLink, VNP and EEE each keep their own runtime/proof responsibilities.",
       ]}
       interfaces={[
         { label: "Current classification", value: "Benchmark / specification surface" },

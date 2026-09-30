@@ -10,10 +10,10 @@ export default function Page() {
     <SystemLanding
       eyebrow="Execution Evidence Envelope"
       title="A portable record of what the governed execution actually became."
-      body="EEE is the execution-evidence artifact, not an authorization token. CAPPO builds a signed envelope only after the authority path has done its job, binding the execution, authority context, policy decision, commitments, observed effects and verification material into one portable record."
+      body="EEE is the execution-evidence artifact, not an authorization token. Veklom's Authority layer builds a signed envelope only after the authority path has done its job, binding the execution, authority context, policy decision, commitments, observed effects and verification material into one portable record."
       role="Portable signed execution-evidence format"
       state="PROOF"
-      stateDetail="EEE-Core v0.1.0 is implemented in CAPPO with RFC 8785 canonicalization, SHA-256/SHA-384 envelope roots, Ed25519 issuer signatures and an offline verifier that returns VALID, VALID_WITH_UNRESOLVED_REFS, INVALID or UNSUPPORTED_VERSION."
+      stateDetail="EEE is implemented as a signed, tamper-evident record that anyone holding the trusted public key can verify offline. The technical specification and verifier details are published at veklom.dev."
       owns={[
         "A deterministic envelope over an already-gated execution and its evidence fields.",
         "Issuer signature verification against caller-supplied trusted public keys.",
@@ -23,7 +23,7 @@ export default function Page() {
       doesNotOwn={[
         "EEE cannot authorize or route an execution; the implementation deliberately exposes no execution entry point.",
         "An envelope does not invent unknown effects, provider attempts or revocation state just to look complete.",
-        "PGL/Gnomledger is the durable provenance ledger; EEE is the portable execution record that can be stored or verified elsewhere.",
+        "Evidence is the durable, tamper-evident record; EEE is the portable execution record that can be stored or verified elsewhere.",
       ]}
       interfaces={[
         { label: "Version", value: "EEE-Core v0.1.0" },
@@ -33,9 +33,9 @@ export default function Page() {
       ]}
       proofNote="EEE is still part of Veklom and it is implemented. Its job is narrower than the old marketing page implied: carry signed evidence about an already-governed execution without pretending the evidence artifact itself granted the authority."
       primaryHref="/pgl"
-      primaryLabel="See durable provenance"
-      secondaryHref="/proof"
-      secondaryLabel="Inspect execution proof"
+      primaryLabel="See durable evidence"
+      secondaryHref="https://veklom.dev"
+      secondaryLabel="Technical proof at veklom.dev"
     />
   );
 }

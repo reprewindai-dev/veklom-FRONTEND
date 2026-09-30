@@ -19,14 +19,14 @@ const guides = [
   {
     n: "02",
     title: "Run live Activation",
-    body: "Discover a capability from CAPPO, request a bounded lease, prove a real denial, execute the allowed operation, then inspect persisted evidence.",
+    body: "Discover a capability from Authority, request a bounded lease, prove a real denial, execute the allowed operation, then inspect persisted evidence.",
     href: "/activate",
     cta: "Run Activation",
   },
   {
     n: "03",
     title: "Inspect runtime truth",
-    body: "Observe BYOS, LockerPhycer, CAPPO, cAPI and Gnomledger/PGL from the public proof and machine surfaces without synthetic health state.",
+    body: "Observe the BYOS runtime, Identity, Authority, Connections and Evidence from the public proof and machine surfaces without synthetic health state.",
     href: "/proof",
     cta: "Inspect proof",
   },
@@ -41,10 +41,10 @@ const guides = [
 
 const concepts = [
   ["BYOS Runtime", "Workspace, tenant and usable execution substrate."],
-  ["LockerPhycer", "Security, identity and governed host-execution boundary."],
-  ["CAPPO", "Fail-closed consequence authorization."],
-  ["cAPI", "Cross-service interlink and connection path."],
-  ["Gnomledger / PGL", "Durable evidence and provenance."],
+  ["Identity", "Security, identity and governed host-execution boundary."],
+  ["Authority", "Fail-closed authorization for consequential actions."],
+  ["Connections", "Connects to the systems you already use."],
+  ["Evidence", "Durable, tamper-evident evidence you can verify independently."],
   ["VLink", "Portable, scoped connection primitive."],
   ["Guardian", "Policy-bounded recovery plane."],
 ];

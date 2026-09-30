@@ -76,7 +76,7 @@ export default function ConformancePage() {
             <div className="rounded-[30px] border border-theme-border bg-theme-surface p-7 md:p-10">
               <StageLabel>Deployment truth</StageLabel>
               <h2 className="mt-6 text-3xl font-semibold leading-[1.02] tracking-[-.045em] text-theme-ink md:text-5xl">A healthy plane does not certify the whole system.</h2>
-              <p className="mt-6 text-sm leading-7 text-theme-inkDim">BYOS Runtime, LockerPhycer, CAPPO, cAPI, Gnomledger/PGL, VLink and Guardian have separate responsibilities. The live proof page reports individual runtime observations rather than collapsing them into one global green badge.</p>
+              <p className="mt-6 text-sm leading-7 text-theme-inkDim">BYOS Runtime, Identity, Authority, Connections, Evidence, VLink and Guardian have separate responsibilities. The live proof page reports individual runtime observations rather than collapsing them into one global green badge.</p>
             </div>
 
             <div className="rounded-[30px] border border-theme-border bg-theme-surface p-7 md:p-10">

@@ -24,7 +24,7 @@ const demos = [
   {
     id: "network-lease",
     title: "NetworkLease / Tunnel Demo",
-    description: "CAPPO authorizes a NetworkLease. A Cloudflare Tunnel hostname exists because the lease exists. Revoke the lease, the hostname becomes DENY.",
+    description: "Veklom authorizes a NetworkLease. A Cloudflare Tunnel hostname exists because the lease exists. Revoke the lease, the hostname becomes DENY.",
     badge: "LAB",
     badgeColor: "text-theme-warn border-theme-warn/40 bg-theme-warn/10",
     href: "#",

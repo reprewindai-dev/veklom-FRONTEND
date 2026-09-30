@@ -9,8 +9,8 @@ export const metadata = {
 };
 
 const boundaries = [
-  ["Authority", "Application UI and connection metadata do not mint consequence authority. CAPPO remains the execution authorization boundary."],
-  ["Host execution", "LockerPhycer is designed to keep sensitive host execution controls out of ordinary application containers."],
+  ["Authority", "Application UI and connection metadata do not mint consequence authority. Veklom's Authority layer remains the execution authorization boundary."],
+  ["Host execution", "Veklom's Identity layer is designed to keep sensitive host execution controls out of ordinary application containers."],
   ["Recovery", "Guardian recovery actions are bounded by declared recovery authority rather than unrestricted host automation."],
   ["Evidence", "A health response or configured integration is not promoted into cryptographic or consequence proof."],
 ];

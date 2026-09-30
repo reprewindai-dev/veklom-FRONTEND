@@ -18,28 +18,28 @@ const planes = [
   },
   {
     id: "02",
-    name: "LockerPhycer",
+    name: "Identity",
     role: "Security, identity and execution-host boundary",
-    body: "Keeps sensitive host execution authority out of ordinary application containers. Its governed cell-host path verifies signed authority, immutable runtime identity, replay fencing and isolation requirements before host-level execution.",
+    body: "Keeps sensitive host execution authority out of ordinary application containers. Before anything runs at host level, it checks for signed authorization, a fixed runtime identity, replay protection and isolation.",
     emphasis: true,
   },
   {
     id: "03",
-    name: "CAPPO",
-    role: "Consequence authorization",
-    body: "The fail-closed decision boundary. CAPPO determines whether a requested machine consequence fits the authority that was actually granted.",
+    name: "Authority",
+    role: "Authorization for consequential actions",
+    body: "The fail-closed decision point. Authority determines whether a requested machine action fits the authorization that was actually granted, before it takes effect.",
   },
   {
     id: "04",
-    name: "cAPI",
-    role: "Cross-service interlink",
-    body: "The connection fabric between Veklom services and external capability surfaces. It carries integration without becoming the source of execution authority.",
+    name: "Connections",
+    role: "Connects to the systems you already use",
+    body: "Sits next to what you already run and connects Veklom to your existing services, with no rip-and-replace. It carries the integration without becoming the source of execution authority.",
   },
   {
     id: "05",
-    name: "Gnomledger / PGL",
-    role: "Evidence and provenance",
-    body: "Durable evidence state. Execution outcomes, provenance and reconciliation belong here instead of disappearing with the machine that performed the work.",
+    name: "Evidence",
+    role: "Tamper-evident evidence and history",
+    body: "Durable, tamper-evident evidence you can verify independently. Execution outcomes, history and reconciliation are kept here instead of disappearing with the machine that performed the work.",
   },
   {
     id: "06",
@@ -59,9 +59,9 @@ const flow = [
   ["Need", "A machine or operator declares the intended work."],
   ["Identity", "A temporary execution identity is established."],
   ["Authority", "Policy, scope, budget and time become an explicit capability boundary."],
-  ["Execution", "BYOS and LockerPhycer provide the runtime and host boundary."],
-  ["Consequence", "CAPPO controls whether the requested effect may cross into the real system."],
-  ["Evidence", "Gnomledger / PGL preserve what actually happened."],
+  ["Execution", "The BYOS runtime and the Identity boundary provide where work runs and what protects the host."],
+  ["Consequence", "Authorization decides whether the requested effect may cross into the real system."],
+  ["Evidence", "A tamper-evident record preserves what actually happened."],
 ];
 
 export default function ArchitecturePage() {
@@ -74,7 +74,7 @@ export default function ArchitecturePage() {
           <PremiumPageIntro
             eyebrow="System architecture"
             title="Veklom is a stack of boundaries, not a single server."
-            body="The Capability OS is built from distinct runtime planes with different authority. BYOS and LockerPhycer are central because one provides the usable execution substrate and the other protects the host-level execution boundary."
+            body="The Capability OS is built from distinct runtime planes with different authority. The BYOS runtime and Identity are central because one provides the usable execution substrate and the other protects the host-level execution boundary."
           />
         </section>
 
