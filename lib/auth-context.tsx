@@ -13,7 +13,8 @@ interface AuthState {
   error?: string;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<{ autoSignedIn: boolean }>;
-  loginWithGithub: () => void;
+  /** Optional fallback destination used when the page URL carries no returnTo. */
+  loginWithGithub: (fallbackReturnTo?: string) => void;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -140,10 +141,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { autoSignedIn: false };
   }, []);
 
-  const loginWithGithub = useCallback(() => {
+  const loginWithGithub = useCallback((fallbackReturnTo?: string) => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const next = safeReturnTo(params.get("returnTo"), `${BASE_PATH}/os/onboarding`);
+    // Guard: this is also wired directly as an onClick handler, which passes an event.
+    const fallback =
+      typeof fallbackReturnTo === "string" ? safeReturnTo(fallbackReturnTo, `${BASE_PATH}/os/onboarding`) : `${BASE_PATH}/os/onboarding`;
+    const next = safeReturnTo(params.get("returnTo"), fallback);
     window.location.href = `${BASE_PATH}/api/auth/github/login?next=${encodeURIComponent(next)}`;
   }, []);
 

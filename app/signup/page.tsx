@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from"react";
+import { useEffect, useState } from"react";
 import Link from"next/link";
-import { useRouter } from"next/navigation";
 import { useAuth } from"@/lib/auth-context";
+import { FUNNEL_RETURN_TO, safeRelativePath } from"@/lib/funnel";
 import { Button, ErrorBox, SuccessBox, GithubButton } from"@/components/ui";
 import { AuthLayout } from"@/components/AuthLayout";
 
@@ -11,7 +11,13 @@ const MIN_PW = 8;
 
 export default function SignupPage() {
  const { signup, loginWithGithub } = useAuth();
- const router = useRouter();
+ // Where the new account lands after verification + sign-in. Only a same-origin
+ // relative path is accepted; default is VLink, the first point of access.
+ const [returnTo, setReturnTo] = useState(FUNNEL_RETURN_TO);
+ useEffect(() => {
+ setReturnTo(safeRelativePath(new URL(window.location.href).searchParams.get("returnTo")));
+ }, []);
+ const loginHref = `/login?returnTo=${encodeURIComponent(returnTo)}`;
  const [email, setEmail] = useState("");
  const [pw, setPw] = useState("");
  const [name, setName] = useState("");
@@ -36,7 +42,8 @@ export default function SignupPage() {
  setErr("Please accept all required agreements below.");
  return;
  }
- loginWithGithub();
+ // A returnTo in the page URL is forwarded as next=; otherwise VLink.
+ loginWithGithub(returnTo);
  }
 
  async function onSubmit(e: React.FormEvent) {
@@ -61,14 +68,11 @@ export default function SignupPage() {
  })
  }).catch(console.error);
 
- const { autoSignedIn } = await signup(email, pw, name || undefined);
- if (autoSignedIn) {
- setOk("Account created. Taking you to your workspace onboarding...");
- router.replace("/os/onboarding");
- } else {
- setOk("Account created. Please sign in to continue.");
- setTimeout(() => router.replace("/login"), 1400);
- }
+ // LockerPhycer never auto-signs-in email accounts and blocks password
+ // login until the address is verified, so the next step is the inbox.
+ await signup(email, pw, name || undefined);
+ setOk("Check your email to verify your account — the link expires in 30 minutes.");
+ setBusy(false);
  } catch (e) {
  setErr((e as Error).message);
  setBusy(false);
@@ -79,7 +83,7 @@ export default function SignupPage() {
  <AuthLayout
  eyebrow="14-day free trial"
  title="Create your account"
- subtitle="Spin up a governed AI workspace in minutes. No credit card required to start."
+ subtitle="Start your 14-day full-access trial of Capability OS. Connect your first system with VLink in minutes."
  >
  {err && <ErrorBox message={err} className="mb-4" />}
  
@@ -153,7 +157,7 @@ export default function SignupPage() {
  </form>
 
  <p className="text-xs text-ink-400 mt-6 text-center">
- Already have an account? <Link href="/login" className="text-brand-400 hover:underline">Sign in</Link>
+ Already have an account? <Link href={loginHref} className="text-brand-400 hover:underline">Sign in</Link>
  </p>
  </AuthLayout>
  );
