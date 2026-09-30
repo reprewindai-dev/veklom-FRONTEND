@@ -9,26 +9,34 @@ import { CapabilitySearch } from "@/components/cos/CapabilitySearch";
 import { BeaconDiscovery } from "@/components/cos/BeaconDiscovery";
 import { ConsequenceRing } from "@/components/cos/ConsequenceRing";
 import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
+import { SandboxScenarios } from "@/components/cos/SandboxScenarios";
+import { environmentStorageSuffix, SANDBOX_COPY, useSandboxMode } from "@/lib/cos/sandbox";
 
 export default function CapabilityHome() {
   const reduceMotion = useReducedMotion();
+  const sandbox = useSandboxMode();
+  const recentKey = `veklom.cos.recent-capabilities${environmentStorageSuffix(sandbox)}`;
   const [query, setQuery] = useState("");
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [holdingAuthority, setHoldingAuthority] = useState(0);
 
   useEffect(() => {
     try {
-      setRecentIds(JSON.parse(localStorage.getItem("veklom.cos.recent-capabilities") || "[]"));
+      setRecentIds(JSON.parse(localStorage.getItem(recentKey) || "[]"));
     } catch {
       setRecentIds([]);
     }
     setHoldingAuthority(readSessionCapabilityLease() ? 1 : 0);
-  }, []);
+  }, [recentKey]);
 
   const openCapability = (capability: Capability) => {
     const next = [capability.id, ...recentIds.filter((id) => id !== capability.id)].slice(0, 6);
     setRecentIds(next);
-    localStorage.setItem("veklom.cos.recent-capabilities", JSON.stringify(next));
+    try {
+      localStorage.setItem(recentKey, JSON.stringify(next));
+    } catch {
+      // Storage may be unavailable in a restricted browser context.
+    }
   };
 
   const filtered = useMemo(
@@ -56,14 +64,22 @@ export default function CapabilityHome() {
           </p>
         </div>
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cos-steel">
-          {capabilities.length} in catalog · {capabilities.filter((capability) => capability.mountState === "Mounted").length} mounted ·{" "}
-          <span className={holdingAuthority ? "text-cos-warn" : undefined}>{holdingAuthority} holding authority</span>
+          {capabilities.length} in catalog ·{" "}
+          <span className={holdingAuthority ? "text-cos-warn" : undefined} title="Session-held CAPPO mount in this environment">{holdingAuthority} holding authority ({sandbox ? "sandbox" : "live"})</span>
         </p>
       </motion.div>
 
       <ConsequenceRing subject="What this workspace can currently prove" />
 
       <CapabilitySearch value={query} onChange={setQuery} />
+      {sandbox ? (
+        <div data-testid="sandbox-strip" className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-cos-warn/40 bg-cos-warn/[0.08] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-cos-warn">
+          {SANDBOX_COPY.strip.map((item, index) => (
+            <span key={item} className="flex items-center gap-3">{index > 0 ? <span aria-hidden="true">|</span> : null}{item}</span>
+          ))}
+        </div>
+      ) : null}
+      <SandboxScenarios />
       <BeaconDiscovery />
 
       <div className="mt-12">
@@ -79,7 +95,7 @@ export default function CapabilityHome() {
       </div>
 
       <div className="mt-12">
-        <div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Mounted capabilities</h2></div>
+        <div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">{sandbox ? "Sandbox capabilities" : "Mounted capabilities"}</h2></div>
         {mounted.length ? (
           <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {mounted.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
