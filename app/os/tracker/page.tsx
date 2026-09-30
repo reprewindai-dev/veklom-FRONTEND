@@ -9,6 +9,8 @@ import { Pillar } from "@/components/cos/SectionPillars";
 import { JsonPanel } from "@/components/cos/StageParts";
 import { UnknownLink } from "@/components/cos/StageCollection";
 import { VeklomActivityCue, type ActivityCondition } from "@/components/cos/VeklomActivityCue";
+import { EnvironmentRows, rowsFromPayload } from "@/components/cos/EnvironmentRows";
+import { useSandboxMode } from "@/lib/cos/sandbox";
 
 function runCondition(value: Record<string, unknown>): ActivityCondition | undefined {
   const raw = value.status ?? value.state ?? value.outcome;
@@ -47,6 +49,8 @@ export default function TrackerPage() {
     for (const endpoint of stage.endpoints) if (endpoint.method === "GET") void data.call(endpoint);
   }, [data.call, stage.endpoints]);
   const runs = runRows(data.payloads["GET /v1/runs"]);
+  const ledgerRows = rowsFromPayload(data.payloads["GET /v1/audit/ledger"]);
+  const sandbox = useSandboxMode();
 
   return (
     <>
@@ -57,10 +61,10 @@ export default function TrackerPage() {
           </Pillar>
         </div>
         <Pillar title="Telemetry" proof="Needs proof">
-          {runs.length ? <div className="space-y-2">{runs.map((run, index) => { const condition = runCondition(run); const id = run.run_id ?? run.id ?? `run-${index}`; return <div key={`${String(id)}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-cos-border bg-cos-bg/35 px-3 py-2"><span className="font-mono text-xs text-cos-text">{String(id)}</span>{condition ? <VeklomActivityCue kind="execution" condition={condition} size={18} showCaption={false} /> : null}</div>; })}</div> : <JsonPanel value={data.payloads["GET /v1/runs"]} empty="No execution runs returned — GET /v1/runs" />}
+          {runs.length ? <EnvironmentRows rows={runs} empty="No execution runs in this environment — GET /v1/runs" idOf={(run, index) => String(run.run_id ?? run.id ?? `run-${index}`)} extra={(run) => { const condition = runCondition(run); return condition ? <VeklomActivityCue kind="execution" condition={condition} size={18} showCaption={false} /> : null; }} /> : sandbox ? <p className="text-xs text-cos-muted">No sandbox-scoped execution runs returned — GET /v1/runs</p> : <JsonPanel value={data.payloads["GET /v1/runs"]} empty="No execution runs returned — GET /v1/runs" />}
         </Pillar>
         <Pillar title="Authority" proof="Needs proof"><UnknownLink label="Authorization ↔ Execution" detail="a run record carrying the authorization decision or execution binding" /></Pillar>
-        <Pillar title="Evidence" proof="Needs proof"><JsonPanel value={data.payloads["GET /v1/audit/ledger"]} empty="No ledger returned — GET /v1/audit/ledger" /></Pillar>
+        <Pillar title="Evidence" proof="Needs proof">{ledgerRows ? <EnvironmentRows rows={ledgerRows} empty="No ledger entries in this environment — GET /v1/audit/ledger" idOf={(row, index) => String(row.id ?? row.event_id ?? row.entry_hash ?? row.hash ?? `entry-${index}`)} /> : sandbox ? <p className="text-xs text-cos-muted">No sandbox-scoped ledger entries returned — GET /v1/audit/ledger</p> : <JsonPanel value={data.payloads["GET /v1/audit/ledger"]} empty="No ledger returned — GET /v1/audit/ledger" />}</Pillar>
         <Pillar title="Drift" proof="Needs proof"><div className="space-y-3">{sources.map((source) => <UnknownLink key={source.path} label={source.label} detail={source.detail} />)}</div></Pillar>
       </SectionShell>
       <div className="mx-auto max-w-[1500px] px-5 pb-8 lg:px-10"><Link href="/os/computeless" className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-steel hover:text-cos-accent">Runtime diagnostics ↗</Link></div>
