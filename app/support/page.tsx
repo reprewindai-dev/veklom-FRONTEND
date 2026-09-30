@@ -17,6 +17,13 @@ export default function Page() {
           ],
         },
         {
+          title: "Billing",
+          items: [
+            "Billing, subscription, cancellation and refund questions: billing@veklom.com",
+            "Include your account email and, if you have one, the Stripe receipt or invoice number. Never send full card numbers by email.",
+          ],
+        },
+        {
           title: "Security",
           items: [
             "Credential exposure, webhook abuse, suspected authorization bypass, evidence tampering or security vulnerabilities: security@veklom.com",
@@ -30,6 +37,10 @@ export default function Page() {
         {
           title: "Evidence",
           body: "When reporting an execution or recovery discrepancy, provide non-secret execution IDs, receipt/event IDs, timestamps and the expected vs observed outcome. Avoid copying full request bodies or sensitive provider data unless explicitly requested through a secure support channel.",
+        },
+        {
+          title: "Policies",
+          body: "How we handle your information is described in the Privacy Policy at veklom.com/privacy. Plans, billing, cancellation and refunds are covered by the Terms of Service at veklom.com/terms.",
         },
       ]}
       note="Support will never ask you to paste private keys, OAuth client secrets, bearer tokens or production credentials into a public issue, screenshot or chat."

@@ -12,21 +12,21 @@ export default function Page() {
         {
           title: "Backend session cookies",
           items: [
-            "access_token — HttpOnly backend-issued session token used after authenticated flows such as GitHub OAuth.",
-            "refresh_token — HttpOnly backend-issued token used to continue an authenticated session according to backend policy.",
+            "veklom_session — HttpOnly, Secure, SameSite=Lax session token set after password or GitHub sign-in; expires after 7 days.",
+            "veklom_github_token — short-lived (60 seconds) Secure, SameSite=Lax cookie that hands the session to the web app after GitHub sign-in.",
           ],
         },
         {
           title: "Navigation marker",
-          body: "The frontend may use a `veklom.session` presence marker after local token login so top-level browser navigation can reach an authenticated surface. Middleware treats this only as a presence signal; backend validation still decides whether the session is legitimate.",
+          body: "The frontend may use a `veklom.session` presence marker after local token login so top-level browser navigation can reach an authenticated surface, and the web app may keep a copy of the session token in browser storage. Middleware treats the marker only as a presence signal; backend validation still decides whether the session is legitimate.",
         },
         {
           title: "OAuth integrity",
-          body: "Short-lived OAuth state/return-path cookies may be used to bind a GitHub authorization response to the browser flow that initiated it and to prevent state substitution or open-redirect behavior.",
+          body: "GitHub sign-in uses a signed, time-limited OAuth state value to bind the authorization response to the flow that initiated it, and only same-site return paths are accepted, to prevent state substitution or open-redirect behavior.",
         },
         {
-          title: "Non-essential tracking",
-          body: "This notice does not authorize hidden advertising or analytics cookies. If non-essential analytics or marketing technologies are introduced later, their use and consent requirements should be disclosed separately before deployment.",
+          title: "Optional analytics",
+          body: "The site includes support for Google Analytics, which sets analytics cookies only after you opt in and stays off when your browser sends a Global Privacy Control signal. Advertising storage and personalization are always denied. You can change your choice at veklom.com/privacy-choices. See the Privacy Policy at veklom.com/privacy for more.",
         },
       ]}
       note="Cookie presence is never treated as permission to spend money, mutate repositories, change infrastructure or perform another consequence. Session authentication and consequence authority remain separate boundaries."
