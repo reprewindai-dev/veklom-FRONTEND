@@ -88,6 +88,23 @@ export default function PrivacyChoicesPage() {
                 <div className="rounded-2xl border border-theme-border bg-theme-bg p-5">
                   <div className="flex items-start justify-between gap-5">
                     <div>
+                      <h2 className="text-lg font-semibold tracking-[-.025em] text-theme-ink">Veklom visit measurement (no cookies)</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-inkDim">Veklom counts page views and a few named steps (such as starting signup) with its own tool: no cookies, no fingerprinting, no third party, no IP address stored. A random identifier for this browser tab, kept in session storage until the tab closes, connects one visit&apos;s pages. It is not created when your browser sends Global Privacy Control or Do Not Track, when optional analytics is saved as off, or in the EEA, the UK and China unless optional analytics is on; then only anonymous page counts are sent.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => save(false)}
+                      disabled={savedAt !== null && !analytics}
+                      className="shrink-0 rounded-full border border-theme-border bg-theme-surface px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.14em] text-theme-ink disabled:cursor-default disabled:text-theme-inkDim"
+                    >
+                      {savedAt !== null && !analytics ? "Page counts only" : "Limit to page counts"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-theme-border bg-theme-bg p-5">
+                  <div className="flex items-start justify-between gap-5">
+                    <div>
                       <h2 className="text-lg font-semibold tracking-[-.025em] text-theme-ink">Sale / sharing for targeted advertising</h2>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-inkDim">This preference is fixed off. The current public privacy runtime does not enable sale/share tracking or cross-context behavioral advertising.</p>
                     </div>

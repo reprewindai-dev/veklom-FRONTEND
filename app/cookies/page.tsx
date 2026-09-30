@@ -25,6 +25,10 @@ export default function Page() {
           body: "GitHub sign-in uses a signed, time-limited OAuth state value to bind the authorization response to the flow that initiated it, and only same-site return paths are accepted, to prevent state substitution or open-redirect behavior.",
         },
         {
+          title: "Visit measurement without cookies",
+          body: "Veklom's own first-party visit measurement sets no cookies and reads none, and sends nothing to a third party. When it is allowed, it keeps a random identifier for the current browser tab in session storage under veklom.analytics.sid, with three small flags: veklom.analytics.landed (the first page of this visit was counted), veklom.analytics.linked (this tab was linked to your workspace after you signed in) and veklom.analytics.github_pending (a GitHub sign-in started in this tab). Session storage belongs to one tab and is cleared when the tab closes. Nothing is stored, and only anonymous page counts are sent, when your browser sends Global Privacy Control or Do Not Track, when you choose \"Essential only\" or save optional analytics as off, or in the EEA, the UK and China until you turn optional analytics on at veklom.com/privacy-choices.",
+        },
+        {
           title: "Optional analytics",
           body: "The site includes support for Google Analytics, which sets analytics cookies only after you opt in and stays off when your browser sends a Global Privacy Control signal. Advertising storage and personalization are always denied. You can change your choice at veklom.com/privacy-choices. See the Privacy Policy at veklom.com/privacy for more.",
         },

@@ -6,6 +6,7 @@ import { useAuth } from"@/lib/auth-context";
 import { FUNNEL_RETURN_TO, safeRelativePath } from"@/lib/funnel";
 import { Button, ErrorBox, SuccessBox, GithubButton } from"@/components/ui";
 import { AuthLayout } from"@/components/AuthLayout";
+import { track, trackGithubSignupClicked } from"@/lib/analytics/tracker";
 
 const MIN_PW = 8;
 
@@ -38,6 +39,7 @@ export default function SignupPage() {
  const allAccepted = agreedTerms && agreedPrivacy && agreedAUP && agreedGithubLink && agreedGithubNoBlankCheck && agreedDeviceFlow;
 
  function handleGithub() {
+ trackGithubSignupClicked(allAccepted);
  if (!allAccepted) {
  setErr("Please accept all required agreements below.");
  return;
@@ -58,6 +60,7 @@ export default function SignupPage() {
  return;
  }
  setBusy(true);
+ track("signup_submitted");
  try {
  await fetch("/api/auth/acceptance", {
  method: "POST",
@@ -87,7 +90,7 @@ export default function SignupPage() {
  >
  {err && <ErrorBox message={err} className="mb-4" />}
  
- <div className="space-y-3 mb-6 p-4 border border-border rounded bg-surface/50 text-xs text-ink-400">
+ <div data-analytics-form="signup" className="space-y-3 mb-6 p-4 border border-border rounded bg-surface/50 text-xs text-ink-400">
  <p className="font-semibold text-ink">Required Agreements & Acknowledgements</p>
  
  <label className="flex items-start gap-2 cursor-pointer">
@@ -132,7 +135,7 @@ export default function SignupPage() {
  <span className="h-px flex-1 bg-border" />
  </div>
 
- <form onSubmit={onSubmit} className="space-y-4">
+ <form onSubmit={onSubmit} data-analytics-form="signup" className="space-y-4">
  <div>
  <label className="text-xs text-ink-400">Name</label>
  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className="input mt-1.5" />

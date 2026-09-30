@@ -9,6 +9,7 @@ import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
 import AmbientIntervention from "@/components/ambient/AmbientIntervention";
 import DegradedBanner from "@/components/DegradedBanner";
 import PrivacyRuntime from "@/components/privacy/PrivacyRuntime";
+import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -118,6 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {children}
               </div>
               <AmbientIntervention />
+              <AnalyticsTracker />
             </AuthProvider>
           </WebMCPProvider>
         </ThemeProvider>
