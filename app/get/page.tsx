@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { useVeklomInstall } from "@/components/acquisition/PwaInstallBridge";
+import { SIGNUP_URL } from "@/lib/funnel";
 
 const ACQUISITION_SESSION_KEY = "veklom_acquisition_prompt_v2";
 
@@ -54,7 +55,7 @@ export default function GetVeklomPage() {
         const accepted = await install();
         if (accepted) {
           markAcquisitionStarted();
-          router.push("/signup");
+          router.push(SIGNUP_URL);
         }
       } finally {
         setInstalling(false);
@@ -63,7 +64,7 @@ export default function GetVeklomPage() {
     }
 
     markAcquisitionStarted();
-    router.push("/signup");
+    router.push(SIGNUP_URL);
   }
 
   return (
