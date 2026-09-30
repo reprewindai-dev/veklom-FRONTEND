@@ -25,8 +25,17 @@ describe("brand surfaces", () => {
   });
 
   it("keeps the existing branded cards scoped to their intended surfaces", () => {
-    expect(read("app/layout.tsx")).toContain("/images/veklom-logo-m2m.jpg");
+    expect(read("app/layout.tsx")).toContain("brandShareMetadata");
+    expect(read("app/vlink/layout.tsx")).toContain('brandShareMetadata("vlink"');
     expect(read("app/os/layout.tsx")).toContain("/og-capability-os.jpg");
+  });
+
+  it("ships a 1200x630 share card, 32px favicon and 180px touch icon per product", () => {
+    for (const brand of ["veklom", "capability-os", "vlink"]) {
+      expect(pngDimensions(`public/brand/og/${brand}-og-1200x630.png`)).toEqual([1200, 630]);
+      expect(pngDimensions(`public/brand/og/${brand}-favicon-32.png`)).toEqual([32, 32]);
+      expect(pngDimensions(`public/brand/og/${brand}-apple-touch-180.png`)).toEqual([180, 180]);
+    }
   });
 
   it("publishes shield-derived icon sizes", () => {

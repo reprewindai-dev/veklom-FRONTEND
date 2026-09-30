@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { BRANDS, DEFAULT_ORIGIN, brandForHost, brandShareMetadata, originFromHost } from "@/lib/brandMetadata";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -15,15 +17,14 @@ const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 const TITLE = "Veklom - Capability OS for Governed Machine Action";
 const DESC = "Mount a capability. Bind it to identity, policy, budget, and time. Execute through a governed boundary. Preserve evidence after the machine disappears.";
 
-const OG_IMAGE = "/images/veklom-logo-m2m.jpg";
-const TWITTER_IMAGE = "/images/veklom-logo-m2m.jpg";
-
-export const metadata: Metadata = {
-  metadataBase: new URL("https://veklom.com"),
+const baseMetadata: Metadata = {
+  metadataBase: new URL(DEFAULT_ORIGIN),
   applicationName: "Veklom",
   title: {
     default: TITLE,
-    template: "%s | Veklom",
+    // Child titles already carry their own "| Veklom" / "· Veklom" suffix; the
+    // old "%s | Veklom" template produced "VLink | Veklom | Veklom".
+    template: "%s",
   },
   description: DESC,
   keywords: ["Veklom", "Sovereign AI", "AI governance", "control plane", "private AI", "compliance", "AI routing", "Agentic Governance", "API benchmarking", "Runtime authority", "physics-based SLAs"],
@@ -44,22 +45,6 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/site.webmanifest",
-  openGraph: {
-    type: "website",
-    siteName: "Veklom - Capability OS",
-    title: TITLE,
-    description: DESC,
-    url: "/",
-    images: [{ url: OG_IMAGE, width: 1024, height: 1024, alt: "Veklom M2M Trust Infrastructure" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@veklom",
-    creator: "@veklom",
-    title: TITLE,
-    description: DESC,
-    images: [TWITTER_IMAGE],
-  },
   robots: { index: true, follow: true },
   other: {
     "base:app_id": "6a31ef5406f4fa4223585905",
@@ -77,6 +62,39 @@ export const metadata: Metadata = {
     "machine:mcp": "/mcp/manifest.json",
   },
 };
+
+/**
+ * The share card, icons and metadataBase follow the request host: veklom.com
+ * gets the Veklom card, os.veklom.com the Capability OS card (same Next app).
+ * Unknown hosts fall back to https://veklom.com. Canonical is set on the home
+ * page and /vlink rather than here, so it is not inherited by every route.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const host = (await headers()).get("host");
+  const origin = originFromHost(host);
+  const brand = brandForHost(host);
+  const share = brandShareMetadata(brand, origin, "/");
+  const brandIcons = share.icons as { icon: object[]; apple: object[] };
+
+  return {
+    ...baseMetadata,
+    metadataBase: new URL(origin),
+    title: { default: brand === "veklom" ? TITLE : BRANDS[brand].title, template: "%s" },
+    description: brand === "veklom" ? DESC : BRANDS[brand].description,
+    icons: {
+      icon: [
+        ...brandIcons.icon,
+        { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: [{ url: "/favicon.ico" }],
+      apple: brandIcons.apple,
+    },
+    openGraph: share.openGraph,
+    twitter: share.twitter,
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
