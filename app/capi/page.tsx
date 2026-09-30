@@ -1,41 +1,41 @@
 import { SystemLanding } from "@/components/brand/SystemLanding";
 
 export const metadata = {
-  title: "cAPI | Veklom",
-  description: "The governed cross-service connection layer in Veklom.",
+  title: "Connections | Veklom",
+  description: "Veklom connects to the systems you already use and sits next to what you already run: no rip-and-replace, with accountability carried on every call.",
 };
 
 export default function Page() {
   return (
     <SystemLanding
-      eyebrow="cAPI / Covenant"
+      eyebrow="Connections"
       title="Connection should carry accountability, not bypass it."
-      body="cAPI is Veklom's governed connection layer between capability surfaces. It discovers and carries calls across service boundaries while keeping consequence authority and durable evidence anchored in the systems that actually own them."
-      role="Cross-service governed connection fabric"
+      body="Connections is how Veklom connects to the systems you already use. It sits next to what you already run, with no rip-and-replace: it finds capabilities and carries calls between services, while authorization and durable evidence stay with the parts of Veklom that own them."
+      role="Governed connections between your services"
       state="MIXED"
-      stateDetail="The canonical cAPI repository exposes a typed governed pipeline and local runtime on port 3003, including request, state, discovery, policy composition, audit and evidence-forwarding surfaces. Some seeded/demo runtime behavior in that repo should not be confused with external production proof."
+      stateDetail="The connection service has a working governed pipeline with request, discovery, policy, audit and evidence-forwarding surfaces; some demo behavior in its repository is not treated as production proof. The technical detail is published at veklom.dev."
       owns={[
-        "Cross-service capability discovery and connection orchestration.",
-        "Connection-level policy, request signing and replay-aware handling where implemented in the cAPI runtime.",
-        "Local audit/evidence records for cAPI-observed calls and forwarding status into PGL when configured.",
-        "A stable interlink layer so application integrations do not need to own Veklom authority logic themselves.",
+        "Discovering capabilities across services and orchestrating the connection.",
+        "Connection-level policy, request signing and replay-aware handling where implemented.",
+        "Local audit records for the calls it observes, forwarded to Evidence when configured.",
+        "A stable integration layer, so your applications do not have to carry Veklom authorization logic themselves.",
       ]}
       doesNotOwn={[
-        "CAPPO remains the constitutional consequence-authority boundary.",
-        "A cAPI connection or local receipt does not automatically prove the external provider performed the claimed consequence.",
-        "PGL/Gnomledger remains the durable provenance store and VLink remains the low-friction portable connection primitive.",
+        "Authority remains the boundary that decides whether an action may take effect.",
+        "A successful connection or local receipt does not by itself prove the external provider performed the claimed action.",
+        "Evidence remains the durable record, and VLink remains the low-friction way to connect a single workload.",
       ]}
       interfaces={[
-        { label: "Canonical local port", value: "3003" },
         { label: "Governed request", value: "POST /api/request" },
         { label: "Discovery", value: "GET /api/discover/{identity}" },
-        { label: "Audit / evidence", value: "GET /api/audit · PGL forwarding when configured" },
+        { label: "Audit / evidence", value: "GET /api/audit · forwarded to Evidence when configured" },
+        { label: "Technical proof", value: "https://veklom.dev" },
       ]}
-      proofNote="cAPI can truthfully show what it observed, signed and forwarded. The site must not upgrade seeded traffic, a successful connection or a local ledger entry into proof of an external real-world consequence without provider-side readback."
+      proofNote="Connections can truthfully show what it observed, signed and forwarded. The site must not upgrade demo traffic, a successful connection or a local log entry into proof of a real-world outcome without confirmation from the provider."
       primaryHref="/architecture"
       primaryLabel="See the connection plane"
-      secondaryHref="/proof"
-      secondaryLabel="Observe current runtime"
+      secondaryHref="https://veklom.dev"
+      secondaryLabel="Technical proof at veklom.dev"
     />
   );
 }

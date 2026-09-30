@@ -1,37 +1,37 @@
 import { SystemLanding } from "@/components/brand/SystemLanding";
 
 export const metadata = {
-  title: "PGL / Gnomledger | Veklom",
-  description: "Durable evidence, provenance and lineage for governed machine execution.",
+  title: "Evidence | Veklom",
+  description: "Tamper-evident evidence of governed machine actions that you can verify independently, and that outlasts the machine that acted.",
 };
 
 export default function Page() {
   return (
     <SystemLanding
-      eyebrow="PGL / Gnomledger"
+      eyebrow="Evidence"
       title="The machine can disappear. The evidence cannot."
-      body="Project Genome Ledger is Veklom's durable provenance layer. It preserves append-only execution events, lineage and independently checkable hash-chain state so the truth of a governed action does not vanish with the process that performed it."
-      role="Durable evidence / provenance and lineage"
+      body="Evidence is Veklom's durable record of what happened. It keeps an append-only, tamper-evident history of every governed action that you can verify independently, so the truth of an action does not vanish with the process that performed it."
+      role="Durable, tamper-evident evidence and history"
       state="RUNTIME"
-      stateDetail="Gnomledger is a standalone FastAPI service with append-only ledger APIs, per-identity chain verification, lineage surfaces and a canonical local health endpoint. Runtime proof still depends on the specific deployed instance being observed."
+      stateDetail="Evidence runs as its own service with append-only records and independent verification; what is proven always depends on the specific deployment being observed. The technical proof is published at veklom.dev."
       owns={[
-        "Append-only ledger event persistence with hash-chain integrity checks.",
-        "Execution and identity provenance that survives process restarts.",
-        "Lineage / ancestry relationships for machine identities and execution artifacts.",
-        "Independent ledger verification surfaces used by other Veklom services.",
+        "Append-only records with tamper-evident integrity checks.",
+        "A history of actions and identities that survives restarts.",
+        "Lineage: which machine identity produced which action and result.",
+        "Independent verification used by the rest of Veklom.",
       ]}
       doesNotOwn={[
-        "PGL records evidence; it does not mint consequence authority.",
-        "A ledger event cannot make a false provider outcome true. The upstream evidence must still be attributable and correctly bound.",
-        "CAPPO owns authorization; EEE defines a portable execution-evidence artifact; Guardian owns bounded recovery behavior.",
+        "Evidence records what happened; it does not grant authority.",
+        "A record cannot make a false provider outcome true. The upstream evidence must still be attributable and correctly bound.",
+        "Authority owns authorization; EEE defines a portable execution-evidence artifact; Guardian owns bounded recovery behavior.",
       ]}
       interfaces={[
-        { label: "Canonical local API", value: "http://127.0.0.1:8001" },
         { label: "Health", value: "GET /health" },
         { label: "Append event", value: "POST /api/v1/ledger/events" },
-        { label: "Verify chain", value: "GET /api/v1/ledger/agents/{id}/verify" },
+        { label: "Verify record", value: "GET /api/v1/ledger/agents/{id}/verify" },
+        { label: "Technical proof", value: "https://veklom.dev" },
       ]}
-      proofNote="PGL proves the integrity and continuity of what was recorded. Strong external-consequence claims still require the evidence event to be bound to the real provider/result rather than merely appended successfully."
+      proofNote="Evidence proves the integrity and continuity of what was recorded. Strong claims about real-world outcomes still require the record to be bound to the actual provider result, not merely stored successfully."
       primaryHref="/proof"
       primaryLabel="Inspect evidence fabric"
       secondaryHref="/eee"
