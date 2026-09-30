@@ -178,3 +178,39 @@ select {
   border-radius: .45rem;
   padding: .1rem .35rem;
 }
+
+/*
+ * Capability OS sandbox environment. The whole shell switches to amber/gold
+ * tokens so sandbox is unmistakable on every /os screen. Applied by AppShell
+ * via data-environment; it is not user-dismissible.
+ */
+.cos-shell[data-environment="sandbox"] {
+  --theme-accent: 255 184 0;
+  --theme-info: 255 184 0;
+  --theme-accent-steel: 196 160 96;
+  --theme-border: rgba(255, 184, 0, 0.18);
+  --theme-grid-line: rgba(255, 184, 0, 0.05);
+  --theme-sheen: rgba(255, 184, 0, 0.06);
+}
+
+.cos-sandbox-watermark {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.cos-sandbox-watermark span {
+  transform: rotate(-28deg);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: clamp(6rem, 18vw, 16rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgb(255 184 0 / 0.045);
+  white-space: nowrap;
+}

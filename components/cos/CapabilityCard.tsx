@@ -37,7 +37,7 @@ export function CapabilityCard({ capability, onOpen }: { capability: Capability;
       <div className="pointer-events-none absolute inset-0 bg-cos-sheen opacity-70" />
       <div>
         <div className="relative mb-5 flex items-start justify-between">
-          <span className="rounded-lg border border-cos-accent/20 bg-cos-accent/10 p-2.5 text-cos-accent shadow-[0_0_25px_-10px_#00E5FF]"><Icon size={20} /></span>
+          <span className="rounded-lg border border-cos-accent/20 bg-cos-accent/10 p-2.5 text-cos-accent shadow-[0_0_25px_-10px_rgb(var(--theme-accent))]"><Icon size={20} /></span>
           <ProofBadge status={capability.evidence.proofState} />
         </div>
         <div className="relative flex items-center gap-2"><h3 className="text-lg font-medium text-cos-text">{capability.name}</h3><span className="rounded border border-cos-border bg-cos-surface2 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-cos-steel">{capability.kind}</span></div>
