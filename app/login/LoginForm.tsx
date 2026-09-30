@@ -87,7 +87,7 @@ export function LoginForm() {
 
       <button
         type="button"
-        onClick={loginWithGithub}
+        onClick={() => loginWithGithub()}
         disabled={github?.configured !== true}
         className="group flex min-h-14 w-full items-center justify-between rounded-2xl border border-theme-border bg-theme-surface px-5 text-sm font-semibold text-theme-ink shadow-[0_10px_35px_rgba(2,8,23,.05)] transition duration-300 hover:-translate-y-0.5 hover:border-theme-ink/15 hover:shadow-[0_18px_45px_rgba(2,8,23,.08)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
       >

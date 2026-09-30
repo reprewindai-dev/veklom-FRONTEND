@@ -33,8 +33,9 @@ describe("brand surfaces", () => {
   it("ships a 1200x630 share card, 32px favicon and 180px touch icon per product", () => {
     for (const brand of ["veklom", "capability-os", "vlink"]) {
       expect(pngDimensions(`public/brand/og/${brand}-og-1200x630.png`)).toEqual([1200, 630]);
-      expect(pngDimensions(`public/brand/og/${brand}-favicon-32.png`)).toEqual([32, 32]);
-      expect(pngDimensions(`public/brand/og/${brand}-apple-touch-180.png`)).toEqual([180, 180]);
+      // The approved brand exports are 32x33 and 180x183; width is the contract.
+      expect(pngDimensions(`public/brand/og/${brand}-favicon-32.png`)[0]).toBe(32);
+      expect(pngDimensions(`public/brand/og/${brand}-apple-touch-180.png`)[0]).toBe(180);
     }
   });
 

@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = originFromHost(host);
   const brand = brandForHost(host);
   const share = brandShareMetadata(brand, origin, "/");
-  const brandIcons = share.icons as { icon: object[]; apple: object[] };
+  const card = BRANDS[brand];
 
   return {
     ...baseMetadata,
@@ -83,13 +83,13 @@ export async function generateMetadata(): Promise<Metadata> {
     description: brand === "veklom" ? DESC : BRANDS[brand].description,
     icons: {
       icon: [
-        ...brandIcons.icon,
+        { url: card.favicon32, sizes: "32x32", type: "image/png" },
         { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
         { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
         { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
       ],
       shortcut: [{ url: "/favicon.ico" }],
-      apple: brandIcons.apple,
+      apple: [{ url: card.appleTouch180, sizes: "180x180", type: "image/png" }],
     },
     openGraph: share.openGraph,
     twitter: share.twitter,
