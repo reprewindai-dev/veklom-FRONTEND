@@ -10,7 +10,10 @@ import {
 } from "@/lib/cos/lease-session";
 
 describe("session capability lease handoff", () => {
-  beforeEach(() => sessionStorage.clear());
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
 
   const lease = {
     mountId: "mnt_1",
@@ -59,8 +62,11 @@ describe("session capability lease handoff", () => {
   });
 
   it("reads legacy three-field leases and extended scope fields", () => {
+    // A project=sandbox lease lives in the sandbox-segregated slot and is only
+    // readable while sandbox mode is on.
+    localStorage.setItem("veklom.environment", "sandbox");
     sessionStorage.setItem(
-      "veklom.capability_lease",
+      "veklom.capability_lease.sandbox",
       JSON.stringify({
         mountId: "mnt_2",
         tokenId: "tok_2",

@@ -1,4 +1,5 @@
 import type { PglProofLookup } from "@/lib/cos/readback";
+import { SANDBOX_PROJECT, environmentStorageSuffix, readEnvironmentIsSandbox } from "@/lib/cos/sandbox";
 
 export type SessionCapabilityLeaseGrants = {
   reads?: string[];
@@ -22,9 +23,26 @@ export type SessionCapabilityLease = {
   grants?: SessionCapabilityLeaseGrants;
 };
 
-const KEY = "veklom.capability_lease";
-const CONSEQUENCE_KEY = "veklom.capability_consequence";
+// Leases and consequence records are segregated per environment so a sandbox
+// mount can never be read back as live state (and vice versa).
+const LEASE_KEY_BASE = "veklom.capability_lease";
+const CONSEQUENCE_KEY_BASE = "veklom.capability_consequence";
 const LEASE_CHANGED_EVENT = "veklom.capability_lease.changed";
+
+function leaseKey() {
+  return `${LEASE_KEY_BASE}${environmentStorageSuffix()}`;
+}
+
+function consequenceKey() {
+  return `${CONSEQUENCE_KEY_BASE}${environmentStorageSuffix()}`;
+}
+
+/** A lease belongs to the current environment only when its CAPPO project scope matches. */
+function leaseMatchesEnvironment(lease: Pick<SessionCapabilityLease, "project">): boolean {
+  const sandbox = readEnvironmentIsSandbox();
+  if (lease.project === undefined) return !sandbox;
+  return sandbox ? lease.project === SANDBOX_PROJECT : lease.project !== SANDBOX_PROJECT;
+}
 
 function notifyLeaseChanged() {
   if (typeof window !== "undefined") {
@@ -35,7 +53,7 @@ function notifyLeaseChanged() {
 export function storeSessionCapabilityLease(lease: SessionCapabilityLease) {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
-    sessionStorage.setItem(KEY, JSON.stringify(lease));
+    sessionStorage.setItem(leaseKey(), JSON.stringify(lease));
     notifyLeaseChanged();
   } catch {
     // Storage may be unavailable in a restricted browser context.
@@ -46,7 +64,7 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
   if (typeof window === "undefined" || !window.sessionStorage) return null;
   let raw: string | null;
   try {
-    raw = sessionStorage.getItem(KEY);
+    raw = sessionStorage.getItem(leaseKey());
   } catch {
     return null;
   }
@@ -86,7 +104,7 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
       }
       if (Object.keys(grants).length) lease.grants = grants;
     }
-    return lease;
+    return leaseMatchesEnvironment(lease) ? lease : null;
   } catch {
     return null;
   }
@@ -136,7 +154,7 @@ export function applyTerminateResponse(
 export function clearSessionCapabilityLease() {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
-    sessionStorage.removeItem(KEY);
+    sessionStorage.removeItem(leaseKey());
     notifyLeaseChanged();
   } catch {
     // Storage may be unavailable in a restricted browser context.
@@ -177,7 +195,7 @@ export function storeSessionConsequence(
     recordedAt: record.recordedAt ?? new Date().toISOString(),
   };
   try {
-    sessionStorage.setItem(CONSEQUENCE_KEY, JSON.stringify(value));
+    sessionStorage.setItem(consequenceKey(), JSON.stringify(value));
   } catch {
     // Storage may be unavailable in a restricted browser context.
   }
@@ -187,7 +205,7 @@ export function readSessionConsequence(mountId?: string): SessionConsequenceReco
   if (typeof window === "undefined" || !window.sessionStorage) return null;
   let raw: string | null;
   try {
-    raw = sessionStorage.getItem(CONSEQUENCE_KEY);
+    raw = sessionStorage.getItem(consequenceKey());
   } catch {
     return null;
   }
@@ -238,7 +256,7 @@ export function readSessionConsequence(mountId?: string): SessionConsequenceReco
 export function clearSessionConsequence() {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
-    sessionStorage.removeItem(CONSEQUENCE_KEY);
+    sessionStorage.removeItem(consequenceKey());
   } catch {
     // Storage may be unavailable in a restricted browser context.
   }
