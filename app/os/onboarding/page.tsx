@@ -2,16 +2,20 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Circle, Database, Fingerprint, Layers3, Play, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Circle, Database, Fingerprint, Layers3, Play, ShieldCheck, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api, ApiError, setTokens } from "@/lib/api";
 import { Button, ErrorBox } from "@/components/ui";
 import { LiveOnlyNotice } from "@/components/cos/LiveOnly";
 import { useSandboxMode } from "@/lib/cos/sandbox";
+import { OnboardingChecklist } from "@/components/cos/OnboardingChecklist";
+import { WalletStep } from "@/components/wallet/WalletStep";
+import type { WalletState } from "@/lib/wallet/api";
 
 const STEPS = [
   { id: "identity", label: "Operator Identity" },
   { id: "workspace", label: "Workspace" },
+  { id: "wallet", label: "Wallet" },
   { id: "agent", label: "Agent + Genome" },
   { id: "activation", label: "Live Activation" },
 ] as const;
@@ -118,14 +122,17 @@ export default function OnboardingPage() {
   const [tools, setTools] = useState("");
   const [permissions, setPermissions] = useState("");
   const [safetyRules, setSafetyRules] = useState("");
+  const [walletBound, setWalletBound] = useState(false);
+  const [checklistKey, setChecklistKey] = useState(0);
 
   const boundWorkspaceId = workspaceId ?? me?.workspace_id ?? null;
   const completed = useMemo(() => [
     identityLoaded,
     Boolean(boundWorkspaceId),
+    walletBound,
     Boolean(agent),
     false,
-  ], [agent, boundWorkspaceId, identityLoaded]);
+  ], [agent, boundWorkspaceId, identityLoaded, walletBound]);
 
   useEffect(() => {
     let active = true;
@@ -148,6 +155,13 @@ export default function OnboardingPage() {
       active = false;
     };
   }, []);
+
+  // Deep link from VLink: /os/onboarding?step=wallet opens the Wallet step once
+  // the workspace is bound (the wallet belongs to the workspace).
+  useEffect(() => {
+    if (!identityLoaded || !boundWorkspaceId) return;
+    if (new URLSearchParams(window.location.search).get("step") === "wallet") setStep(2);
+  }, [identityLoaded, boundWorkspaceId]);
 
   function continueStep() {
     setError(null);
@@ -231,6 +245,7 @@ export default function OnboardingPage() {
   const heading = [
     "Identify the operator",
     "Establish the workspace",
+    "Set up your wallet",
     "Register the agent genome",
     "Activate under real authority",
   ][step];
@@ -255,13 +270,14 @@ export default function OnboardingPage() {
             </button>
           ))}
         </nav>
+        {identityLoaded && !authRequired ? <OnboardingChecklist className="mt-5" identityKnown refreshKey={checklistKey} /> : null}
       </aside>
 
       <section className="min-w-0 rounded-2xl border border-cos-border bg-cos-surface2/70 p-5 shadow-cos-card md:p-8">
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-cos-accent">
-              {step === 0 ? <Fingerprint size={14} /> : step === 1 ? <Database size={14} /> : step === 2 ? <ShieldCheck size={14} /> : <Play size={14} />}
+              {step === 0 ? <Fingerprint size={14} /> : step === 1 ? <Database size={14} /> : step === 2 ? <Wallet size={14} /> : step === 3 ? <ShieldCheck size={14} /> : <Play size={14} />}
               Step {step + 1} of {STEPS.length}
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-cos-text md:text-3xl">{heading}</h1>
@@ -316,6 +332,22 @@ export default function OnboardingPage() {
         ) : null}
 
         {step === 2 ? (
+          <div className="space-y-5">
+            {boundWorkspaceId ? (
+              <WalletStep onWalletChange={(state: WalletState | null) => {
+                setWalletBound(Boolean(state?.wallet));
+                setChecklistKey((key) => key + 1);
+              }} />
+            ) : (
+              <p className="text-sm text-cos-muted">Bind a workspace first; the wallet belongs to the workspace.</p>
+            )}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={continueStep}>{walletBound ? "Continue" : "Continue without a wallet"}</Button>
+            </div>
+          </div>
+        ) : null}
+
+        {step === 3 ? (
           <form onSubmit={registerAgent} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Agent name" value={agentName} onChange={setAgentName} />
@@ -348,7 +380,7 @@ export default function OnboardingPage() {
           </form>
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 ? (
           <div className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Operator email</div><div className="mt-2 break-all text-sm text-cos-text">{me?.email}</div></div>

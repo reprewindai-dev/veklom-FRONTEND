@@ -23,7 +23,11 @@
         "uuid": "^11.1.1"
     },
     "dependencies": {
-        "@base-org/account": "^2.5.5",
+        "@base-org/account": "^2.5.13",
+        "@coinbase/cdp-core": "^0.0.126",
+        "@coinbase/cdp-hooks": "^0.0.126",
+        "@coinbase/cdp-react": "^0.0.126",
+        "@coinbase/cdp-sdk": "^1.57.1",
         "@coinbase/wallet-sdk": "^4.3.7",
         "@glideapps/glide-data-grid": "^6.0.3",
         "@google/genai": "^2.9.0",
