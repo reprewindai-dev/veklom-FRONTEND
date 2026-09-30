@@ -1,22 +1,20 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { AppShell } from "@/components/cos/AppShell";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { BRANDS, brandShareMetadata, originFromHost } from "@/lib/brandMetadata";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Capability OS · Veklom",
-    template: "%s · Capability OS · Veklom",
-  },
-  description:
-    "Veklom Capability OS — the trust layer machines pass through. Prove identity, capability, governance, execution, evidence, and settlement.",
-  openGraph: {
-    images: [{ url: "/og-capability-os.jpg", width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["/og-capability-os.jpg"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = originFromHost((await headers()).get("host"));
+  return {
+    ...brandShareMetadata("capability-os", origin, "/os"),
+    title: {
+      default: "Capability OS · Veklom",
+      template: "%s · Capability OS · Veklom",
+    },
+    description: BRANDS["capability-os"].description,
+  };
+}
 
 export default function CapabilityOsLayout({ children }: { children: React.ReactNode }) {
   return (
