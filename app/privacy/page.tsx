@@ -16,6 +16,7 @@ export default function Page() {
             "Authentication information: if you sign in with GitHub, GitHub shares your profile (login and display name) and your verified email address with us. We use them to create or match your Veklom account and do not keep your GitHub access token after sign-in. We also record session details such as sign-in time and session expiry and, for password sign-in, the IP address and browser user agent of the sign-in request.",
             "Workspace, usage and evidence data: the workspaces you create, the governed actions you run (both allowed and denied), policy decisions, receipts, audit logs and execution evidence, and your plan and credit usage.",
             "Billing information: payments for paid plans and credit top-ups are processed by Stripe. You enter your card and billing details with Stripe, and Veklom does not receive or store full card numbers. We keep your Stripe customer and subscription identifiers, plan, subscription status and payment events so we can apply your plan and credits.",
+            "Site usage measurement: we measure how visitors move through veklom.com, Capability OS and VLink with our own tool. No third party receives this data, and it uses no cookies and no device fingerprinting. For each page view and a few named steps (clicking a main button such as \"Start free with VLink\", starting or submitting the signup form, signing in, opening VLink connect, scrolling half or most of a page, and how long the page was visible before you left) we record the page path without its query string, which site it was (veklom.com, Capability OS or VLink), the domain of the site that sent you on the first page of your visit, any campaign (UTM) tags in the link, the country reported by our network provider Cloudflare, and the time. To connect the pages of one visit, your browser creates a random identifier for that tab and keeps it in session storage; it is removed when you close the tab. We do not store your IP address or browser user agent with these records, and we do not collect your name, email address or account before you sign in. After you sign in, we record one link between that tab's identifier and your workspace, so we can see which visits led to an active workspace.",
             "Technical logs: security and service logs such as request metadata, failed sign-in attempts and security events, which we use to operate and protect the service.",
             "Messages you send us: the content of emails you send to our support, billing or security addresses.",
           ],
@@ -27,6 +28,7 @@ export default function Page() {
             "To provide the product: run and govern actions, produce receipts and evidence, and show you your history.",
             "To apply your plan, measure credit usage, and process subscriptions, renewals and top-ups through Stripe.",
             "To send service emails such as email verification, password reset, welcome, subscription and plan notices.",
+            "To see, in aggregate, where visitors leave the site and the signup and setup steps, so we can improve them.",
             "To detect and prevent abuse, fraud and security incidents, and to investigate problems you report.",
             "To comply with legal obligations and enforce our Terms.",
           ],
@@ -44,7 +46,7 @@ export default function Page() {
         },
         {
           title: "Cookies and analytics",
-          body: "We use essential cookies to keep you signed in and to protect sign-in flows; see veklom.com/cookies. The site includes support for Google Analytics, which loads only after you opt in and stays off when your browser sends a Global Privacy Control signal. You can change your choice at any time at veklom.com/privacy-choices.",
+          body: "We use essential cookies to keep you signed in and to protect sign-in flows; see veklom.com/cookies. Our own site usage measurement, described above, does not use cookies. No tab identifier is created, and we count only anonymous page views (page path, site, country and time), when your browser sends a Global Privacy Control or Do Not Track signal, when you choose \"Essential only\" or save optional analytics as off, or, in the EEA, the UK and China, until you turn optional analytics on. The site also includes support for Google Analytics, which loads only after you opt in and stays off when your browser sends a Global Privacy Control signal. You can change your choice at any time at veklom.com/privacy-choices.",
         },
         {
           title: "Security practices",

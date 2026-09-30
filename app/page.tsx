@@ -52,7 +52,7 @@ export default function LandingPage() {
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <div className="flex flex-col items-center gap-2 sm:items-start">
-                <Link href={SIGNUP_URL} className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                <Link href={SIGNUP_URL} data-analytics-cta="start-free-vlink:hero" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
                   Start free with VLink <span className="transition-transform group-hover:translate-x-1">→</span>
                 </Link>
                 <span className="text-[11px] text-theme-inkDim">14-day full-access trial · no card required</span>
@@ -92,7 +92,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <Link href={SIGNUP_URL} className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                <Link href={SIGNUP_URL} data-analytics-cta="start-free-vlink:mid" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
                   Start free with VLink <span className="transition-transform group-hover:translate-x-1">→</span>
                 </Link>
                 <Link href="/vlink/connect/" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20 hover:bg-theme-surface">
@@ -183,7 +183,7 @@ export default function LandingPage() {
                 <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Use what is available now. Inspect what is proven. Build from a bounded capability.</h2>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <Link href={SIGNUP_URL} className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Start free with VLink →</Link>
+                <Link href={SIGNUP_URL} data-analytics-cta="start-free-vlink:footer" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Start free with VLink →</Link>
                 <Link href="/os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Open Capability OS</Link>
                 <Link href="/machine" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">For Machines</Link>
                 <Link href="/proof" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</Link>

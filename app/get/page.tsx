@@ -87,6 +87,7 @@ export default function GetVeklomPage() {
             <button
               type="button"
               onClick={primaryAction}
+              data-analytics-cta="get-primary"
               disabled={installing || state === "checking"}
               className="group mt-9 flex min-h-16 w-full max-w-xl items-center justify-between rounded-xl bg-theme-ink px-6 text-left text-theme-bg shadow-xl transition-all hover:-translate-y-0.5 hover:shadow-2xl disabled:cursor-wait disabled:opacity-60"
             >
