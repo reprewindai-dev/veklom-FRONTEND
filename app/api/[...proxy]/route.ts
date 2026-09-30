@@ -5,6 +5,7 @@ import {
   isCappoIdentityPath,
   isCappoProxyPath,
 } from "@/lib/cappo-proxy-paths";
+import { isOperatorLockerPath } from "@/lib/wallet/proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
@@ -81,6 +82,10 @@ async function proxyRequest(req: NextRequest) {
   let targetBase = "";
   let forwardPath = path;
   const isPglRoute = path.startsWith("/api/pgl/") || path.startsWith("/api/ledger/");
+  // Operator-scoped LockerPhycer routes (wallet, entitlements, Stripe top-up
+  // checkout). They must carry the operator's own bearer; the service secret is
+  // never substituted for a missing one.
+  const isOperatorLockerRoute = isOperatorLockerPath(path);
 
   if (path.startsWith("/api/cappo/")) {
     if (!CAPPO_BACKEND_URL) {
@@ -123,7 +128,8 @@ async function proxyRequest(req: NextRequest) {
   } else if (
     path.startsWith("/api/v1/locker") ||
     path.startsWith("/api/v1/auth") ||
-    path.startsWith("/api/v1/workspace")
+    path.startsWith("/api/v1/workspace") ||
+    isOperatorLockerRoute
   ) {
     if (!LOCKERPHYCER_URL) {
       return NextResponse.json(
@@ -179,6 +185,10 @@ async function proxyRequest(req: NextRequest) {
     headers.delete("authorization");
     headers.delete("cookie");
     headers.set("x-api-key", PGL_LEDGER_API_KEY);
+  } else if (isOperatorLockerRoute) {
+    if (!hasBearerIdentity) {
+      return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
+    }
   } else if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET && !hasBearerIdentity) {
     headers.set("Authorization", `Bearer ${LOCKERPHYCER_SECRET}`);
   } else if (
