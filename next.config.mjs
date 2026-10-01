@@ -108,6 +108,14 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
+        // ── api.veklom.com gateway: short paths and prefix-stripped service routes ──
+        // The tunnel sends all of api.veklom.com here; it cannot rewrite paths itself.
+        ...[
+          { source: "/health", destination: `${LOCKERPHYCER_URL}/health` },
+          { source: "/pricing", destination: "/api/v1/pricing" },
+          { source: "/cappo/:path*", destination: `${CAPPO_URL}/:path*` },
+          { source: "/identity/:path*", destination: `${LOCKERPHYCER_URL}/:path*` },
+        ].map((rule) => ({ ...rule, has: [{ type: "host", value: "api.veklom.com" }] })),
         // ── LockerPhycer: identity authority ──────────────────────────────────
         { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
         // First-party, cookieless funnel analytics (events, config, link, admin funnel)
