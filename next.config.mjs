@@ -114,6 +114,8 @@ const nextConfig = {
           { source: "/health", destination: `${LOCKERPHYCER_URL}/health` },
           { source: "/pricing", destination: `${CAPPO_URL}/api/v1/pricing` },
           { source: "/cappo/:path*", destination: `${CAPPO_URL}/:path*` },
+          { source: "/pgl", destination: `${PGL_URL}/health` },
+          { source: "/pgl/:path+", destination: `${PGL_URL}/:path+` },
           { source: "/identity/:path*", destination: `${LOCKERPHYCER_URL}/:path*` },
         ].map((rule) => ({ ...rule, has: [{ type: "host", value: "api.veklom.com" }] })),
         // ── Public verification keys (CAPPO Ed25519 key set), on every host ───────
