@@ -112,10 +112,13 @@ const nextConfig = {
         // The tunnel sends all of api.veklom.com here; it cannot rewrite paths itself.
         ...[
           { source: "/health", destination: `${LOCKERPHYCER_URL}/health` },
-          { source: "/pricing", destination: "/api/v1/pricing" },
+          { source: "/pricing", destination: `${CAPPO_URL}/api/v1/pricing` },
           { source: "/cappo/:path*", destination: `${CAPPO_URL}/:path*` },
           { source: "/identity/:path*", destination: `${LOCKERPHYCER_URL}/:path*` },
         ].map((rule) => ({ ...rule, has: [{ type: "host", value: "api.veklom.com" }] })),
+        // ── Public verification keys (CAPPO Ed25519 key set), on every host ───────
+        { source: "/.well-known/capability-beacon-keys", destination: `${CAPPO_URL}/.well-known/capability-beacon-keys` },
+        { source: "/.well-known/jwks.json", destination: `${CAPPO_URL}/.well-known/capability-beacon-keys` },
         // ── LockerPhycer: identity authority ──────────────────────────────────
         { source: "/api/v1/users/:path*",     destination: `${LOCKERPHYCER_URL}/api/v1/users/:path*` },
         // First-party, cookieless funnel analytics (events, config, link, admin funnel)
