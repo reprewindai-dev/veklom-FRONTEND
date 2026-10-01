@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { publicOrigin } from "@/lib/public-origin";
 
 function safeReturnTo(value: string | null): string {
   if (!value) return "/os";
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
   // GitHub token exchange, user/workspace binding and session issuance.
   // The frontend only provides a stable same-origin entry point.
   const next = safeReturnTo(req.nextUrl.searchParams.get("next"));
-  const backendLogin = new URL("/api/v1/auth/github/login", req.url);
+  const backendLogin = new URL("/api/v1/auth/github/login", publicOrigin(req));
   backendLogin.searchParams.set("next", next);
   return NextResponse.redirect(backendLogin);
 }

@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { publicOrigin } from "@/lib/public-origin";
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const githubError = params.get("error");
   if (githubError) {
-    const login = new URL("/login", req.url);
+    const login = new URL("/login", publicOrigin(req));
     login.searchParams.set("github_error", githubError);
     const description = params.get("error_description");
     if (description) login.searchParams.set("github_error_description", description.slice(0, 240));
     return NextResponse.redirect(login);
   }
 
-  const backendCallback = new URL("/api/v1/auth/github/callback", req.url);
+  const backendCallback = new URL("/api/v1/auth/github/callback", publicOrigin(req));
   for (const key of ["code", "state", "installation_id", "setup_action"]) {
     const value = params.get(key);
     if (value) backendCallback.searchParams.set(key, value);
