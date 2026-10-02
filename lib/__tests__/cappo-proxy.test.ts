@@ -10,11 +10,17 @@ describe("CAPPO proxy boundary", () => {
   const originalBackendUrl = process.env.CAPPO_BACKEND_URL;
   const originalCapiBackendUrl = process.env.CAPI_BACKEND_URL;
   const originalCapiApiKey = process.env.CAPI_API_KEY;
+  const originalLockerphycerUrl = process.env.LOCKERPHYCER_URL;
+  const originalVbbUrl = process.env.VBB_BACKEND_URL;
+  // The proxy checks the caller's session with Identity before any gated CAPPO call.
+  const sessionOk = () => new Response(JSON.stringify({ id: "user-1" }), { status: 200 });
 
   beforeAll(() => {
     process.env.CAPPO_BACKEND_URL = "https://cappo.test";
     process.env.CAPI_BACKEND_URL = "https://capi.test";
     process.env.CAPI_API_KEY = "capi-admin-key";
+    process.env.LOCKERPHYCER_URL = "https://identity.test";
+    process.env.VBB_BACKEND_URL = "https://cappo.test";
     jest.isolateModules(() => {
       proxyModule = require("@/app/api/[...proxy]/route") as ProxyModule;
     });
@@ -31,6 +37,10 @@ describe("CAPPO proxy boundary", () => {
     else process.env.CAPI_BACKEND_URL = originalCapiBackendUrl;
     if (originalCapiApiKey === undefined) delete process.env.CAPI_API_KEY;
     else process.env.CAPI_API_KEY = originalCapiApiKey;
+    if (originalLockerphycerUrl === undefined) delete process.env.LOCKERPHYCER_URL;
+    else process.env.LOCKERPHYCER_URL = originalLockerphycerUrl;
+    if (originalVbbUrl === undefined) delete process.env.VBB_BACKEND_URL;
+    else process.env.VBB_BACKEND_URL = originalVbbUrl;
   });
 
   it("refuses an unlisted CAPPO path without contacting an upstream", async () => {
@@ -46,7 +56,8 @@ describe("CAPPO proxy boundary", () => {
   });
 
   it("forwards identity to CAPPO without forwarding browser credentials or API keys", async () => {
-    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+    const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(sessionOk()).mockResolvedValue(
       new Response(JSON.stringify({ error: "invalid token" }), {
         status: 401,
         headers: { "content-type": "application/json" },
@@ -63,16 +74,17 @@ describe("CAPPO proxy boundary", () => {
     const response = await proxyModule.GET(request);
 
     expect(response.status).toBe(401);
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/runs");
-    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/v1/runs");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
     expect(upstreamHeaders.get("authorization")).toBe("Bearer session-token");
     expect(upstreamHeaders.get("cookie")).toBeNull();
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
   });
 
   it("maps a missing workspace to 403 without contacting CAPPO", async () => {
-    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+    const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(sessionOk()).mockResolvedValue(
       new Response(JSON.stringify({ detail: { error: "WORKSPACE_CONTEXT_MISSING" } }), {
         status: 403,
         headers: { "content-type": "application/json" },
@@ -89,11 +101,12 @@ describe("CAPPO proxy boundary", () => {
     expect(await response.json()).toEqual({
       detail: { error: "WORKSPACE_CONTEXT_MISSING" },
     });
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
   it("forwards a bounded execution request to CAPPO without an internal key", async () => {
     const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(sessionOk())
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ status: "payment-required" }), {
           status: 402,
@@ -113,9 +126,9 @@ describe("CAPPO proxy boundary", () => {
     const response = await proxyModule.POST(request);
 
     expect(response.status).toBe(402);
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/exec");
-    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/v1/exec");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
     expect(upstreamHeaders.get("authorization")).toBe("Bearer session-token");
     expect(upstreamHeaders.get("cookie")).toBeNull();
@@ -123,6 +136,7 @@ describe("CAPPO proxy boundary", () => {
 
   it("proxies the authenticated agents collection through CAPPO", async () => {
     const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(sessionOk())
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ agents: [] }), {
           status: 200,
@@ -140,9 +154,9 @@ describe("CAPPO proxy boundary", () => {
     const response = await proxyModule.GET(request);
 
     expect(response.status).toBe(200);
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/api/v1/agents");
-    const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/api/v1/agents");
+    const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
     expect(upstreamHeaders.get("x-workspace-id")).toBeNull();
     expect(upstreamHeaders.get("x-veklom-requester-id")).toBeNull();
@@ -152,6 +166,7 @@ describe("CAPPO proxy boundary", () => {
 
   it("preserves CAPPO's upstream failure rather than inventing authorization", async () => {
     const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(sessionOk())
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ error: "unavailable" }), {
           status: 503,
@@ -167,8 +182,8 @@ describe("CAPPO proxy boundary", () => {
 
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: "unavailable" });
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/runs");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/v1/runs");
   });
 
   it("forwards public CAPPO discovery paths without credentials", async () => {
@@ -228,6 +243,7 @@ describe("CAPPO proxy boundary", () => {
   it("passes CAPPO payment challenges through without an extra authority exchange", async () => {
     const paymentBody = JSON.stringify({ x402Version: 1, accepts: [] });
     const fetchSpy = jest.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(sessionOk())
       .mockResolvedValueOnce(
         new Response(paymentBody, {
           status: 402,
@@ -245,8 +261,8 @@ describe("CAPPO proxy boundary", () => {
     expect(response.status).toBe(402);
     expect(await response.json()).toEqual(JSON.parse(paymentBody));
     expect(response.headers.get("x-payment-required")).toBe("true");
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/v1/exec");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/v1/exec");
   });
 
   it("forwards Interlink bearers without a cAPI admin key", async () => {
@@ -276,5 +292,47 @@ describe("CAPPO proxy boundary", () => {
     const upstreamHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
     expect(upstreamHeaders.get("authorization")).toBe("Bearer lockerphycer-session");
     expect(upstreamHeaders.get("x-api-key")).toBeNull();
+  });
+
+  it("refuses a gated CAPPO path with no session, without contacting any upstream", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch");
+    for (const target of ["/api/cappo/v1/audit-logs", "/api/cappo/v1/runs", "/api/v1/gpc/stats", "/v1/governance/v2/quarantine"]) {
+      const response = await proxyModule.GET(new NextRequest(`https://control.veklom.com${target}`, { method: "GET" }));
+      expect(response.status).toBe(401);
+    }
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("refuses a gated CAPPO path when Identity rejects the session, without contacting CAPPO", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ detail: "Session revoked or expired" }), { status: 401 }),
+    );
+    const request = new NextRequest("https://control.veklom.com/api/cappo/v1/audit-logs", {
+      method: "GET",
+      headers: { authorization: "Bearer stale-session-token" },
+    });
+
+    const response = await proxyModule.GET(request);
+
+    expect(response.status).toBe(401);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://identity.test/api/v1/auth/me");
+  });
+
+  it("keeps public pricing readable without a session but gates writes on the same family", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ plans: [] }), { status: 200, headers: { "content-type": "application/json" } }),
+    );
+
+    const read = await proxyModule.GET(new NextRequest("https://control.veklom.com/api/v1/pricing", { method: "GET" }));
+    expect(read.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://cappo.test/api/v1/pricing");
+
+    const write = await proxyModule.POST(
+      new NextRequest("https://control.veklom.com/api/v1/x402/verify", { method: "POST", body: "{}" }),
+    );
+    expect(write.status).toBe(401);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });

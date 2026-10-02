@@ -4,6 +4,7 @@ import {
   isCappoExecPath,
   isCappoIdentityPath,
   isCappoProxyPath,
+  isCappoPublicPath,
 } from "@/lib/cappo-proxy-paths";
 import { isOperatorLockerPath } from "@/lib/wallet/proxy-paths";
 
@@ -81,6 +82,9 @@ async function proxyRequest(req: NextRequest) {
 
   let targetBase = "";
   let forwardPath = path;
+  // CAPPO itself currently accepts unauthenticated callers, so this proxy is the
+  // gate: anything that is not an explicitly public read needs a live session.
+  let requiresPrincipal = false;
   const isPglRoute = path.startsWith("/api/pgl/") || path.startsWith("/api/ledger/");
   // Operator-scoped LockerPhycer routes (wallet, entitlements, Stripe top-up
   // checkout). They must carry the operator's own bearer; the service secret is
@@ -101,6 +105,7 @@ async function proxyRequest(req: NextRequest) {
     }
 
     targetBase = CAPPO_BACKEND_URL;
+    requiresPrincipal = !isCappoPublicPath(forwardPath);
     headers.delete("authorization");
     headers.delete("cookie");
     headers.delete("x-workspace-id");
@@ -165,6 +170,12 @@ async function proxyRequest(req: NextRequest) {
     // Explicit legacy compatibility routes only. There is deliberately no
     // catch-all /api/v1 -> legacy backend fallback. Any unowned route fails closed.
     targetBase = VBB_BACKEND_URL;
+    const isPublicRead =
+      (req.method === "GET" || req.method === "HEAD") &&
+      (path === "/api/v1/pricing" ||
+        path === "/api/v1/x402/config" ||
+        path.startsWith("/api/v1/benchmarks/"));
+    requiresPrincipal = !isPublicRead;
   } else {
     return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });
   }
@@ -172,6 +183,11 @@ async function proxyRequest(req: NextRequest) {
   const hasBearerIdentity = (headers.get("authorization") || "")
     .toLowerCase()
     .startsWith("bearer");
+
+  if (requiresPrincipal) {
+    const principalError = await requirePrincipal(req);
+    if (principalError) return principalError;
+  }
 
   if (isPglRoute) {
     if (!PGL_LEDGER_API_KEY) {

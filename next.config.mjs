@@ -110,7 +110,10 @@ const nextConfig = {
         ...[
           { source: "/health", destination: `${LOCKERPHYCER_URL}/health` },
           { source: "/pricing", destination: `${CAPPO_URL}/api/v1/pricing` },
-          { source: "/cappo/:path*", destination: `${CAPPO_URL}/:path*` },
+          // CAPPO accepts unauthenticated callers, so only its health check and
+          // public key documents are exposed here.
+          { source: "/cappo/health", destination: `${CAPPO_URL}/health` },
+          { source: "/cappo/.well-known/:doc(capability-beacon-keys|x402)", destination: `${CAPPO_URL}/.well-known/:doc` },
           { source: "/pgl", destination: `${PGL_URL}/health` },
           { source: "/pgl/:path+", destination: `${PGL_URL}/:path+` },
           { source: "/identity/:path*", destination: `${LOCKERPHYCER_URL}/:path*` },
@@ -128,9 +131,6 @@ const nextConfig = {
         { source: "/health/",       destination: `${LOCKERPHYCER_URL}/health/` },
         { source: "/status/",       destination: `${LOCKERPHYCER_URL}/health/` },
         { source: "/protocol.json", destination: `${LOCKERPHYCER_URL}/protocol.json` },
-
-        // ── CAPPO: consequence authority ──────────────────────────────────────
-        { source: "/api/v1/cappo/:path*",  destination: `${CAPPO_URL}/api/v1/cappo/:path*` },
 
         // ── VNP: measurement ──────────────────────────────────────────────────
         { source: "/api/v1/vnp/:path*",    destination: `${VNP_URL}/api/v1/vnp/:path*` },
