@@ -33,6 +33,8 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
   const [github, setGithub] = useState<GithubStatus | null>(null);
 
   useEffect(() => {
@@ -60,12 +62,18 @@ export function LoginForm() {
     setError("");
 
     try {
-      await login(email, password);
+      await login(email, password, mfaRequired ? mfaCode : undefined);
       trackLoginSucceeded("password", getToken());
       router.replace(safeDestination());
       router.refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Sign in failed");
+      const message = cause instanceof Error ? cause.message : "Sign in failed";
+      if (message === "MFA code required") {
+        // Password accepted; the account has two-step sign-in turned on.
+        setMfaRequired(true);
+      } else {
+        setError(message);
+      }
       setLoading(false);
     }
   };
@@ -142,6 +150,25 @@ export function LoginForm() {
             autoComplete="current-password"
           />
         </div>
+
+        {mfaRequired && (
+          <div>
+            <label htmlFor="veklom-login-mfa" className="mb-2.5 block text-[11px] font-semibold text-theme-ink">Authentication code</label>
+            <input
+              id="veklom-login-mfa"
+              type="text"
+              inputMode="numeric"
+              required
+              autoFocus
+              value={mfaCode}
+              onChange={(event) => setMfaCode(event.target.value)}
+              className="min-h-14 w-full rounded-2xl border border-theme-border bg-theme-surface px-4 text-base text-theme-ink outline-none transition placeholder:text-theme-inkDim/55 focus:border-theme-accent focus:ring-4 focus:ring-theme-accent/5"
+              placeholder="6-digit code or a backup code"
+              autoComplete="one-time-code"
+            />
+            <p className="mt-2 text-[11px] text-theme-inkDim">Two-step sign-in is on for this account. Enter the code from your authenticator app.</p>
+          </div>
+        )}
 
         <button
           type="submit"

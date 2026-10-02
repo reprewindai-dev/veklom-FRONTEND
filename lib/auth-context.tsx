@@ -11,7 +11,7 @@ interface AuthState {
   tier: Tier;
   loading: boolean;
   error?: string;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, mfaCode?: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<{ autoSignedIn: boolean }>;
   /** Optional fallback destination used when the page URL carries no returnTo. */
   loginWithGithub: (fallbackReturnTo?: string) => void;
@@ -105,11 +105,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadProfile();
   }, [loadProfile]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, mfaCode?: string) => {
     setError(undefined);
     const res = await api<{ access_token: string; refresh_token?: string; token?: string }>(
       "/api/v1/auth/login",
-      { unauth: true, body: { email: email.trim().toLowerCase(), password } },
+      { unauth: true, body: { email: email.trim().toLowerCase(), password, ...(mfaCode ? { mfa_code: mfaCode.trim() } : {}) } },
     );
     const access = res.access_token || res.token;
     if (!access) throw new Error("Authentication succeeded without an access token");
