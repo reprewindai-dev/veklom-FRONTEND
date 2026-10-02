@@ -16,9 +16,10 @@ export default function ForgotPasswordPage() {
  e.preventDefault();
  setErr(undefined); setOk(undefined); setBusy(true);
  try {
- // Backend endpoint may or may not be enabled; we always show a neutral
- // confirmation so we don't leak which emails exist.
- await api("/api/v1/auth/password-reset", { unauth: true, body: { email } }).catch(() => {});
+ // The backend answers the same way whether or not the email exists, so the
+ // neutral confirmation leaks nothing. Real failures (network, server) must
+ // surface instead of hiding behind the success message.
+ await api("/api/v1/auth/password-reset", { unauth: true, body: { email } });
  setOk("If an account exists for that email, a reset link is on its way.");
  } catch (e) {
  setErr((e as Error).message);

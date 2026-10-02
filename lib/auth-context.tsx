@@ -84,7 +84,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      const urlToken = url.searchParams.get("token") || url.searchParams.get("veklom_token");
+      // Password-reset and email-verification links carry their own one-time
+      // `token`. It is not a session token: taking it here stored it as the
+      // login, stripped it from the URL and broke both flows.
+      const ownsTokenParam = ["/reset-password", "/verify-email"].some(
+        (route) => url.pathname === route || url.pathname.startsWith(`${route}/`),
+      );
+      const urlToken = (ownsTokenParam ? null : url.searchParams.get("token")) || url.searchParams.get("veklom_token");
       const urlRefresh = url.searchParams.get("refresh_token") || url.searchParams.get("veklom_refresh_token");
 
       if (urlToken) {
