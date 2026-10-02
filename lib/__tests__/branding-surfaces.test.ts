@@ -27,7 +27,7 @@ describe("brand surfaces", () => {
   it("keeps the existing branded cards scoped to their intended surfaces", () => {
     expect(read("app/layout.tsx")).toContain("brandShareMetadata");
     expect(read("app/vlink/layout.tsx")).toContain('brandShareMetadata("vlink"');
-    expect(read("app/os/layout.tsx")).toContain("/og-capability-os.jpg");
+    expect(read("app/os/layout.tsx")).toContain('brandShareMetadata("capability-os"');
   });
 
   it("ships a 1200x630 share card, 32px favicon and 180px touch icon per product", () => {

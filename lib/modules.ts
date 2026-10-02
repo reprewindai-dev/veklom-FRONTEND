@@ -26,7 +26,7 @@ export const MODULES: ModuleDef[] = [
   { slug: "playground", label: "Playground", href: "/playground", group: "run", minTier: "free", description: "Side-by-side model comparison with Markdown rendering, cost prediction, and circuit breaker status.", icon: "FlaskConical", sidebar: true },
   { slug: "runtime", label: "Runtime Enforcement", href: "/runtime", group: "run", minTier: "free", description: "7-step deterministic execution pipeline with agent builder and cryptographic evidence ledger.", icon: "Terminal", sidebar: true },
   { slug: "terminal", label: "Swarm Terminal", href: "/terminal", group: "run", minTier: "free", description: "Raw CLI and Swarm Map.", icon: "TerminalSquare", sidebar: true },
-  { slug: "deployments", label: "Deployments", href: "/deployments", group: "run", minTier: "pro", description: "BYOS deployment tracking.", icon: "Server", sidebar: false },
+  { slug: "deployments", label: "Deployments", href: "/deployments", group: "run", minTier: "pro", description: "Deployment tracking.", icon: "Server", sidebar: false },
   { slug: "routing", label: "Smart Routing", href: "/routing", group: "run", minTier: "pro", description: "Provider routing rules.", icon: "Network", sidebar: false },
   { slug: "autonomous", label: "Autonomous Jobs", href: "/autonomous", group: "run", minTier: "pro", description: "Execute and monitor autonomous runs.", icon: "Bot", sidebar: false },
 

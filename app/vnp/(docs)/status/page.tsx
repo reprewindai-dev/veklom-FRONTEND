@@ -188,7 +188,7 @@ export default function StatusPage() {
  const uptimeBasis = `${uptime?.source ??"GET /api/v1/platform/uptime"} (read server-side via /api/vnp/status-uptime)`;
  const uptimeDetail = uptime?.available
  ?"Uptime window read through a server-side route handler that holds credentials; no credentials are exposed to the browser."
- : uptime?.reason ??"Requires authenticated BYOS credentials; no public-safe credentialed source is available.";
+ : uptime?.reason ??"Requires authenticated workspace credentials; no public-safe credentialed source is available.";
 
  // ── Row: Process uptime ────────────────────────────────────────────────────
  // /api/health does not expose a process-uptime counter, so we do not invent one.

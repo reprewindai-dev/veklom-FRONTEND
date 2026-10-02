@@ -163,7 +163,7 @@ async function proxyRequest(req: NextRequest) {
     path.startsWith("/api/v1/platform")
   ) {
     // Explicit legacy compatibility routes only. There is deliberately no
-    // catch-all /api/v1 -> VBB/BYOS fallback. Any unowned route fails closed.
+    // catch-all /api/v1 -> legacy backend fallback. Any unowned route fails closed.
     targetBase = VBB_BACKEND_URL;
   } else {
     return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });

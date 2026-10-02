@@ -7,8 +7,8 @@
 //   vnp                       → VNP (measurement)
 //   apex / abide              → downstream services
 //
-// BYOS is NOT a fallback target. Any /api/* path not matched above
-// must return 404 from Next.js rather than silently reaching BYOS.
+// The decommissioned legacy backend is NOT a fallback target. Any /api/* path not matched above
+// must return 404 from Next.js rather than silently reaching it.
 
 const LOCKERPHYCER_URL = (
   process.env.LOCKERPHYCER_URL ||
@@ -152,7 +152,7 @@ const nextConfig = {
         { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },
         { source: "/api/v1/abide/:path*",  destination: `${ABIDE_URL}/api/v1/abide/:path*` },
       ],
-      // NO fallback to BYOS. Unmatched /api/* returns 404 from Next.js.
+      // NO fallback to the legacy backend. Unmatched /api/* returns 404 from Next.js.
       // This is intentional: silent catch-alls mask ownership regressions.
     };
   },

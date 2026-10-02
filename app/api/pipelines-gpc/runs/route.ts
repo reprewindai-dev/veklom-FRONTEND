@@ -3,7 +3,7 @@ import type { VeklomRun } from"../../../../components/terminal/types";
 
 export const dynamic ="force-dynamic";
 
-const BYOS_BACKEND_URL =
+const AUTHORITY_BACKEND_URL =
  process.env.VBB_BACKEND_URL || process.env.BACKEND_URL ||"https://api.veklom.com";
 
 type SourceState ="verified" |"degraded" |"empty" |"needs_proof" |"error";
@@ -47,7 +47,7 @@ function authHeaders(req: NextRequest): HeadersInit {
 
 async function readJson<T>(req: NextRequest, path: string): Promise<SourceProbe<T>> {
  try {
- const res = await fetch(`${BYOS_BACKEND_URL.replace(/\/+$/,"")}${path}`, {
+ const res = await fetch(`${AUTHORITY_BACKEND_URL.replace(/\/+$/,"")}${path}`, {
  method:"GET",
  headers: authHeaders(req),
  cache:"no-store",
@@ -152,12 +152,12 @@ function runFromRecent(row: Record<string, unknown>, generatedAt: string): Veklo
  {
  name:"Plan",
  status:"completed",
- details: `Route selected by BYOS: ${route}.`,
+ details: `Route selected by Authority: ${route}.`,
  },
  {
  name:"cAPI Gateway",
  status:"completed",
- details:"Run was reported through the BYOS workspace overview feed.",
+ details:"Run was reported through the Authority workspace overview feed.",
  },
  {
  name:"ArbiterOS",
@@ -205,7 +205,7 @@ function summarizeProof(
  const hardErrors = failed.filter((probe) => ![401, 402, 403].includes(probe.status));
 
  let state: SourceState ="verified";
- let reason ="Workspace overview, pipelines, and GPC telemetry returned from BYOS.";
+ let reason ="Workspace overview, pipelines, and GPC telemetry returned from Authority.";
  if (authBlocked) {
  state ="needs_proof";
  reason = `${authBlocked.route} requires authorization or payment proof: ${authBlocked.error}${
@@ -216,12 +216,12 @@ function summarizeProof(
  reason = hardErrors.map((probe) => `${probe.route}: ${probe.error}`).join(";");
  } else if (runs.length === 0) {
  state ="empty";
- reason ="BYOS returned no recent governed pipeline runs for this workspace.";
+ reason ="Authority returned no recent governed pipeline runs for this workspace.";
  }
 
  return {
  state,
- source:"byos-pipelines-gpc",
+ source:"authority-pipelines-gpc",
  reason,
  generated_at: generatedAt,
  routes: {

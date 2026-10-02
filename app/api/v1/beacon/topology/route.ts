@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
-const BYOS_BACKEND_URL =
+const AUTHORITY_BACKEND_URL =
  process.env.VBB_BACKEND_URL ||
  process.env.BACKEND_URL ||"https://api.veklom.com";
 
 export async function GET() {
- const upstreamUrl = `${BYOS_BACKEND_URL.replace(/\/+$/,"")}/api/v1/beacon/topology`;
+ const upstreamUrl = `${AUTHORITY_BACKEND_URL.replace(/\/+$/,"")}/api/v1/beacon/topology`;
 
  try {
  const res = await fetch(upstreamUrl, {
@@ -18,7 +18,7 @@ export async function GET() {
  status:"error",
  topology: {
  nodes: [],
- eventsLog: [`BYOS topology unavailable: HTTP ${res.status}`],
+ eventsLog: [`Authority topology unavailable: HTTP ${res.status}`],
  ledgerFeed: [],
  totalSettledUsd: 0,
  activeNodes: 0,
@@ -40,7 +40,7 @@ export async function GET() {
  status:"error",
  topology: {
  nodes: [],
- eventsLog: ["BYOS topology request failed"],
+ eventsLog: ["Authority topology request failed"],
  ledgerFeed: [],
  totalSettledUsd: 0,
  activeNodes: 0,

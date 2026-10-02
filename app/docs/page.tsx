@@ -12,7 +12,7 @@ const guides = [
   {
     n: "01",
     title: "Enter Capability OS",
-    body: "Authenticate through the BYOS identity/session boundary and open your workspace. Login establishes identity; it does not grant execution authority by itself.",
+    body: "Sign in through Identity and open your workspace. Login establishes identity; it does not grant execution authority by itself.",
     href: "/login?returnTo=/os",
     cta: "Open workspace",
   },
@@ -26,7 +26,7 @@ const guides = [
   {
     n: "03",
     title: "Inspect runtime truth",
-    body: "Observe the BYOS runtime, Identity, Authority, Connections and Evidence from the public proof and machine surfaces without synthetic health state.",
+    body: "Observe Execution, Identity, Authority, Connections and Evidence from the public proof and machine surfaces without synthetic health state.",
     href: "/proof",
     cta: "Inspect proof",
   },
@@ -40,8 +40,8 @@ const guides = [
 ];
 
 const concepts = [
-  ["BYOS Runtime", "Workspace, tenant and usable execution substrate."],
-  ["Identity", "Security, identity and governed host-execution boundary."],
+  ["Execution", "The gateway where approved actions run, each settled exactly once."],
+  ["Identity", "Accounts, workspaces, credits and the governed host-execution boundary."],
   ["Authority", "Fail-closed authorization for consequential actions."],
   ["Connections", "Connects to the systems you already use."],
   ["Evidence", "Durable, tamper-evident evidence you can verify independently."],

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: "Missing required fields." }, { status: 400 });
     }
 
-    // Use active canonical services only. BYOS is decommissioned and must not
+    // Use active canonical services only. The legacy backend is decommissioned and must not
     // remain a validation or fallback dependency.
     const backends = canonicalBackends();
     const capiBackend = backends.find((backend) => backend.id === "capi");

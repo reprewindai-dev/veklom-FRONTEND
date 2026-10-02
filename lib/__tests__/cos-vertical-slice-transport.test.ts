@@ -65,7 +65,7 @@ describe("Capability OS truthful vertical-slice transport", () => {
     expect(url).toBe("http://localhost/api/cappo/v1/executions/exec-1/evidence");
     expect(init.headers.Authorization).toBe("Bearer real-session-token");
     expect(init.headers["X-API-Key"]).toBeUndefined();
-    expect(JSON.stringify(init)).not.toContain("byos_test_key");
+    expect(JSON.stringify(init)).not.toContain("legacy_test_key");
   });
 
   it("retrieves measurement for the exact execution", async () => {

@@ -23,11 +23,11 @@ export default function Page() {
       doesNotOwn={[
         "Connections owns how services connect to each other.",
         "Authority owns the decision whether an action may take effect, and fails closed.",
-        "Evidence owns the durable record, and BYOS owns tenant/workspace runtime state.",
+        "Evidence owns the durable record, and Execution runs the approved action.",
       ]}
       interfaces={[
         { label: "Health", value: "GET /health" },
-        { label: "Works with", value: "Authority · Connections · Evidence · BYOS" },
+        { label: "Works with", value: "Authority · Connections · Evidence · Execution" },
         { label: "Technical proof", value: "https://veklom.dev" },
       ]}
       proofNote="Identity should be judged by the boundary that is actually deployed: which version is running, signed authorization, replay behavior and the real action path. A configured URL or a passing unit test is not enough to claim the host boundary is live."

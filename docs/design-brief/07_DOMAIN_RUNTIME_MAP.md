@@ -8,7 +8,7 @@ This document records the **reported runtime contract** for Veklom foundation se
 
 | Service | Public surface | Reported internal port | State |
 |---|---|---:|---|
-| BYOS | `api.veklom.com` | 8088 | `NOT_VERIFIED` |
+| API gateway (control plane rewrites) | `api.veklom.com` | 3002 | `NOT_VERIFIED` |
 | Control Plane | `governance.veklom.com`, `control.veklom.com` | 3002 | `NOT_VERIFIED` |
 | cAPI / Interlink | `capi.veklom.com`, `interlink.veklom.com` | 3003 | `NOT_VERIFIED` |
 | GPC / UACP V3 | `gpc.veklom.com`, `veklom.com/gpc` | 3010 | `NOT_VERIFIED` |

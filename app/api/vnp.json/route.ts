@@ -32,7 +32,7 @@ type TopologyResponse = {
  };
 };
 
-const BYOS_BACKEND_URL =
+const AUTHORITY_BACKEND_URL =
  process.env.VBB_BACKEND_URL ||
  process.env.BACKEND_URL ||"https://api.veklom.com";
 
@@ -68,10 +68,10 @@ const fallbackStack: VerificationStackItem[] = [
 ];
 
 export async function GET() {
- const byosBase = trimTrailingSlash(BYOS_BACKEND_URL);
+ const authorityBase = trimTrailingSlash(AUTHORITY_BACKEND_URL);
  const cappoBase = trimTrailingSlash(CAPPO_BACKEND_URL);
- const methodologyUrl = `${byosBase}/api/v1/vnp/methodology`;
- const topologyUrl = `${byosBase}/api/v1/beacon/topology`;
+ const methodologyUrl = `${authorityBase}/api/v1/vnp/methodology`;
+ const topologyUrl = `${authorityBase}/api/v1/beacon/topology`;
 
  const [methodology, topology] = await Promise.all([
  readJson<MethodologyResponse>(methodologyUrl),
@@ -106,7 +106,7 @@ export async function GET() {
  methodology?.tagline ||"Cryptographic API telemetry for the machine-to-machine economy",
  verification_stack: verificationStack,
  backends: {
- byos: byosBase,
+ authority: authorityBase,
  cappo: `${cappoBase}/v1/exec`,
  },
  evidence_endpoints: {

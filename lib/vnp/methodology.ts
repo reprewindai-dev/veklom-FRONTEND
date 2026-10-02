@@ -49,13 +49,13 @@ export const VNP_VERIFICATION_STACK: Array<{
   {
     label: "x402 settlement evidence",
     shortLabel: "x402",
-    description: "Payment-required, verification, protected route, and ledger evidence from the BYOS backend when configured.",
+    description: "Payment-required, verification, protected route, and ledger evidence from the Authority backend when configured.",
     status: "Connected",
   },
   {
     label: "PGL audit trails",
     shortLabel: "PGL",
-    description: "PGL genome, identity, certificate, and lineage evidence across BYOS and CAPPO route surfaces.",
+    description: "PGL genome, identity, certificate, and lineage evidence across Identity and Authority route surfaces.",
     status: "Connected",
   },
   {

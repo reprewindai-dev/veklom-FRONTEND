@@ -35,7 +35,7 @@ async function checkDependency(dependency: Dependency) {
 
 export async function GET() {
  const dependencies = await Promise.all([
- checkDependency({ name:"byos", url: process.env.BACKEND_URL }),
+ checkDependency({ name:"cappo", url: process.env.BACKEND_URL }),
  checkDependency({ name:"capi", url: process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL }),
  checkDependency({ name:"gnomledger", url: process.env.GNOMLEDGER_URL }),
  checkDependency({ name:"lockerphycer", url: process.env.LOCKERPHYCER_URL }),

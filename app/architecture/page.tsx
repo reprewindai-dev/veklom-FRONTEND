@@ -11,16 +11,16 @@ export const metadata = {
 const planes = [
   {
     id: "01",
-    name: "BYOS Runtime",
-    role: "Tenant / workspace execution substrate",
-    body: "The operating substrate for users, workspaces, API access, integrations, budgets and governed runtime services. This is where the Capability OS becomes an actual usable environment rather than an architecture diagram.",
+    name: "Execution",
+    role: "Where governed actions actually run",
+    body: "The execution gateway runs a requested action only after it passes every check: a valid signed envelope, the exact act that was approved, a live time window, no revocation, scope, budget and replay protection. Each operation settles exactly once, and the result is recorded.",
     emphasis: true,
   },
   {
     id: "02",
     name: "Identity",
-    role: "Security, identity and execution-host boundary",
-    body: "Keeps sensitive host execution authority out of ordinary application containers. Before anything runs at host level, it checks for signed authorization, a fixed runtime identity, replay protection and isolation.",
+    role: "Accounts, workspaces and the host boundary",
+    body: "Owns sign-in, sessions, workspaces, credits and billing, and keeps sensitive host execution authority out of ordinary application containers. Before anything runs at host level, it checks for signed authorization, a fixed runtime identity, replay protection and isolation.",
     emphasis: true,
   },
   {
@@ -59,7 +59,7 @@ const flow = [
   ["Need", "A machine or operator declares the intended work."],
   ["Identity", "A temporary execution identity is established."],
   ["Authority", "Policy, scope, budget and time become an explicit capability boundary."],
-  ["Execution", "The BYOS runtime and the Identity boundary provide where work runs and what protects the host."],
+  ["Execution", "The execution gateway runs the work; the Identity boundary protects the host it runs on."],
   ["Consequence", "Authorization decides whether the requested effect may cross into the real system."],
   ["Evidence", "A tamper-evident record preserves what actually happened."],
 ];
@@ -74,7 +74,7 @@ export default function ArchitecturePage() {
           <PremiumPageIntro
             eyebrow="System architecture"
             title="Veklom is a stack of boundaries, not a single server."
-            body="The Capability OS is built from distinct runtime planes with different authority. The BYOS runtime and Identity are central because one provides the usable execution substrate and the other protects the host-level execution boundary."
+            body="The Capability OS is built from distinct runtime planes with different authority. Execution and Identity are central: one is where approved work actually runs, the other owns the accounts and protects the host-level execution boundary."
           />
         </section>
 

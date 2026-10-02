@@ -10,9 +10,9 @@ export const metadata = {
 const groups = [
   {
     title: "Capability OS",
-    body: "Authenticated tenant and workspace APIs are issued by BYOS. Browser traffic stays same-origin through the control plane so cookies and session validation do not depend on a separate CORS contract.",
-    routes: ["/api/v1/auth/*", "/api/v1/*", "BYOS /health", "BYOS /ready"],
-    href: "/byos",
+    body: "Authenticated account, workspace, credit and billing APIs are served by Identity (LockerPhycer). Browser traffic stays same-origin through the control plane so cookies and session validation do not depend on a separate CORS contract.",
+    routes: ["/api/v1/auth/*", "/api/v1/wallet", "/api/v1/billing/*", "GET /health"],
+    href: "/os",
   },
   {
     title: "Consequence authority",
@@ -40,7 +40,7 @@ const groups = [
   },
   {
     title: "Host boundary",
-    body: "LockerPhycer exposes its security/identity host boundary separately from BYOS and CAPPO.",
+    body: "LockerPhycer exposes its security/identity host boundary separately from CAPPO.",
     routes: ["LockerPhycer :8092", "GET /health", "local /docs when running"],
     href: "/lockerphycer",
   },
@@ -88,7 +88,7 @@ export default function ApiDirectoryPage() {
               <h2 className="mt-6 text-4xl font-semibold tracking-[-.055em] text-theme-ink md:text-5xl">The browser is not the authority kernel.</h2>
             </div>
             <div className="grid gap-3">
-              {["Authentication and workspace state come from BYOS.", "Consequence authorization comes from CAPPO.", "Host-sensitive execution boundaries stay in LockerPhycer.", "Durable evidence belongs in PGL/Gnomledger; portable execution evidence belongs in EEE.", "Connection identifiers and transport routes never mint wider authority."].map((item, index) => (
+              {["Authentication and workspace state come from Identity.", "Consequence authorization comes from CAPPO.", "Host-sensitive execution boundaries stay in LockerPhycer.", "Durable evidence belongs in PGL/Gnomledger; portable execution evidence belongs in EEE.", "Connection identifiers and transport routes never mint wider authority."].map((item, index) => (
                 <div key={item} className="grid grid-cols-[34px_1fr] gap-4 rounded-2xl border border-theme-border bg-theme-bg p-4">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full border border-theme-border text-[9px] font-semibold text-theme-inkDim">{String(index + 1).padStart(2, "0")}</span>
                   <span className="text-sm leading-6 text-theme-ink">{item}</span>

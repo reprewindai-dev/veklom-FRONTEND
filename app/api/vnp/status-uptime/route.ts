@@ -1,6 +1,6 @@
 import { NextResponse } from"next/server";
 
-// Server-side reader for the authenticated BYOS uptime window.
+// Server-side reader for the authenticated workspace uptime window.
 // `GET /api/v1/platform/uptime` returns 401 anonymously, so the credential is
 // only ever held server-side and NEVER sent to the browser. If no credential is
 // configured (or the upstream rejects it) we return an explicit unavailable

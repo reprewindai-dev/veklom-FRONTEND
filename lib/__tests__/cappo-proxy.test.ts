@@ -45,7 +45,7 @@ describe("CAPPO proxy boundary", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("maps an invalid BYOS session to 401 without contacting CAPPO", async () => {
+  it("maps an invalid session to 401 without contacting CAPPO", async () => {
     const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ error: "invalid token" }), {
         status: 401,
@@ -55,7 +55,7 @@ describe("CAPPO proxy boundary", () => {
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/runs", {
       method: "GET",
       headers: {
-        authorization: "Bearer byos-session-token",
+        authorization: "Bearer session-token",
         cookie: "veklom.session=present",
       },
     });
@@ -80,7 +80,7 @@ describe("CAPPO proxy boundary", () => {
     );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/runs", {
       method: "GET",
-      headers: { authorization: "Bearer byos-session-token" },
+      headers: { authorization: "Bearer session-token" },
     });
 
     const response = await proxyModule.GET(request);
@@ -109,7 +109,7 @@ describe("CAPPO proxy boundary", () => {
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/exec", {
       method: "POST",
       headers: {
-        authorization: "Bearer byos-session-token",
+        authorization: "Bearer session-token",
         "x-api-key": "browser-key-must-not-forward",
         "content-type": "application/json",
       },
@@ -145,7 +145,7 @@ describe("CAPPO proxy boundary", () => {
     const request = new NextRequest("https://control.veklom.com/api/cappo/api/v1/agents", {
       method: "GET",
       headers: {
-        authorization: "Bearer byos-session-token",
+        authorization: "Bearer session-token",
         cookie: "veklom.session=present",
       },
     });
@@ -156,7 +156,7 @@ describe("CAPPO proxy boundary", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://api.veklom.com/api/v1/auth/cappo-token");
     const exchangeHeaders = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
-    expect(exchangeHeaders.get("authorization")).toBe("Bearer byos-session-token");
+    expect(exchangeHeaders.get("authorization")).toBe("Bearer session-token");
     expect(exchangeHeaders.get("cookie")).toBe("veklom.session=present");
     expect(fetchSpy.mock.calls[1]?.[0]).toBe("https://cappo.test/api/v1/agents");
     const upstreamHeaders = new Headers(fetchSpy.mock.calls[1]?.[1]?.headers);
@@ -167,7 +167,7 @@ describe("CAPPO proxy boundary", () => {
     expect(upstreamHeaders.get("cookie")).toBeNull();
   });
 
-  it("fails closed when the BYOS assertion exchange is unavailable", async () => {
+  it("fails closed when the identity assertion exchange is unavailable", async () => {
     const fetchSpy = jest.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ error: "unavailable" }), {
@@ -177,7 +177,7 @@ describe("CAPPO proxy boundary", () => {
       );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/runs", {
       method: "GET",
-      headers: { authorization: "Bearer byos-session-token" },
+      headers: { authorization: "Bearer session-token" },
     });
 
     const response = await proxyModule.GET(request);
@@ -258,7 +258,7 @@ describe("CAPPO proxy boundary", () => {
       );
     const request = new NextRequest("https://control.veklom.com/api/cappo/v1/exec", {
       method: "POST",
-      headers: { authorization: "Bearer byos-session-token" },
+      headers: { authorization: "Bearer session-token" },
       body: JSON.stringify({ capability: "demo" }),
     });
 

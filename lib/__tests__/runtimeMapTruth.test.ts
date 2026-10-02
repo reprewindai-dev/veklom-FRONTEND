@@ -14,7 +14,7 @@ describe("foundation runtime map truth contract", () => {
   it("keeps reported ports explicit without promoting them to verified runtime state", () => {
     const source = readRuntimeMap();
 
-    expect(source).toContain("| BYOS | `api.veklom.com` | 8088 | `NOT_VERIFIED` |");
+    expect(source).toContain("| API gateway (control plane rewrites) | `api.veklom.com` | 3002 | `NOT_VERIFIED` |");
     expect(source).toContain("| Control Plane | `governance.veklom.com`, `control.veklom.com` | 3002 | `NOT_VERIFIED` |");
     expect(source).toContain("| cAPI / Interlink | `capi.veklom.com`, `interlink.veklom.com` | 3003 | `NOT_VERIFIED` |");
     expect(source).toContain("| GPC / UACP V3 | `gpc.veklom.com`, `veklom.com/gpc` | 3010 | `NOT_VERIFIED` |");

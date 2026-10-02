@@ -21,7 +21,7 @@ export default function Page() {
         "The governed execution path used by the live Activation journey.",
       ]}
       doesNotOwn={[
-        "BYOS owns tenant/workspace runtime and user session state.",
+        "Identity owns accounts, workspaces and user session state.",
         "Identity owns the security, key and host-execution boundary.",
         "Evidence owns the durable record; Connections and VLink connect your systems but never grant authority.",
       ]}

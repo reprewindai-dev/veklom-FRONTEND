@@ -3,7 +3,7 @@ import type { AgentNode } from"../../../../components/terminal/types";
 
 export const dynamic ="force-dynamic";
 
-const BYOS_BACKEND_URL =
+const AUTHORITY_BACKEND_URL =
  process.env.VBB_BACKEND_URL || process.env.BACKEND_URL ||"https://api.veklom.com";
 
 type ProofState ="verified" |"empty" |"needs_proof" |"error";
@@ -53,7 +53,7 @@ async function readJson<T>(req: NextRequest, path: string): Promise<{
  error?: string;
 }> {
  try {
- const res = await fetch(`${BYOS_BACKEND_URL.replace(/\/+$/,"")}${path}`, {
+ const res = await fetch(`${AUTHORITY_BACKEND_URL.replace(/\/+$/,"")}${path}`, {
  method:"GET",
  headers: authHeaders(req),
  cache:"no-store",
@@ -173,11 +173,11 @@ function mapAgent(record: Record<string, unknown>, index: number, generatedAt: s
  const radius = 260 + (index % 3) * 95;
  const scopes = toolScopes(record);
  const warnings = [
- rawRole ?"" :"BYOS registry did not return a role; visual role is inferred for topology grouping.",
- rawDepartment ?"" :"BYOS registry did not return a department/cluster; visual cluster is inferred for filtering.",
- stringValue(record, ["status","state","health_status"],"") ?"" :"BYOS registry did not return status; node is shown as Idle until backend state is present.",
+ rawRole ?"" :"Authority registry did not return a role; visual role is inferred for topology grouping.",
+ rawDepartment ?"" :"Authority registry did not return a department/cluster; visual cluster is inferred for filtering.",
+ stringValue(record, ["status","state","health_status"],"") ?"" :"Authority registry did not return status; node is shown as Idle until backend state is present.",
  record.x === undefined || record.y === undefined
- ?"BYOS registry did not return map coordinates; position is deterministic UI layout only."
+ ?"Authority registry did not return map coordinates; position is deterministic UI layout only."
  :"",
  ].filter(Boolean);
 
@@ -189,7 +189,7 @@ function mapAgent(record: Record<string, unknown>, index: number, generatedAt: s
  status: statusValue(rawStatus),
  mission: stringValue(
  record,
- ["mission","description","purpose"],"Registered BYOS agent. No mission text was provided by the authoritative registry.",
+ ["mission","description","purpose"],"Registered Authority agent. No mission text was provided by the authoritative registry.",
  ),
  currentTask: stringValue(record, ["current_task","currentTask"],""),
  lastAction: stringValue(record, ["last_action","lastAction"],""),
@@ -226,10 +226,10 @@ export async function GET(req: NextRequest) {
  agents: [],
  proof: {
  state:"needs_proof",
- source:"byos-agents-registry",
+ source:"authority-agents-registry",
  reason: isPaymentRequired
- ? `BYOS registry requires x402 payment proof: ${registry.error ||"payment_required"}`
- : registry.error ||"BYOS agent registry unavailable",
+ ? `Authority registry requires x402 payment proof: ${registry.error ||"payment_required"}`
+ : registry.error ||"Authority agent registry unavailable",
  generated_at: generatedAt,
  routes: {
  registry:"/api/v1/agents/registry",
@@ -245,11 +245,11 @@ export async function GET(req: NextRequest) {
  const registryRows = arrayFromRegistry(registry.data);
  const agents = registryRows.map((row, index) => mapAgent(row, index, generatedAt));
  const registryData = isRecord(registry.data) ? registry.data : {};
- const source = stringValue(registryData, ["source"], agents.length ?"byos" :"empty");
+ const source = stringValue(registryData, ["source"], agents.length ?"authority" :"empty");
  const reason = stringValue(
  registryData,
  ["reason","message","detail"],
- agents.length ?"BYOS agent registry returned live records." :"No BYOS agent records returned.",
+ agents.length ?"Authority agent registry returned live records." :"No Authority agent records returned.",
  );
 
  return NextResponse.json(

@@ -11,14 +11,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const byosApiUrl = process.env.VEKLOM_BACKEND_URL || process.env.LOCKERPHYCER_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.veklom.com";
+    const identityApiUrl = process.env.VEKLOM_BACKEND_URL || process.env.LOCKERPHYCER_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.veklom.com";
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
     let backendRes;
     try {
-      backendRes = await fetch(`${byosApiUrl}/api/v1/auth/login`, {
+      backendRes = await fetch(`${identityApiUrl}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

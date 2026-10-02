@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     if (value) backendCallback.searchParams.set(key, value);
   }
 
-  // BYOS validates its own signed OAuth state, exchanges the code, binds the
+  // Identity validates its own signed OAuth state, exchanges the code, binds the
   // GitHub identity to a Veklom user/workspace, creates the server-side Session,
   // sets HttpOnly access/refresh cookies and performs the final safe redirect.
   return NextResponse.redirect(backendCallback);
