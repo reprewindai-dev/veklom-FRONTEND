@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { MarketingLayout } from"@/components/marketing/MarketingLayout";
+import { HumanAppShell } from"@/components/shell/HumanAppShell";
 import { Activity, Github, ShieldCheck, FileText, Code, GitCommit } from"lucide-react";
 import Link from 'next/link';
 import { motion } from"framer-motion";
@@ -36,7 +36,7 @@ export default function OpenSourcePage() {
  }, []);
 
  return (
- <MarketingLayout isMachine={false}>
+ <HumanAppShell>
  <section className="relative pt-32 pb-20 px-6 max-w-6xl mx-auto min-h-screen text-cos-text">
  <div className="text-center mb-16">
  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cos-accent/10 border border-cos-accent/20 text-cos-accent text-xs font-semibold uppercase tracking-wider mb-6">
@@ -51,7 +51,7 @@ export default function OpenSourcePage() {
  </div>
 
  <div className="grid lg:grid-cols-2 gap-12 mb-20">
- <div className="p-8 rounded-2xl bg-bg-900 border border-border shadow-2xl relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-theme-surface border border-theme-border shadow-2xl relative overflow-hidden group">
  <div className="absolute inset-0 bg-theme-surface from-cos-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
  
  <div className="flex items-center gap-4 mb-6 relative z-10">
@@ -78,16 +78,16 @@ export default function OpenSourcePage() {
  </div>
  </div>
 
- <div className="p-8 rounded-2xl bg-bg-900 border border-border shadow-2xl relative overflow-hidden group">
- <div className="absolute inset-0 bg-theme-surface from-[#FFB800]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+ <div className="p-8 rounded-2xl bg-theme-surface border border-theme-border shadow-2xl relative overflow-hidden group">
+ <div className="absolute inset-0 bg-theme-surface from-[rgb(var(--theme-accent))]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
  
  <div className="flex items-center gap-4 mb-6 relative z-10">
- <div className="w-12 h-12 rounded-xl bg-[#FFB800]/10 flex items-center justify-center border border-[#FFB800]/20">
- <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+ <div className="w-12 h-12 rounded-xl bg-[rgb(var(--theme-accent))]/10 flex items-center justify-center border border-[rgb(var(--theme-accent))]/20">
+ <ShieldCheck className="w-6 h-6 text-[rgb(var(--theme-accent))]" />
  </div>
  <div>
  <h3 className="text-2xl font-bold">EEE & VCGB Protocols</h3>
- <div className="text-sm font-mono text-[#FFB800]">Status: Open Sourced</div>
+ <div className="text-sm font-mono text-[rgb(var(--theme-accent))]">Status: Open Sourced</div>
  </div>
  </div>
  
@@ -96,10 +96,10 @@ export default function OpenSourcePage() {
  </p>
  
  <div className="flex gap-4 relative z-10">
- <Link href="/eee/docs" className="px-6 py-3 rounded-lg bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/20 font-bold hover:bg-[#FFB800]/20 transition-colors flex items-center gap-2">
+ <Link href="/eee/docs" className="px-6 py-3 rounded-lg bg-[rgb(var(--theme-accent))]/10 text-[rgb(var(--theme-accent))] border border-[rgb(var(--theme-accent))]/20 font-bold hover:bg-[rgb(var(--theme-accent))]/20 transition-colors flex items-center gap-2">
  <FileText className="w-4 h-4" /> EEE Spec
  </Link>
- <Link href="/vcgb/docs" className="px-6 py-3 rounded-lg bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/20 font-bold hover:bg-[#FFB800]/20 transition-colors flex items-center gap-2">
+ <Link href="/vcgb/docs" className="px-6 py-3 rounded-lg bg-[rgb(var(--theme-accent))]/10 text-[rgb(var(--theme-accent))] border border-[rgb(var(--theme-accent))]/20 font-bold hover:bg-[rgb(var(--theme-accent))]/20 transition-colors flex items-center gap-2">
  <ShieldCheck className="w-4 h-4" /> VCGB Spec
  </Link>
  </div>
@@ -107,7 +107,7 @@ export default function OpenSourcePage() {
  </div>
 
  {/* 60-Day Countdown Section */}
- <div className="w-full p-8 md:p-12 rounded-2xl bg-theme-surface from-bg-800 to-bg-900 border border-border flex flex-col items-center text-center">
+ <div className="w-full p-8 md:p-12 rounded-2xl bg-theme-surface  border border-theme-border flex flex-col items-center text-center">
  <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold uppercase tracking-wider mb-6">
  <Activity className="w-4 h-4 animate-pulse" /> Core Infrastructure Release
  </div>
@@ -117,22 +117,22 @@ export default function OpenSourcePage() {
  </p>
 
  <div className="flex flex-wrap justify-center gap-6 mb-8">
- <div className="flex flex-col items-center bg-bg-900 border border-border p-6 rounded-xl min-w-[120px]">
+ <div className="flex flex-col items-center bg-theme-surface border border-theme-border p-6 rounded-xl min-w-[120px]">
  <div className="text-5xl font-mono font-bold text-cos-accent mb-2">{String(timeLeft.days).padStart(2, '0')}</div>
  <div className="text-xs font-bold uppercase tracking-widest text-cos-text/50">Days</div>
  </div>
  <div className="text-5xl font-mono font-bold text-cos-text/20 py-4">:</div>
- <div className="flex flex-col items-center bg-bg-900 border border-border p-6 rounded-xl min-w-[120px]">
+ <div className="flex flex-col items-center bg-theme-surface border border-theme-border p-6 rounded-xl min-w-[120px]">
  <div className="text-5xl font-mono font-bold text-cos-accent mb-2">{String(timeLeft.hours).padStart(2, '0')}</div>
  <div className="text-xs font-bold uppercase tracking-widest text-cos-text/50">Hours</div>
  </div>
  <div className="text-5xl font-mono font-bold text-cos-text/20 py-4 hidden md:block">:</div>
- <div className="flex flex-col items-center bg-bg-900 border border-border p-6 rounded-xl min-w-[120px]">
+ <div className="flex flex-col items-center bg-theme-surface border border-theme-border p-6 rounded-xl min-w-[120px]">
  <div className="text-5xl font-mono font-bold text-cos-accent mb-2">{String(timeLeft.minutes).padStart(2, '0')}</div>
  <div className="text-xs font-bold uppercase tracking-widest text-cos-text/50">Minutes</div>
  </div>
  <div className="text-5xl font-mono font-bold text-cos-text/20 py-4 hidden md:block">:</div>
- <div className="flex flex-col items-center bg-bg-900 border border-border p-6 rounded-xl min-w-[120px]">
+ <div className="flex flex-col items-center bg-theme-surface border border-theme-border p-6 rounded-xl min-w-[120px]">
  <div className="text-5xl font-mono font-bold text-cos-accent mb-2">{String(timeLeft.seconds).padStart(2, '0')}</div>
  <div className="text-xs font-bold uppercase tracking-widest text-cos-text/50">Seconds</div>
  </div>
@@ -144,6 +144,6 @@ export default function OpenSourcePage() {
  </div>
 
  </section>
- </MarketingLayout>
+ </HumanAppShell>
  );
 }

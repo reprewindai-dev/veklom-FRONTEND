@@ -3,7 +3,7 @@
 import React from 'react';
 import { DocsSidebar, SidebarGroup } from './DocsSidebar';
 import { DocsToc, TocHeading } from './DocsToc';
-import { MarketingLayout } from '@/components/marketing/MarketingLayout';
+import { HumanAppShell } from '@/components/shell/HumanAppShell';
 
 interface DocsLayoutProps {
  children: React.ReactNode;
@@ -13,7 +13,7 @@ interface DocsLayoutProps {
 
 export function DocsLayout({ children, sidebarGroups, tocHeadings }: DocsLayoutProps) {
  return (
- <MarketingLayout>
+ <HumanAppShell>
  <div className="flex-grow max-w-[1400px] mx-auto w-full flex px-4 sm:px-6 lg:px-8">
  
  {/* Left Navigation Sidebar */}
@@ -30,7 +30,7 @@ export function DocsLayout({ children, sidebarGroups, tocHeadings }: DocsLayoutP
  <DocsToc headings={tocHeadings} />
  
  </div>
- </MarketingLayout>
+ </HumanAppShell>
  );
 }
 

@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer";
+export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "lockerphycer";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -32,12 +32,10 @@ const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 export function canonicalBackends(): CanonicalBackendConfig[] {
   const capiUrl = CAPI_RUNTIME_URL;
   const cappoUrl = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
-  const ledgerUrl = process.env.LEDGER_URL || "https://ledger.veklom.com";
+  const ledgerUrl = process.env.LEDGER_URL || process.env.PGL_URL || "https://pgl.veklom.com";
   const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
   const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
   const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
-  const apexUrl = process.env.APEX_URL || "https://apex.veklom.com";
-  const abideUrl = process.env.ABIDE_URL || "https://abide.veklom.com";
   const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
 
   return [
@@ -101,26 +99,6 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       healthPath: "/health",
       overviewPath: undefined,
       authMode: "none",
-    },
-    {
-      id: "apex",
-      label: "Apex Blueprint",
-      repo: "ApexBlueprintV4",
-      role: "policy-oracle",
-      baseUrl: trimTrailingSlash(apexUrl),
-      healthPath: "/health",
-      overviewPath: undefined,
-      authMode: "none",
-    },
-    {
-      id: "abide",
-      label: "ABIDE",
-      repo: "ABIDE",
-      role: "sovereign-control-plane",
-      baseUrl: trimTrailingSlash(abideUrl),
-      healthPath: "/health",
-      overviewPath: undefined,
-      authMode: "forward-bearer",
     },
     {
       id: "lockerphycer",

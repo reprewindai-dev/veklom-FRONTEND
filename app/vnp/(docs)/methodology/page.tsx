@@ -20,8 +20,8 @@ export default function MethodologyPage() {
  </div>
 
  <div className="space-y-8">
- <h2 className="text-2xl font-bold border-b border-rule pb-4 text-cos-text">1. P99 Latency (Geographically Normalized)</h2>
- <div className="bg-void-panel border border-rule rounded-xl p-6">
+ <h2 className="text-2xl font-bold border-b border-theme-border pb-4 text-cos-text">1. P99 Latency (Geographically Normalized)</h2>
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-6">
  <p className="text-cos-text/90 leading-relaxed mb-4">
  Averages are useless for autonomous agents. If an LLM router encounters a P99 latency spike, the entire generation pipeline halts. VNP strictly evaluates the 99th percentile of response times across our decentralized Edge Probes.
  </p>
@@ -30,8 +30,8 @@ export default function MethodologyPage() {
  </p>
  </div>
 
- <h2 className="text-2xl font-bold border-b border-rule pb-4 text-cos-text">2. Absolute Availability & Uptime</h2>
- <div className="bg-void-panel border border-rule rounded-xl p-6">
+ <h2 className="text-2xl font-bold border-b border-theme-border pb-4 text-cos-text">2. Absolute Availability & Uptime</h2>
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-6">
  <p className="text-cos-text/90 leading-relaxed mb-4">
  VNP operates on zero-trust principles. We do not trust self-reported status pages. Our STAMP (Simple Two-Way Active Measurement Protocol - RFC 8762) micro-sessions ensure that performance measurements span every physical member link of complex provider infrastructure utilizing Equal-Cost Multipath (ECMP) routing.
  </p>
@@ -45,8 +45,8 @@ export default function MethodologyPage() {
  </div>
  </div>
 
- <h2 className="text-2xl font-bold border-b border-rule pb-4 text-cos-text">3. x402 Settlement Compliance</h2>
- <div className="bg-void-panel border border-rule rounded-xl p-6">
+ <h2 className="text-2xl font-bold border-b border-theme-border pb-4 text-cos-text">3. x402 Settlement Compliance</h2>
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-6">
  <p className="text-cos-text/90 leading-relaxed mb-4">
  APIs must put their money where their SLAs are. Providers failing to meet their latency or correctness constraints face instant, machine-to-machine financial slashing on the Base blockchain.
  </p>

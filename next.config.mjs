@@ -5,7 +5,6 @@
 //   cappo                     → CAPPO (consequence authority)
 //   ledger                    → PGL (evidence)
 //   vnp                       → VNP (measurement)
-//   apex / abide              → downstream services
 //
 // The decommissioned legacy backend is NOT a fallback target. Any /api/* path not matched above
 // must return 404 from Next.js rather than silently reaching it.
@@ -18,8 +17,6 @@ const LOCKERPHYCER_URL = (
 const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
 const CAPPO_URL = (process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com").replace(/\/$/, "");
 const VNP_URL = (process.env.VNP_URL || "https://vnp.veklom.com").replace(/\/$/, "");
-const APEX_URL = (process.env.APEX_URL || "https://apex.veklom.com").replace(/\/$/, "");
-const ABIDE_URL = (process.env.ABIDE_URL || "https://abide.veklom.com").replace(/\/$/, "");
 const PGL_URL = (process.env.PGL_URL || "https://pgl.veklom.com").replace(/\/$/, "");
 const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/$/, "");
 
@@ -149,8 +146,6 @@ const nextConfig = {
         { source: "/pair/:path*", destination: `${VLINK_URL}/pair/:path*` },
 
         // ── Downstream services ───────────────────────────────────────────────
-        { source: "/api/v1/apex/:path*",   destination: `${APEX_URL}/api/v1/apex/:path*` },
-        { source: "/api/v1/abide/:path*",  destination: `${ABIDE_URL}/api/v1/abide/:path*` },
       ],
       // NO fallback to the legacy backend. Unmatched /api/* returns 404 from Next.js.
       // This is intentional: silent catch-alls mask ownership regressions.

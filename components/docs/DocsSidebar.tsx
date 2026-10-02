@@ -22,7 +22,7 @@ export function DocsSidebar({ groups }: DocsSidebarProps) {
  const pathname = usePathname();
 
  return (
- <aside className="w-64 shrink-0 hidden lg:block border-r border-rule pt-8 pr-6 pb-20 sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar">
+ <aside className="w-64 shrink-0 hidden lg:block border-r border-theme-border pt-8 pr-6 pb-20 sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar">
  {groups.map((group, i) => (
  <div key={i} className="mb-8">
  <h4 className="text-xs font-bold text-cos-text/50 uppercase tracking-widest mb-3 px-3">{group.title}</h4>

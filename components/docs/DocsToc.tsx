@@ -27,7 +27,7 @@ export function DocsToc({ headings = [] }: DocsTocProps) {
  return (
  <aside className="w-64 shrink-0 hidden xl:block pt-8 pl-6 pb-20 sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar">
  <h4 className="text-xs font-bold text-cos-text uppercase mb-4 tracking-wide">On this page</h4>
- <ul className="space-y-3 border-l border-rule">
+ <ul className="space-y-3 border-l border-theme-border">
  {displayHeadings.map((heading, i) => (
  <li 
  key={i} 
