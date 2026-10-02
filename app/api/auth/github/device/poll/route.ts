@@ -49,39 +49,26 @@ export async function POST(req: NextRequest) {
     // Success - we have the token
     const accessToken = data.access_token;
     
-    // Fetch user
-    const userRes = await fetch("https://api.github.com/user", {
-      headers: {
-        "Authorization": "Bearer " + accessToken,
-        "Accept": "application/json",
-        "User-Agent": "Veklom-M2M-App"
-      }
-    });
-
-    let githubUsername = "unknown";
-    if (userRes.ok) {
-      const userData = await userRes.json();
-      githubUsername = userData.login;
-    }
-
-    // Exchange with LockerPhycer
+    // Identity verifies the token with GitHub against this app and derives the
+    // GitHub login itself. The login is never taken from this request.
     const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "https://command.veklom.com";
     const exchangeRes = await fetch(lockerphycerUrl + "/api/v1/auth/github/exchange", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ github_username: githubUsername })
+      body: JSON.stringify({ github_access_token: accessToken })
     });
-    
+
     if (!exchangeRes.ok) {
-        return NextResponse.json({ error: "LockerPhycer exchange failed" }, { status: 502 });
+      const status = exchangeRes.status === 401 ? 401 : 502;
+      return NextResponse.json({ error: "GitHub identity could not be verified" }, { status });
     }
-    
+
     const exchangeData = await exchangeRes.json();
 
     return NextResponse.json({
       success: true,
       message: "Session granted via Device Flow",
-      github_username: githubUsername,
+      github_username: exchangeData.user?.username ?? null,
       session_granted: true,
       access_token: exchangeData.access_token
     });
