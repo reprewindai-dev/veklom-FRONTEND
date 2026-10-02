@@ -57,21 +57,21 @@ function StatusRow({
  detail?: string;
 }) {
  return (
- <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-6">
  <div className="flex items-start justify-between gap-4 mb-3">
- <h3 className="text-lg font-bold text-white">{title}</h3>
+ <h3 className="text-lg font-bold text-theme-ink">{title}</h3>
  <ProofPill state={state} />
  </div>
- <div className="text-2xl font-mono text-white mb-3">{value}</div>
- {detail && <p className="text-sm text-gray-400 leading-relaxed mb-3">{detail}</p>}
- <dl className="text-xs text-gray-500 space-y-1 font-mono">
+ <div className="text-2xl font-mono text-theme-ink mb-3">{value}</div>
+ {detail && <p className="text-sm text-theme-inkDim leading-relaxed mb-3">{detail}</p>}
+ <dl className="text-xs text-theme-inkDim space-y-1 font-mono">
  <div className="flex gap-2">
- <dt className="text-gray-600 uppercase tracking-wider shrink-0">Basis</dt>
- <dd className="text-gray-400 break-all">{basis}</dd>
+ <dt className="text-theme-inkDim uppercase tracking-wider shrink-0">Basis</dt>
+ <dd className="text-theme-inkDim break-all">{basis}</dd>
  </div>
  <div className="flex gap-2">
- <dt className="text-gray-600 uppercase tracking-wider shrink-0">Window</dt>
- <dd className="text-gray-400">{measurementWindow}</dd>
+ <dt className="text-theme-inkDim uppercase tracking-wider shrink-0">Window</dt>
+ <dd className="text-theme-inkDim">{measurementWindow}</dd>
  </div>
  </dl>
  </div>
@@ -205,19 +205,19 @@ export default function StatusPage() {
  <h1 className="text-4xl font-extrabold tracking-tight">Network Status &amp; Evidence</h1>
  <button
  onClick={() => refresh()}
- className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 transition-colors"
+ className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-theme-surface text-theme-ink border border-theme-border hover:bg-theme-surface2 transition-colors"
  >
  <RefreshCw className={`w-3.5 h-3.5 ${loading ?"animate-spin" :""}`} />
  Refresh
  </button>
  </div>
- <p className="text-xl text-gray-400 leading-relaxed mb-2">
+ <p className="text-xl text-theme-inkDim leading-relaxed mb-2">
  Every claim below shows only what the backend actually returned, with its source and
  measurement window. Where evidence is absent, the row reads{""}
- <span className="text-amber-300 font-semibold">Needs proof</span> rather than a
+ <span className="text-theme-warn font-semibold">Needs proof</span> rather than a
  fabricated uptime or &ldquo;Connected&rdquo; label.
  </p>
- <p className="text-sm text-gray-500 font-mono">
+ <p className="text-sm text-theme-inkDim font-mono">
  updated_at: {updatedLabel} · source: {CANONICAL_TOPOLOGY_URL}
  </p>
  </div>
@@ -260,15 +260,15 @@ export default function StatusPage() {
  {/* Per-node telemetry table — the raw evidence behind the telemetry row */}
  <section>
  <div className="flex items-center gap-3 mb-6">
- <Server className="w-6 h-6 text-[#FFB800]" />
+ <Server className="w-6 h-6 text-theme-accent" />
  <h2 className="text-2xl font-bold">Per-node telemetry</h2>
  </div>
  {topologyOk === false ? (
- <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-400">
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-6 text-theme-inkDim">
  The canonical beacon topology endpoint could not be read. No node evidence is available.
  </div>
  ) : nodes.length === 0 ? (
- <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-400">
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-6 text-theme-inkDim">
  {loading ?"Loading node telemetry…" :"The topology response returned no nodes."}
  </div>
  ) : (
@@ -278,57 +278,57 @@ export default function StatusPage() {
  return (
  <div
  key={node.id}
- className="bg-white/5 border border-white/10 rounded-xl p-6"
+ className="bg-theme-surface border border-theme-border rounded-xl p-6"
  >
  <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
  <div>
- <h3 className="text-lg font-bold text-white">{node.name}</h3>
- <p className="text-sm text-gray-400">
+ <h3 className="text-lg font-bold text-theme-ink">{node.name}</h3>
+ <p className="text-sm text-theme-inkDim">
  {node.physicalLocation ?? node.region} · {node.region}
  </p>
  </div>
  <div className="text-right">
  <ProofPill state={conn.state} />
- <p className="text-xs text-gray-500 mt-1">{conn.reason}</p>
+ <p className="text-xs text-theme-inkDim mt-1">{conn.reason}</p>
  </div>
  </div>
  <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 text-sm font-mono">
  <div>
- <dt className="text-gray-600 text-xs uppercase tracking-wider">Registration</dt>
- <dd className="text-gray-200">{node.registrationStatus ??"unknown"}</dd>
+ <dt className="text-theme-inkDim text-xs uppercase tracking-wider">Registration</dt>
+ <dd className="text-theme-ink">{node.registrationStatus ??"unknown"}</dd>
  </div>
  <div>
- <dt className="text-gray-600 text-xs uppercase tracking-wider">Active keys</dt>
- <dd className="text-gray-200">{node.activeKeyCount ??"—"}</dd>
+ <dt className="text-theme-inkDim text-xs uppercase tracking-wider">Active keys</dt>
+ <dd className="text-theme-ink">{node.activeKeyCount ??"—"}</dd>
  </div>
  <div>
- <dt className="text-gray-600 text-xs uppercase tracking-wider">
+ <dt className="text-theme-inkDim text-xs uppercase tracking-wider">
  Operational status
  </dt>
- <dd className="text-gray-200">
+ <dd className="text-theme-ink">
  {node.status_str ??"—"}
  {node.status ? ` (${node.status})` :""}
  </dd>
  </div>
  <div>
- <dt className="text-gray-600 text-xs uppercase tracking-wider">Heartbeat</dt>
- <dd className="text-gray-200">
+ <dt className="text-theme-inkDim text-xs uppercase tracking-wider">Heartbeat</dt>
+ <dd className="text-theme-ink">
  {formatFreshness(node.heartbeatFreshnessSeconds)}
  </dd>
  </div>
  <div>
- <dt className="text-gray-600 text-xs uppercase tracking-wider">Observations</dt>
- <dd className="text-gray-200">
+ <dt className="text-theme-inkDim text-xs uppercase tracking-wider">Observations</dt>
+ <dd className="text-theme-ink">
  {typeof node.observationCount ==="number"
  ? node.observationCount.toLocaleString()
  :"—"}
  </dd>
  </div>
  <div>
- <dt className="text-gray-600 text-xs uppercase tracking-wider">
+ <dt className="text-theme-inkDim text-xs uppercase tracking-wider">
  Last observation
  </dt>
- <dd className="text-gray-200">{formatTimestamp(node.lastObservation)}</dd>
+ <dd className="text-theme-ink">{formatTimestamp(node.lastObservation)}</dd>
  </div>
  </dl>
  </div>
@@ -338,15 +338,15 @@ export default function StatusPage() {
  )}
  </section>
 
- <div className="bg-white/5 border border-white/10 rounded-xl p-8">
+ <div className="bg-theme-surface border border-theme-border rounded-xl p-8">
  <div className="flex items-center gap-3 mb-4">
- <ShieldCheck className="w-6 h-6 text-[#FFB800]" />
+ <ShieldCheck className="w-6 h-6 text-theme-accent" />
  <h3 className="text-xl font-bold">How to read this page</h3>
  </div>
- <p className="text-gray-400 leading-relaxed">
- A badge is not proof. <span className="text-emerald-300 font-semibold">Live</span> means
+ <p className="text-theme-inkDim leading-relaxed">
+ A badge is not proof. <span className="text-theme-verified font-semibold">Live</span> means
  the backend returned the stated evidence at fetch time;{""}
- <span className="text-amber-300 font-semibold">Needs proof</span> means the required
+ <span className="text-theme-warn font-semibold">Needs proof</span> means the required
  evidence was absent or the source was unreachable. Node connectivity is derived from each
  node&rsquo;s returned status and heartbeat freshness, never from the existence of a node
  record or a nonzero observation count.

@@ -108,7 +108,7 @@ export default function OpenSourcePage() {
 
  {/* 60-Day Countdown Section */}
  <div className="w-full p-8 md:p-12 rounded-2xl bg-theme-surface  border border-theme-border flex flex-col items-center text-center">
- <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold uppercase tracking-wider mb-6">
+ <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-theme-danger/10 text-theme-danger border border-theme-danger/20 text-xs font-bold uppercase tracking-wider mb-6">
  <Activity className="w-4 h-4 animate-pulse" /> Core Infrastructure Release
  </div>
  <h2 className="text-3xl md:text-5xl font-bold mb-4">The OS Spine is Opening</h2>

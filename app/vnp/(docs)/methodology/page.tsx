@@ -35,11 +35,11 @@ export default function MethodologyPage() {
  <p className="text-cos-text/90 leading-relaxed mb-4">
  VNP operates on zero-trust principles. We do not trust self-reported status pages. Our STAMP (Simple Two-Way Active Measurement Protocol - RFC 8762) micro-sessions ensure that performance measurements span every physical member link of complex provider infrastructure utilizing Equal-Cost Multipath (ECMP) routing.
  </p>
- <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg mt-4">
- <h4 className="text-red-400 font-bold mb-2 flex items-center gap-2">
+ <div className="bg-theme-danger/10 border border-theme-danger/20 p-4 rounded-lg mt-4">
+ <h4 className="text-theme-danger font-bold mb-2 flex items-center gap-2">
  <ShieldCheck className="w-4 h-4" /> Canadian Regulatory Alignment
  </h4>
- <p className="text-sm text-red-200/70">
+ <p className="text-sm text-theme-danger">
  Aligns perfectly with Canada's Consumer-Driven Banking Act (CDBA) 2026 mandate requiring 99.5% mathematically proven uptime for Tier-1 financial APIs.
  </p>
  </div>
