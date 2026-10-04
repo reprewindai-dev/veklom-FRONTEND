@@ -4,6 +4,7 @@
   "surface": "machine",
   "product": "Veklom Capability OS",
   "description": "Machine-readable discovery surface for governed machine action.",
+  "mcp_server": "https://capi.veklom.com/mcp",
   "routes": {
     "html": "/mcp",
     "manifest": "/mcp/manifest.json",

@@ -1,29 +1,21 @@
 {
-  "name": "Veklom Nexus",
-  "description": "Sovereign AI hub with governed agent execution and multi-backend runtime. Nine-phase governance on every consequential action. x402 native monetization. PGL evidence on every execution.",
+  "name": "Veklom",
+  "description": "Consequence boundary for AI agents. An agent can hold the code, the state and old credentials and still not be allowed to cause the next real effect: every consequential action needs a current, scoped grant from CAPPO, its result is read back from the target, and evidence is kept in a separate ledger.",
   "url": "https://veklom.com",
-  "version": "2.4.1",
+  "version": "1.0.0",
   "supportedInterfaces": ["mcp"],
-  "defaultInputModes": ["text/plain", "application/json"],
+  "mcpEndpoint": "https://capi.veklom.com/mcp",
+  "defaultInputModes": ["application/json"],
   "defaultOutputModes": ["application/json"],
   "securitySchemes": {
-    "oauth2": {
-      "type": "oauth2",
-      "authorizationUrl": "https://veklom.com/.well-known/oauth-authorization-server"
-    }
-  },
-  "securityRequirements": [{"oauth2": []}],
-  "extensions": {
-    "pgl": {
-      "uri": "https://pgl.veklom.com/a2a/v1",
-      "required": false
-    }
+    "bearer": { "type": "http", "scheme": "bearer", "description": "Veklom session token, machine token, or mount-holder credential. Obtain via https://veklom.com/signup." }
   },
   "skills": [
-    {"name": "execute", "description": "Execute governed agent tasks"},
-    {"name": "govern", "description": "Nine-phase governance on actions"},
-    {"name": "assess", "description": "Assess agent workloads"},
-    {"name": "verify_receipt", "description": "Verify x402 payment receipt"},
-    {"name": "evidence.retrieve", "description": "Retrieve PGL evidence"}
-  ]
+    { "name": "discover", "description": "List mountable capability packages (public)." },
+    { "name": "mount", "description": "Request a bounded, expiring capability mount (credential required)." },
+    { "name": "execute", "description": "Request one governed action; CAPPO decides; at most once per operation_id (credential required)." },
+    { "name": "readback", "description": "Read the target's own state (credential required)." },
+    { "name": "verify", "description": "Check a ledger event hash (public)." }
+  ],
+  "proofs": "https://veklom.dev"
 }

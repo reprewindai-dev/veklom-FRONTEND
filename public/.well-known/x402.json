@@ -1,6 +1,8 @@
 {
   "x402_version": 2,
-  "provider": "Veklom Control Plane — Sovereign AI Hub",
+  "provider": "Veklom",
+  "status": "settlement_not_enabled",
+  "status_note": "Veklom's x402 settlement is not enabled on the live API yet. The payee identity below is published so it can be verified in advance; no route currently charges through x402.",
   "network": "eip155:8453",
   "payTo": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
   "currency": "USDC",
@@ -9,43 +11,12 @@
     "veklom_id_wallet": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
     "verification_domain": "id.veklom.com"
   },
-  "routes": [
-    {
-      "route": "POST /api/v1/ai/inference",
-      "price": "$0.008",
-      "description": "Policy-gated AI inference. Ollama-first, auto-escalates to Groq/Gemini/OpenAI.",
-      "tags": ["ai", "inference", "governed", "policy", "veklom"]
-    },
-    {
-      "route": "POST /api/v1/gpc/compile",
-      "price": "$0.015",
-      "description": "Compile agent intent into a deterministic governed plan with proof hash.",
-      "tags": ["gpc", "compile", "plan", "governance", "veklom"]
-    },
-    {
-      "route": "POST /api/v1/pipelines/trigger",
-      "price": "$0.025",
-      "description": "Trigger a governed pipeline with budget caps and kill switches.",
-      "tags": ["pipeline", "trigger", "orchestration", "veklom"]
-    },
-    {
-      "route": "GET /api/v1/evidence/export",
-      "price": "$0.005",
-      "description": "Export SHA-256 sealed audit evidence for governed execution.",
-      "tags": ["evidence", "audit", "sha256", "proof", "veklom"]
-    },
-    {
-      "route": "GET /api/v1/compliance/report",
-      "price": "$0.010",
-      "description": "Generate compliance report across SOC2, HIPAA, GDPR, ISO 27001, EU AI Act.",
-      "tags": ["compliance", "soc2", "hipaa", "gdpr", "report", "veklom"]
-    }
-  ],
+  "routes": [],
+  "principle": "Payment establishes commercial entitlement only. It never grants authority to cause an action; CAPPO decides every consequential action.",
   "discovery": {
-    "bazaar": "https://bazaar.cdp.coinbase.com",
-    "mcp_sse": "https://api.veklom.com/mcp/sse",
-    "llms_txt": "https://api.veklom.com/llms.txt",
-    "openapi": "https://api.veklom.com/openapi.json",
+    "mcp": "https://capi.veklom.com/mcp",
+    "mcp_discovery": "https://veklom.com/.well-known/mcp.json",
+    "llms_txt": "https://veklom.com/llms.txt",
     "veklom_id": "https://id.veklom.com"
   }
 }
