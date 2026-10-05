@@ -63,7 +63,7 @@ export default function TrackerPage() {
         <Pillar title="Evidence" proof="Needs proof"><JsonPanel value={data.payloads["GET /v1/audit/ledger"]} empty="No ledger returned — GET /v1/audit/ledger" /></Pillar>
         <Pillar title="Drift" proof="Needs proof"><div className="space-y-3">{sources.map((source) => <UnknownLink key={source.path} label={source.label} detail={source.detail} />)}</div></Pillar>
       </SectionShell>
-      <div className="mx-auto max-w-[1500px] px-5 pb-8 lg:px-10"><Link href="/os/computeless" className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-steel hover:text-cos-accent">Runtime diagnostics ↗</Link></div>
+      <div className="mx-auto max-w-[1500px] px-5 pb-8 lg:px-10"><Link href="/os/computeless" className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-steel hover:text-cos-accent">Private Cloud ↗</Link></div>
     </>
   );
 }

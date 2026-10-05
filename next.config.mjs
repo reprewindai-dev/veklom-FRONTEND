@@ -95,6 +95,7 @@ const nextConfig = {
       { source: "/os/workflows", destination: "/os/blueprint", permanent: true },
       { source: "/os/executions", destination: "/os/execute", permanent: true },
       { source: "/os/governed-compute", destination: "/os/computeless", permanent: true },
+      { source: "/os/private-cloud", destination: "/os/computeless", permanent: false },
       { source: "/os/settings", destination: "/os", permanent: true },
       { source: "/os/terminal", destination: "/os", permanent: true },
       { source: "/dashboard", destination: "/os", permanent: false },
