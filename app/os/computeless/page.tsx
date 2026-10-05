@@ -156,6 +156,10 @@ export default function PrivateCloudPage() {
   };
 
   const proof = data.stageProof;
+  // Each panel carries the proof of the call it renders, not the aggregate of uncalled routes.
+  const recordFor = (method: string, path: string) => data.records.find((r) => r.method === method && r.path === path);
+  const liveProof = recordFor("GET", "/api/fabric/state")?.proof ?? proof;
+  const enrollProof = recordFor("GET", "/api/fabric/enrollment")?.proof ?? proof;
   const envLabel = sandbox ? "Sandbox fabric · separate machines and workloads; nothing here touches production" : "Production fabric";
 
   if (!state) {
@@ -220,7 +224,7 @@ export default function PrivateCloudPage() {
       </div>
 
       <div className="grid min-w-0 content-start gap-4">
-        <Panel title="Machines" icon={Server} proof={proof}>
+        <Panel title="Machines" icon={Server} proof={liveProof}>
           <div className="grid gap-3 md:grid-cols-2">
             {state.workers.map((w) => {
               return (
@@ -244,12 +248,34 @@ export default function PrivateCloudPage() {
             })}
           </div>
         </Panel>
+      </div>
 
-        <Panel title="Workloads" icon={ListChecks} proof={proof}>
+      <div className="grid min-w-0 content-start gap-4">
+        <Panel title="Authority" icon={KeyRound} proof={liveProof}>
+          {state.workers.map((w) => {
+            const held = running.filter((j) => j.placement?.chosen?.worker_id === w.worker_id);
+            return (
+              <div key={w.worker_id} className="border-b border-cos-border py-2 last:border-b-0">
+                <div className="text-sm text-cos-text">{w.host.hostname}</div>
+                {held.length
+                  ? held.map((j) => <div key={j.job_id} className="font-mono text-[10px] text-cos-accent">authorized for {j.job_id} · single-use grant {j.authority.mount_id.slice(0, 14)}…</div>)
+                  : <div className="font-mono text-[10px] text-cos-steel">connected · no authority</div>}
+              </div>
+            );
+          })}
+          <p className="mt-3 text-[11px] leading-5 text-cos-steel">Connecting a machine grants nothing. CAPPO issues one single-use grant per workload, sealed to the chosen machine; it ends when the workload commits or is fenced.</p>
+        </Panel>
+      </div>
+
+      <div className="min-w-0 xl:col-span-2">
+        <Panel title="Workloads" icon={ListChecks} proof={liveProof}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead><tr className="font-mono text-[10px] uppercase tracking-[0.12em] text-cos-steel"><th className="pb-2 pr-3">Workload</th><th className="pb-2 pr-3">Outcome</th><th className="pb-2 pr-3">Ran on</th><th className="pb-2 pr-3">Why Veklom chose this machine</th><th className="pb-2">Result</th></tr></thead>
               <tbody>
+                {state.jobs.length === 0 ? (
+                  <tr className="border-t border-cos-border"><td colSpan={5} className="py-4 text-xs text-cos-muted">No workloads have been placed on this {expected} fabric yet.</td></tr>
+                ) : null}
                 {state.jobs.slice(0, 25).map((j) => (
                   <tr key={j.job_id} className="border-t border-cos-border align-top">
                     <td className="py-3 pr-3"><code className="font-mono text-xs text-cos-text">{j.job_id}</code><div className="text-xs text-cos-muted">{j.spec.workload}{j.spec.dataset ? ` · ${j.spec.dataset}` : ""} · {j.spec.cpus} CPU / {j.spec.mem_gb} GB</div></td>
@@ -269,23 +295,8 @@ export default function PrivateCloudPage() {
         </Panel>
       </div>
 
-      <div className="grid min-w-0 content-start gap-4">
-        <Panel title="Authority" icon={KeyRound} proof={proof}>
-          {state.workers.map((w) => {
-            const held = running.filter((j) => j.placement?.chosen?.worker_id === w.worker_id);
-            return (
-              <div key={w.worker_id} className="border-b border-cos-border py-2 last:border-b-0">
-                <div className="text-sm text-cos-text">{w.host.hostname}</div>
-                {held.length
-                  ? held.map((j) => <div key={j.job_id} className="font-mono text-[10px] text-cos-accent">authorized for {j.job_id} · single-use grant {j.authority.mount_id.slice(0, 14)}…</div>)
-                  : <div className="font-mono text-[10px] text-cos-steel">connected · no authority</div>}
-              </div>
-            );
-          })}
-          <p className="mt-3 text-[11px] leading-5 text-cos-steel">Connecting a machine grants nothing. CAPPO issues one single-use grant per workload, sealed to the chosen machine; it ends when the workload commits or is fenced.</p>
-        </Panel>
-
-        <Panel title="Capacity" icon={Cpu} proof={proof}>
+      <div className="grid min-w-0 content-start gap-4 md:grid-cols-2 xl:col-span-2 xl:grid-cols-3">
+        <Panel title="Capacity" icon={Cpu} proof={liveProof}>
           <Row k="Available / busy / offline" v={`${s.machines_available} / ${s.machines_busy} / ${s.machines_offline}`} />
           <Row k="CPU free / total" v={`${(c.cpus_total - c.cpus_reserved).toFixed(1)} / ${c.cpus_total}`} />
           <Row k="Memory free / total" v={`${(c.mem_gb_total - c.mem_gb_reserved).toFixed(1)} / ${c.mem_gb_total.toFixed(1)} GB`} />
@@ -294,14 +305,14 @@ export default function PrivateCloudPage() {
           <p className="mt-3 text-[11px] leading-5 text-cos-steel">Physical machines are counted once, however many workers each runs.</p>
         </Panel>
 
-        <Panel title="Placement" icon={MapPin} proof={proof}>
+        <Panel title="Placement" icon={MapPin} proof={liveProof}>
           <Row k="Policy" v={MODE_LABEL[state.policy.mode]} />
           <Row k="Cloud" v={state.policy.cloud_enabled ? "allowed" : "not allowed"} />
           <p className="mt-3 text-[11px] leading-5 text-cos-steel">Placement runs only after CAPPO has issued the workload&apos;s grant: it chooses where, never whether.</p>
           {policyError ? <p className="mt-2 text-xs text-cos-danger">{policyError}</p> : null}
         </Panel>
 
-        <Panel title="Failover" icon={RefreshCw} proof={proof}>
+        <Panel title="Failover" icon={RefreshCw} proof={liveProof}>
           <Row k="Automatically relocated" v={s.jobs_relocated} />
           <Row k="Lost acks reconciled (no re-run)" v={s.lost_acks_reconciled} />
           <Row k="Stale attempts refused by CAPPO" v={s.stale_attempts_refused} />
@@ -312,18 +323,18 @@ export default function PrivateCloudPage() {
           ) : null}
         </Panel>
 
-        <Panel title="Data locality" icon={Database} proof={proof}>
+        <Panel title="Data locality" icon={Database} proof={liveProof}>
           <Row k="Ran beside their data" v={`${s.data_local_runs} of ${s.runs_with_dataset}`} />
           {[...datasetsByMachine.entries()].map(([host, ds]) => <Row key={host} k={host} v={[...ds].join(", ") || "no datasets"} />)}
         </Panel>
 
-        <Panel title="Cloud" icon={Cloud} proof={proof}>
+        <Panel title="Cloud" icon={Cloud} proof={liveProof}>
           <Row k="Cloud compute used" v={s.cloud_placements ? `${s.cloud_placements} placements` : "none"} />
           <Row k="Cloud workers connected" v={state.workers.filter((w) => w.worker_class === "cloud").length} />
           <p className="mt-3 text-[11px] leading-5 text-cos-steel">Private only runs with no hyperscaler dependency. Cloud is never the control plane, authority or evidence store.</p>
         </Panel>
 
-        <Panel title="Connect a machine" icon={Plug} proof={proof}>
+        <Panel title="Connect a machine" icon={Plug} proof={enrollProof}>
           {enrollment ? (
             <div className="space-y-3">
               <ul className="space-y-1 text-xs text-cos-muted">{enrollment.requirements.map((r) => <li key={r}>• {r}</li>)}</ul>
@@ -338,6 +349,7 @@ export default function PrivateCloudPage() {
           )}
         </Panel>
       </div>
+
     </SectionShell>
   );
 }
