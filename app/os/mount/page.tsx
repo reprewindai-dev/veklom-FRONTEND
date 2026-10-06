@@ -24,6 +24,7 @@ import { SANDBOX_PROJECT, useSandboxMode } from "@/lib/cos/sandbox";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 import { mountStatusProof } from "@/lib/cos/readback";
+import { readBoundWorkspaceId } from "@/lib/cos/workspace-session";
 
 type JsonRecord = Record<string, unknown>;
 type PackagePayload = {
@@ -105,7 +106,9 @@ export default function MountPage() {
   const packagePayload = data.payloads["GET /v1/capability/packages"];
   const packages = (Array.isArray(packagePayload) ? packagePayload : []) as PackagePayload[];
   const [packageRef, setPackageRef] = useState("");
-  const [workspace, setWorkspace] = useState("default");
+  // Never assume a workspace: it is prefilled from the onboarding link
+  // (?workspace=), the session profile, or the workspace bound during onboarding.
+  const [workspace, setWorkspace] = useState("");
   const [project, setProject] = useState("");
   const [reads, setReads] = useState("");
   const [writes, setWrites] = useState("");
@@ -155,9 +158,17 @@ export default function MountPage() {
   }, [sandbox]);
 
   useEffect(() => {
+    if (workspace) return;
+    const linked = new URLSearchParams(window.location.search).get("workspace")?.trim();
+    const profileWorkspace = typeof me?.workspace_id === "string" ? me.workspace_id : null;
+    const prefill = linked || profileWorkspace || readBoundWorkspaceId();
+    if (prefill) setWorkspace(prefill);
+  }, [me?.workspace_id, workspace]);
+
+  useEffect(() => {
     if (!heldLease) return;
     if (!packageRef && heldLease.packageRef) setPackageRef(heldLease.packageRef);
-    if (workspace === "default" && heldLease.workspace) setWorkspace(heldLease.workspace);
+    if (!workspace && heldLease.workspace) setWorkspace(heldLease.workspace);
     if (!project && heldLease.project) setProject(heldLease.project);
     if (!resource && heldLease.resource) setResource(heldLease.resource);
   }, [heldLease, packageRef, project, resource, workspace]);

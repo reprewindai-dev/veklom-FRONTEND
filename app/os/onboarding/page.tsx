@@ -11,6 +11,8 @@ import { useSandboxMode } from "@/lib/cos/sandbox";
 import { OnboardingChecklist } from "@/components/cos/OnboardingChecklist";
 import { WalletStep } from "@/components/wallet/WalletStep";
 import type { WalletState } from "@/lib/wallet/api";
+import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
+import { storeBoundWorkspaceId } from "@/lib/cos/workspace-session";
 
 const STEPS = [
   { id: "identity", label: "Operator Identity" },
@@ -126,13 +128,27 @@ export default function OnboardingPage() {
   const [checklistKey, setChecklistKey] = useState(0);
 
   const boundWorkspaceId = workspaceId ?? me?.workspace_id ?? null;
+  // The last step is complete once a real mount has been held in this session
+  // (the mount page stores the lease); nothing on this page can claim it.
+  const [activated, setActivated] = useState(false);
   const completed = useMemo(() => [
     identityLoaded,
     Boolean(boundWorkspaceId),
     walletBound,
     Boolean(agent),
-    false,
-  ], [agent, boundWorkspaceId, identityLoaded, walletBound]);
+    activated,
+  ], [activated, agent, boundWorkspaceId, identityLoaded, walletBound]);
+
+  useEffect(() => {
+    setActivated(readSessionCapabilityLease() !== null);
+  }, [step]);
+
+  // Remember the bound workspace so /os/mount can prefill it.
+  useEffect(() => {
+    if (boundWorkspaceId) storeBoundWorkspaceId(boundWorkspaceId);
+  }, [boundWorkspaceId]);
+
+  const mountHref = boundWorkspaceId ? `/os/mount?workspace=${encodeURIComponent(boundWorkspaceId)}` : "/os/mount";
 
   useEffect(() => {
     let active = true;
@@ -391,11 +407,11 @@ export default function OnboardingPage() {
             <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-5 text-sm leading-7 text-cos-muted">
               Activation runs the real governed loop:
               <div className="mt-3 font-mono text-xs leading-6 text-cos-text">mount veklom.governed-counter@v1 → counter.reset DENY → counter.increment ALLOW → receipt → terminate → replay DENY</div>
-              <p className="mt-4">The workspace field on the mount page must equal the workspace bound in Step 2.</p>
+              <p className="mt-4">The workspace field on the mount page is prefilled with the workspace bound in Step 2 and must stay equal to it.</p>
               <p className="mt-3">Sandbox vs production is selected on the mount page (project=sandbox is fixed there).</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={() => router.push("/os/mount")}>Open mount</Button>
+              <Button onClick={() => router.push(mountHref)}>Open mount</Button>
               <Link className="rounded-lg border border-cos-border px-4 py-2 text-sm text-cos-text hover:border-cos-accent" href="/os/evidence">Open evidence</Link>
             </div>
           </div>
