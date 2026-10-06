@@ -207,6 +207,9 @@ export default function SpineApp() {
 
  return (
  <div className="min-h-screen bg-theme-surface text-slate-100 font-sans selection:bg-theme-accent selection:text-white pb-16">
+ <div role="status" className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-center text-xs font-semibold tracking-wide text-amber-200">
+ Simulated data — not connected to a live fabric. Everything on this page comes from a local mock dataset.
+ </div>
  <Header
  activeTab={activeTab}
  setActiveTab={setActiveTab}
