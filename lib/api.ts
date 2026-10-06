@@ -388,8 +388,10 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
           if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login";
           }
-        } else if (!window.location.pathname.startsWith("/governance")) {
-          window.location.href = "/governance";
+        } else if (!window.location.pathname.startsWith("/login")) {
+          // There is no /governance page; an unauthenticated or forbidden
+          // request on a private page sends the operator back to sign in.
+          window.location.href = "/login";
         }
       }
     }
