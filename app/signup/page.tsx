@@ -74,7 +74,7 @@ export default function SignupPage() {
  // LockerPhycer never auto-signs-in email accounts and blocks password
  // login until the address is verified, so the next step is the inbox.
  await signup(email, pw, name || undefined);
- setOk("Check your email to verify your account — the link expires in 30 minutes.");
+ setOk("Check your email and open the verification link (it expires in 30 minutes). Sign-in is refused until the address is verified.");
  setBusy(false);
  } catch (e) {
  setErr((e as Error).message);
@@ -84,9 +84,9 @@ export default function SignupPage() {
 
  return (
  <AuthLayout
- eyebrow="14-day free trial"
+ eyebrow="Capability OS"
  title="Create your account"
- subtitle="Start your 14-day full-access trial of Capability OS. Connect your first system with VLink in minutes."
+ subtitle="Create your operator account, verify your email, then connect your first system with VLink."
  >
  {err && <ErrorBox message={err} className="mb-4" />}
  

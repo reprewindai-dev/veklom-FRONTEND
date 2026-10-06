@@ -100,7 +100,7 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
             <Link href="/get" data-analytics-cta="get-veklom" className="hidden rounded-full px-4 py-2 text-[12px] font-medium text-theme-inkDim transition hover:text-theme-ink md:inline-flex">Get Veklom</Link>
             <Link href="/login?returnTo=/os" data-analytics-cta="open-capability-os" className="hidden rounded-full px-4 py-2 text-[12px] font-medium text-theme-inkDim transition hover:text-theme-ink md:inline-flex">Open Capability OS ↗</Link>
             <Link href={SIGNUP_URL} data-analytics-cta="start-free-trial" className="group inline-flex min-h-10 items-center gap-3 rounded-full bg-theme-ink px-4 text-[12px] font-semibold text-theme-bg shadow-[0_10px_30px_rgba(0,0,0,.12)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_38px_rgba(0,0,0,.18)] sm:px-5">
-              Start free trial <span className="transition-transform group-hover:translate-x-0.5">→</span>
+              Create account <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
             <button
               type="button"
@@ -123,7 +123,7 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
               <div className="mt-3 grid grid-cols-2 gap-2 border-t border-theme-border pt-4">
-                <Link href={SIGNUP_URL} data-analytics-cta="start-free-trial:mobile" className="col-span-2 inline-flex min-h-11 items-center justify-center rounded-full bg-theme-ink text-sm font-semibold text-theme-bg">Start free trial →</Link>
+                <Link href={SIGNUP_URL} data-analytics-cta="start-free-trial:mobile" className="col-span-2 inline-flex min-h-11 items-center justify-center rounded-full bg-theme-ink text-sm font-semibold text-theme-bg">Create account →</Link>
                 <Link href="/login?returnTo=/os" className="col-span-2 inline-flex min-h-11 items-center justify-center rounded-full border border-theme-border bg-theme-surface text-sm font-medium">Open Capability OS ↗</Link>
                 <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-full border border-theme-border bg-theme-surface text-sm font-medium">Sign in</Link>
                 <div className="flex min-h-11 items-center justify-center rounded-full border border-theme-border bg-theme-surface"><ThemeToggle /></div>
