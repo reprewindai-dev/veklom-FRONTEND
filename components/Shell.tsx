@@ -130,14 +130,18 @@ function CommandSearch() {
 }
 
 export default function Shell({ children }: { children: React.ReactNode }) {
- const { me, sub, tier, logout, loading } = useAuth();
+ const { me, sub, tier, logout, loading, error, signedOut, refresh } = useAuth();
  const router = useRouter();
  const pathname = usePathname();
  const [mobileOpen, setMobileOpen] = useState(false);
 
+ // Only a definite sign-out (the identity authority rejected the session)
+ // sends the operator to /login. A transient profile failure (429, 5xx,
+ // network) keeps the session and renders an error with a retry instead of
+ // bouncing a signed-in operator back to the login page.
  useEffect(() => {
- if (!loading && !me) router.replace("/login");
- }, [loading, me, router]);
+ if (!loading && signedOut) router.replace("/login");
+ }, [loading, signedOut, router]);
 
  useEffect(() => {
  setMobileOpen(false);
@@ -170,7 +174,26 @@ export default function Shell({ children }: { children: React.ReactNode }) {
  );
  }
 
- if (!me) return null; // redirect in-flight
+ if (!me) {
+ if (signedOut) return null; // redirect in-flight
+ return (
+ <div className="min-h-screen bg-[#0A0A0A] grid place-items-center px-6" data-testid="shell-session-error">
+ <div className="max-w-md rounded-xl border border-border bg-bg-900/80 p-6 text-center" role="alert">
+ <div className="text-[10px] font-mono text-accent-red tracking-[0.2em] uppercase font-bold">Session check failed</div>
+ <p className="mt-3 text-sm text-ink-200">
+ {error || "The identity service did not answer."} Your session was kept; nothing was signed out.
+ </p>
+ <button
+ type="button"
+ onClick={() => void refresh()}
+ className="mt-5 inline-flex items-center justify-center rounded-lg border border-border px-4 h-9 text-sm text-ink-50 hover:bg-white/[0.04] transition"
+ >
+ Retry
+ </button>
+ </div>
+ </div>
+ );
+ }
 
  const activeUser = me;
 

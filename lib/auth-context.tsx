@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, ApiError, clearTokens, setTokens } from "./api";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { api, ApiError, clearTokens, SESSION_INVALID_EVENT, setTokens } from "./api";
 import { normalizeTier, Tier } from "./tiers";
 import type { Me, Subscription } from "@/types/api";
 
@@ -10,7 +10,15 @@ interface AuthState {
   sub?: Subscription;
   tier: Tier;
   loading: boolean;
+  /** Set when the profile could not be loaded for a reason that is not a sign-out. */
   error?: string;
+  /**
+   * True only when the identity authority definitely rejected the session
+   * (401 "Invalid token", 403 "Not authenticated" with no bearer) or the
+   * operator signed out. A transient failure (429, 5xx, network, timeout)
+   * leaves it false and keeps the tokens and the previous profile.
+   */
+  signedOut: boolean;
   login: (email: string, password: string, mfaCode?: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<{ autoSignedIn: boolean }>;
   /** Optional fallback destination used when the page URL carries no returnTo. */
@@ -21,6 +29,22 @@ interface AuthState {
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const Ctx = createContext<AuthState | null>(null);
+
+/** Delay before the single retry of a transient /auth/me failure. */
+export const PROFILE_RETRY_DELAY_MS = 1500;
+
+/**
+ * Live LockerPhycer answers `/api/v1/auth/me` with 403 "Not authenticated"
+ * when no bearer is presented (FastAPI HTTPBearer) and 401 "Invalid token"
+ * for a bad or expired bearer. Both are definite sign-outs. Anything else
+ * (429, 5xx, the proxy's 503, network failure, malformed body) says nothing
+ * about the session and must not drop it.
+ */
+export function isDefiniteSignOut(cause: unknown): boolean {
+  if (!(cause instanceof ApiError)) return false;
+  if (cause.status === 401) return true;
+  return cause.status === 403 && /not authenticated/i.test(cause.message);
+}
 
 function safeReturnTo(value: string | null, fallback = "/os/onboarding"): string {
   if (!value) return fallback;
@@ -51,35 +75,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sub, setSub] = useState<Subscription | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
+  const [signedOut, setSignedOut] = useState(false);
+  const mounted = useRef(true);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadProfile = useCallback(async () => {
-    setLoading(true);
-    setError(undefined);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
+  }, []);
+
+  const dropSession = useCallback(() => {
+    clearTokens();
+    markNavigationSession(false);
+    setMe(undefined);
+    setSub(undefined);
+    setSignedOut(true);
+  }, []);
+
+  const loadProfile = useCallback(async (attempt = 0): Promise<void> => {
+    if (attempt === 0) {
+      setLoading(true);
+      setError(undefined);
+    }
 
     try {
       const data = await api<Me>("/api/v1/auth/me");
+      if (!mounted.current) return;
       setMe(data);
+      setSignedOut(false);
+      setError(undefined);
       markNavigationSession(true);
 
       try {
         const subData = await api<Subscription>("/api/v1/billing/subscription");
-        setSub(subData);
+        if (mounted.current) setSub(subData);
       } catch {
-        setSub(undefined);
+        if (mounted.current) setSub(undefined);
       }
+      if (mounted.current) setLoading(false);
     } catch (cause) {
-      const isSignedOut = cause instanceof ApiError && cause.status === 401;
-      if (!isSignedOut) {
-        setError(cause instanceof Error ? cause.message : "Unable to validate session");
+      if (!mounted.current) return;
+      if (isDefiniteSignOut(cause)) {
+        dropSession();
+        setLoading(false);
+        return;
       }
-      clearTokens();
-      markNavigationSession(false);
-      setMe(undefined);
-      setSub(undefined);
-    } finally {
+
+      // Transient: keep the tokens and whatever profile we already had. Retry
+      // once after a short delay; only then surface the error.
+      if (attempt === 0) {
+        retryTimer.current = setTimeout(() => {
+          retryTimer.current = null;
+          void loadProfile(1);
+        }, PROFILE_RETRY_DELAY_MS);
+        return;
+      }
+      setError(cause instanceof Error ? cause.message : "Unable to validate session");
       setLoading(false);
     }
-  }, []);
+  }, [dropSession]);
+
+  // The transport signals a 401 from the identity authority for the bearer it
+  // presented; the session is dropped here, without a navigation.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onSessionInvalid = () => {
+      dropSession();
+      setLoading(false);
+    };
+    window.addEventListener(SESSION_INVALID_EVENT, onSessionInvalid);
+    return () => window.removeEventListener(SESSION_INVALID_EVENT, onSessionInvalid);
+  }, [dropSession]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -159,16 +228,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     api("/api/v1/auth/logout", { method: "POST" }).catch(() => {});
-    clearTokens();
-    markNavigationSession(false);
-    setMe(undefined);
-    setSub(undefined);
-  }, []);
+    dropSession();
+  }, [dropSession]);
+
+  // `refresh` takes no arguments so it can be wired straight to onClick
+  // without the event being read as the retry attempt.
+  const refresh = useCallback(() => loadProfile(0), [loadProfile]);
 
   const tier: Tier = useMemo(() => normalizeTier(sub?.tier || sub?.plan || me?.tier), [sub, me]);
 
   return (
-    <Ctx.Provider value={{ me, sub, tier, loading, error, login, signup, loginWithGithub, logout, refresh: loadProfile }}>
+    <Ctx.Provider value={{ me, sub, tier, loading, error, signedOut, login, signup, loginWithGithub, logout, refresh }}>
       {children}
     </Ctx.Provider>
   );

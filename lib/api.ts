@@ -163,6 +163,40 @@ function isPublicRoute(pathname: string): boolean {
   ));
 }
 
+// Identity routes are the only ones whose 401 says anything about the browser
+// session: they are answered by LockerPhycer, which issued the bearer. CAPPO,
+// cAPI, PGL and VLink answer 401/403 for their own reasons (missing service
+// key, workspace mismatch, their own auth) and their errors are rendered where
+// they happen. Navigating away from them is what bounced signed-in operators
+// back to /login with a valid session.
+const IDENTITY_ROUTE_PREFIXES = ["/api/v1/auth/", "/api/v1/workspace"];
+
+export function isIdentityRoute(path: string): boolean {
+  let pathname = path;
+  if (path.startsWith("http")) {
+    try {
+      pathname = new URL(path).pathname;
+    } catch {
+      return false;
+    }
+  }
+  pathname = pathname.split("?")[0];
+  return IDENTITY_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
+ * Dispatched on `window` when the identity authority rejects (401) the bearer
+ * this client presented. The auth context clears the session; nothing in this
+ * module navigates.
+ */
+export const SESSION_INVALID_EVENT = "VeklomSessionInvalid";
+
+export interface SessionInvalidDetail {
+  path: string;
+  status: number;
+  message: string;
+}
+
 export function apiBaseUrl(): string {
   if (API_BASE) return API_BASE;
   if (typeof window !== "undefined") {
@@ -282,9 +316,12 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
     headers["X-Veklom-Environment"] = env;
   }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
+  // The bearer this request presented, if any. A 401 from the identity
+  // authority only invalidates the session when it was answering this token.
+  let presentedToken: string | null = null;
   if (!opts.unauth) {
-    const tok = getToken();
-    if (tok) headers["Authorization"] = `Bearer ${tok}`;
+    presentedToken = getToken();
+    if (presentedToken) headers["Authorization"] = `Bearer ${presentedToken}`;
   }
 
   const res = await performFetch(path, opts, headers);
@@ -362,6 +399,25 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
           throw new ApiError(res.status, "x402 Payment Intervention Triggered: " + String(msg), json, "http", path);
         }
       } else if (res.status === 403 || res.status === 401) {
+        // Never navigate from here. A 401/403 from CAPPO, cAPI, PGL or VLink is
+        // thrown to the caller and rendered in place. Only the identity
+        // authority rejecting the bearer we presented (401) is a sign-out, and
+        // even that is signalled as an event for the auth context to handle.
+        // A 403 is not: LockerPhycer answers a request with no bearer with
+        // 403 "Not authenticated", which the auth context reads directly.
+        // Checked first so an identity 401 whose message mentions a "token"
+        // is never mistaken for a missing service key below.
+        if (
+          res.status === 401 &&
+          presentedToken &&
+          isIdentityRoute(path) &&
+          getToken() === presentedToken
+        ) {
+          const detail: SessionInvalidDetail = { path, status: res.status, message: String(msg) };
+          window.dispatchEvent(new CustomEvent(SESSION_INVALID_EVENT, { detail }));
+          throw new ApiError(res.status, String(msg), json, "http", path);
+        }
+
         const normalizedMessage = String(msg).toLowerCase();
         const isAuthTokenError = normalizedMessage.includes("invalid or expired token") ||
                                  normalizedMessage.includes("invalid token") ||
@@ -378,20 +434,6 @@ export async function api<T>(path: string, opts: RequestOpts = {}): Promise<T> {
             detail: { type: "MISSING_KEY", message: msg, code }
           }));
           throw new ApiError(res.status, "Ambient Intervention Triggered: " + String(msg), json, "http", path);
-        }
-
-        if (isPublicPage) {
-          throw new ApiError(res.status, String(msg), json, "http", path);
-        }
-
-        if (normalizedMessage.includes("token") || normalizedMessage.includes("auth") || normalizedMessage.includes("credentials")) {
-          if (!window.location.pathname.startsWith("/login")) {
-            window.location.href = "/login";
-          }
-        } else if (!window.location.pathname.startsWith("/login")) {
-          // There is no /governance page; an unauthenticated or forbidden
-          // request on a private page sends the operator back to sign in.
-          window.location.href = "/login";
         }
       }
     }
