@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from"clsx";
-import { ReactNode } from"react";
+import { ReactNode, useId } from"react";
 import { AlertTriangle, CheckCircle2, Github } from"lucide-react";
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
@@ -108,22 +108,65 @@ export function Table<T>({
  );
 }
 
-export function Button({ children, onClick, variant ="primary", type ="button", disabled, loading, className, size }: {
+// The `btn`/`btn-primary`/`btn-ghost` classes this component used to rely on
+// were never defined in any stylesheet, so every Button rendered as bare text
+// and operators did not recognise actions as buttons. The look lives here now,
+// in the Capability OS glass language (translucent fill, accent hairline,
+// rounded-xl), built only from the `cos-*` theme tokens.
+const BUTTON_BASE =
+ "relative inline-flex items-center justify-center gap-2 rounded-xl border font-medium cursor-pointer select-none backdrop-blur-md " +
+ "transition-[border-color,background-color,box-shadow] duration-200 motion-reduce:transition-none " +
+ "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cos-accent focus-visible:ring-offset-2 focus-visible:ring-offset-cos-bg " +
+ "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none";
+
+const BUTTON_VARIANTS = {
+ // Primary: stronger accent fill. Label stays on the theme text colour, which
+ // keeps >= 4.5:1 contrast on the light and dark themes alike.
+ primary:
+ "border-cos-accent/70 bg-cos-accent/20 text-cos-text shadow-[0_0_0_1px_rgb(var(--theme-accent)/0.12),0_8px_24px_-14px_rgb(var(--theme-accent)/0.7)] " +
+ "enabled:hover:border-cos-accent enabled:hover:bg-cos-accent/30 enabled:hover:shadow-[0_0_0_1px_rgb(var(--theme-accent)/0.35),0_10px_30px_-12px_rgb(var(--theme-accent)/0.8)]",
+ // Secondary: glass.
+ outline:
+ "border-cos-accent/40 bg-cos-surface2/60 text-cos-text " +
+ "enabled:hover:border-cos-accent/80 enabled:hover:shadow-[0_0_0_1px_rgb(var(--theme-accent)/0.2),0_8px_24px_-16px_rgb(var(--theme-accent)/0.6)]",
+ ghost:
+ "border-cos-border bg-cos-surface2/30 text-cos-text enabled:hover:border-cos-accent/60 enabled:hover:bg-cos-accent/10",
+ danger:
+ "border-cos-danger/50 bg-cos-danger/15 text-cos-text enabled:hover:border-cos-danger enabled:hover:bg-cos-danger/25",
+} as const;
+
+const BUTTON_SIZES = {
+ sm: "h-8 px-3 text-xs",
+ md: "h-10 px-4 text-sm",
+ lg: "h-12 px-6 text-base",
+} as const;
+
+export function Button({ children, onClick, variant ="primary", type ="button", disabled, loading, className, size ="md", disabledReason }: {
  children: ReactNode; onClick?: () => void; variant?:"primary" |"ghost" |"danger" |"outline"; type?:"button" |"submit"; disabled?: boolean; loading?: boolean; className?: string; size?:"sm" |"md" |"lg";
+ /** Shown as a tooltip and announced to assistive technology while the button is disabled. */
+ disabledReason?: string;
 }) {
- return (
+ const hintId = useId();
+ const isDisabled = Boolean(disabled || loading);
+ const hint = isDisabled && !loading && disabledReason ? disabledReason : undefined;
+ const button = (
  <button
- type={type} onClick={onClick} disabled={disabled || loading}
- className={clsx("btn",
- variant ==="primary" &&"btn-primary",
- variant ==="ghost" &&"btn-ghost",
- variant ==="danger" &&"bg-accent-red/20 hover:bg-accent-red/30 text-accent-red border border-accent-red/40",
- variant ==="outline" &&"bg-transparent hover:bg-white/5 text-ink-200 border border-white/20",
- className
- )}
+ type={type} onClick={onClick} disabled={isDisabled}
+ aria-describedby={hint ? hintId : undefined}
+ title={hint}
+ className={clsx(BUTTON_BASE, BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className)}
  >
  {loading && <Spinner />}
  {children}
  </button>
+ );
+ if (!hint) return button;
+ // Disabled buttons do not receive pointer events in every browser, so the
+ // tooltip is also carried by a wrapper, and the reason is in the a11y tree.
+ return (
+ <span className="inline-flex" title={hint}>
+ {button}
+ <span id={hintId} className="sr-only">{hint}</span>
+ </span>
  );
 }

@@ -392,7 +392,7 @@ export default function OnboardingPage() {
               </div>
             )}
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={continueStep} disabled={!identityLoaded || authRequired}>Continue</Button>
+              <Button onClick={continueStep} disabled={!identityLoaded || authRequired} disabledReason={authRequired ? "Sign in first" : "Waiting for your identity to load"}>Continue</Button>
               {identityFailed && !authRequired ? (
                 <Button type="button" variant="outline" onClick={() => setIdentityAttempt((value) => value + 1)}>Retry identity check</Button>
               ) : null}
@@ -427,7 +427,7 @@ export default function OnboardingPage() {
                 ) : null}
                 {sandbox ? <LiveOnlyNotice action="Bind workspace" reason="LockerPhycer POST /api/v1/workspace has no sandbox scope; a workspace created here would be live." /> : null}
                 {/* One action: binding is what moves this step forward. */}
-                <Button type="submit" loading={busy} disabled={sandbox || !workspaceName.trim() || !slugify(workspaceSlug)}>{sandbox ? "Bind workspace · Live only" : "Bind workspace and continue"}</Button>
+                <Button type="submit" loading={busy} disabled={sandbox || !workspaceName.trim() || !slugify(workspaceSlug)} disabledReason={sandbox ? "Workspace binding is live only; switch to Live" : "Enter a workspace name first"}>{sandbox ? "Bind workspace · Live only" : "Bind workspace and continue"}</Button>
               </form>
             )}
             <p className="text-xs leading-6 text-cos-muted">Authentication established who you are. This step binds the session to a workspace. It grants no capability — authority is only issued by CAPPO at mount time.</p>
@@ -467,7 +467,7 @@ export default function OnboardingPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="PGL POST /api/pgl/agents/ writes to the live ledger and has no sandbox scope." /> : null}
-              <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me}>{sandbox ? "Register agent genome · Live only" : agentUnavailable ? "Retry registration" : "Register agent genome"}</Button>
+              <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me} disabledReason={sandbox ? "Agent registration is live only; switch to Live" : !boundWorkspaceId ? "Bind a workspace first" : "Enter an agent name first"}>{sandbox ? "Register agent genome · Live only" : agentUnavailable ? "Retry registration" : "Register agent genome"}</Button>
               {agent || agentUnavailable ? (
                 <Button type="button" onClick={continueStep} variant="outline">{agent ? "Continue" : "Continue without agent genome"}</Button>
               ) : null}
