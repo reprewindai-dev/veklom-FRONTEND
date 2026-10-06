@@ -46,6 +46,23 @@ export function isDefiniteSignOut(cause: unknown): boolean {
   return cause.status === 403 && /not authenticated/i.test(cause.message);
 }
 
+/**
+ * Whether the signed-in operator's email is verified. LockerPhycer's
+ * `/api/v1/auth/me` (UserResponse) has never returned `is_verified`, so reading
+ * only that field labelled every operator "Email not yet verified". Prefer the
+ * explicit `email_verified` flag when LockerPhycer sends it, then the legacy
+ * `is_verified`, then the account status: login is refused until the email is
+ * verified, so an "active" account is a verified one.
+ */
+export function isEmailVerified(
+  me: Pick<Me, "email_verified" | "is_verified" | "status"> | null | undefined,
+): boolean {
+  if (!me) return false;
+  if (typeof me.email_verified === "boolean") return me.email_verified;
+  if (typeof me.is_verified === "boolean") return me.is_verified;
+  return typeof me.status === "string" && me.status.trim().toLowerCase() === "active";
+}
+
 function safeReturnTo(value: string | null, fallback = "/os/onboarding"): string {
   if (!value) return fallback;
   if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return fallback;

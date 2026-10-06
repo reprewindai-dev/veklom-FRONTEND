@@ -13,7 +13,7 @@ import { WalletStep } from "@/components/wallet/WalletStep";
 import type { WalletState } from "@/lib/wallet/api";
 import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
 import { storeBoundWorkspaceId } from "@/lib/cos/workspace-session";
-import { isDefiniteSignOut } from "@/lib/auth-context";
+import { isDefiniteSignOut, isEmailVerified } from "@/lib/auth-context";
 import {
   canOpenMount,
   classifyAgentRegistrationFailure,
@@ -33,6 +33,8 @@ type Me = {
   id?: string;
   email: string;
   username?: string;
+  status?: string;
+  email_verified?: boolean;
   is_verified?: boolean;
   workspace_id?: string | null;
 };
@@ -162,6 +164,7 @@ export default function OnboardingPage() {
 
   const agentUnavailable = !agent && agentOutcome?.kind === "unavailable";
   const workspaceClaim = workspaceClaimState(me);
+  const emailVerified = isEmailVerified(me);
   const mountHref = boundWorkspaceId ? `/os/mount?workspace=${encodeURIComponent(boundWorkspaceId)}` : "/os/mount";
 
   useEffect(() => {
@@ -341,8 +344,8 @@ export default function OnboardingPage() {
                 </div>
                 <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4">
                   <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Verification state</div>
-                  <div className={`mt-2 text-sm ${me?.is_verified === true ? "text-cos-accent" : "text-cos-muted"}`}>
-                    {me?.is_verified === true ? "Verified by LockerPhycer" : "Email not yet verified"}
+                  <div data-testid="verification-state" className={`mt-2 text-sm ${emailVerified ? "text-cos-accent" : "text-cos-muted"}`}>
+                    {emailVerified ? "Verified by LockerPhycer" : "Email not yet verified"}
                   </div>
                 </div>
               </div>

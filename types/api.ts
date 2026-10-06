@@ -10,6 +10,13 @@ export interface Me {
   org_name?: string;
   is_superuser?: boolean;
   tier?: string;
+  workspace_id?: string | null;
+  /** LockerPhycer account status; "active" once the email is verified. */
+  status?: string;
+  /** Explicit verification flag (newer LockerPhycer builds); preferred when present. */
+  email_verified?: boolean;
+  /** Legacy flag; LockerPhycer's UserResponse does not return it. */
+  is_verified?: boolean;
   [k: string]: unknown;
 }
 
