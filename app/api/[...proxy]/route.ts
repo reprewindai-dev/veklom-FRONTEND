@@ -13,7 +13,10 @@ const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL |
 const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
 const PGL_LEDGER_API_KEY = process.env.PGL_LEDGER_API_KEY || "";
 const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, "");
-const LOCKERPHYCER_SECRET = process.env.LOCKERPHYCER_SECRET_KEY || "";
+// LockerPhycer requests carry only the caller's own bearer (or none, for the
+// anonymous /api/v1/auth/* flows). No service secret is ever substituted:
+// LockerPhycer's SECRET_KEY is its JWT signing key and no route accepts it as a
+// bearer, so attaching it only put the signing secret on the wire.
 const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
 
 const HOP_BY_HOP_HEADERS = [
@@ -205,8 +208,6 @@ async function proxyRequest(req: NextRequest) {
     if (!hasBearerIdentity) {
       return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
     }
-  } else if (targetBase === LOCKERPHYCER_URL && LOCKERPHYCER_SECRET && !hasBearerIdentity) {
-    headers.set("Authorization", `Bearer ${LOCKERPHYCER_SECRET}`);
   } else if (
     targetBase === CAPI_RUNTIME_URL &&
     !isCapiInterlinkRoute &&
