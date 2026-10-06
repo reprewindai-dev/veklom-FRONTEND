@@ -144,7 +144,7 @@ describe("onboarding with the PGL ledger unavailable", () => {
     await click(button(el, "Continue"));
 
     expect(el.querySelector('[data-testid="workspace-missing"]')).not.toBeNull();
-    expect(button(el, "Bind workspace")).toBeTruthy();
+    expect(button(el, "Bind workspace and continue")).toBeTruthy();
     expect(mockPush).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
   });

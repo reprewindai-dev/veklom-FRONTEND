@@ -72,6 +72,11 @@ function slugify(value: string): string {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64);
 }
 
+/** Slug normalisation while typing: keeps a trailing hyphen so "my-" can become "my-team". */
+function slugDraft(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-/, "").slice(0, 64);
+}
+
 function csvValues(value: string): string[] {
   return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
@@ -119,6 +124,7 @@ export default function OnboardingPage() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceSlug, setWorkspaceSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [agent, setAgent] = useState<AgentResponse | null>(null);
   // Set when agent registration failed. "unavailable" (the PGL proxy or
   // ledger is not reachable/configured) does not block onboarding.
@@ -211,21 +217,56 @@ export default function OnboardingPage() {
     setMe({ ...refreshed, workspace_id: refreshed.workspace_id ?? null });
   }
 
+  // The session token may predate the operator's workspace (`workspace_id`
+  // null). Ask LockerPhycer for the workspace the operator already owns so the
+  // step shows it as bound instead of asking them to create another.
+  useEffect(() => {
+    if (!identityLoaded || boundWorkspaceId || sandbox) return;
+    let active = true;
+    api.get<WorkspaceResponse | { workspace?: WorkspaceResponse | null }>("/api/v1/workspace/me")
+      .then((value) => {
+        if (!active || !value) return;
+        const found = "workspace" in value ? value.workspace : (value as WorkspaceResponse);
+        if (found && typeof found.id === "string" && found.id.trim()) setWorkspaceId(found.id);
+      })
+      .catch(() => {
+        // 404 means no workspace yet; anything else leaves the create form up.
+      });
+    return () => {
+      active = false;
+    };
+  }, [identityLoaded, boundWorkspaceId, sandbox]);
+
   async function createWorkspace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sandbox) return;
+    const slug = slugify(workspaceSlug);
+    if (sandbox || !workspaceName.trim() || !slug) return;
     setBusy(true);
     setError(null);
+    setWorkspaceError(null);
     try {
+      // LockerPhycer returns the operator's existing active workspace if there
+      // is one, otherwise creates it.
       const response = await api.post<WorkspaceResponse>("/api/v1/workspace", {
-        name: workspaceName,
-        slug: workspaceSlug,
+        name: workspaceName.trim(),
+        slug,
       });
       if (response.access_token) setTokens(response.access_token, response.refresh_token ?? null);
       setWorkspaceId(response.id);
-      await refreshIdentity();
+      setStep(2);
+      // The re-read only refreshes the displayed profile; the bind already
+      // succeeded, so a failure here must not be reported as a bind failure.
+      try {
+        await refreshIdentity();
+      } catch {
+        // keep the bound workspace
+      }
     } catch (cause: unknown) {
-      setError(errorMessage(cause));
+      if (cause instanceof ApiError && cause.status === 409) {
+        setWorkspaceError(`The slug "${slug}" is already taken. Choose another slug. (${cause.message})`);
+      } else {
+        setWorkspaceError(errorMessage(cause));
+      }
     } finally {
       setBusy(false);
     }
@@ -371,15 +412,26 @@ export default function OnboardingPage() {
                   </p>
                 ) : null}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Name" value={workspaceName} onChange={(value) => { setWorkspaceName(value); if (!slugTouched) setWorkspaceSlug(slugify(value)); }} placeholder="Operating workspace" />
-                  <Field label="Slug" value={workspaceSlug} onChange={(value) => { setSlugTouched(true); setWorkspaceSlug(slugify(value)); }} placeholder="operating-workspace" />
+                  {/* The slug follows the name (lowercase, hyphenated) until the
+                      operator edits it; clearing it hands it back to the name. */}
+                  <Field label="Name" value={workspaceName} onChange={(value) => { setWorkspaceName(value); setWorkspaceError(null); if (!slugTouched) setWorkspaceSlug(slugify(value)); }} placeholder="Operating workspace" />
+                  <Field label="Slug" value={workspaceSlug} onChange={(value) => {
+                    const typed = slugDraft(value);
+                    setWorkspaceError(null);
+                    setSlugTouched(Boolean(typed));
+                    setWorkspaceSlug(typed || slugify(workspaceName));
+                  }} placeholder="operating-workspace" />
                 </div>
+                {workspaceError ? (
+                  <p data-testid="workspace-error" role="alert" className="rounded-lg border border-cos-danger/40 bg-cos-danger/10 px-3 py-2 text-sm text-cos-text">{workspaceError}</p>
+                ) : null}
                 {sandbox ? <LiveOnlyNotice action="Bind workspace" reason="LockerPhycer POST /api/v1/workspace has no sandbox scope; a workspace created here would be live." /> : null}
-                <Button type="submit" loading={busy} disabled={sandbox || !workspaceName || !workspaceSlug}>{sandbox ? "Bind workspace · Live only" : "Bind workspace"}</Button>
+                {/* One action: binding is what moves this step forward. */}
+                <Button type="submit" loading={busy} disabled={sandbox || !workspaceName.trim() || !slugify(workspaceSlug)}>{sandbox ? "Bind workspace · Live only" : "Bind workspace and continue"}</Button>
               </form>
             )}
             <p className="text-xs leading-6 text-cos-muted">Authentication established who you are. This step binds the session to a workspace. It grants no capability — authority is only issued by CAPPO at mount time.</p>
-            <Button onClick={continueStep} disabled={!boundWorkspaceId}>Continue</Button>
+            {boundWorkspaceId ? <Button onClick={continueStep}>Continue</Button> : null}
           </div>
         ) : null}
 
