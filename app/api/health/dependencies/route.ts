@@ -35,7 +35,10 @@ async function checkDependency(dependency: Dependency) {
 
 export async function GET() {
  const dependencies = await Promise.all([
- checkDependency({ name:"cappo", url: process.env.BACKEND_URL }),
+ checkDependency({ name:"cappo", url: process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL }),
+ // The BYOS backend is decommissioned. BACKEND_URL used to be probed here and
+ // turned the whole summary into 503 on live; probe it only when BYOS_URL is set.
+ checkDependency({ name:"byos", url: process.env.BYOS_URL }),
  checkDependency({ name:"capi", url: process.env.CAPI_URL || process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL }),
  checkDependency({ name:"gnomledger", url: process.env.PGL_URL || process.env.GNOMLEDGER_URL }),
  checkDependency({ name:"vlink", url: process.env.VLINK_URL }),
