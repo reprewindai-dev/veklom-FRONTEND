@@ -62,19 +62,31 @@ export default function SignupPage() {
  setBusy(true);
  track("signup_submitted");
  try {
- await fetch("/api/auth/acceptance", {
+ // Terms acceptance is recorded server-side. A failure is not fatal to the
+ // account, but it is never hidden: the operator is told it was not recorded.
+ let acceptanceRecorded = false;
+ try {
+ const acceptanceRes = await fetch("/api/auth/acceptance", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
  body: JSON.stringify({
  document_version: "2026-08-28",
  acceptance_source: "signup_form"
  })
- }).catch(console.error);
+ });
+ acceptanceRecorded = acceptanceRes.ok;
+ if (!acceptanceRes.ok) console.error("Acceptance not recorded", acceptanceRes.status);
+ } catch (cause) {
+ console.error("Acceptance not recorded", cause);
+ }
 
  // LockerPhycer never auto-signs-in email accounts and blocks password
  // login until the address is verified, so the next step is the inbox.
  await signup(email, pw, name || undefined);
- setOk("Check your email and open the verification link (it expires in 30 minutes). Sign-in is refused until the address is verified.");
+ setOk(
+ "Check your email and open the verification link (it expires in 30 minutes). Sign-in is refused until the address is verified." +
+ (acceptanceRecorded ? "" : " Note: your agreement acceptance could not be recorded; you may be asked to accept again at sign-in.")
+ );
  setBusy(false);
  } catch (e) {
  setErr((e as Error).message);

@@ -22,7 +22,16 @@ export async function POST(req: NextRequest) {
       ]
     };
 
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8092";
+    // Acceptance records belong to Identity (LockerPhycer), the same base URL the
+    // rest of the app uses. The old BACKEND_API_URL / localhost:8092 default pointed
+    // at nothing on live, so every acceptance silently failed.
+    const backendUrl = (process.env.LOCKERPHYCER_URL || process.env.BACKEND_API_URL || "").replace(/\/+$/, "");
+    if (!backendUrl) {
+      return NextResponse.json(
+        { success: false, error: "Acceptance recorder is not configured" },
+        { status: 503 },
+      );
+    }
 
     const backendRes = await fetch(`${backendUrl}/api/auth/acceptance`, {
       method: "POST",
