@@ -22,14 +22,18 @@ describe("VLink front-door funnel", () => {
   it("wires the primary CTAs, nav and /get to the signup URL", () => {
     expect(read("app/page.tsx")).toContain("Start free with VLink");
     expect(read("app/page.tsx")).toContain("href={SIGNUP_URL}");
-    expect(read("components/shell/HumanAppShell.tsx")).toContain("Start free trial");
+    const shell = read("components/shell/HumanAppShell.tsx");
+    expect(shell).toContain("Create account");
+    // There is no billing or trial; the nav must not promise one.
+    expect(shell).not.toContain("Start free trial");
     expect(read("app/get/page.tsx")).toContain("router.push(SIGNUP_URL)");
   });
 
   it("tells email signups to verify instead of signing in", () => {
     const signup = read("app/signup/page.tsx");
-    expect(signup).toContain("Check your email to verify your account — the link expires in 30 minutes.");
+    expect(signup).toContain("Sign-in is refused until the address is verified.");
     expect(signup).not.toContain("Please sign in to continue");
+    expect(signup).not.toContain("free trial");
     expect(read("app/verify-email/page.tsx")).toContain("router.replace(destination)");
   });
 
