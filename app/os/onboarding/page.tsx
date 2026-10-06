@@ -13,6 +13,13 @@ import { WalletStep } from "@/components/wallet/WalletStep";
 import type { WalletState } from "@/lib/wallet/api";
 import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
 import { storeBoundWorkspaceId } from "@/lib/cos/workspace-session";
+import { isDefiniteSignOut } from "@/lib/auth-context";
+import {
+  canOpenMount,
+  classifyAgentRegistrationFailure,
+  workspaceClaimState,
+  type AgentStepOutcome,
+} from "@/lib/cos/onboarding-steps";
 
 const STEPS = [
   { id: "identity", label: "Operator Identity" },
@@ -111,6 +118,11 @@ export default function OnboardingPage() {
   const [workspaceSlug, setWorkspaceSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [agent, setAgent] = useState<AgentResponse | null>(null);
+  // Set when agent registration failed. "unavailable" (the PGL proxy or
+  // ledger is not reachable/configured) does not block onboarding.
+  const [agentOutcome, setAgentOutcome] = useState<AgentStepOutcome | null>(null);
+  const [identityAttempt, setIdentityAttempt] = useState(0);
+  const [identityFailed, setIdentityFailed] = useState(false);
   const [ledger, setLedger] = useState<LedgerState>({ status: "Not started" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,29 +160,36 @@ export default function OnboardingPage() {
     if (boundWorkspaceId) storeBoundWorkspaceId(boundWorkspaceId);
   }, [boundWorkspaceId]);
 
+  const agentUnavailable = !agent && agentOutcome?.kind === "unavailable";
+  const workspaceClaim = workspaceClaimState(me);
   const mountHref = boundWorkspaceId ? `/os/mount?workspace=${encodeURIComponent(boundWorkspaceId)}` : "/os/mount";
 
   useEffect(() => {
     let active = true;
+    setIdentityFailed(false);
     api.get<Me>("/api/v1/auth/me")
       .then((value) => {
         if (!active) return;
         setMe({ ...value, workspace_id: value.workspace_id ?? null });
         setWorkspaceId(value.workspace_id ?? null);
         setIdentityLoaded(true);
+        setError(null);
       })
       .catch((cause: unknown) => {
         if (!active) return;
-        if (cause instanceof ApiError && (cause.status === 401 || cause.status === 403)) {
+        // Only the identity authority definitely rejecting the session asks
+        // for sign-in; a 429/5xx/network failure is shown with a retry.
+        if (isDefiniteSignOut(cause)) {
           setAuthRequired(true);
         } else {
+          setIdentityFailed(true);
           setError(errorMessage(cause));
         }
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [identityAttempt]);
 
   // Deep link from VLink: /os/onboarding?step=wallet opens the Wallet step once
   // the workspace is bound (the wallet belongs to the workspace).
@@ -216,6 +235,7 @@ export default function OnboardingPage() {
     setBusy(true);
     setError(null);
     setLedger({ status: "Not started" });
+    setAgentOutcome(null);
     try {
       const response = await api.post<AgentResponse>("/api/pgl/agents/", {
         agent_name: agentName,
@@ -245,14 +265,17 @@ export default function OnboardingPage() {
         setLedger({ status: "Live", result: verification });
       } catch (cause: unknown) {
         const message = errorMessage(cause);
+        // The agent is registered; only the chain read-back failed. That is
+        // shown on the ledger badge below, not as a blocking error.
         setLedger({
           status: cause instanceof ApiError && cause.status === 503 ? "Degraded" : "Not started",
           error: message,
         });
-        setError(message);
       }
     } catch (cause: unknown) {
-      setError(errorMessage(cause));
+      const outcome = classifyAgentRegistrationFailure(cause);
+      setAgentOutcome(outcome);
+      if (outcome.kind === "failed") setError(outcome.message);
     } finally {
       setBusy(false);
     }
@@ -282,7 +305,7 @@ export default function OnboardingPage() {
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-xs ${index === step ? "bg-cos-accent/10 text-cos-text" : "text-cos-muted"} disabled:cursor-not-allowed`}
             >
               {completed[index] ? <Check size={15} className="shrink-0 text-cos-accent" /> : <Circle size={15} className="shrink-0 text-cos-steel" />}
-              <span>{item.label}</span>
+              <span>{item.label}{item.id === "agent" && agentUnavailable ? " · unavailable" : ""}</span>
             </button>
           ))}
         </nav>
@@ -324,7 +347,12 @@ export default function OnboardingPage() {
                 </div>
               </div>
             )}
-            <Button onClick={continueStep} disabled={!identityLoaded || authRequired}>Continue</Button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={continueStep} disabled={!identityLoaded || authRequired}>Continue</Button>
+              {identityFailed && !authRequired ? (
+                <Button type="button" variant="outline" onClick={() => setIdentityAttempt((value) => value + 1)}>Retry identity check</Button>
+              ) : null}
+            </div>
           </div>
         ) : null}
 
@@ -334,6 +362,11 @@ export default function OnboardingPage() {
               <div className="rounded-xl border border-cos-accent/30 bg-cos-accent/5 p-5 text-sm text-cos-text">Workspace bound: <span className="font-mono">{boundWorkspaceId}</span></div>
             ) : (
               <form onSubmit={createWorkspace} className="space-y-4">
+                {workspaceClaim === "missing" ? (
+                  <p data-testid="workspace-missing" className="rounded-xl border border-cos-border bg-cos-bg/40 p-4 text-sm text-cos-muted">
+                    Your session is signed in but has no workspace yet. Create one here to continue; nothing else is required first.
+                  </p>
+                ) : null}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Name" value={workspaceName} onChange={(value) => { setWorkspaceName(value); if (!slugTouched) setWorkspaceSlug(slugify(value)); }} placeholder="Operating workspace" />
                   <Field label="Slug" value={workspaceSlug} onChange={(value) => { setSlugTouched(true); setWorkspaceSlug(slugify(value)); }} placeholder="operating-workspace" />
@@ -379,9 +412,19 @@ export default function OnboardingPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="PGL POST /api/pgl/agents/ writes to the live ledger and has no sandbox scope." /> : null}
-              <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me}>{sandbox ? "Register agent genome · Live only" : "Register agent genome"}</Button>
-              {agent ? <Button type="button" onClick={continueStep} disabled={!agent} variant="outline">Continue</Button> : null}
+              <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me}>{sandbox ? "Register agent genome · Live only" : agentUnavailable ? "Retry registration" : "Register agent genome"}</Button>
+              {agent || agentUnavailable ? (
+                <Button type="button" onClick={continueStep} variant="outline">{agent ? "Continue" : "Continue without agent genome"}</Button>
+              ) : null}
             </div>
+            {agentUnavailable ? (
+              <div data-testid="agent-step-unavailable" role="status" className="rounded-xl border border-cos-warn/40 bg-cos-warn/[0.06] p-4 text-sm text-cos-muted">
+                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-cos-warn">Unavailable · retry later</div>
+                <p className="mt-2">
+                  The agent ledger did not accept the registration ({agentOutcome?.message}). Nothing was recorded. Your workspace stays bound and the mount page works without a registered genome; register the agent once the ledger is reachable.
+                </p>
+              </div>
+            ) : null}
             {agent ? (
               <div className="space-y-4 rounded-xl border border-cos-border bg-cos-bg/40 p-4 text-xs">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -401,8 +444,8 @@ export default function OnboardingPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Operator email</div><div className="mt-2 break-all text-sm text-cos-text">{me?.email}</div></div>
               <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Workspace ID</div><div className="mt-2 break-all font-mono text-sm text-cos-text">{boundWorkspaceId}</div></div>
-              <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Agent ID</div><div className="mt-2 break-all font-mono text-sm text-cos-text">{agent?.agent_id}</div></div>
-              <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Certificate ID</div><div className="mt-2 break-all font-mono text-sm text-cos-text">{agent?.certificate_id}</div></div>
+              <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Agent ID</div><div className="mt-2 break-all font-mono text-sm text-cos-text">{agent?.agent_id ?? (agentUnavailable ? "Not registered · ledger unavailable, retry later" : "Not registered")}</div></div>
+              <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Certificate ID</div><div className="mt-2 break-all font-mono text-sm text-cos-text">{agent?.certificate_id ?? "None issued"}</div></div>
             </div>
             <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-5 text-sm leading-7 text-cos-muted">
               Activation runs the real governed loop:
@@ -411,7 +454,11 @@ export default function OnboardingPage() {
               <p className="mt-3">Sandbox vs production is selected on the mount page (project=sandbox is fixed there).</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={() => router.push(mountHref)}>Open mount</Button>
+              {canOpenMount(boundWorkspaceId) ? (
+                <Button onClick={() => router.push(mountHref)}>Open mount</Button>
+              ) : (
+                <Button type="button" onClick={() => setStep(1)}>Bind a workspace first</Button>
+              )}
               <Link className="rounded-lg border border-cos-border px-4 py-2 text-sm text-cos-text hover:border-cos-accent" href="/os/evidence">Open evidence</Link>
             </div>
           </div>
