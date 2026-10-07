@@ -54,8 +54,8 @@ interface CompiledPlan {
   python: GovernedPython;
 }
 
-const COMPILE: StageEndpoint = { method: "POST", path: "/api/v1/gpc/compile", classification: "present", response: "CAPPO plan + pipeline" };
-const RECOMPILE: StageEndpoint = { method: "POST", path: "/api/v1/gpc/pipeline/compile", classification: "present", response: "CAPPO governed Python" };
+const COMPILE: StageEndpoint = { method: "POST", path: "/api/abide/v1/blueprint/compile", classification: "present", response: "ABIDE plan + pipeline" };
+const RECOMPILE: StageEndpoint = { method: "POST", path: "/api/abide/v1/pipeline/compile", classification: "present", response: "ABIDE governed Python" };
 
 const VERDICTS: Record<Verdict, { label: string; tone: string; detail: string }> = {
   ready_for_mount: {
@@ -133,7 +133,7 @@ export default function GovernPage() {
     const result = await call<CompiledPlan>(COMPILE, { intent: text.trim() });
     setBusy(false);
     if (!isCompiledPlan(result.data)) {
-      setError(result.record.error || `CAPPO did not return a pipeline (HTTP ${result.record.status ?? "unreachable"}).`);
+      setError(result.record.error || `ABIDE did not return a pipeline (HTTP ${result.record.status ?? "unreachable"}).`);
       return;
     }
     setPlan(result.data);
@@ -214,7 +214,7 @@ export default function GovernPage() {
               ))}
             </div>
             <p className="text-xs leading-5 text-cos-muted">
-              CAPPO maps each step to the capability catalog it actually serves. Building a pipeline grants nothing; every step still needs its own permit when it runs.
+              ABIDE maps each step to the capability catalog cAPI actually serves. Building a pipeline grants nothing; every step still needs its own permit when it runs.
             </p>
           </form>
           {error ? <div className="mt-3"><FailureNotice detail={error} /></div> : null}
@@ -229,7 +229,7 @@ export default function GovernPage() {
               <GpcPropertyPanel />
             </div>
           ) : (
-            <div className="mt-4"><HonestEmpty title="No pipeline yet" route="POST /api/v1/gpc/compile" detail="Build one from an intent. Rewire or remove steps on the canvas and the governed Python recompiles." /></div>
+            <div className="mt-4"><HonestEmpty title="No pipeline yet" route="POST /api/abide/v1/blueprint/compile" detail="Build one from an intent. Rewire or remove steps on the canvas and the governed Python recompiles." /></div>
           )}
         </Pillar>
 
@@ -290,7 +290,7 @@ export default function GovernPage() {
           ) : python && !python.success ? (
             <FailureNotice detail={python.warnings.join("; ") || "The pipeline could not be compiled."} />
           ) : (
-            <HonestEmpty title="No code yet" route="POST /api/v1/gpc/pipeline/compile" detail="The pipeline compiles to Python the moment it exists." />
+            <HonestEmpty title="No code yet" route="POST /api/abide/v1/pipeline/compile" detail="The pipeline compiles to Python the moment it exists." />
           )}
         </Pillar>
 

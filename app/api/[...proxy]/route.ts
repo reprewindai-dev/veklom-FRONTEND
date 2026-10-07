@@ -18,6 +18,8 @@ const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, ""
 // LockerPhycer's SECRET_KEY is its JWT signing key and no route accepts it as a
 // bearer, so attaching it only put the signing secret on the wire.
 const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
+// Internal-only; no public fallback so a missing setting fails closed.
+const ABIDE_URL = (process.env.ABIDE_URL || "").replace(/\/+$/, "");
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -93,6 +95,7 @@ async function proxyRequest(req: NextRequest) {
   // CAPPO itself currently accepts unauthenticated callers, so this proxy is the
   // gate: anything that is not an explicitly public read needs a live session.
   let requiresPrincipal = false;
+  let isAbideRoute = false;
   const isPglRoute = path.startsWith("/api/pgl/") || path.startsWith("/api/ledger/");
   // Operator-scoped LockerPhycer routes (wallet, entitlements, Stripe top-up
   // checkout). They must carry the operator's own bearer; the service secret is
@@ -132,6 +135,16 @@ async function proxyRequest(req: NextRequest) {
   } else if (path.startsWith("/api/capi/")) {
     targetBase = CAPI_RUNTIME_URL;
     forwardPath = path.replace(/^\/api\/capi/, "/api/v1/capi");
+  } else if (path.startsWith("/api/abide/")) {
+    // ABIDE (wiring W-06) compiles blueprints/contracts and grants nothing, so it
+    // gets no caller credentials; the live-session check below still gates it.
+    if (!ABIDE_URL) {
+      return NextResponse.json({ error: "ABIDE blueprint service is not configured" }, { status: 503 });
+    }
+    targetBase = ABIDE_URL;
+    forwardPath = path.replace(/^\/api\/abide/, "");
+    requiresPrincipal = true;
+    isAbideRoute = true;
   } else if (path.startsWith("/api/pgl/")) {
     targetBase = PGL_URL;
     forwardPath = path.replace(/^\/api\/pgl/, "/api/v1");
@@ -197,7 +210,10 @@ async function proxyRequest(req: NextRequest) {
     if (principalError) return principalError;
   }
 
-  if (isPglRoute) {
+  if (isAbideRoute) {
+    headers.delete("authorization");
+    headers.delete("cookie");
+  } else if (isPglRoute) {
     if (!PGL_LEDGER_API_KEY) {
       return NextResponse.json(
         { error: "PGL ledger proxy is not configured" },
