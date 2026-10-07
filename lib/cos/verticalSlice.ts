@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { pglLedgerEventPath, type PglLedgerEvent } from "@/lib/cos/readback";
 
 export interface GovernedConsequenceRequest {
   capabilityLease: {
@@ -29,6 +30,14 @@ export interface GovernedConsequenceResponse {
     reason: string;
     anchor_id?: string | null;
   };
+  // Real PGL ledger identifiers CAPPO recorded for this run. Used to retrieve and
+  // verify the persisted evidence event against the canonical ledger.
+  pgl?: {
+    pre_execution_certificate_id?: string | null;
+    post_execution_certificate_id?: string | null;
+    capi_evidence_event_id?: string | null;
+    persisted?: boolean;
+  } | null;
   _runtimeMeta?: unknown;
 }
 
@@ -62,14 +71,14 @@ export function executeGovernedConsequence(
   });
 }
 
-export function fetchExecutionEvidence(executionId: string): Promise<unknown> {
-  return api(`/api/cappo/v1/executions/${encodeURIComponent(executionId)}/evidence`, {
-    method: "GET",
-  });
-}
-
-export function fetchExecutionMeasurement(executionId: string): Promise<unknown> {
-  return api(`/api/cappo/v1/executions/${encodeURIComponent(executionId)}/measurements`, {
-    method: "GET",
-  });
+/**
+ * Retrieve a persisted PGL ledger event by its id from the canonical ledger.
+ *
+ * CAPPO does not expose a per-execution evidence route; the real anchored evidence
+ * lives in the PGL ledger. The governed execution response carries the ledger event
+ * ids CAPPO recorded, and this fetches the event itself (hash, chain link, payload)
+ * so the browser can surface genuine, independently retrievable evidence.
+ */
+export function fetchPglLedgerEvent(eventId: string): Promise<PglLedgerEvent> {
+  return api<PglLedgerEvent>(pglLedgerEventPath(eventId), { method: "GET" });
 }

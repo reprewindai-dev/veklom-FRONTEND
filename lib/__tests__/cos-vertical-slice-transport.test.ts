@@ -1,7 +1,6 @@
 import {
   executeGovernedConsequence,
-  fetchExecutionEvidence,
-  fetchExecutionMeasurement,
+  fetchPglLedgerEvent,
 } from "@/lib/cos/verticalSlice";
 
 const response = (body: unknown) => ({
@@ -58,23 +57,17 @@ describe("Capability OS truthful vertical-slice transport", () => {
     }));
   });
 
-  it("retrieves linked evidence without a fallback API key", async () => {
-    await fetchExecutionEvidence("exec-1");
+  it("retrieves the canonical PGL ledger event without a fallback API key", async () => {
+    await fetchPglLedgerEvent("evt_exec_1");
 
     const [url, init] = (fetch as jest.Mock).mock.calls[0];
-    expect(url).toBe("http://localhost/api/cappo/v1/executions/exec-1/evidence");
+    // Evidence lives in the PGL ledger, reached through the same-origin PGL proxy
+    // (which injects the service key); the browser never sends a fallback key.
+    expect(url).toBe("http://localhost/api/pgl/ledger/events/evt_exec_1");
+    expect(init.method).toBe("GET");
     expect(init.headers.Authorization).toBe("Bearer real-session-token");
     expect(init.headers["X-API-Key"]).toBeUndefined();
     expect(JSON.stringify(init)).not.toContain("legacy_test_key");
-  });
-
-  it("retrieves measurement for the exact execution", async () => {
-    await fetchExecutionMeasurement("exec-1");
-
-    expect(fetch).toHaveBeenCalledWith(
-      "http://localhost/api/cappo/v1/executions/exec-1/measurements",
-      expect.objectContaining({ method: "GET" }),
-    );
   });
 
   it("keeps the x402 intervention enabled for governed execution", async () => {

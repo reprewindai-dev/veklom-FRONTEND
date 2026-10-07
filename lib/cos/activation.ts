@@ -1,7 +1,7 @@
 import { api, ApiError } from "@/lib/api";
 import {
   executeGovernedConsequence,
-  fetchExecutionEvidence,
+  fetchPglLedgerEvent,
   type GovernedConsequenceResponse,
 } from "@/lib/cos/verticalSlice";
 
@@ -213,27 +213,65 @@ export async function executeActivationAllowed(
   };
 }
 
+/**
+ * Evidence for a governed execution lives in the canonical PGL ledger, not in a
+ * per-execution CAPPO route. The execution response carries the ledger event ids
+ * CAPPO recorded; this retrieves the real persisted event (hash, chain link,
+ * payload) and surfaces it as the execution's evidence. It never fabricates a
+ * proof: if CAPPO recorded no ledger event, or the ledger has no persisted event
+ * for it, the stage stops honestly instead of presenting a 404 or an invented hash.
+ */
 export async function inspectActivationEvidence(
   execution: ActivationAllowedExecution,
 ): Promise<ActivationEvidence> {
+  const pgl = execution.response.pgl ?? undefined;
+  const eventId =
+    pgl?.post_execution_certificate_id ||
+    pgl?.capi_evidence_event_id ||
+    pgl?.pre_execution_certificate_id ||
+    undefined;
+  if (!eventId) {
+    throw new ActivationUnavailableError(
+      "CAPPO recorded no PGL ledger event for this execution; there is nothing to verify via PGL.",
+    );
+  }
+
   try {
-    const evidence = await fetchExecutionEvidence(execution.executionId) as ActivationEvidence;
-    if (
-      evidence.execution_id !== execution.executionId ||
-      !["verified", "verified_with_unresolved_refs"].includes(evidence.proof_state) ||
-      evidence.pgl?.persisted !== true ||
-      !evidence.pgl?.event_hash
-    ) {
+    const event = await fetchPglLedgerEvent(eventId);
+    if (event.persisted !== true || !event.event_hash) {
       throw new ActivationUnavailableError(
-        "The evidence response is not a verified, persisted proof for this execution.",
+        "The PGL ledger returned no persisted evidence event for this execution.",
       );
     }
-    return evidence;
+    return {
+      execution_id: execution.executionId,
+      // The public/authenticated ledger lookup confirms the event is recorded and
+      // chained, but is not a full browser-side cryptographic chain verification —
+      // reported honestly as verified-with-unresolved-refs rather than "verified".
+      proof_state: "verified_with_unresolved_refs",
+      verification_reasons: [
+        "Evidence retrieved from the canonical PGL ledger event for this execution.",
+        "Ledger reports the event persisted with a chained event hash.",
+        "Independent cryptographic chain verification was not performed in the browser.",
+      ],
+      eee:
+        event.details && typeof event.details === "object"
+          ? (event.details as Record<string, unknown>)
+          : {},
+      pgl: {
+        event_id: event.event_id,
+        certificate_id: pgl?.pre_execution_certificate_id ?? null,
+        event_hash: event.event_hash,
+        previous_event_hash: event.prev_event_hash ?? null,
+        persisted: true,
+        created_at: event.created_at ?? "",
+      },
+    };
   } catch (error) {
     if (error instanceof ActivationUnavailableError) throw error;
     if (error instanceof ApiError) {
       throw new ActivationUnavailableError(
-        `Execution evidence is unavailable (${error.status ?? error.kind}).`,
+        `Execution evidence is available only via PGL and could not be confirmed (${error.status ?? error.kind}).`,
         error,
       );
     }

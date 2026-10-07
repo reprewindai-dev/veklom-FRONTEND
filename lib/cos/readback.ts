@@ -81,6 +81,24 @@ export function pglProofPath(eventHash: string): string {
   return `/api/pgl/ledger/proof/${encodeURIComponent(eventHash)}`;
 }
 
+/** Authenticated retrieval of one exact ledger event, including its payload. */
+export function pglLedgerEventPath(eventId: string): string {
+  return `/api/pgl/ledger/events/${encodeURIComponent(eventId)}`;
+}
+
+export type PglLedgerEvent = {
+  event_id: string;
+  event_type?: string;
+  actor?: string;
+  summary?: string;
+  details?: Record<string, unknown>;
+  prev_event_hash?: string | null;
+  event_hash?: string;
+  created_at?: string;
+  persisted?: boolean;
+  [key: string]: unknown;
+};
+
 export function pglChainVerifyPath(agentId: string): string {
   return `/api/pgl/ledger/agents/${encodeURIComponent(agentId)}/verify`;
 }
