@@ -98,9 +98,11 @@ export const stages: StageDefinition[] = [
     id: "govern",
     label: "Govern",
     route: "/os/govern",
-    purpose: "Compatibility surface for policy and approval evaluation before consequence authority is issued.",
-    owner: "CAPPO authorization / governance v2",
+    purpose: "Lay a plan out as a governed pipeline, see CAPPO's decision for every step, and compile it to code that can only act under a permit.",
+    owner: "CAPPO GPC pipeline compiler / authorization",
     endpoints: [
+      { method: "POST", path: "/api/v1/gpc/compile", classification: "needs_proof", qualification: "deterministic plan id (same intent + catalog = same id), not persisted; grants nothing", response: "steps against the live catalog, verdict, pipeline graph, governed Python, proof hash", baseUrl: backend("cappo") },
+      { method: "POST", path: "/api/v1/gpc/pipeline/compile", classification: "needs_proof", qualification: "compiles the edited canvas graph; grants nothing", response: "governed Python, execution order, parallel levels", baseUrl: backend("cappo") },
       { method: "POST", path: "/api/v1/execution/authorize", classification: "needs_proof", qualification: "generated authorization id; local decision service", response: "decision and authorization hashes", baseUrl: backend("cappo") },
       { method: "POST", path: "/v1/governance/v2/assess", classification: "needs_proof", qualification: "in-memory, not durable", response: "governance assessment", baseUrl: backend("cappo") },
       { method: "GET", path: "/v1/governance/v2/quarantine", classification: "needs_proof", qualification: "in-memory, not durable", response: "quarantine queue", baseUrl: backend("cappo") },

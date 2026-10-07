@@ -28,6 +28,8 @@ import ReactFlow, {
  addEdge,
  applyNodeChanges,
  applyEdgeChanges,
+ Handle,
+ Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -96,7 +98,9 @@ const CustomGpcNode = React.memo<CustomGpcNodeProps>(
  </div>
  )}
 
- {/* Input/Output handles rendered via ReactFlow */}
+ {/* Edges attach to these; without them ReactFlow draws no edges and nothing can be connected. */}
+ <Handle type="target" id="in" position={Position.Left} />
+ <Handle type="source" id="out" position={Position.Right} />
  </div>
  );
  }
@@ -154,10 +158,13 @@ CustomEdge.displayName = 'CustomEdge';
 export interface GpcCanvasProps {
  onCompile?: () => void;
  onExecute?: () => void;
+ /** Container height; defaults to the full viewport for the standalone builder. */
+ heightClassName?: string;
+ executeLabel?: string;
 }
 
 export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
- ({ onCompile, onExecute }) => {
+ ({ onCompile, onExecute, heightClassName = 'h-screen', executeLabel = 'Execute' }) => {
  // Fetch only specific state slices to avoid full re-renders
  const [canvasNodes, setCanvasNodes] = useNodesState([]);
  const [canvasEdges, setCanvasEdges] = useEdgesState([]);
@@ -205,9 +212,13 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
  }));
  }, [storeEdges, isExecuting]);
 
- // Update canvas state when store changes
+ // Update canvas state when store changes, keeping the sizes ReactFlow measured:
+ // edges are only drawn between nodes whose dimensions/handles are known.
  React.useEffect(() => {
- setCanvasNodes(rfNodes);
+ setCanvasNodes((previous) => rfNodes.map((node) => {
+ const measured = previous.find((p) => p.id === node.id);
+ return measured ? { ...measured, ...node, width: measured.width, height: measured.height } : node;
+ }));
  }, [rfNodes, setCanvasNodes]);
 
  React.useEffect(() => {
@@ -225,6 +236,8 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
  if (change.selected) {
  canvasStore.toggleNodeSelection(change.id);
  }
+ } else if (change.type === 'remove') {
+ canvasStore.deleteNode(change.id);
  }
  });
  setCanvasNodes((nds) => applyNodeChanges(changes, nds));
@@ -283,7 +296,7 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
  );
 
  return (
- <div className="w-full h-screen flex flex-col">
+ <div className={`w-full ${heightClassName} flex flex-col`}>
  {/* Header toolbar */}
  <div className="h-14 border-b border-border px-4 flex items-center gap-2 bg-white">
  <button
@@ -298,7 +311,7 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
  disabled={isExecuting}
  className="px-3 py-1 text-sm font-medium rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
  >
- {isExecuting ? 'Running...' : 'Execute'}
+ {isExecuting ? 'Running...' : executeLabel}
  </button>
  <div className="flex-1" />
  <div className="text-xs text-gray-500">
@@ -308,8 +321,8 @@ export const GpcCanvas: React.FC<GpcCanvasProps> = React.memo(
 
  {/* Canvas */}
  <ReactFlow
- nodes={rfNodes}
- edges={rfEdges}
+ nodes={canvasNodes}
+ edges={canvasEdges}
  onNodesChange={handleNodesChange}
  onEdgesChange={handleEdgesChange}
  onConnect={handleConnect}

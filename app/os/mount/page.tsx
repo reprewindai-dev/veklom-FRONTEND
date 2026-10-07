@@ -167,6 +167,21 @@ export default function MountPage() {
     if (prefill) setWorkspace(prefill);
   }, [me?.workspace_id, workspace]);
 
+  // Blueprint hands a compiled plan's scope over as query parameters. It only
+  // pre-fills the form; CAPPO still decides what is granted.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const take = (key: string, set: (value: string) => void) => {
+      const value = params.get(key)?.trim();
+      if (value) set(value);
+    };
+    take("package", setPackageRef);
+    take("project", setProject);
+    take("reads", setReads);
+    take("writes", setWrites);
+    take("blocked", setBlocked);
+  }, []);
+
   useEffect(() => {
     if (!heldLease) return;
     if (!packageRef && heldLease.packageRef) setPackageRef(heldLease.packageRef);
