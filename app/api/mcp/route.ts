@@ -269,9 +269,57 @@ const WEBMCP_TOOLS = [
   }
 ];
 
+// Consequential tools cause (or read back) a real governed effect. They are
+// never anonymous: the caller must present their own bearer, and the workspace
+// is never defaulted. Discovery tools stay public.
+const CREDENTIALED_TOOLS = new Set([
+  "veklom_mount_capability",
+  "veklom_execute_action",
+  "veklom_read_target_state",
+  "veklom_terminate_mount",
+]);
+
+type ToolContext = { bearer?: string };
+
+// Thrown for conditions that must surface as a JSON-RPC error (e.g. a missing
+// credential) rather than an in-band tool result.
+class McpToolError extends Error {
+  code: number;
+  constructor(message: string, code = -32001) {
+    super(message);
+    this.code = code;
+  }
+}
+
 // Helper to execute specific WebMCP tools
-async function executeTool(name: string, args: Record<string, any> = {}): Promise<any> {
-  const workspace = args.workspace || "default";
+async function executeTool(
+  name: string,
+  args: Record<string, any> = {},
+  ctx: ToolContext = {},
+): Promise<any> {
+  // Discovery tools are public. A consequential tool requires the caller's own
+  // bearer (forwarded to CAPPO, which decides every action) and an explicit
+  // workspace; the workspace is never silently defaulted to "default".
+  const workspace = typeof args.workspace === "string" ? args.workspace.trim() : "";
+  if (CREDENTIALED_TOOLS.has(name)) {
+    if (!ctx.bearer) {
+      throw new McpToolError(
+        `${name} is a consequential action: send an 'Authorization: Bearer <token>' header with the MCP request. Discovery tools are public; action tools need the caller's own credential.`,
+      );
+    }
+    if (!workspace) {
+      throw new McpToolError(
+        `${name} requires an explicit 'workspace' argument; it is never defaulted to 'default'.`,
+        -32602,
+      );
+    }
+  }
+
+  const credentialedHeaders = (): Record<string, string> => ({
+    "Content-Type": "application/json",
+    "X-Workspace-ID": workspace,
+    "Authorization": `Bearer ${ctx.bearer}`,
+  });
 
   switch (name) {
     case "veklom_vlink_corridors": {
@@ -350,10 +398,7 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
 
       const res = await fetch(`${CAPPO_BACKEND_URL}/v1/capability/mounts`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Workspace-ID": workspace
-        },
+        headers: credentialedHeaders(),
         body: JSON.stringify(payload),
         cache: "no-store"
       });
@@ -377,10 +422,7 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
 
       const res = await fetch(`${CAPPO_BACKEND_URL}/v1/capability/mounts/${args.mount_id}/execute`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Workspace-ID": workspace
-        },
+        headers: credentialedHeaders(),
         body: JSON.stringify(payload),
         cache: "no-store"
       });
@@ -399,7 +441,8 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
       const res = await fetch(url, {
         headers: {
           "Accept": "application/json",
-          "X-Workspace-ID": workspace
+          "X-Workspace-ID": workspace,
+          "Authorization": `Bearer ${ctx.bearer}`
         },
         cache: "no-store"
       });
@@ -412,20 +455,71 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
     }
 
     case "veklom_verify_evidence": {
-      if (args.receipt_id) {
+      // Verification is an independent lookup against the PGL/GnomLedger, never
+      // an assertion. Without a pgl_event_hash there is nothing to check, and
+      // without a configured ledger key we cannot check it: say so plainly
+      // instead of returning verified:true.
+      const eventHash = typeof args.event_hash === "string" ? args.event_hash.trim() : "";
+      const receiptId = typeof args.receipt_id === "string" ? args.receipt_id.trim() : "";
+
+      if (!eventHash) {
         return {
-          verified: true,
-          verification_standard: "PGL-E4",
-          receipt_id: args.receipt_id,
-          ledger: "GnomLedger",
-          status: "confirmed",
-          anchored_at: new Date().toISOString()
+          verified: false,
+          reason: receiptId
+            ? "Independent PGL verification needs the receipt's pgl_event_hash; a receipt_id alone cannot be verified here."
+            : "No event_hash provided; nothing to verify against the ledger.",
+          ...(receiptId ? { receipt_id: receiptId } : {}),
         };
       }
+
+      if (!PGL_LEDGER_API_KEY) {
+        return {
+          verified: false,
+          reason: "PGL ledger lookup is not configured (PGL_LEDGER_API_KEY unset); cannot independently verify.",
+          event_hash: eventHash,
+        };
+      }
+
+      let lookup: any;
+      try {
+        const res = await fetch(
+          `${PGL_URL}/api/v1/ledger/proof/${encodeURIComponent(eventHash)}`,
+          { headers: { "Accept": "application/json", "x-api-key": PGL_LEDGER_API_KEY }, cache: "no-store" },
+        );
+        if (!res.ok) {
+          return {
+            verified: false,
+            reason: `PGL ledger lookup failed: HTTP ${res.status}.`,
+            event_hash: eventHash,
+          };
+        }
+        lookup = await res.json();
+      } catch (err: any) {
+        return {
+          verified: false,
+          reason: `PGL ledger lookup error: ${err?.message || String(err)}`,
+          event_hash: eventHash,
+        };
+      }
+
+      const persisted = lookup?.persisted === true && lookup?.event_hash === eventHash;
+      const chain = lookup?.chain;
+      const chainOk = !chain || (!chain.error && chain.status === "verified" && chain.valid === true);
+      const verified = persisted && chainOk;
+
       return {
-        verified: true,
-        verification_standard: "PGL-E4",
-        status: "confirmed"
+        verified,
+        ledger: "GnomLedger",
+        event_hash: eventHash,
+        ...(receiptId ? { receipt_id: receiptId } : {}),
+        ...(verified
+          ? { verification_standard: "PGL-E4" }
+          : {
+              reason: !persisted
+                ? "Ledger did not independently persist this event_hash."
+                : "Event is persisted but its hash chain is not verified.",
+            }),
+        lookup,
       };
     }
 
@@ -436,10 +530,7 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
 
       const res = await fetch(`${CAPPO_BACKEND_URL}/v1/capability/mounts/${args.mount_id}/terminate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Workspace-ID": workspace
-        },
+        headers: credentialedHeaders(),
         body: JSON.stringify(payload),
         cache: "no-store"
       });
@@ -448,17 +539,20 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
     }
 
     case "veklom_wallet_options": {
+      // The testbed wallet is a simulated sandbox balance, not real funds, and
+      // it grants no authorization of its own (CAPPO decides every action).
       return {
         corridor: "x402_machine_commerce",
         status: "available",
+        simulated: true,
         options: {
           testbed_provisioning: {
             available: true,
+            simulated: true,
             network: "base-sepolia",
-            prefunded_usdc: 100.0,
-            description: "Instant ephemeral test wallet with pre-funded sandbox balance. No private keys or capital required.",
-            provisioned_wallet_address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-            simulated_authorization: "allow_all"
+            simulated_balance_usdc: 100.0,
+            description: "Simulated sandbox test wallet (base-sepolia). The balance is not real funds, and it confers no authority; CAPPO authorizes every action independently.",
+            provisioned_wallet_address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
           },
           external_wallet: {
             supported_networks: ["base", "ethereum", "solana"],
@@ -540,7 +634,7 @@ async function executeTool(name: string, args: Record<string, any> = {}): Promis
 }
 
 // JSON-RPC 2.0 Request processor
-async function processRpcRequest(rpc: any): Promise<any> {
+async function processRpcRequest(rpc: any, ctx: ToolContext = {}): Promise<any> {
   const { jsonrpc, id, method, params } = rpc;
 
   if (jsonrpc !== "2.0") {
@@ -604,7 +698,7 @@ async function processRpcRequest(rpc: any): Promise<any> {
         }
 
         try {
-          const outcome = await executeTool(name, toolArgs || {});
+          const outcome = await executeTool(name, toolArgs || {}, ctx);
           return {
             jsonrpc: "2.0",
             id,
@@ -619,6 +713,15 @@ async function processRpcRequest(rpc: any): Promise<any> {
             }
           };
         } catch (err: any) {
+          // A missing credential (or other precondition) is a protocol-level
+          // error, not a tool result: surface it as a JSON-RPC error.
+          if (err instanceof McpToolError) {
+            return {
+              jsonrpc: "2.0",
+              id,
+              error: { code: err.code, message: err.message }
+            };
+          }
           return {
             jsonrpc: "2.0",
             id,
@@ -656,12 +759,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
+    // The caller's own bearer, if any. Discovery tools ignore it; consequential
+    // tools require it and forward it to CAPPO.
+    const authHeader = req.headers.get("authorization") || "";
+    const bearerMatch = /^bearer\s+(.+)$/i.exec(authHeader.trim());
+    const ctx: ToolContext = { bearer: bearerMatch?.[1]?.trim() || undefined };
+
     if (Array.isArray(body)) {
-      const responses = (await Promise.all(body.map(processRpcRequest))).filter(Boolean);
+      const responses = (await Promise.all(body.map((rpc) => processRpcRequest(rpc, ctx)))).filter(Boolean);
       return NextResponse.json(responses);
     }
 
-    const response = await processRpcRequest(body);
+    const response = await processRpcRequest(body, ctx);
     if (!response) {
       return new NextResponse(null, { status: 204 });
     }

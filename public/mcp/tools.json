@@ -36,7 +36,7 @@
           "ttl_seconds": { "type": "integer", "default": 300 }
         }
       },
-      "auth_required": false,
+      "auth_required": true,
       "status": "active"
     },
     {
@@ -56,7 +56,7 @@
           "workspace": { "type": "string", "default": "default" }
         }
       },
-      "auth_required": false,
+      "auth_required": true,
       "status": "active"
     },
     {
@@ -72,7 +72,7 @@
           "workspace": { "type": "string", "default": "default" }
         }
       },
-      "auth_required": false,
+      "auth_required": true,
       "status": "active"
     },
     {
@@ -100,12 +100,12 @@
           "workspace": { "type": "string", "default": "default" }
         }
       },
-      "auth_required": false,
+      "auth_required": true,
       "status": "active"
     },
     {
       "name": "veklom_wallet_options",
-      "description": "Provides the complete wallet corridor for machines and humans: inspect existing wallet, connect external EVM/Solana wallet, provision a testbed/ephemeral wallet with pre-funded test USDC, or inspect x402 payment requirements.",
+      "description": "Provides the wallet corridor for machines and humans: inspect existing wallet, connect external EVM/Solana wallet, provision a simulated sandbox testbed wallet (non-real balance, grants no authority), or inspect x402 payment requirements.",
       "input_schema": {
         "type": "object",
         "properties": {
