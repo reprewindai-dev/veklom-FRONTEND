@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getToken } from "@/lib/api";
 import { trackLoginSucceeded } from "@/lib/analytics/tracker";
 
+import { trackAnalyticsEvent } from "@/lib/analytics";
 type GithubStatus = {
   configured: boolean;
   present?: Record<string, boolean>;
@@ -39,7 +40,7 @@ export function LoginForm() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/v1/auth/github/config-status", { cache: "no-store", headers: { Accept: "application/json" } })
+    fetch("/api/auth/github/status", { cache: "no-store", headers: { Accept: "application/json" } })
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
@@ -64,6 +65,11 @@ export function LoginForm() {
     try {
       await login(email, password, mfaRequired ? mfaCode : undefined);
       trackLoginSucceeded("password", getToken());
+      trackAnalyticsEvent("login", {
+        method: "email",
+        journey_stage: "identity",
+        outcome: "success",
+      });
       router.replace(safeDestination());
       router.refresh();
     } catch (cause) {

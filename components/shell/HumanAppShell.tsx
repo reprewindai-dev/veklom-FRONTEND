@@ -9,6 +9,7 @@ import { PremiumLogo } from "@/components/brand/PremiumPrimitives";
 import { SIGNUP_URL } from "@/lib/funnel";
 
 const navItems = [
+  ["/consequence-authority", "Consequence Authority"],
   ["/proof", "Proof"],
   ["/architecture", "Architecture"],
   ["/conformance", "Conformance"],
@@ -22,9 +23,10 @@ const footerGroups = [
     links: [
       ["/get", "Get Veklom"],
       
-      ["/lockerphycer", "Identity"],
-      ["/cappo", "Authority"],
-      ["/capi", "Connections"],
+      ["/lockerphycer", "LockerPhycer"],
+      ["/consequence-authority", "Consequence Authority"],
+      ["/cappo", "CAPPO"],
+      ["/capi", "cAPI"],
       ["/vlink", "VLink"],
       ["/guardian", "Guardian"],
     ],

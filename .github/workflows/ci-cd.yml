@@ -59,7 +59,6 @@ jobs:
         if: success()
         run: echo "Build passed for ${{ github.sha }}"
 
-# This workflow is verification only. It does not make a third-party frontend host
-# authoritative for production. Canonical production remains the self-hosted Veklom
-# deployment path described in README.md: Coolify/owned infrastructure behind Veklom's
-# public routing. GitHub-hosted CI proves the build; it does not own production runtime.
+# This workflow is verification only; it does not deploy production. Current Core V1
+# uses Veklom-owned/local hardware, Docker, and Cloudflare Tunnels as defined by
+# reprewindai-dev/veklom-ops-command/CURRENT_ARCHITECTURE_LOCK.md.

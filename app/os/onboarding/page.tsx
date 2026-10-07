@@ -281,7 +281,10 @@ export default function OnboardingPage() {
     setLedger({ status: "Not started" });
     setAgentOutcome(null);
     try {
-      const response = await api.post<AgentResponse>("/api/pgl/agents/", {
+      // GnomLedger creates agents at POST /api/v1/. Keep the same-origin proxy
+      // at /api/pgl/ so the browser never follows a redirect to the ledger's
+      // private Docker hostname.
+      const response = await api.post<AgentResponse>("/api/pgl/", {
         agent_name: agentName,
         creator: me.email,
         jurisdiction,

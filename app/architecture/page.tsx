@@ -6,6 +6,7 @@ import { AmbientField, PremiumPageIntro, StageLabel } from "@/components/brand/P
 export const metadata = {
   title: "Architecture | Veklom",
   description: "The runtime planes that make up Veklom Capability OS.",
+  alternates: { canonical: "/architecture" },
 };
 
 const planes = [
@@ -143,6 +144,7 @@ export default function ArchitecturePage() {
 
           <div className="mt-12 flex flex-wrap gap-3">
             <Link href="/proof" className="inline-flex min-h-12 items-center justify-center rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg">Inspect live proof →</Link>
+            <Link href="/consequence-authority" className="inline-flex min-h-12 items-center justify-center rounded-full border border-theme-border bg-theme-surface px-6 text-sm font-semibold text-theme-ink">Read consequence authority</Link>
             <Link href="/machine" className="inline-flex min-h-12 items-center justify-center rounded-full border border-theme-border bg-theme-surface px-6 text-sm font-semibold text-theme-ink">Open machine surface</Link>
           </div>
         </section>

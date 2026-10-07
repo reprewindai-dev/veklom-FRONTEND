@@ -1,11 +1,51 @@
 {
-  "name": "Veklom",
-  "type": "consequence-boundary",
+  "name": "Veklom Capability OS",
+  "type": "governed-machine-infrastructure",
   "version": "1.0.0",
-  "mcp": "https://capi.veklom.com/mcp",
-  "discovery": "https://veklom.com/.well-known/mcp.json",
-  "catalog": "https://capi.veklom.com/api/v1/capi/interlink/capability/packages",
-  "claims": "https://veklom.com/machine/claims.json",
-  "evidence": "https://veklom.com/machine/evidence-index.json",
-  "proofs": "https://veklom.dev"
+  "gateway": "VLink Universal Connection Plane",
+  "description": "Multi-corridor governed capability infrastructure. Connect using whatever interface your machine or application supports.",
+  "corridors": {
+    "webmcp": {
+      "name": "WebMCP / Model Context Protocol",
+      "transport": "Streamable JSON-RPC 2.0 & SSE",
+      "endpoint": "https://veklom.com/mcp",
+      "rpc_endpoint": "https://veklom.com/api/mcp",
+      "manifest": "https://veklom.com/mcp/manifest.json",
+      "tools": "https://veklom.com/mcp/tools.json",
+      "description": "Direct tool invocation for autonomous LLM agents."
+    },
+    "openapi": {
+      "name": "OpenAPI 3.1 REST API",
+      "transport": "HTTP REST JSON",
+      "schema_url": "https://cappo.veklom.com/openapi.json",
+      "mirror_schema_url": "https://veklom.com/machine/openapi.json",
+      "description": "Standard OpenAPI schema for direct REST HTTP execution."
+    },
+    "vlink_pairing": {
+      "name": "VLink Ephemeral Pairing",
+      "transport": "VLink Pairing Protocol",
+      "pairing_url": "https://vlink.veklom.com",
+      "api_url": "https://veklom.com/api/v1/vlinks",
+      "description": "Ephemeral device/agent pairing flow: create -> pair -> approve -> execute."
+    },
+    "x402": {
+      "name": "x402 Machine Commerce & Wallet Corridor",
+      "transport": "HTTP 402 + Payment Signatures",
+      "manifest": "https://veklom.com/.well-known/x402.json",
+      "wallet_options": "https://veklom.com/machine/wallet",
+      "description": "Autonomous commerce with testbed pre-funded USDC and live EVM/Solana corridors."
+    },
+    "human_console": {
+      "name": "Interactive Human Console",
+      "transport": "Web UI",
+      "url": "https://veklom.com",
+      "description": "Dashboard for human onboarding, workspace administration, and proof verification."
+    }
+  },
+  "endpoints": {
+    "cappo": "https://cappo.veklom.com",
+    "capi": "https://capi.veklom.com",
+    "pgl": "https://pgl.veklom.com",
+    "mcp": "https://veklom.com/mcp"
+  }
 }

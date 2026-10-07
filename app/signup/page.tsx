@@ -7,6 +7,7 @@ import { FUNNEL_RETURN_TO, safeRelativePath } from"@/lib/funnel";
 import { Button, ErrorBox, SuccessBox, GithubButton } from"@/components/ui";
 import { AuthLayout } from"@/components/AuthLayout";
 import { track, trackGithubSignupClicked } from"@/lib/analytics/tracker";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const MIN_PW = 8;
 
@@ -83,6 +84,11 @@ export default function SignupPage() {
  // LockerPhycer never auto-signs-in email accounts and blocks password
  // login until the address is verified, so the next step is the inbox.
  await signup(email, pw, name || undefined);
+ trackAnalyticsEvent("sign_up", {
+   method: "email",
+   journey_stage: "identity",
+   outcome: "success",
+ });
  setOk(
  "Check your email and open the verification link (it expires in 30 minutes). Sign-in is refused until the address is verified." +
  (acceptanceRecorded ? "" : " Note: your agreement acceptance could not be recorded; you may be asked to accept again at sign-in.")

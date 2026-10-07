@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, ApiError, clearTokens, SESSION_INVALID_EVENT, setTokens } from "./api";
+import { api, ApiError, clearTokens, getToken, SESSION_INVALID_EVENT, setTokens } from "./api";
 import { normalizeTier, Tier } from "./tiers";
 import type { Me, Subscription } from "@/types/api";
 
@@ -118,6 +118,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(undefined);
     }
 
+    const hasBrowserSession = typeof document !== "undefined" && (
+      Boolean(getToken()) || document.cookie.split(";").some((cookie) => cookie.trim() === "veklom.session=present")
+    );
+    if (!hasBrowserSession) {
+      setMe(undefined);
+      setSub(undefined);
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await api<Me>("/api/v1/auth/me");
       if (!mounted.current) return;
@@ -125,13 +135,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSignedOut(false);
       setError(undefined);
       markNavigationSession(true);
-
-      try {
-        const subData = await api<Subscription>("/api/v1/billing/subscription");
-        if (mounted.current) setSub(subData);
-      } catch {
-        if (mounted.current) setSub(undefined);
-      }
+      // LockerPhycer exposes the effective tier on the identity profile. There
+      // is no subscription endpoint in the deployed identity contract, so do
+      // not generate a guaranteed 404 during every successful login.
+      setSub(undefined);
       if (mounted.current) setLoading(false);
     } catch (cause) {
       if (!mounted.current) return;
@@ -226,7 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Email/password accounts are deliberately not auto-signed-in. LockerPhycer
-    // sends a short-lived Resend verification link and refuses login until the
+    // sends a short-lived sovereign-mail verification link and refuses login until the
     // address is verified. GitHub OAuth remains a separate verified identity path.
     clearTokens();
     markNavigationSession(false);

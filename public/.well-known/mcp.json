@@ -1,21 +1,30 @@
 {
-  "_note": "Veklom convenience document describing its MCP server. Not an MCP standard discovery URI.",
-  "name": "Veklom",
-  "description": "Separates an agent's ability to run from its authority to make an action real. Discovery tools are public; action tools need the caller's own credential, and CAPPO decides every consequential action.",
-  "mcpEndpoint": "https://capi.veklom.com/mcp",
-  "transport": "streamable-http",
-  "protocolVersions": ["2025-11-25", "2025-06-18", "2025-03-26"],
+  "_note": "Veklom WebMCP Discovery and Endpoint Registry",
+  "mcpEndpoint": "https://veklom.com/mcp",
+  "rpcEndpoint": "https://veklom.com/api/mcp",
+  "protocolVersion": "2024-11-05",
+  "supportedTransports": ["streamable-http", "sse"],
+  "paths": {
+    "server/discover": "https://veklom.com/mcp",
+    "tools/list": "https://veklom.com/mcp",
+    "tools/call": "https://veklom.com/mcp"
+  },
+  "corridors": {
+    "webmcp": "https://veklom.com/mcp",
+    "openapi": "https://cappo.veklom.com/openapi.json",
+    "vlink_pairing": "https://vlink.veklom.com",
+    "x402_commerce": "https://veklom.com/.well-known/x402.json"
+  },
   "auth": {
-    "type": "bearer",
-    "header": "Authorization: Bearer <token>",
-    "obtain": "Sign up at https://veklom.com/signup. A signed-in person can mint a machine token for an agent. A successful mount returns a holder credential (vlm_...) limited to that mount.",
-    "publicTools": ["veklom_connection_options", "veklom_discover_capabilities", "veklom_pricing", "veklom_verify_evidence"],
-    "credentialedTools": ["veklom_mount_capability", "veklom_execute_action", "veklom_read_target_state", "veklom_terminate_mount"]
+    "type": "ephemeral_capability_lease",
+    "sandbox_auth_required": false,
+    "protectedResourceMetadata": "https://veklom.com/.well-known/oauth-authorization-server"
   },
-  "catalog": "https://capi.veklom.com/api/v1/capi/interlink/capability/packages",
   "payment": {
-    "x402Discovery": "https://veklom.com/.well-known/x402.json",
-    "note": "Payment never grants authority."
+    "pricingEndpoint": "https://cappo.veklom.com/api/v1/x402/config",
+    "walletCorridor": "https://veklom.com/machine/wallet"
   },
-  "tools": "https://veklom.com/mcp/tools.json"
+  "extensions": {
+    "pgl": "https://pgl.veklom.com/a2a/v1"
+  }
 }

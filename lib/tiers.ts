@@ -1,7 +1,7 @@
 // Tier model — mapped from the Veklom build plan.
-// Now expanded to include Machine API tiers (bronze/medium/good).
+// Aligned with Veklom Commercial Model v1.0 (Hardened Launch Card).
 
-export type Tier = "free" | "starter" | "pro" | "sovereign" | "enterprise" | "bronze" | "medium" | "good";
+export type Tier = "free" | "starter" | "pro" | "team" | "sovereign" | "enterprise" | "bronze" | "medium" | "good";
 
 export const TIER_RANK: Record<Tier, number> = {
   free: 0,
@@ -9,6 +9,7 @@ export const TIER_RANK: Record<Tier, number> = {
   bronze: 1,
   pro: 2,
   medium: 2,
+  team: 3,
   sovereign: 3,
   good: 3,
   enterprise: 4,
@@ -18,6 +19,7 @@ export const TIER_LABEL: Record<Tier, string> = {
   free: "Free",
   starter: "Starter",
   pro: "Pro",
+  team: "Team",
   sovereign: "Sovereign",
   enterprise: "Enterprise",
   bronze: "Bronze API",
@@ -28,9 +30,10 @@ export const TIER_LABEL: Record<Tier, string> = {
 export const TIER_PRICE: Record<Tier, string> = {
   free: "$0",
   starter: "$7.5K",
-  pro: "$18K",
+  pro: "$29.99/mo",
+  team: "$89.99/mo",
   sovereign: "Custom",
-  enterprise: "$45K",
+  enterprise: "Custom",
   bronze: "$0.001 USDC",
   medium: "$0.05 USDC",
   good: "$0.25 USDC",
@@ -45,6 +48,7 @@ export function normalizeTier(raw: unknown): Tier {
   const s = String(raw ?? "free").toLowerCase();
   if (s.includes("enterprise")) return "enterprise";
   if (s.includes("sovereign")) return "sovereign";
+  if (s.includes("team")) return "team";
   if (s.includes("pro")) return "pro";
   if (s.includes("starter") || s.includes("basic")) return "starter";
   if (s.includes("bronze")) return "bronze";

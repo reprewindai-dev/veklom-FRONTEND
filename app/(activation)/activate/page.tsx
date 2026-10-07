@@ -16,6 +16,7 @@ import {
 
 import { PremiumLogo, StageLabel } from "@/components/brand/PremiumPrimitives";
 import { useAuth } from "@/lib/auth-context";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
   ActivationUnavailableError,
   discoverActivationPackage,
@@ -105,6 +106,10 @@ export default function ActivationPage() {
   async function connect() {
     await run(async () => {
       const selected = await discoverActivationPackage();
+      trackAnalyticsEvent("activation_discovery_success", {
+        journey_stage: "discovery",
+        outcome: "success",
+      });
       setCapability(selected);
       setStep(2);
     });
@@ -114,6 +119,10 @@ export default function ActivationPage() {
     if (!capability || !workspaceId.trim() || !projectId.trim()) return;
     await run(async () => {
       const issued = await requestActivationLease(capability, workspaceId.trim(), projectId.trim());
+      trackAnalyticsEvent("capability_lease_issued", {
+        journey_stage: "authority",
+        outcome: "success",
+      });
       setLease(issued);
       setStep(3);
     });
@@ -123,6 +132,10 @@ export default function ActivationPage() {
     if (!lease) return;
     await run(async () => {
       const rejected = await proveActivationDenial(lease);
+      trackAnalyticsEvent("blocked_action_denied", {
+        journey_stage: "authority",
+        outcome: "denied_as_expected",
+      });
       setDenial(rejected);
       setStep(4);
     });
@@ -132,6 +145,10 @@ export default function ActivationPage() {
     if (!lease) return;
     await run(async () => {
       const allowed = await executeActivationAllowed(lease);
+      trackAnalyticsEvent("governed_consequence_allow", {
+        journey_stage: "consequence",
+        outcome: "allowed",
+      });
       setExecution(allowed);
       setStep(5);
     });
@@ -141,6 +158,10 @@ export default function ActivationPage() {
     if (!execution) return;
     await run(async () => {
       const proof = await inspectActivationEvidence(execution);
+      trackAnalyticsEvent("governed_evidence_verified", {
+        journey_stage: "evidence",
+        outcome: "verified",
+      });
       setEvidence(proof);
       setStep(6);
     });

@@ -9,7 +9,7 @@
   "identity": {
     "veklom_id_app": "6a20f24cc341f72c2f573eb5",
     "veklom_id_wallet": "0x3a74772e925b54F7dAD7FD95c9Ba30825033f970",
-    "verification_domain": "id.veklom.com"
+    "verification_domain": "veklom.com"
   },
   "routes": [],
   "principle": "Payment establishes commercial entitlement only. It never grants authority to cause an action; CAPPO decides every consequential action.",

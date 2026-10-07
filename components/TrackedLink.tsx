@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 type TrackedLinkProps = Omit<ComponentProps<typeof Link>, "children"> & {
   children: ReactNode;
@@ -9,12 +10,6 @@ type TrackedLinkProps = Omit<ComponentProps<typeof Link>, "children"> & {
   ctaLabel: string;
   ctaLocation: string;
 };
-
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-  }
-}
 
 export function TrackedLink({
   children,
@@ -30,7 +25,9 @@ export function TrackedLink({
       href={href}
       {...props}
       onClick={(event) => {
-        window.gtag?.("event", eventName, {
+        trackAnalyticsEvent(eventName, {
+          journey_stage: "acquisition",
+          surface: ctaLocation,
           cta_label: ctaLabel,
           cta_location: ctaLocation,
           destination: typeof href === "string" ? href : href.pathname ?? "unknown",
