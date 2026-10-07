@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, ApiError, clearTokens, getToken, SESSION_INVALID_EVENT, setTokens } from "./api";
+import { api, ApiError, clearTokens, SESSION_INVALID_EVENT, setTokens } from "./api";
 import { normalizeTier, Tier } from "./tiers";
 import type { Me, Subscription } from "@/types/api";
 
@@ -118,16 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(undefined);
     }
 
-    const hasBrowserSession = typeof document !== "undefined" && (
-      Boolean(getToken()) || document.cookie.split(";").some((cookie) => cookie.trim() === "veklom.session=present")
-    );
-    if (!hasBrowserSession) {
-      setMe(undefined);
-      setSub(undefined);
-      setLoading(false);
-      return;
-    }
-
+    // Always ask the identity authority. A 403 "Not authenticated" (no bearer)
+    // and a 401 "Invalid token" are definite sign-outs; everything else is
+    // transient and must not drop the session. Skipping this call for a missing
+    // bearer would leave an anonymous visitor un-signed-out and regress the
+    // login-bounce fix this branch exists for.
     try {
       const data = await api<Me>("/api/v1/auth/me");
       if (!mounted.current) return;

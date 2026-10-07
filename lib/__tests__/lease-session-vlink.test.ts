@@ -6,7 +6,13 @@ import {
 } from "@/lib/cos/lease-session";
 
 describe("VLink fields in the session capability lease", () => {
-  beforeEach(() => sessionStorage.clear());
+  beforeEach(() => {
+    sessionStorage.clear();
+    // The fixtures below are project:"sandbox" leases, which the environment
+    // segregation only surfaces while sandbox mode is on.
+    localStorage.clear();
+    localStorage.setItem("veklom.environment", "sandbox");
+  });
 
   const lease: SessionCapabilityLease = {
     mountId: "mnt_1",

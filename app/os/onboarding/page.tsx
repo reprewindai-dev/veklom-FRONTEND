@@ -469,7 +469,7 @@ export default function OnboardingPage() {
               <Field label="Safety rules (comma-separated)" value={safetyRules} onChange={setSafetyRules} required={false} />
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="PGL POST /api/pgl/agents/ writes to the live ledger and has no sandbox scope." /> : null}
+              {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="PGL POST /api/pgl/ writes to the live ledger and has no sandbox scope." /> : null}
               <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me} disabledReason={sandbox ? "Agent registration is live only; switch to Live" : !boundWorkspaceId ? "Bind a workspace first" : "Enter an agent name first"}>{sandbox ? "Register agent genome · Live only" : agentUnavailable ? "Retry registration" : "Register agent genome"}</Button>
               {agent || agentUnavailable ? (
                 <Button type="button" onClick={continueStep} variant="outline">{agent ? "Continue" : "Continue without agent genome"}</Button>

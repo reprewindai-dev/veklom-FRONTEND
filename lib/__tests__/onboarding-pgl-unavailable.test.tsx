@@ -98,7 +98,8 @@ describe("onboarding with the PGL ledger unavailable", () => {
   it("marks the agent step unavailable and still opens the mount page with the bound workspace", async () => {
     const calls = installFetch((url) => {
       if (url.includes("/api/v1/auth/me")) return [{ email: "operator@example.com", workspace_id: "ws-live-1" }, 200];
-      if (url.includes("/api/pgl/agents/")) return [{ error: "PGL ledger proxy is not configured" }, 503];
+      // Agent creation is routed through the canonical PGL endpoint (POST /api/pgl/).
+      if (url.includes("/api/pgl/") && !url.includes("/ledger/")) return [{ error: "PGL ledger proxy is not configured" }, 503];
       return undefined;
     });
 
@@ -116,7 +117,7 @@ describe("onboarding with the PGL ledger unavailable", () => {
       form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     });
 
-    expect(calls.some((call) => call.startsWith("POST ") && call.includes("/api/pgl/agents/"))).toBe(true);
+    expect(calls.some((call) => call.startsWith("POST ") && call.includes("/api/pgl/"))).toBe(true);
     const notice = el.querySelector('[data-testid="agent-step-unavailable"]');
     expect(notice?.textContent).toContain("Unavailable · retry later");
     expect(notice?.textContent).toContain("PGL ledger proxy is not configured");

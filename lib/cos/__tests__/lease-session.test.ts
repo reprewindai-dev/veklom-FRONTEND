@@ -135,6 +135,8 @@ describe("session capability lease handoff", () => {
   });
 
   it("clears only the holder credential from the stored lease", () => {
+    // project:"sandbox" leases are only readable while sandbox mode is on.
+    localStorage.setItem("veklom.environment", "sandbox");
     const handoffLease = {
       ...lease,
       holderCredential: "vlm_mnt_1.secret",
