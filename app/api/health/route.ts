@@ -9,7 +9,8 @@ export async function GET() {
       service: "veklom-frontend",
       runtime: "nextjs",
       timestamp: new Date().toISOString(),
-      commit: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? null,
+      commit: process.env.VEKLOM_SOURCE_COMMIT_SHA ?? process.env.SOURCE_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? null,
+      runtimeImageId: process.env.VEKLOM_RUNTIME_IMAGE_ID ?? null,
       environment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown",
     },
     {
