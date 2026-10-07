@@ -41,7 +41,7 @@ const guides = [
 
 const concepts = [
   ["Execution", "The gateway where approved actions run, each settled exactly once."],
-  ["Identity", "Accounts, workspaces, credits and the governed host-execution boundary."],
+  ["Identity", "Sign-in, sessions, workspaces, credits and key security."],
   ["Authority", "Fail-closed authorization for consequential actions."],
   ["Connections", "Connects to the systems you already use."],
   ["Evidence", "Durable, tamper-evident evidence you can verify independently."],

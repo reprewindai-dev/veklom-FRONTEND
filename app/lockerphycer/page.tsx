@@ -11,7 +11,7 @@ export default function Page() {
       eyebrow="Identity"
       title="Keep host execution authority out of ordinary application code."
       body="Identity is the part of Veklom that handles security, keys and sign-in, and guards sensitive execution on the host. It exists so an ordinary application container cannot quietly become the machine's root authority."
-      role="Security, keys, identity and the host-execution boundary"
+      role="Sign-in, sessions, workspaces and key security"
       state="MIXED"
       stateDetail="The identity service, its health checks and its isolated-execution code exist in source, but a live claim still has to be proven from the running deployment rather than assumed from code. The technical detail is published at veklom.dev."
       owns={[

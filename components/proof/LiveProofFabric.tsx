@@ -26,7 +26,7 @@ type LiveProof = {
 
 // Buyer-facing names for the probed services (display copy only; ids and API unchanged).
 const serviceCopy: Record<string, { label: string; role: string }> = {
-  lockerphycer: { label: "Identity", role: "Sign-in, key security and the protected host-execution boundary" },
+  lockerphycer: { label: "Identity", role: "Sign-in, sessions, workspaces and key security" },
   cappo: { label: "Authority", role: "Decides whether a consequential action may take effect" },
   capi: { label: "Connections", role: "Connects to the systems you already use and discovers capabilities" },
   pgl: { label: "Evidence", role: "Durable, tamper-evident evidence you can verify independently" },

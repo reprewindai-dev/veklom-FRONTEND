@@ -22,7 +22,7 @@ export default function Page() {
       ]}
       doesNotOwn={[
         "Identity owns accounts, workspaces and user session state.",
-        "Identity owns the security, key and host-execution boundary.",
+        "Identity owns sign-in, sessions, workspaces and key security.",
         "Evidence owns the durable record; Connections and VLink connect your systems but never grant authority.",
       ]}
       interfaces={[
