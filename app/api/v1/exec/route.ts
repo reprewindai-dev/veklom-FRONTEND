@@ -65,6 +65,9 @@ function forwardedHeaders(req: NextRequest): Headers {
  headers.delete("connection");
  headers.delete("content-length");
  headers.delete("x-api-key");
+ // Node's fetch negotiates (and decodes) its own encoding; the browser's may
+ // include zstd, which Node 20 cannot decode.
+ headers.delete("accept-encoding");
 
  headers.set("accept","application/json");
  headers.set("x-veklom-runtime-proxy","control-plane");

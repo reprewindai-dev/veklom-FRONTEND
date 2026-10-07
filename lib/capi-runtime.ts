@@ -1,5 +1,12 @@
+// CAPI_URL is what the deployment (compose + Dockerfile) actually sets. Without it
+// in this chain the server fell through to the public hostname, so every cAPI call
+// left the private network and came back through the edge (and a staging stack
+// talked to production cAPI).
 export const CAPI_RUNTIME_URL =
-  process.env.CAPI_BACKEND_URL || process.env.INTERLINK_CAPI_URL || "https://capi.veklom.com";
+  process.env.CAPI_BACKEND_URL ||
+  process.env.CAPI_URL ||
+  process.env.INTERLINK_CAPI_URL ||
+  "https://capi.veklom.com";
 
 export const CAPPO_BACKEND_URL = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL;
 

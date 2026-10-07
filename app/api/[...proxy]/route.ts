@@ -81,6 +81,11 @@ async function proxyRequest(req: NextRequest) {
   const headers = new Headers(req.headers);
   headers.delete("host");
   headers.delete("x-api-key");
+  // Let Node's fetch negotiate its own encoding. Forwarding the browser's
+  // (which includes zstd) gets a zstd body back that Node 20 cannot decode, and
+  // the content-encoding header is dropped below, so the browser would receive
+  // raw compressed bytes labelled as JSON.
+  headers.delete("accept-encoding");
   stripHopByHopHeaders(headers);
 
   let targetBase = "";
