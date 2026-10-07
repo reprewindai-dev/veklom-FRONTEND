@@ -1,13 +1,15 @@
 {
   "corridor": "x402_machine_commerce",
   "status": "ready",
-  "description": "Veklom autonomous machine wallet and settlement corridor. Machines requiring USDC payment can provision an instant testbed wallet or connect an external address.",
+  "simulated": true,
+  "description": "Veklom machine wallet and settlement corridor. Machines can provision a simulated sandbox testbed wallet (non-real balance) or connect a real external address.",
   "options": {
     "testbed_provisioning": {
       "available": true,
+      "simulated": true,
       "network": "base-sepolia",
-      "prefunded_balance_usdc": 100.0,
-      "description": "Instant ephemeral sandbox wallet pre-credited with test USDC. No private key management or real funds required.",
+      "simulated_balance_usdc": 100.0,
+      "description": "Simulated sandbox wallet (base-sepolia) seeded with a non-real test balance. Not real funds, and it confers no authority; CAPPO authorizes every action independently.",
       "wallet_address": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
       "status": "active"
     },
@@ -17,7 +19,7 @@
         { "chain": "ethereum", "chainId": 1, "token": "USDC" },
         { "chain": "solana", "token": "USDC" }
       ],
-      "connect_url": "https://veklom.com/settings/wallet"
+      "connect_url": "https://veklom.com/os"
     }
   },
   "current_capability_pricing": {
