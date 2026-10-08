@@ -19,7 +19,12 @@ import {
   type SessionCapabilityLease,
   type SessionCapabilityLeaseGrants,
 } from "@/lib/cos/lease-session";
-import { targetRefFor } from "@/lib/cos/capability-targets";
+import {
+  clearPendingExecutionIntent,
+  describeArguments,
+  readPendingExecutionIntent,
+  type ExecutionIntent,
+} from "@/lib/cos/execution-intent";
 import { SANDBOX_PROJECT, useSandboxMode } from "@/lib/cos/sandbox";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
 import type { ProofStatus } from "@/lib/cos/capabilities";
@@ -36,6 +41,7 @@ type PackagePayload = {
   reads?: string[];
   writes?: string[];
   blocked?: string[];
+  target_ref?: string | null;
 };
 type MountResponse = {
   decision?: string;
@@ -123,8 +129,12 @@ export default function MountPage() {
   const [actionResponse, setActionResponse] = useState<JsonRecord>();
   const [heldLease, setHeldLease] = useState<SessionCapabilityLease | null>(() => readSessionCapabilityLease());
   const [busy, setBusy] = useState(false);
+  // The contract-bound operation Blueprint handed over, if any. It applies only to its own package.
+  const [pendingIntent, setPendingIntent] = useState<ExecutionIntent | null>(null);
   const selectedPackage = useMemo(() => packages.find((item) => item.id === packageRef), [packageRef, packages]);
-  const targetRef = targetRefFor(packageRef);
+  const activeIntent = pendingIntent && pendingIntent.operation.package_ref === packageRef ? pendingIntent : null;
+  // The target is never invented here: it comes from the contract or the package's catalog entry.
+  const targetRef = activeIntent?.operation.target_ref ?? selectedPackage?.target_ref ?? undefined;
   const mount = asRecord(mountResponse?.mount);
   const token = asRecord(mountResponse?.token);
   const mountId = asString(mount?.id) ?? asString(token?.mount_id) ?? heldLease?.mountId;
@@ -142,15 +152,24 @@ export default function MountPage() {
 
   useEffect(() => {
     if (!selectedPackage) return;
-    setReads(selectedPackage.reads?.join(",") ?? "");
-    setWrites(selectedPackage.writes?.join(",") ?? "");
+    if (activeIntent) {
+      // Request exactly the bound operation: its one write, on its one resource.
+      setReads("");
+      setWrites(activeIntent.operation.action);
+      setResource(activeIntent.operation.resource);
+    } else {
+      setReads(selectedPackage.reads?.join(",") ?? "");
+      setWrites(selectedPackage.writes?.join(",") ?? "");
+    }
     setBlocked(selectedPackage.blocked?.join(",") ?? "");
-  }, [selectedPackage]);
+  }, [selectedPackage, activeIntent]);
 
   useEffect(() => {
-    if (!targetRef || !me?.id || resource) return;
-    setResource(`counter-${me.id.slice(0, 8)}`);
-  }, [me?.id, resource, targetRef]);
+    const intent = readPendingExecutionIntent();
+    if (!intent) return;
+    setPendingIntent(intent);
+    setPackageRef(intent.operation.package_ref);
+  }, []);
 
   useEffect(() => {
     setProject((current) => {
@@ -170,6 +189,8 @@ export default function MountPage() {
   // Blueprint hands a compiled plan's scope over as query parameters. It only
   // pre-fills the form; CAPPO still decides what is granted.
   useEffect(() => {
+    // A contract-bound operation is narrower than any query-string scope; it wins.
+    if (readPendingExecutionIntent()) return;
     const params = new URLSearchParams(window.location.search);
     const take = (key: string, set: (value: string) => void) => {
       const value = params.get(key)?.trim();
@@ -184,10 +205,11 @@ export default function MountPage() {
 
   useEffect(() => {
     if (!heldLease) return;
-    if (!packageRef && heldLease.packageRef) setPackageRef(heldLease.packageRef);
+    const pending = readPendingExecutionIntent();
+    if (!packageRef && heldLease.packageRef && !pending) setPackageRef(heldLease.packageRef);
     if (!workspace && heldLease.workspace) setWorkspace(heldLease.workspace);
     if (!project && heldLease.project) setProject(heldLease.project);
-    if (!resource && heldLease.resource) setResource(heldLease.resource);
+    if (!resource && heldLease.resource && !pending) setResource(heldLease.resource);
   }, [heldLease, packageRef, project, resource, workspace]);
 
   async function requestMount(event: FormEvent<HTMLFormElement>) {
@@ -195,8 +217,21 @@ export default function MountPage() {
     if (!packageRef || !workspace || !project) return;
     setBusy(true);
     setActionResponse(undefined);
-    setRequestedScope({ workspace, project, reads: listValue(reads) ?? [], writes: listValue(writes) ?? [], blocked: listValue(blocked) ?? [], ttl_seconds: Number(ttl) });
-    const result = await data.call<MountResponse>(endpoint("POST", "/v1/capability/mounts", capiBase), { package_ref: packageRef, execution_scope: { workspace, project }, requested_action_scope: { reads: listValue(reads), writes: listValue(writes), blocked: listValue(blocked) ?? [] }, ttl_seconds: Number(ttl) });
+    // A bound operation mounts exactly its one resource; otherwise a resource, if typed, bounds the mount.
+    const boundResource = activeIntent?.operation.resource ?? (resource.trim() || undefined);
+    const resources = boundResource ? [boundResource] : undefined;
+    setRequestedScope({ workspace, project, reads: listValue(reads) ?? [], writes: listValue(writes) ?? [], blocked: listValue(blocked) ?? [], resources: resources ?? [], ttl_seconds: Number(ttl) });
+    // A bound operation is sent whole: CAPPO checks its target against the package, narrows
+    // the mount to its one action and resource, and binds its exact arguments (envelope).
+    const operation = activeIntent
+      ? {
+        target_ref: activeIntent.operation.target_ref,
+        action: activeIntent.operation.action,
+        resource: activeIntent.operation.resource,
+        arguments: activeIntent.operation.arguments,
+      }
+      : undefined;
+    const result = await data.call<MountResponse>(endpoint("POST", "/v1/capability/mounts", capiBase), { package_ref: packageRef, execution_scope: { workspace, project, ...(resources ? { resources } : {}), ...(operation ? { operation } : {}) }, requested_action_scope: { reads: listValue(reads), writes: listValue(writes), blocked: listValue(blocked) ?? [] }, ttl_seconds: Number(ttl) });
     if (result.data) {
       setMountResponse(result.data);
       const returnedMount = asRecord(result.data.mount);
@@ -219,16 +254,22 @@ export default function MountPage() {
           targetRef,
           workspace,
           project,
-          resource,
+          resource: boundResource,
           grants: returnedGrants(asRecord(result.data.mount)?.grants)
             ?? returnedGrants(asRecord(result.data.token)?.grants),
           executionId: asString(returnedToken?.execution_id),
           expiresAt: asString(returnedToken?.expires_at),
           ...(holderCredential ? { holderCredential } : {}),
+          ...(activeIntent ? { intent: activeIntent } : {}),
         };
         clearSessionConsequence();
         storeSessionCapabilityLease(lease);
         setHeldLease(lease);
+        if (activeIntent) {
+          // The intent now travels with the lease; a second mount needs a fresh binding.
+          clearPendingExecutionIntent();
+          setPendingIntent(null);
+        }
       }
     }
     setBusy(false);
@@ -244,7 +285,7 @@ export default function MountPage() {
     event.preventDefault();
     if (!mountId || !token || !action) return;
     setBusy(true);
-    const result = await data.call<JsonRecord>(endpoint("POST", `/v1/capability/mounts/${mountId}/actions`, capiBase), { token_id: token.token_id, nonce: token.nonce, action, resource: targetRef ? resource : undefined });
+    const result = await data.call<JsonRecord>(endpoint("POST", `/v1/capability/mounts/${mountId}/actions`, capiBase), { token_id: token.token_id, nonce: token.nonce, action, resource: resource.trim() || undefined });
     if (result.data) setActionResponse(result.data);
     setBusy(false);
   }
@@ -266,7 +307,7 @@ export default function MountPage() {
 
   return <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
     <div className="xl:col-span-2"><Pillar title="Work" proof={data.records[0]?.proof ?? "Needs proof"} detail="Every mount decision below is returned by CAPPO; the browser does not predict grants.">
-      <form onSubmit={requestMount} className="space-y-4 rounded-xl border border-cos-border bg-cos-bg/35 p-4"><div className="flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h3 className="text-sm font-medium text-cos-text">Discover and request a mount</h3></div><label className="block text-xs text-cos-muted">Capability package<select value={packageRef} onChange={(event) => setPackageRef(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required><option value="">Select a returned package</option>{packages.map((item) => <option key={item.id} value={item.id}>{item.id} — {item.title}</option>)}</select></label>{selectedPackage ? <div className="rounded-lg border border-cos-border bg-cos-surface2/50 p-3 text-xs leading-5 text-cos-muted"><strong className="text-cos-text">{selectedPackage.purpose}</strong><div className="mt-2">Package blocked actions: {selectedPackage.blocked?.length ? selectedPackage.blocked.join(", ") : "None returned."}</div></div> : null}<div className="grid gap-3 sm:grid-cols-2"><label className="text-xs text-cos-muted">Workspace<input value={workspace} onChange={(event) => setWorkspace(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /><span className="mt-1 block text-[10px] text-cos-steel">Must equal the workspace scope of your session token</span></label><label className="text-xs text-cos-muted">Project<input value={project} onChange={(event) => setProject(event.target.value)} readOnly={sandbox} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text read-only:cursor-not-allowed read-only:opacity-70" required /><span className="mt-1 block text-[10px] text-cos-steel">{sandbox ? "Sandbox scope is fixed to project=sandbox" : "Enter the project scope for this mount"}</span></label><label className="text-xs text-cos-muted">Requested reads<input value={reads} onChange={(event) => setReads(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Requested writes<input value={writes} onChange={(event) => setWrites(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Requested blocked actions<input value={blocked} onChange={(event) => setBlocked(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label>{targetRef ? <label className="text-xs text-cos-muted">Counter resource<input value={resource} onChange={(event) => setResource(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /></label> : null}<label className="text-xs text-cos-muted">Requested TTL (seconds)<input type="number" min="1" value={ttl} onChange={(event) => setTtl(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /></label></div><button type="submit" disabled={busy || !packages.length} className="rounded-lg bg-cos-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Requesting…" : "Request mount"}</button></form>
+      <form onSubmit={requestMount} className="space-y-4 rounded-xl border border-cos-border bg-cos-bg/35 p-4"><div className="flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h3 className="text-sm font-medium text-cos-text">Discover and request a mount</h3></div><label className="block text-xs text-cos-muted">Capability package<select value={packageRef} onChange={(event) => setPackageRef(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required><option value="">Select a returned package</option>{packages.map((item) => <option key={item.id} value={item.id}>{item.id} — {item.title}</option>)}</select></label>{activeIntent ? <div className="rounded-lg border border-cos-accent/40 bg-cos-accent/[0.05] p-3 text-xs leading-5 text-cos-muted"><div className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Bounded operation from contract {activeIntent.contractId}</div><div className="mt-1 text-cos-text">{activeIntent.clause}</div><div className="mt-1 font-mono text-cos-text">{activeIntent.operation.action} · {activeIntent.operation.target_ref} · resource {activeIntent.operation.resource} · {describeArguments(activeIntent.operation.arguments)}</div><div className="mt-1 text-[10px] text-cos-steel">This mount is requested for exactly this operation. CAPPO decides what is granted.</div></div> : null}{selectedPackage ? <div className="rounded-lg border border-cos-border bg-cos-surface2/50 p-3 text-xs leading-5 text-cos-muted"><strong className="text-cos-text">{selectedPackage.purpose}</strong><div className="mt-2">Package blocked actions: {selectedPackage.blocked?.length ? selectedPackage.blocked.join(", ") : "None returned."}</div></div> : null}<div className="grid gap-3 sm:grid-cols-2"><label className="text-xs text-cos-muted">Workspace<input value={workspace} onChange={(event) => setWorkspace(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /><span className="mt-1 block text-[10px] text-cos-steel">Must equal the workspace scope of your session token</span></label><label className="text-xs text-cos-muted">Project<input value={project} onChange={(event) => setProject(event.target.value)} readOnly={sandbox} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text read-only:cursor-not-allowed read-only:opacity-70" required /><span className="mt-1 block text-[10px] text-cos-steel">{sandbox ? "Sandbox scope is fixed to project=sandbox" : "Enter the project scope for this mount"}</span></label><label className="text-xs text-cos-muted">Requested reads<input value={reads} onChange={(event) => setReads(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Requested writes<input value={writes} onChange={(event) => setWrites(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Requested blocked actions<input value={blocked} onChange={(event) => setBlocked(event.target.value)} placeholder="comma,separated,actions" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" /></label><label className="text-xs text-cos-muted">Resource bound<input value={resource} onChange={(event) => setResource(event.target.value)} readOnly={Boolean(activeIntent)} placeholder="optional: limit the mount to one resource" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text read-only:cursor-not-allowed read-only:opacity-70" /><span className="mt-1 block text-[10px] text-cos-steel">{activeIntent ? "Fixed by the contract's bound operation" : "Empty means every resource the granted actions reach"}</span></label><label className="text-xs text-cos-muted">Requested TTL (seconds)<input type="number" min="1" value={ttl} onChange={(event) => setTtl(event.target.value)} className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /></label></div><button type="submit" disabled={busy || !packages.length} className="rounded-lg bg-cos-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Requesting…" : "Request mount"}</button></form>
       {heldLeaseScopeMismatch ? <p className="mt-3 text-xs text-cos-warn">Held mount is in {heldLease?.project ?? "unknown"} scope; revoke it or switch back</p> : null}
       {heldLease && !mountResponse ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-cos-accent/25 bg-cos-accent/[0.035] p-3 text-xs text-cos-muted"><span>Held mount <code className="font-mono text-cos-text">{heldLease.mountId}</code> · package <code className="font-mono text-cos-text">{heldLease.packageRef ?? "Not returned"}</code></span><button type="button" onClick={refreshStatus} disabled={busy} className="rounded border border-cos-border px-3 py-2 text-cos-text disabled:opacity-50">Refresh persisted status</button></div> : null}
       {heldLease?.holderCredential ? <p className="mt-2 text-xs text-cos-muted">Machine holder credential issued (held in this browser session only; never re-fetchable from CAPPO)</p> : null}
@@ -278,6 +319,6 @@ export default function MountPage() {
     <Pillar title="Telemetry" proof={mountResponse ? (lifecycleState === "mounted" ? mountStatusProof(data.records) : "Present") : "Needs proof"}>{mountResponse ? <div className="space-y-3"><Field label="Mount lifecycle" value={lifecycleState ?? mountResponse.reason} /><Field label="Mount ID" value={mountId} /><Field label="TTL" value={asRecord(mount?.token)?.ttl_seconds ?? token?.ttl_seconds} /><button type="button" onClick={refreshStatus} disabled={busy || !mountId} className="rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-text disabled:opacity-50"><Clock3 size={13} className="mr-2 inline" />Refresh persisted status</button></div> : <HonestEmpty title="No mount telemetry yet" route="GET /v1/capability/mounts/{mount_id}" detail="A persisted mount response will provide lifecycle and expiry state after a mount is requested." />}</Pillar>
     <Pillar title="Authority" proof={token && isLive ? mountStatusProof(data.records) : mountResponse ? "Present" : "Needs proof"}>{token && isLive ? <TokenDescriptor token={token} proof={mountStatusProof(data.records)} /> : <HonestEmpty title="No live token descriptor" route="GET /v1/capability/mounts/{mount_id}" detail="Expired and terminated mounts are rendered without token descriptors." />}</Pillar>
     <Pillar title="Evidence" proof={actionResponse ? (actionResponse.decision === "allow" ? "Present" : "Degraded") : "Needs proof"}>{actionResponse ? <div className="space-y-3"><div className="flex items-center gap-2"><ProofBadge status={actionResponse.decision === "allow" ? "Present" : "Degraded"} /><span className="font-mono text-xs uppercase text-cos-text">{String(actionResponse.decision ?? "Not returned")}</span></div><Field label="Action" value={actionResponse.action} /><Field label="Reason" value={actionResponse.reason} /><Anchoring value={asRecord(actionResponse.anchoring) as MountResponse["anchoring"]} /></div> : <form onSubmit={evaluateAction} className="space-y-3"><label className="block text-xs text-cos-muted">Action to evaluate<input value={action} onChange={(event) => setAction(event.target.value)} placeholder="contact.read" className="mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 text-sm text-cos-text" required /></label><button type="submit" disabled={busy || !isLive} className="rounded-lg border border-cos-accent/40 px-3 py-2 text-xs text-cos-accent disabled:opacity-50"><SquareTerminal size={13} className="mr-2 inline" />Evaluate returned token</button><p className="text-[11px] leading-5 text-cos-steel">CAPPO decides allow or deny. Blocked actions remain visible in the Authority pillar and are never predicted here.</p></form>}</Pillar>
-    <Pillar title="Drift" proof={mountResponse ? "Present" : "Needs proof"}>{mountResponse ? <div className="space-y-4"><ScopeList label="Requested reads" values={asStringList(requestedScope?.reads)} /><ScopeList label="Granted reads" values={asStringList(granted?.reads)} /><ScopeList label="Requested writes" values={asStringList(requestedScope?.writes)} /><ScopeList label="Granted writes" values={asStringList(granted?.writes)} /><div className="flex items-center gap-2 text-xs text-cos-muted"><Ban size={14} className="text-cos-warn" />Blocked actions: {asStringList(granted?.blocked).length ? asStringList(granted?.blocked).join(", ") : "None returned."}</div><button type="button" onClick={terminate} disabled={busy || !mountId || lifecycleState !== "mounted"} className="rounded-lg border border-cos-warn/40 px-3 py-2 text-xs text-cos-warn disabled:opacity-50">Terminate persisted mount</button></div> : <HonestEmpty title="No granted-vs-requested comparison" route="POST /v1/capability/mounts" detail="The comparison appears only after CAPPO returns the mount decision and granted scope." />}</Pillar>
+    <Pillar title="Drift" proof={mountResponse ? "Present" : "Needs proof"}>{mountResponse ? <div className="space-y-4"><ScopeList label="Requested reads" values={asStringList(requestedScope?.reads)} /><ScopeList label="Granted reads" values={asStringList(granted?.reads)} /><ScopeList label="Requested writes" values={asStringList(requestedScope?.writes)} /><ScopeList label="Granted writes" values={asStringList(granted?.writes)} /><ScopeList label="Requested resources" values={asStringList(requestedScope?.resources)} /><ScopeList label="Granted resources" values={asStringList(granted?.resources)} /><div className="flex items-center gap-2 text-xs text-cos-muted"><Ban size={14} className="text-cos-warn" />Blocked actions: {asStringList(granted?.blocked).length ? asStringList(granted?.blocked).join(", ") : "None returned."}</div><button type="button" onClick={terminate} disabled={busy || !mountId || lifecycleState !== "mounted"} className="rounded-lg border border-cos-warn/40 px-3 py-2 text-xs text-cos-warn disabled:opacity-50">Terminate persisted mount</button></div> : <HonestEmpty title="No granted-vs-requested comparison" route="POST /v1/capability/mounts" detail="The comparison appears only after CAPPO returns the mount decision and granted scope." />}</Pillar>
   </SectionShell>;
 }

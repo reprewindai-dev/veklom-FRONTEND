@@ -8,6 +8,14 @@ import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { Field, FailureNotice } from "@/components/cos/StageParts";
 import { getStage, type StageEndpoint } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
+import {
+  asBoundOperation,
+  describeArguments,
+  readPendingExecutionIntent,
+  storePendingExecutionIntent,
+  type ArgumentValue,
+  type BoundOperation,
+} from "@/lib/cos/execution-intent";
 
 type Coverage = "read" | "write" | "blocked" | "uncovered";
 type Readiness = "PUBLIC_AVAILABLE_TODAY" | "RESTRICTED_ACCESS_EXISTS" | "RESEARCH_STAGE" | "THEORETICAL_ONLY";
@@ -23,6 +31,13 @@ interface ContractStep {
   risk_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   requires_approval: boolean;
   reason: string;
+  bindable?: boolean;
+  operation?: BoundOperation | null;
+}
+
+interface DraftBinding {
+  resource: string;
+  args: string;
 }
 
 interface GatedClaim {
@@ -126,11 +141,18 @@ export default function BlueprintPage() {
   const [agentId, setAgentId] = useState<string | null>(null);
   const [seal, setSeal] = useState<LedgerEvent>();
   const [sealError, setSealError] = useState<string>();
+  // Operations the user bound to write steps, by step sequence. ABIDE validates them and
+  // takes the target from the catalog; nothing here decides what is bindable.
+  const [bound, setBound] = useState<Record<number, { resource: string; arguments: Record<string, ArgumentValue> }>>({});
+  const [drafts, setDrafts] = useState<Record<number, DraftBinding>>({});
+  const [handedStepId, setHandedStepId] = useState<string | null>(null);
 
-  useEffect(() => setAgentId(readRegisteredAgent()), []);
+  useEffect(() => {
+    setAgentId(readRegisteredAgent());
+    setHandedStepId(readPendingExecutionIntent()?.stepId ?? null);
+  }, []);
 
-  async function compile(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function runCompile(operations: Record<number, { resource: string; arguments: Record<string, ArgumentValue> }>) {
     if (!intent.trim()) return;
     setBusy(true);
     setError(undefined);
@@ -139,13 +161,61 @@ export default function BlueprintPage() {
     const response = await call<CompileResult>(COMPILE, {
       intent: intent.trim(),
       claims: claims.filter((claim) => claim.statement.trim() && claim.requested_label.trim()),
+      operations: Object.entries(operations).map(([sequence, op]) => ({ sequence: Number(sequence), ...op })),
     });
     setBusy(false);
     if (!isCompileResult(response.data)) {
       setError(response.record.error || `ABIDE did not return a contract (HTTP ${response.record.status ?? "unreachable"}).`);
       return;
     }
+    setBound(operations);
     setResult(response.data);
+  }
+
+  async function compile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    // A new outcome starts unbound: bindings belong to the steps of the contract they were made on.
+    await runCompile({});
+  }
+
+  async function bindStep(sequence: number) {
+    const draft = drafts[sequence];
+    if (!draft?.resource.trim()) return;
+    let args: unknown = {};
+    if (draft.args.trim()) {
+      try {
+        args = JSON.parse(draft.args);
+      } catch {
+        setError("Arguments must be a JSON object, e.g. {\"note\": \"approved\"}.");
+        return;
+      }
+    }
+    if (!args || typeof args !== "object" || Array.isArray(args)) {
+      setError("Arguments must be a JSON object.");
+      return;
+    }
+    await runCompile({ ...bound, [sequence]: { resource: draft.resource.trim(), arguments: args as Record<string, ArgumentValue> } });
+  }
+
+  async function unbindStep(sequence: number) {
+    const rest = { ...bound };
+    delete rest[sequence];
+    await runCompile(rest);
+  }
+
+  function handOperation(step: ContractStep) {
+    const operation = asBoundOperation(step.operation);
+    if (!result || !operation) return;
+    storePendingExecutionIntent({
+      contractId: result.contract.contract_id,
+      canonicalHash: result.contract.canonical_hash,
+      stepId: step.step_id,
+      sequence: step.sequence,
+      clause: step.clause,
+      operation,
+      boundAt: new Date().toISOString(),
+    });
+    setHandedStepId(step.step_id);
   }
 
   async function exportAgentFile(format: "agents_md" | "claude_md") {
@@ -250,6 +320,27 @@ export default function BlueprintPage() {
                         <span className="rounded border border-cos-border px-1.5 py-0.5 text-cos-steel">risk {step.risk_level}</span>
                         {step.requires_approval ? <span className="rounded border border-cos-warn/50 px-1.5 py-0.5 text-cos-warn">requires approval</span> : null}
                       </div>
+                      {step.operation ? (
+                        <div className="mt-2 rounded border border-cos-accent/40 bg-cos-accent/[0.05] p-2 text-[11px]">
+                          <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Bound operation (in the contract hash)</div>
+                          <div className="mt-1 font-mono text-cos-text">{step.operation.action} · {step.operation.target_ref} · resource {step.operation.resource} · {describeArguments(step.operation.arguments)}</div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <button type="button" onClick={() => handOperation(step)} className="rounded border border-cos-accent/50 px-2 py-1 text-cos-accent hover:bg-cos-accent/10">
+                              {handedStepId === step.step_id ? "Handed to Mount ✓" : "Use this operation"}
+                            </button>
+                            {handedStepId === step.step_id ? <Link href="/os/mount" className="text-cos-accent underline">Mount it</Link> : null}
+                            <button type="button" onClick={() => void unbindStep(step.sequence)} disabled={busy} className="text-cos-steel hover:text-cos-danger disabled:opacity-50">Unbind</button>
+                          </div>
+                        </div>
+                      ) : step.bindable ? (
+                        <div className="mt-2 grid gap-2 rounded border border-cos-border p-2 sm:grid-cols-[120px_1fr_auto]">
+                          <input value={drafts[step.sequence]?.resource ?? ""} onChange={(e) => setDrafts((d) => ({ ...d, [step.sequence]: { resource: e.target.value, args: d[step.sequence]?.args ?? "" } }))}
+                            placeholder="resource" aria-label={`Resource for step ${step.sequence}`} className="rounded border border-cos-border bg-transparent px-2 py-1 font-mono text-xs text-cos-text" />
+                          <input value={drafts[step.sequence]?.args ?? ""} onChange={(e) => setDrafts((d) => ({ ...d, [step.sequence]: { resource: d[step.sequence]?.resource ?? "", args: e.target.value } }))}
+                            placeholder='arguments, JSON: {"field": "value"}' aria-label={`Arguments for step ${step.sequence}`} className="rounded border border-cos-border bg-transparent px-2 py-1 font-mono text-xs text-cos-text" />
+                          <button type="button" onClick={() => void bindStep(step.sequence)} disabled={busy || !drafts[step.sequence]?.resource?.trim()} className="rounded border border-cos-accent/50 px-2 py-1 text-[11px] text-cos-accent disabled:opacity-50">Bind exact operation</button>
+                        </div>
+                      ) : null}
                     </div>
                   </li>
                 );

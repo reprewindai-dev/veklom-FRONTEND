@@ -1,3 +1,4 @@
+import { asExecutionIntent, type ExecutionIntent } from "@/lib/cos/execution-intent";
 import type { PglProofLookup } from "@/lib/cos/readback";
 import { SANDBOX_PROJECT, environmentStorageSuffix, readEnvironmentIsSandbox } from "@/lib/cos/sandbox";
 
@@ -30,16 +31,90 @@ export type SessionCapabilityLease = {
   grants?: SessionCapabilityLeaseGrants;
   holderCredential?: string;
   vlinkHandoff?: SessionVLinkHandoff;
+  /** The contract-bound operation this mount was requested for (from ABIDE via Blueprint). */
+  intent?: ExecutionIntent;
+  /** The operation_id this lease last submitted, kept so it can be replayed as a test. */
+  lastOperationId?: string;
 };
+
+/**
+ * Credentials the machine still holds after the authority behind them ended or was
+ * replaced. They are kept on purpose: the proof is that holding them is not enough.
+ */
+export type RetainedCapabilityLease = Pick<
+  SessionCapabilityLease,
+  "mountId" | "tokenId" | "nonce" | "packageRef" | "targetRef" | "workspace" | "project" | "terminatedBy" | "intent" | "lastOperationId"
+> & { retainedAt: string };
 
 // Leases and consequence records are segregated per environment so a sandbox
 // mount can never be read back as live state (and vice versa).
 const LEASE_KEY_BASE = "veklom.capability_lease";
+const RETAINED_KEY_BASE = "veklom.capability_lease.retained";
 const CONSEQUENCE_KEY_BASE = "veklom.capability_consequence";
 const LEASE_CHANGED_EVENT = "veklom.capability_lease.changed";
+const MAX_RETAINED = 10;
 
 function leaseKey() {
   return `${LEASE_KEY_BASE}${environmentStorageSuffix()}`;
+}
+
+function retainedKey() {
+  return `${RETAINED_KEY_BASE}${environmentStorageSuffix()}`;
+}
+
+export function readRetainedCapabilityLeases(): RetainedCapabilityLease[] {
+  if (typeof window === "undefined" || !window.sessionStorage) return [];
+  try {
+    const raw = sessionStorage.getItem(retainedKey());
+    const list = raw ? (JSON.parse(raw) as unknown) : [];
+    if (!Array.isArray(list)) return [];
+    return list.flatMap((item): RetainedCapabilityLease[] => {
+      const value = item as Partial<RetainedCapabilityLease>;
+      if (typeof value?.mountId !== "string" || typeof value.tokenId !== "string" || typeof value.nonce !== "string") return [];
+      const retained: RetainedCapabilityLease = {
+        mountId: value.mountId,
+        tokenId: value.tokenId,
+        nonce: value.nonce,
+        retainedAt: typeof value.retainedAt === "string" ? value.retainedAt : "",
+      };
+      for (const key of ["packageRef", "targetRef", "workspace", "project", "terminatedBy", "lastOperationId"] as const) {
+        if (typeof value[key] === "string") retained[key] = value[key];
+      }
+      const intent = asExecutionIntent(value.intent);
+      if (intent) retained.intent = intent;
+      return leaseMatchesEnvironment(retained) ? [retained] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
+function retainLease(lease: SessionCapabilityLease) {
+  const retained: RetainedCapabilityLease = {
+    mountId: lease.mountId,
+    tokenId: lease.tokenId,
+    nonce: lease.nonce,
+    packageRef: lease.packageRef,
+    targetRef: lease.targetRef,
+    workspace: lease.workspace,
+    project: lease.project,
+    terminatedBy: lease.terminatedBy,
+    intent: lease.intent,
+    lastOperationId: lease.lastOperationId,
+    retainedAt: new Date().toISOString(),
+  };
+  const others = readRetainedCapabilityLeases().filter((item) => item.mountId !== lease.mountId);
+  try {
+    sessionStorage.setItem(retainedKey(), JSON.stringify([retained, ...others].slice(0, MAX_RETAINED)));
+  } catch {
+    // Storage may be unavailable in a restricted browser context.
+  }
+}
+
+/** Before a lease is replaced or cleared, keep its credentials as retained. */
+function retainCurrentUnless(nextMountId?: string) {
+  const current = readSessionCapabilityLease();
+  if (current && current.mountId !== nextMountId) retainLease(current);
 }
 
 function consequenceKey() {
@@ -62,6 +137,7 @@ function notifyLeaseChanged() {
 export function storeSessionCapabilityLease(lease: SessionCapabilityLease) {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
+    retainCurrentUnless(lease.mountId);
     sessionStorage.setItem(leaseKey(), JSON.stringify(lease));
     notifyLeaseChanged();
   } catch {
@@ -98,9 +174,12 @@ export function readSessionCapabilityLease(): SessionCapabilityLease | null {
       "resource",
       "executionId",
       "expiresAt",
+      "lastOperationId",
     ] as const) {
       if (typeof value[key] === "string") lease[key] = value[key];
     }
+    const intent = asExecutionIntent(value.intent);
+    if (intent) lease.intent = intent;
     if (typeof value.terminated === "boolean") lease.terminated = value.terminated;
     if (typeof value.terminatedBy === "string") lease.terminatedBy = value.terminatedBy;
     if (typeof value.holderCredential === "string") {
@@ -183,6 +262,7 @@ export function applyTerminateResponse(
 export function clearSessionCapabilityLease() {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
+    retainCurrentUnless();
     sessionStorage.removeItem(leaseKey());
     notifyLeaseChanged();
   } catch {
@@ -197,11 +277,27 @@ export function clearHolderCredential() {
   storeSessionCapabilityLease(withoutCredential);
 }
 
+export type SessionConsequenceAttempt =
+  | "execute"
+  | "retry"
+  | "forbidden_action"
+  | "revoke"
+  | "no_authority"
+  | "retained_token"
+  | "replay";
+
+const CONSEQUENCE_ATTEMPTS: ReadonlySet<string> = new Set<SessionConsequenceAttempt>([
+  "execute", "retry", "forbidden_action", "revoke", "no_authority", "retained_token", "replay",
+]);
+
 export type SessionConsequenceDenial = {
-  attempt: "execute" | "retry" | "forbidden_action" | "revoke";
+  attempt: SessionConsequenceAttempt;
   decision: string;
   reason: string;
   at: string;
+  /** The mount whose credentials made the attempt, when not the held lease's own. */
+  mountId?: string;
+  operationId?: string;
 };
 
 export type SessionTargetReadback = {
@@ -260,11 +356,7 @@ export function readSessionConsequence(mountId?: string): SessionConsequenceReco
     const denials = value.denials.filter((item): item is SessionConsequenceDenial => (
       Boolean(item)
       && typeof item === "object"
-      && (item as SessionConsequenceDenial).attempt !== undefined
-      && ((item as SessionConsequenceDenial).attempt === "execute"
-        || (item as SessionConsequenceDenial).attempt === "retry"
-        || (item as SessionConsequenceDenial).attempt === "forbidden_action"
-        || (item as SessionConsequenceDenial).attempt === "revoke")
+      && CONSEQUENCE_ATTEMPTS.has((item as SessionConsequenceDenial).attempt)
       && typeof (item as SessionConsequenceDenial).decision === "string"
       && typeof (item as SessionConsequenceDenial).reason === "string"
       && typeof (item as SessionConsequenceDenial).at === "string"
