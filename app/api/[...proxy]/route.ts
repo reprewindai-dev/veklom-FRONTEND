@@ -7,6 +7,7 @@ import {
   isCappoPublicPath,
 } from "@/lib/cappo-proxy-paths";
 import { isOperatorLockerPath } from "@/lib/wallet/proxy-paths";
+import { computlessForwardPath } from "@/lib/computless-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
@@ -20,6 +21,11 @@ const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, ""
 const VLINK_URL = (process.env.VLINK_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
 // Internal-only; no public fallback so a missing setting fails closed.
 const ABIDE_URL = (process.env.ABIDE_URL || "").replace(/\/+$/, "");
+// Private Cloud (COMPUTLESS owned-compute fabric). The owner token never leaves this server.
+const COMPUTLESS_URL = (process.env.COMPUTLESS_URL || "").replace(/\/+$/, "");
+const FABRIC_OWNER_TOKEN = process.env.FABRIC_OWNER_TOKEN || "";
+const COMPUTLESS_SANDBOX_URL = (process.env.COMPUTLESS_SANDBOX_URL || "").replace(/\/+$/, "");
+const FABRIC_SANDBOX_OWNER_TOKEN = process.env.FABRIC_SANDBOX_OWNER_TOKEN || "";
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -102,7 +108,36 @@ async function proxyRequest(req: NextRequest) {
   // never substituted for a missing one.
   const isOperatorLockerRoute = isOperatorLockerPath(path);
 
-  if (path.startsWith("/api/cappo/")) {
+  if (path.startsWith("/api/computless/")) {
+    // Production and sandbox are separate fabrics with separate machines and owner tokens.
+    // The data mode picks one; there is no fallback from one to the other.
+    const sandboxMode = (req.headers.get("x-veklom-data-mode") || url.searchParams.get("mode")) === "sandbox";
+    const fabricUrl = sandboxMode ? COMPUTLESS_SANDBOX_URL : COMPUTLESS_URL;
+    const ownerToken = sandboxMode ? FABRIC_SANDBOX_OWNER_TOKEN : FABRIC_OWNER_TOKEN;
+    if (!fabricUrl) {
+      return NextResponse.json(
+        { error: sandboxMode ? "Private Cloud sandbox fabric is not configured" : "Private Cloud (COMPUTLESS) is not configured" },
+        { status: 503 },
+      );
+    }
+    const route = computlessForwardPath(req.method, path);
+    if (!route) {
+      return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });
+    }
+    // Fabric state describes the organization's machines: an authenticated principal is required.
+    const principalError = await requirePrincipal(req);
+    if (principalError) return principalError;
+    headers.delete("authorization");
+    headers.delete("cookie");
+    if (route.owner) {
+      if (!ownerToken) {
+        return NextResponse.json({ error: "Private Cloud owner actions are not configured" }, { status: 503 });
+      }
+      headers.set("authorization", `Bearer ${ownerToken}`);
+    }
+    targetBase = fabricUrl;
+    forwardPath = route.forward;
+  } else if (path.startsWith("/api/cappo/")) {
     if (!CAPPO_BACKEND_URL) {
       return NextResponse.json(
         { error: "CAPPO capability proxy is not configured" },

@@ -58,6 +58,7 @@ export function resolveStageTransportPath(
     return `/api/capi/interlink/capability${path.replace(/^\/v1\/capability/, "")}`;
   }
   if (isCappoProxyPath(path)) return `/api/cappo${path}`;
+  if (path.startsWith("/api/fabric/")) return `/api/computless${path.replace(/^\/api/, "")}`;
   return path;
 }
 
@@ -69,6 +70,9 @@ export function resolveStageBaseUrl(
   endpointPath?: string,
 ): string | undefined {
   if (stageId === "mount" || (endpointPath && (isCapiInterlinkPath(endpointPath) || isCappoProxyPath(endpointPath)))) return undefined;
+  // Private Cloud: always same-origin; the proxy selects the production or sandbox fabric
+  // from the request's data mode, so the two fabrics are never mixed.
+  if (endpointPath?.startsWith("/api/fabric/")) return undefined;
   if (!sandbox) return undefined;
   return sandboxBaseUrl || endpointBaseUrl;
 }

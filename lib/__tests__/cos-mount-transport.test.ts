@@ -24,7 +24,7 @@ describe("Capability OS stage transport", () => {
       "terminal",
     ]);
     expect(stages.map((stage) => stage.label)).toEqual([
-      "Runtime diagnostics",
+      "Private Cloud",
       "Capabilities",
       "Mount",
       "Blueprint",

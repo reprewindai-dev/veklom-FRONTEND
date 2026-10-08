@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "lockerphycer";
+export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "lockerphycer" | "computless";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -37,6 +37,8 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
   const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
   const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
   const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
+  // Private Cloud: COMPUTLESS owned-compute fabric (placement and routing; never authority).
+  const computlessUrl = process.env.COMPUTLESS_URL || "";
 
   return [
     {
@@ -108,6 +110,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       baseUrl: trimTrailingSlash(lockerphycerUrl),
       healthPath: "/health",
       overviewPath: undefined,
+      authMode: "server-api-key",
+    },
+    {
+      id: "computless",
+      label: "COMPUTLESS Private Cloud",
+      repo: "computless",
+      role: "execution-engine",
+      baseUrl: trimTrailingSlash(computlessUrl),
+      healthPath: "/api/health",
+      overviewPath: "/api/fabric/state",
       authMode: "server-api-key",
     },
   ];

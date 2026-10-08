@@ -44,14 +44,15 @@ const backend = (id: string) => canonicalBackends().find((item) => item.id === i
 export const stages: StageDefinition[] = [
   {
     id: "computeless",
-    label: "Runtime diagnostics",
+    label: "Private Cloud",
     route: "/os/computeless",
-    purpose: "Inspect source-declared compute diagnostics; no matching backend handlers were found at the audited SHAs.",
-    owner: "COMPUTLESS diagnostics (route handlers pending)",
+    purpose: "Turn the hardware you already own into governed cloud infrastructure: your machines, capacity, placement, workloads, failover and data locality. Machines hold no authority; every workload runs under its own single-use CAPPO grant.",
+    owner: "COMPUTLESS owned-compute fabric (placement and routing) · CAPPO (authority)",
     endpoints: [
-      { method: "GET", path: "/api/v1/computeless/telemetry", classification: "absent", response: "compute telemetry" },
-      { method: "GET", path: "/api/v1/computeless/evidence", classification: "absent", response: "compute evidence payload" },
-      { method: "POST", path: "/api/v1/computeless/execute", classification: "absent", response: "execute action" },
+      { method: "GET", path: "/api/fabric/state", classification: "present", response: "enrolled machines, measured capacity, policy, workloads and placement decisions", baseUrl: backend("computless") },
+      { method: "GET", path: "/api/fabric/jobs/{job_id}", classification: "present", response: "one workload: authority reference, placement reasons, outcome", baseUrl: backend("computless") },
+      { method: "PUT", path: "/api/fabric/policy", classification: "present", response: "placement policy (owned only / owned first / cloud first; cloud enabled)", baseUrl: backend("computless") },
+      { method: "GET", path: "/api/fabric/enrollment", classification: "present", response: "join command for connecting a machine (enrollment grants no authority)", baseUrl: backend("computless") },
     ],
     crossCutting: true,
   },
