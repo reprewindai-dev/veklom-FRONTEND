@@ -45,6 +45,33 @@ This is the starting set. Use cases add more capabilities, each paired to a work
 - **Evidence** is PGL/GnomLedger. **Measure** is VNP. **Settle** is x402. **Tracker** observes every stage for drift and is not an execution stage.
 - **Private Cloud** is where governed workloads physically run: the COMPUTLESS owned-compute fabric. It is cross-cutting, next to Execute. The legacy `/os/governed-compute` redirects here.
 
+## One product, five separate questions
+
+Veklom is **one product**. Every governed action answers five independent questions. Keep them separate in code, UI and docs. Never let one stand in for another.
+
+| Question | Answer | Owner |
+|---|---|---|
+| **Mode:** playground or live? | Playground (try realistic scenarios without affecting live resources) or Live | Capability OS toggle; CAPPO enforces via `execution_scope.project = "sandbox"` |
+| **Location:** where does it run? | Your machine, another owned machine (Private Cloud), or a cloud provider | COMPUTLESS placement |
+| **Containment:** what can the running agent reach? | Locked in a box: network, files, credentials limited | LockerPhycer (execution containment) |
+| **Authority:** what exact action may happen? | One bounded, single-use grant for one operation | CAPPO |
+| **Evidence:** what actually happened? | Signed receipt plus independent readback | CAPPO receipt, PGL/GnomLedger |
+
+## The three meanings of "sandbox" (do not mix them)
+
+| Meaning | Purpose | Who sees it |
+|---|---|---|
+| **Customer playground** ("Switch to sandbox") | Try capabilities and scenarios and learn to trust the controls, without changing live resources. A product feature, not a test environment. | Customers |
+| **Execution containment** (LockerPhycer) | Restrict an agent or workload while it runs. Applies in **both** playground and live; going live never removes containment. | Customers (as a guarantee) |
+| **Deployment test copy** (staging/local/canary) | Test new versions of Veklom itself before release. Never customer-facing. | The Veklom team |
+
+Rules:
+- **Playground and live follow the same rules and the same code paths.** The playground is separated by data and scope, not by weaker checks. A capability behaves identically in both, except that playground never reaches live resources.
+- **Playground must never change live state.** A target that cannot keep a separate playground copy must refuse playground actions (fail closed). It must never execute them against live data.
+  - Found 2026-10-08: the arena record store has one dataset, so CAPPO must refuse sandbox consequences there (`target_has_no_sandbox`, cappo-backend branch `fix/sandbox-isolation`).
+- **Containment is not a mode.** Never implement "live" by turning containment off.
+- **A staging pass is not a customer-playground feature, and vice versa.**
+
 ## Honesty rules (binding)
 
 - Never create health, trust, usage, evidence, settlement, provider or metric values in the frontend.

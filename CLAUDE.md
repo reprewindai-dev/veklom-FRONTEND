@@ -1,5 +1,14 @@
 # Veklom Control Plane Doctrine
 
+> **Read first:** [`docs/capability-os/DESIGN_MODEL.md`](./docs/capability-os/DESIGN_MODEL.md).
+> - Veklom is one product.
+> - Workspaces are places; capabilities are things paired to a workspace, so repeated names are not duplicates.
+> - Every action answers five separate questions: Mode, Location, Containment, Authority, Evidence.
+> - "Sandbox" means three different things: the customer playground, LockerPhycer execution containment, and the staging test copy. Never mix them.
+> - The playground follows the same rules as live and must never change live state.
+>
+> The "Product Spine" section below predates the Capability OS lifecycle. Where they conflict, the design model and `docs/capability-os/navigation-map.md` win.
+
 This repository is the private, tier-gated Next.js control plane for Veklom. Treat it as revenue-critical production software, not a demo.
 
 ## Product Spine

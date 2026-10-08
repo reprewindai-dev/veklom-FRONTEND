@@ -2,6 +2,16 @@
 
 Before any work, read [`00_VEKLOM_BIBLE.md`](./00_VEKLOM_BIBLE.md).
 
+Before changing the Capability OS, read [`docs/capability-os/DESIGN_MODEL.md`](./docs/capability-os/DESIGN_MODEL.md). In short:
+- **One product.** Workspaces are places; capabilities are things that open in a workspace. Repeated names are pairings, not duplicates.
+- **Five separate questions** for every action: Mode (playground/live), Location (where it runs), Containment (what the running agent can reach), Authority (the exact permitted action) and Evidence (what happened). Never let one stand in for another.
+- **"Sandbox" has three meanings:**
+  - the customer playground (same rules as live, never touches live state);
+  - LockerPhycer execution containment (applies in both modes);
+  - the deployment test copy (staging, never customer-facing).
+
+  Keep them apart.
+
 The frontend must be an honest projection of backend/runtime state. Do not synthesize production health, trust, usage, evidence, settlement, topology, or compliance values.
 
 Standalone Veklom products may have independent UIs; Capability OS consumes their underlying capabilities and rebuilds the OS surface natively.
