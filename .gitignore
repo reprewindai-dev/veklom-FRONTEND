@@ -20,3 +20,6 @@ tmp/pdfs/
 .veklom/runtime/
 
 .vercel
+
+# Local Wrangler/Miniflare dev state (long paths break Windows checkout)
+.wrangler/
