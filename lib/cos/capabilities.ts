@@ -44,7 +44,7 @@ export type CapabilityContract = {
   outputs: Record<string, string>;
 
   // Runtime State
-  mountState: "Mounted" | "Available";
+  mountState: "Built in" | "Available";
   workspace: string;
 };
 
@@ -163,7 +163,7 @@ export const capabilities: CapabilityContract[] = [
   {
     id: "blueprint",
     name: "Blueprint",
-    description: "The mounted blueprint workspace for intent and plan review.",
+    description: "Built-in workspace for stating an outcome and reviewing its contract.",
     icon: "FileCode2",
     lifecycleStage: "Blueprint",
     kind: "Workspace",
@@ -172,10 +172,10 @@ export const capabilities: CapabilityContract[] = [
     auth: "none",
     authority: { mount: "Workspace identity", execute: "Workspace identity", settle: "None" },
     trustRequirement: "Workspace identity",
-    evidence: { proofState: "Present", pglRequired: false },
+    evidence: { proofState: "Needs proof", pglRequired: false },
     inputs: {},
     outputs: {},
-    mountState: "Mounted",
+    mountState: "Built in",
     workspace: "/os/blueprint",
   },
   {
@@ -190,10 +190,10 @@ export const capabilities: CapabilityContract[] = [
     auth: "none",
     authority: { mount: "Mount authority", execute: "Mount authority", settle: "None" },
     trustRequirement: "Mount authority",
-    evidence: { proofState: "Present", pglRequired: false },
+    evidence: { proofState: "Needs proof", pglRequired: false },
     inputs: {},
     outputs: {},
-    mountState: "Mounted",
+    mountState: "Built in",
     workspace: "/os/mount",
   },
   {
@@ -208,10 +208,10 @@ export const capabilities: CapabilityContract[] = [
     auth: "jwt",
     authority: { mount: "Evidence access", execute: "Evidence access", settle: "Evidence access" },
     trustRequirement: "Evidence access",
-    evidence: { proofState: "Present", pglRequired: true },
+    evidence: { proofState: "Needs proof", pglRequired: true },
     inputs: { filter: "object" },
     outputs: { events: "array" },
-    mountState: "Mounted",
+    mountState: "Built in",
     workspace: "/os/evidence",
   },
   {
@@ -226,10 +226,10 @@ export const capabilities: CapabilityContract[] = [
     auth: "jwt",
     authority: { mount: "Settlement authority", execute: "Settlement authority", settle: "Settlement authority" },
     trustRequirement: "Settlement authority",
-    evidence: { proofState: "Present", pglRequired: true },
+    evidence: { proofState: "Needs proof", pglRequired: true },
     inputs: {},
     outputs: { required: "boolean", options: "array" },
-    mountState: "Mounted",
+    mountState: "Built in",
     workspace: "/os/settle",
   },
   {
@@ -244,10 +244,10 @@ export const capabilities: CapabilityContract[] = [
     auth: "jwt",
     authority: { mount: "Audit access", execute: "Audit access", settle: "None" },
     trustRequirement: "Audit access",
-    evidence: { proofState: "Present", pglRequired: true },
+    evidence: { proofState: "Needs proof", pglRequired: true },
     inputs: {},
     outputs: { driftReport: "object" },
-    mountState: "Mounted",
+    mountState: "Built in",
     workspace: "/os/tracker",
   },
 ];
