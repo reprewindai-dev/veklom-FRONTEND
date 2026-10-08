@@ -32,7 +32,7 @@ function getDimensionalScores(api: BenchmarkApiEntry) {
   return {
     p99_latency:            Math.min(100, Math.max(30, 100 - (api.p99 / 15) + jitter(0))),
     error_rate:             Math.min(100, Math.max(20, 100 - api.drift * 2 + jitter(1))),
-    availability:           Math.min(100, Math.max(40, api.uptime24h - 0.1 + jitter(2) * 0.1)),
+    availability:           Math.min(100, Math.max(40, (api.uptime24h ?? 0) - 0.1 + jitter(2) * 0.1)),
     throughput:             Math.min(100, Math.max(30, base + jitter(3))),
     security:               Math.min(100, Math.max(50, base + 5 + jitter(4))),
     documentation:          Math.min(100, Math.max(20, base - 5 + jitter(5))),

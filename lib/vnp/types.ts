@@ -347,7 +347,8 @@ export interface BenchmarkApiEntry {
   p50: number;
   p95: number;
   p99: number;
-  sla: number;
+  // Not asserted by Veklom (an SLA is a provider commitment); see observedSuccess.
+  sla: number | null;
   drift: number;
   sovereignTier: number;
   complianceLabels: string[];
@@ -358,7 +359,10 @@ export interface BenchmarkApiEntry {
   mcpSchema?: Record<string, unknown> | null;
   provider?: string | null;
   throughput: number;
-  uptime24h: number;
+  uptime24h: number | null;
+  measured?: boolean;
+  runCount?: number;
+  observedSuccess?: { succeeded: number; attempts: number; percent: number; basis: string };
   totalStaked: number;
   status: string;
   measurementEvidence?: {
