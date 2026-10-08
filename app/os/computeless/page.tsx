@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Cloud, Cpu, Database, KeyRound, ListChecks, MapPin, Plug, RefreshCw, Server } from "lucide-react";
 import { HonestEmpty } from "@/components/cos/SectionPillars";
 import { ProofBadge } from "@/components/cos/ProofBadge";
@@ -114,6 +115,8 @@ export default function PrivateCloudPage() {
   const { call, stage } = data;
   const [state, setState] = useState<FabricState | null>(null);
   const [mismatch, setMismatch] = useState<string | null>(null);
+  // A signed-in account with no workspace yet: machines connect to a workspace, so it must make one first.
+  const [needsWorkspace, setNeedsWorkspace] = useState(false);
   const [policyError, setPolicyError] = useState<string | null>(null);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [enrollError, setEnrollError] = useState<string | null>(null);
@@ -127,8 +130,14 @@ export default function PrivateCloudPage() {
     const ep = endpoint("GET", "/api/fabric/state");
     if (!ep) return;
     const result = await call<FabricState>(ep);
+    if (result.record.status === 403 && /WORKSPACE_REQUIRED/.test(result.record.error || "")) {
+      setState(null);
+      setNeedsWorkspace(true);
+      return;
+    }
     const payload = result.data;
     if (!payload || !Array.isArray(payload.workers)) return;
+    setNeedsWorkspace(false);
     // Never render one environment's machines under the other environment's label.
     if (payload.environment !== expected) {
       setState(null);
@@ -178,6 +187,22 @@ export default function PrivateCloudPage() {
   const liveProof = recordFor("GET", "/api/fabric/state")?.proof ?? proof;
   const enrollProof = (recordFor("POST", "/api/fabric/enrollment-keys") ?? recordFor("GET", "/api/fabric/enrollment"))?.proof ?? proof;
   const envLabel = sandbox ? "Sandbox fabric · separate machines and workloads; nothing here touches production" : "Production fabric";
+
+  if (!state && needsWorkspace) {
+    return (
+      <SectionShell stage={stage} proof={proof} records={data.records}>
+        <div className="xl:col-span-2 rounded-xl border border-dashed border-cos-border bg-cos-bg/45 p-4">
+          <h3 className="text-sm text-cos-text">Create your workspace first</h3>
+          <p className="mt-2 text-xs leading-5 text-cos-muted">
+            Machines connect to a workspace, and only that workspace can see or use them. Your account
+            has no workspace yet. Create one in <Link href="/os/onboarding" className="text-cos-accent underline">onboarding</Link>,
+            then come back here to connect a machine.
+          </p>
+          <code className="mt-3 block break-all font-mono text-[10px] tabular-nums text-cos-warn">GET /api/fabric/state · 403 WORKSPACE_REQUIRED</code>
+        </div>
+      </SectionShell>
+    );
+  }
 
   if (!state) {
     return (
