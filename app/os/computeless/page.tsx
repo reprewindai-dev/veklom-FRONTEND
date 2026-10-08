@@ -421,7 +421,7 @@ export default function PrivateCloudPage() {
 
         {!sandbox ? (
           <Panel title="Run a workload" icon={Play} proof={liveProof}>
-            <RunWorkload hasMachines={s.machines_available > 0} />
+            <RunWorkload hasMachines={s.machines_connected > 0} />
           </Panel>
         ) : null}
       </div>
