@@ -284,10 +284,12 @@ export type SessionConsequenceAttempt =
   | "revoke"
   | "no_authority"
   | "retained_token"
+  | "retained_own_operation"
   | "replay";
 
 const CONSEQUENCE_ATTEMPTS: ReadonlySet<string> = new Set<SessionConsequenceAttempt>([
-  "execute", "retry", "forbidden_action", "revoke", "no_authority", "retained_token", "replay",
+  "execute", "retry", "forbidden_action", "revoke", "no_authority", "retained_token", "retained_own_operation",
+  "replay",
 ]);
 
 export type SessionConsequenceDenial = {

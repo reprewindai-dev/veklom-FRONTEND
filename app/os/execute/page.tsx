@@ -375,12 +375,16 @@ export default function ExecutePage() {
 
   /**
    * The machine still holds credentials from an earlier mount. Use them for the
-   * operation in front of it now ("retained_token"), or to replay the exact
-   * operation they once carried ("replay"). Both must be refused.
+   * operation in front of it now ("retained_token"), for their own original
+   * operation again under a new operation id ("retained_own_operation": the
+   * authority was consumed, so this tests exactly that), or to replay the exact
+   * operation id they once carried ("replay"). All must be refused.
    */
-  async function attemptWithRetained(item: RetainedCapabilityLease, mode: "retained_token" | "replay") {
-    const replayOp = item.intent?.operation;
-    const op = mode === "replay" ? replayOp : operation;
+  async function attemptWithRetained(
+    item: RetainedCapabilityLease,
+    mode: "retained_token" | "retained_own_operation" | "replay",
+  ) {
+    const op = mode === "retained_token" ? operation : item.intent?.operation;
     const operationIdToSend = mode === "replay" ? item.lastOperationId : newOperationId();
     if (!lease || !op || !operationIdToSend) return;
     setBusyAction("retained");
@@ -630,6 +634,9 @@ export default function ExecutePage() {
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button type="button" onClick={() => void attemptWithRetained(item, "retained_token")} disabled={Boolean(busyAction) || !operation} className="rounded border border-cos-warn/40 px-2 py-1 text-[11px] text-cos-warn disabled:opacity-50">
                         Try the current operation with this token
+                      </button>
+                      <button type="button" onClick={() => void attemptWithRetained(item, "retained_own_operation")} disabled={Boolean(busyAction) || !item.intent} className="rounded border border-cos-warn/40 px-2 py-1 text-[11px] text-cos-warn disabled:opacity-50">
+                        Retry its own operation (new id)
                       </button>
                       <button type="button" onClick={() => void attemptWithRetained(item, "replay")} disabled={Boolean(busyAction) || !item.intent || !item.lastOperationId} className="rounded border border-cos-warn/40 px-2 py-1 text-[11px] text-cos-warn disabled:opacity-50">
                         Replay its last operation{item.lastOperationId ? ` (${item.lastOperationId.slice(0, 8)}…)` : ""}
