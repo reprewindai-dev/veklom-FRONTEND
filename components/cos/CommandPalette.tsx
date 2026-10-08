@@ -9,7 +9,7 @@ import { capabilities } from "@/lib/cos/capabilities";
 const links = [
   ["Capabilities", "/os"], ["Mount", "/os/mount"], ["Blueprint", "/os/blueprint"], ["Govern", "/os/govern"],
   ["Execute", "/os/execute"], ["Evidence", "/os/evidence"], ["Measure", "/os/measure"], ["Settle", "/os/settle"],
-  ["Authority", "/os/authority"], ["Tracker", "/os/tracker"],
+  ["Authority", "/os/authority"], ["Tracker", "/os/tracker"], ["Private Cloud", "/os/computeless"],
 ];
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {

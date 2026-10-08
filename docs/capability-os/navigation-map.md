@@ -22,7 +22,7 @@ The canonical lifecycle spine is:
 
 `CAPABILITIES → MOUNT → BLUEPRINT → GOVERN → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER`
 
-Cross-cutting surfaces: Terminal overlay and Runtime diagnostics.
+Cross-cutting surfaces: Private Cloud (owned-compute fabric, `/os/computeless`) and the Terminal overlay. See `DESIGN_MODEL.md` for workspaces vs capabilities.
 
 The former Command / Capabilities-stub / Workflows / Executions / Governed Compute / Settings / Terminal-route shell model is SUPERSEDED (removed in devin/1789290468-cos-reconciliation; legacy URLs 301 to lifecycle routes). Do not reintroduce it.
 

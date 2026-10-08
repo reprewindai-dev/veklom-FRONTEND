@@ -250,4 +250,24 @@ export const capabilities: CapabilityContract[] = [
     mountState: "Mounted",
     workspace: "/os/tracker",
   },
+  {
+    // Cloud is both a workspace (Private Cloud) and a capability opened in it, like every
+    // other baseline pairing (Blueprint → Blueprint, Evidence → Evidence, ...).
+    id: "private-cloud",
+    name: "Private Cloud",
+    description: "Run governed workloads on machines you own: placed beside their data, failover between machines, no hyperscaler. Machines hold no authority; every workload runs under its own single-use CAPPO grant.",
+    icon: "Radar",
+    lifecycleStage: "Private Cloud",
+    kind: "Workspace",
+    route: "/os/computeless",
+    method: "GET",
+    auth: "jwt",
+    authority: { mount: "Workspace identity", execute: "Single-use CAPPO grant per workload", settle: "None" },
+    trustRequirement: "Workspace identity",
+    evidence: { proofState: "Needs proof", pglRequired: true },
+    inputs: {},
+    outputs: { machines: "array", workloads: "array", placements: "array" },
+    mountState: "Mounted",
+    workspace: "/os/computeless",
+  },
 ];
