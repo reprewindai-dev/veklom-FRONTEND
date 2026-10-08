@@ -86,3 +86,27 @@ Rules:
   - The proven consequence route is CAPPO's `/v1/capability/mounts/{id}/execute`, and LockerPhycer holds what BYOS did.
   - CAPPO remains the sole authority.
 - See `veklom-m1p2/evidence/m1-p2/plan-vs-reality-2026-10-08.md` for the item-by-item audit.
+
+## The Governed Consequence Machine (architecture reference)
+
+The owner's architecture page is kept at [`architecture/governed-consequence-machine.html`](./architecture/governed-consequence-machine.html), saved from a temporary file on 2026-10-08 (sha256 `a074a650…d9e1`). Its central invariant: **computational possession does not imply current consequence authority.** The flow runs: compute proposes, authority permits now, the broker performs the mutation, the reality sink proves the result, and PGL records the evidence.
+
+Where each box stands (2026-10-08):
+
+| Box | Role | Built today |
+|---|---|---|
+| CAPPO | Current consequence authority | Live: bounded single-use grants and signed receipts. Atomic start claim (`45c4d05`, `3889c40`); not deployed. |
+| VLink | Machine pairing and authority handoff | Production runs an older build without the lease routes; main has the wiring. |
+| cAPI | Ingress and capability transport | Live; bypass routes closed (410). |
+| LockerPhycer | Identity/session security and the external execution-security boundary | Identity is live. The containment "cell host" exists on main, marked UNVERIFIED. |
+| Disposable Manifestation | Untrusted compute, no ambient credentials | Private Cloud worker (own-your-cloud): the workload runs with no network, a read-only root and limits; the worker holds no Docker socket (runner gate). Local only. |
+| Host Broker | Revalidate target, JIT credential, mutate, revoke | Partial. HTTP targets redeem CAPPO permits themselves (arena pattern). No JIT-credential broker for customer systems yet. |
+| Reality Sink (C) | Independently observable consequence | Arena record store (staging-proven, Run 004); result sink for compute jobs. |
+| VirtualDB | State materialization; working set ≠ historical state | Repo on Google Drive (`G:\My Drive\virtualdb`). Not integrated. |
+| GnomLedger / PGL | Tamper-evident evidence continuity | Live (older build); hash-chain verified. Signature verification is not yet proven. |
+
+The page's guardrails are binding:
+- PGL is tamper-evident, which does not mean storage finality.
+- Do not claim sealed eBPF LockerPhycer enforcement without direct proof.
+- Threat-analysis hooks are not an autonomous IDS.
+- An implemented mechanism is not a runtime-sealed host maturity claim.
