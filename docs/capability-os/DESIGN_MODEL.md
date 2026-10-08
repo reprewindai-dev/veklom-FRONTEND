@@ -7,7 +7,7 @@ Written 2026-10-08 from the owner's walk-through and the design sources:
 - `navigation-map.md`
 - `docs/superpowers/plans/2026-08-14-capability-os-runtime-wiring.md`
 
-**Nothing below is a duplicate.**
+**The repeated names below are deliberate pairings, not duplicates.** In general, check identifiers, roles, destinations and carried context before treating any entry as a duplicate.
 
 ## Two kinds of thing
 

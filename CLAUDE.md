@@ -2,7 +2,7 @@
 
 > **Read first:** [`docs/capability-os/DESIGN_MODEL.md`](./docs/capability-os/DESIGN_MODEL.md).
 > - Veklom is one product.
-> - Workspaces are places; capabilities are things paired to a workspace, so repeated names are not duplicates.
+> - Workspaces are places; capabilities are things paired to a workspace. Shared names are usually deliberate pairings: check identifiers, roles, destinations and carried context before calling anything a duplicate.
 > - Every action answers five separate questions: Mode, Location, Containment, Authority, Evidence.
 > - "Sandbox" means three different things: the customer playground, LockerPhycer execution containment, and the staging test copy. Never mix them.
 > - The playground follows the same rules as live and must never change live state.
