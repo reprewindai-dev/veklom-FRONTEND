@@ -9,8 +9,10 @@ import {
 import { isOperatorLockerPath } from "@/lib/wallet/proxy-paths";
 import {
   computlessForwardPath,
+  inFabricBeta,
   isFabricOwner,
   OWNER_ONLY,
+  parseFabricBeta,
   parseFabricOwners,
   principalWorkspace,
 } from "@/lib/computless-proxy-paths";
@@ -37,6 +39,8 @@ const FABRIC_SERVICE_TOKEN = process.env.FABRIC_SERVICE_TOKEN || "";
 const FABRIC_SANDBOX_SERVICE_TOKEN = process.env.FABRIC_SANDBOX_SERVICE_TOKEN || "";
 // Accounts allowed to act as the fabric owner (comma-separated emails). Empty = nobody.
 const FABRIC_OWNERS = parseFabricOwners(process.env.FABRIC_OWNER_EMAILS);
+// Limited beta: set -> only these accounts (plus owners) may use Private Cloud; unset -> open.
+const FABRIC_BETA = parseFabricBeta(process.env.FABRIC_BETA_EMAILS);
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -152,6 +156,9 @@ async function proxyRequest(req: NextRequest) {
     // A listed owner uses the single-owner fabric (owner token). Any other account is a
     // customer and only ever reaches its own workspace's machines and jobs.
     const caller = isFabricOwner(principal, FABRIC_OWNERS) ? "owner" : "customer";
+    if (caller === "customer" && !inFabricBeta(principal, FABRIC_BETA)) {
+      return NextResponse.json({ error: "PRIVATE_CLOUD_BETA_ONLY" }, { status: 403 });
+    }
     const route = computlessForwardPath(req.method, path, caller);
     if (route === OWNER_ONLY) {
       return NextResponse.json({ error: "PRIVATE_CLOUD_OWNER_REQUIRED" }, { status: 403 });

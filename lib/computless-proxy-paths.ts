@@ -39,6 +39,19 @@ export function isFabricOwner(principal: unknown, owners: Set<string>): boolean 
   return typeof email === "string" && owners.has(email.trim().toLowerCase());
 }
 
+/**
+ * Limited beta: when FABRIC_BETA_EMAILS is set, only those accounts (and listed owners) may use
+ * Private Cloud; set but empty admits no customer. Unset leaves Private Cloud open to every
+ * signed-in account with a workspace (staging and development).
+ */
+export function parseFabricBeta(raw: string | undefined): Set<string> | "open" {
+  return raw === undefined ? "open" : parseFabricOwners(raw);
+}
+
+export function inFabricBeta(principal: unknown, beta: Set<string> | "open"): boolean {
+  return beta === "open" || isFabricOwner(principal, beta);
+}
+
 /** The session's workspace as LockerPhycer reported it, if it is a usable id. */
 export function principalWorkspace(principal: unknown): string | null {
   if (!principal || typeof principal !== "object") return null;
