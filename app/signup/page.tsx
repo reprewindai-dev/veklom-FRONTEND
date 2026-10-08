@@ -9,6 +9,10 @@ import { AuthLayout } from"@/components/AuthLayout";
 import { track, trackGithubSignupClicked } from"@/lib/analytics/tracker";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
+// Every box on this form, as Identity's document types (both GitHub boxes are the GitHub
+// boundary document). Submit is disabled until all are ticked; Identity holds the versions.
+const SIGNUP_AGREEMENTS = ["terms", "privacy", "acceptable_use", "github_boundary", "device_flow"];
+
 const MIN_PW = 8;
 
 export default function SignupPage() {
@@ -63,35 +67,19 @@ export default function SignupPage() {
  setBusy(true);
  track("signup_submitted");
  try {
- // Terms acceptance is recorded server-side. A failure is not fatal to the
- // account, but it is never hidden: the operator is told it was not recorded.
- let acceptanceRecorded = false;
- try {
- const acceptanceRes = await fetch("/api/auth/acceptance", {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify({
- document_version: "2026-08-28",
- acceptance_source: "signup_form"
- })
- });
- acceptanceRecorded = acceptanceRes.ok;
- if (!acceptanceRes.ok) console.error("Acceptance not recorded", acceptanceRes.status);
- } catch (cause) {
- console.error("Acceptance not recorded", cause);
- }
-
+ // The agreements go with the registration itself: Identity records each one
+ // (at its own current version) in the same transaction that creates the
+ // account, so an account never exists without its acceptance record.
  // LockerPhycer never auto-signs-in email accounts and blocks password
  // login until the address is verified, so the next step is the inbox.
- await signup(email, pw, name || undefined);
+ await signup(email, pw, name || undefined, SIGNUP_AGREEMENTS);
  trackAnalyticsEvent("sign_up", {
    method: "email",
    journey_stage: "identity",
    outcome: "success",
  });
  setOk(
- "Check your email and open the verification link (it expires in 30 minutes). Sign-in is refused until the address is verified." +
- (acceptanceRecorded ? "" : " Note: your agreement acceptance could not be recorded; you may be asked to accept again at sign-in.")
+ "Check your email and open the verification link (it expires in 30 minutes). Sign-in is refused until the address is verified."
  );
  setBusy(false);
  } catch (e) {

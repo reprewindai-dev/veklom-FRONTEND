@@ -20,7 +20,7 @@ interface AuthState {
    */
   signedOut: boolean;
   login: (email: string, password: string, mfaCode?: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string) => Promise<{ autoSignedIn: boolean }>;
+  signup: (email: string, password: string, name?: string, acceptedAgreements?: string[]) => Promise<{ autoSignedIn: boolean }>;
   /** Optional fallback destination used when the page URL carries no returnTo. */
   loginWithGithub: (fallbackReturnTo?: string) => void;
   logout: () => void;
@@ -206,14 +206,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadProfile();
   }, [loadProfile]);
 
-  const signup = useCallback(async (email: string, password: string, name?: string) => {
+  const signup = useCallback(async (email: string, password: string, name?: string, acceptedAgreements?: string[]) => {
     setError(undefined);
     const normalizedEmail = email.trim().toLowerCase();
     const baseUsername = deriveUsername(normalizedEmail, name);
     const register = (username: string) =>
       api<{ id: string; email: string; username: string; status: string }>("/api/v1/auth/register", {
         unauth: true,
-        body: { email: normalizedEmail, username, password, full_name: name?.trim() || undefined },
+        body: {
+          email: normalizedEmail,
+          username,
+          password,
+          full_name: name?.trim() || undefined,
+          accepted_agreements: acceptedAgreements,
+        },
       });
 
     try {
