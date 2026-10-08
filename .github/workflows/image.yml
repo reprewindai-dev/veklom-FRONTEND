@@ -1,0 +1,55 @@
+name: veklom-FRONTEND image
+
+# Builds the production frontend image off the production host (a Next.js build exhausted
+# the host's memory on 2026-10-08) and publishes it to GHCR, tagged with the commit SHA.
+# Build args match the production compose (internal service names). Publishing an image
+# deploys nothing: production changes only when the owner promotes a tested tag.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: frontend-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    name: Build and publish image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/veklom-frontend:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          build-args: |
+            FRONTEND_COMMIT_SHA=${{ github.sha }}
+            BACKEND_URL=http://cappo-backend:8002
+            LOCKERPHYCER_URL=http://lockerphycer-api:8092
+            CAPI_URL=http://capi:3003
+            CAPPO_URL=http://cappo-backend:8002
+            CAPPO_BACKEND_URL=http://cappo-backend:8002
+            PGL_URL=http://gnomledger-api:8001
+            VLINK_URL=http://vlink:3000
+            NEXT_PUBLIC_API_BASE_URL=

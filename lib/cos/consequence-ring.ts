@@ -6,6 +6,8 @@
 // it joins are attested, so a ring with gaps is the normal, honest output and a
 // closed ring is a claim that has to be earned.
 
+import type { MaturityStatus } from "@/lib/cos/maturity";
+
 export type RingPositionId =
   | "identity"
   | "connection"
@@ -28,7 +30,8 @@ export type RingState =
   | "DEGRADED"
   | "FAILED"
   | "UNKNOWN"
-  | "NEEDS PROOF";
+  | "NOT IN SESSION"
+  | "NOT SERVED";
 
 export interface RingProbe {
   method: "GET";
@@ -139,14 +142,63 @@ export const ringPositions: RingPositionDefinition[] = [
   },
 ];
 
+/**
+ * What each position has demonstrated in recorded runs: the stable answer to "is this
+ * proven?", kept apart from the per-session reading above. A status always names its
+ * evidence, and nothing is "Proven in production" until a production run is recorded.
+ * Update only together with new evidence.
+ */
+export interface RingProof {
+  status: MaturityStatus;
+  summary: string;
+  evidence?: string;
+}
+
+const RECORDED_RUNS = "Recorded runs 001–005, 14/14 steps each, staging, 2026-10-08";
+
+export const ringProof: Record<RingPositionId, RingProof> = {
+  identity: {
+    status: "Proven on staging",
+    summary: "A signed-in workspace is recognised by CAPPO before any authority is issued.",
+    evidence: RECORDED_RUNS,
+  },
+  connection: {
+    status: "Proven on staging",
+    summary: "cAPI serves the signed capability catalog. Its routes that once bypassed CAPPO are closed in production (410).",
+    evidence: `${RECORDED_RUNS}; production bypass check 2026-10-08`,
+  },
+  authority: {
+    status: "Proven on staging",
+    summary: "One exact operation is allowed once. Consumed, revoked, replayed or stretched authority is refused, each checked against the target's own data.",
+    evidence: `${RECORDED_RUNS}; hostile battery 23/23`,
+  },
+  compute: {
+    status: "Partly proven",
+    summary: "Governed jobs on one owned machine ran beside their data and committed only through CAPPO. Not observable from this page.",
+    evidence: "Own-Your-Cloud stage 1, one physical machine, 2026-10-04/05",
+  },
+  evidence: {
+    status: "Partly proven",
+    summary: "CAPPO signs every consequence receipt. The ledger verifies its hash chain; signature verification of ledger entries is not yet proven.",
+    evidence: RECORDED_RUNS,
+  },
+  measure: {
+    status: "Needs proof",
+    summary: "Not yet exercised in a recorded run.",
+  },
+};
+
 export function positionState(observation: RingObservation): RingState {
   switch (observation.kind) {
     case "unobserved":
       return "UNKNOWN";
+    // Session states describe this browser session only. "Not in session" is the
+    // normal state for a visitor who has not requested a lease; it says nothing
+    // about whether the position is proven (see ringProof for that).
     case "not-observable":
-      return "NEEDS PROOF";
+      return "NOT IN SESSION";
     case "route-absent":
-      return "NEEDS PROOF";
+      return "NOT SERVED";
     case "failed":
       return observation.status && observation.status >= 500 ? "DEGRADED" : "FAILED";
     case "reachable":

@@ -5,10 +5,32 @@ import {
   provenTransitionCount,
   ringClosed,
   ringPositions,
+  ringProof,
   writeBackProven,
   type RingObservation,
   type RingPosition,
 } from "@/lib/cos/consequence-ring";
+
+describe("recorded proof is separate from session state", () => {
+  it("gives every position a recorded-proof status, and names evidence for anything proven", () => {
+    for (const position of ringPositions) {
+      const proof = ringProof[position.id];
+      expect(proof).toBeDefined();
+      if (proof.status !== "Needs proof") expect(proof.evidence).toBeTruthy();
+    }
+  });
+
+  it("reports authority from recorded runs, not from whether this session holds a lease", () => {
+    expect(ringProof.authority.status).toBe("Proven on staging");
+    expect(positionState(observationForHeldLease(null, Date.now()))).toBe("NOT IN SESSION");
+  });
+
+  it("claims nothing in production until a production run is recorded", () => {
+    for (const proof of Object.values(ringProof)) {
+      expect(proof.status).not.toBe("Proven in production");
+    }
+  });
+});
 
 function ring(observations: Partial<Record<string, RingObservation>>): RingPosition[] {
   return ringPositions.map((definition) => ({
@@ -27,8 +49,8 @@ describe("consequence ring truth states", () => {
   });
 
   it("separates missing evidence from an unread position", () => {
-    expect(positionState({ kind: "not-observable", reason: "x" })).toBe("NEEDS PROOF");
-    expect(positionState({ kind: "route-absent" })).toBe("NEEDS PROOF");
+    expect(positionState({ kind: "not-observable", reason: "x" })).toBe("NOT IN SESSION");
+    expect(positionState({ kind: "route-absent" })).toBe("NOT SERVED");
     expect(positionState({ kind: "unobserved" })).toBe("UNKNOWN");
   });
 
@@ -75,8 +97,8 @@ describe("the arc rule", () => {
 describe("authority is only claimed while a lease is live", () => {
   const now = Date.parse("2026-01-01T00:00:00Z");
 
-  it("reports needs proof when no lease was requested", () => {
-    expect(positionState(observationForHeldLease(null, now))).toBe("NEEDS PROOF");
+  it("reports not-in-session when no lease was requested", () => {
+    expect(positionState(observationForHeldLease(null, now))).toBe("NOT IN SESSION");
   });
 
   it("reports a held lease as live, never as verified", () => {

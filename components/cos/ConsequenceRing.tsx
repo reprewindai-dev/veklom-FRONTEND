@@ -10,6 +10,7 @@ import {
   provenTransitionCount,
   ringClosed,
   ringPositions,
+  ringProof,
   totalTransitions,
   writeBackProven,
   type RingLease,
@@ -21,6 +22,7 @@ import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
 import { ApiError, api } from "@/lib/api";
 import { classifyPayload } from "@/lib/cos/proof";
 import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
+import type { MaturityStatus } from "@/lib/cos/maturity";
 
 // Palette is local and deliberate: `signal` is spent only on proven transitions
 // and the write-back edge, so an estate with little evidence renders nearly
@@ -39,7 +41,16 @@ const stateColor: Record<RingState, string> = {
   DEGRADED: BRASS,
   FAILED: "#C2564B",
   UNKNOWN: "#5A6484",
-  "NEEDS PROOF": "#5A6484",
+  "NOT IN SESSION": "#5A6484",
+  "NOT SERVED": "#5A6484",
+};
+
+// Recorded proof, the stable answer a visitor reads first. Distinct from session state.
+const proofColor: Record<MaturityStatus, string> = {
+  "Proven in production": SIGNAL,
+  "Proven on staging": "#9FE8DA",
+  "Partly proven": "#C9A46A",
+  "Needs proof": "#5A6484",
 };
 
 const SIZE = { w: 720, h: 420 };
@@ -187,7 +198,7 @@ export function ConsequenceRing({ subject }: { subject: string }) {
           </h2>
         </div>
         <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: closed ? SIGNAL : "#5A6484" }}>
-          {proven} of {totalTransitions} transitions proven
+          This session: {proven} of {totalTransitions} transitions observed
           {closed ? " · ring closed" : " · ring open"}
         </p>
       </header>
@@ -254,6 +265,7 @@ export function ConsequenceRing({ subject }: { subject: string }) {
             {positions.map((position) => {
               const point = pointAt(position.index);
               const state = positionState(position.observation);
+              const proof = ringProof[position.id];
               const label = pointAt(position.index, RADIUS + 34);
               const anchor = Math.abs(label.x - CENTER.x) < 12
                 ? "middle"
@@ -266,8 +278,8 @@ export function ConsequenceRing({ subject }: { subject: string }) {
                   <text x={label.x} y={label.y - 5} textAnchor={anchor} fontSize={11} fill={PAPER} fontFamily="var(--font-mono)" style={{ letterSpacing: "0.12em" }}>
                     {position.index}. {position.label.toUpperCase()}
                   </text>
-                  <text x={label.x} y={label.y + 9} textAnchor={anchor} fontSize={10} fill={stateColor[state]} fontFamily="var(--font-mono)" style={{ letterSpacing: "0.12em" }}>
-                    {state}
+                  <text x={label.x} y={label.y + 9} textAnchor={anchor} fontSize={10} fill={proofColor[proof.status]} fontFamily="var(--font-mono)" style={{ letterSpacing: "0.12em" }}>
+                    {proof.status.toUpperCase()}
                   </text>
                 </g>
               );
@@ -290,6 +302,7 @@ export function ConsequenceRing({ subject }: { subject: string }) {
           <ul className="flex flex-col">
             {positions.map((position) => {
               const state = positionState(position.observation);
+              const proof = ringProof[position.id];
               const isActive = position.id === selected;
               return (
                 <li key={position.id}>
@@ -297,17 +310,24 @@ export function ConsequenceRing({ subject }: { subject: string }) {
                     type="button"
                     onClick={() => setSelected(position.id)}
                     aria-current={isActive}
-                    className="flex w-full items-baseline justify-between gap-3 rounded px-3 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2"
+                    className="flex w-full flex-col gap-1 rounded px-3 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2"
                     style={{
                       background: isActive ? "rgba(255,255,255,0.04)" : "transparent",
                       // @ts-expect-error CSS custom property for the focus ring color
                       "--tw-ring-color": SIGNAL,
                     }}
                   >
-                    <span className="font-mono text-[11px] tracking-[0.1em]" style={{ color: isActive ? PAPER : "#8A93AD" }}>
-                      {position.index}. {position.label.toUpperCase()}
+                    <span className="flex w-full items-baseline justify-between gap-3">
+                      <span className="font-mono text-[11px] tracking-[0.1em]" style={{ color: isActive ? PAPER : "#8A93AD" }}>
+                        {position.index}. {position.label.toUpperCase()}
+                      </span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: proofColor[proof.status] }}>
+                        {proof.status}
+                      </span>
                     </span>
-                    <StateWord state={state} />
+                    <span className="flex w-full items-baseline justify-end gap-2 font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "#5A6484" }}>
+                      This session: <StateWord state={state} />
+                    </span>
                   </button>
                 </li>
               );
@@ -316,7 +336,14 @@ export function ConsequenceRing({ subject }: { subject: string }) {
 
           <div className="mt-3 rounded-lg border px-4 py-4" style={{ borderColor: WIRE, background: "rgba(255,255,255,0.02)" }}>
             <p className="text-sm leading-6" style={{ color: PAPER }}>{active.role}</p>
-            <p className="mt-2 text-xs leading-5" style={{ color: "#8A93AD" }}>{describeObservation(active)}</p>
+            <p className="mt-3 text-xs leading-5" style={{ color: PAPER }}>
+              <span className="font-semibold" style={{ color: proofColor[ringProof[active.id].status] }}>{ringProof[active.id].status}. </span>
+              {ringProof[active.id].summary}
+            </p>
+            {ringProof[active.id].evidence ? (
+              <p className="mt-1 text-[11px] leading-5" style={{ color: "#8A93AD" }}>Evidence: {ringProof[active.id].evidence}</p>
+            ) : null}
+            <p className="mt-2 text-xs leading-5" style={{ color: "#8A93AD" }}>This session: {describeObservation(active)}</p>
             <dl className="mt-3 flex flex-col gap-1 font-mono text-[10px]" style={{ color: "#5A6484" }}>
               <div className="flex gap-2">
                 <dt className="uppercase tracking-[0.14em]">Owner</dt>
@@ -341,7 +368,7 @@ export function ConsequenceRing({ subject }: { subject: string }) {
       </div>
 
       <footer className="border-t px-6 py-3 text-xs leading-5" style={{ borderColor: WIRE, color: "#5A6484" }}>
-        An arc is drawn only where both positions it joins are attested. Gaps are the finding, not a rendering fault.
+        Each position states what recorded runs have proven, with its evidence. Arcs light up only when this browser session attests both ends, so a new visitor sees an open ring until they mount and execute something themselves.
       </footer>
     </section>
   );
