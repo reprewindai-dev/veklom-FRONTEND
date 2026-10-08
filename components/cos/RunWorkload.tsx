@@ -77,10 +77,13 @@ export function RunWorkload({ hasMachines }: { hasMachines: boolean }) {
         body: { job_id: jobId, spec, authority: { mount_id: m.mount.id, execution_id: jobId } },
       });
       let sealTo = submitted.seal_to ?? null;
+      let machine = submitted.job.placement?.chosen?.hostname;
       push({ text: `Submitted ${jobId} to your workspace.`, tone: "ok" });
       for (let i = 0; !sealTo && i < 30; i += 1) {
         await sleep(2000);
-        sealTo = (await api<JobView>(`/api/computless/fabric/jobs/${jobId}`)).seal_to ?? null;
+        const polled = await api<JobView>(`/api/computless/fabric/jobs/${jobId}`);
+        sealTo = polled.seal_to ?? null;
+        machine = polled.job.placement?.chosen?.hostname ?? machine;
       }
       if (!sealTo) {
         holder = null;
@@ -92,7 +95,7 @@ export function RunWorkload({ hasMachines }: { hasMachines: boolean }) {
       });
       holder = null;
       await api(`/api/computless/fabric/jobs/${jobId}/credential`, { method: "POST", body: { sealed } });
-      push({ text: `Placed on ${sealTo.hostname ?? sealTo.worker_id}; grant sealed to that machine in this browser.`, tone: "ok" });
+      push({ text: `Placed on ${machine ?? sealTo.worker_id} (${sealTo.worker_id}); grant sealed to that machine in this browser.`, tone: "ok" });
 
       push({ text: "Waiting for the machine to claim its start, run, and commit through CAPPO…", tone: "active" });
       let view: JobView["job"] | null = null;
@@ -118,7 +121,7 @@ export function RunWorkload({ hasMachines }: { hasMachines: boolean }) {
         <dt className="text-cos-steel">Workload</dt><dd className="text-cos-text">dataset-digest: counts primes up to N (deterministic, so anyone can recompute it)</dd>
         <dt className="text-cos-steel">Runs on</dt><dd className="text-cos-text">one of your workspace&apos;s machines, in a container with no network</dd>
         <dt className="text-cos-steel">Resources</dt><dd className="text-cos-text">1 CPU, 0.5 GB memory</dd>
-        <dt className="text-cos-steel">Authority</dt><dd className="text-cos-text">one CAPPO grant: single use, 15 minutes, may only commit this job&apos;s result; the machine must claim its start first</dd>
+        <dt className="text-cos-steel">Authority</dt><dd className="text-cos-text">one CAPPO grant: single use, short-lived (CAPPO sets the limit, never more than 15 minutes), may only commit this job&apos;s result; the machine must claim its start first</dd>
         <dt className="text-cos-steel">Result</dt><dd className="text-cos-text">recorded once in the results sink, where it can be re-run and checked independently</dd>
       </dl>
       <div className="flex flex-wrap items-center gap-3">
