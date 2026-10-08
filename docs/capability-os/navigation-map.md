@@ -20,9 +20,11 @@ Grouped, with live status pills and red/yellow/green severity where relevant.
 
 The canonical lifecycle spine is:
 
-`CAPABILITIES → MOUNT → BLUEPRINT → GOVERN → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER`
+`CAPABILITIES → BLUEPRINT → GOVERN → MOUNT → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER`
 
-Cross-cutting surfaces: Terminal overlay and Runtime diagnostics.
+Order changed 2026-10-08 (owner direction: the spine follows the order a user works in). Mount moved after Blueprint/Govern because Mount requests authority for the exact operation the Blueprint contract binds; the contract is intent and must exist before authority is requested (proven path, Run 004).
+
+Cross-cutting surfaces: Private Cloud (owned-compute fabric, `/os/computeless`) and the Terminal overlay.
 
 The former Command / Capabilities-stub / Workflows / Executions / Governed Compute / Settings / Terminal-route shell model is SUPERSEDED (removed in devin/1789290468-cos-reconciliation; legacy URLs 301 to lifecycle routes). Do not reintroduce it.
 
@@ -31,9 +33,9 @@ Lifecycle routes:
 | Stage | Route |
 |---|---|
 | Capabilities | `/os` |
-| Mount | `/os/mount` |
 | Blueprint | `/os/blueprint` |
 | Govern | `/os/govern` |
+| Mount | `/os/mount` |
 | Authority | `/os/authority` |
 | Execute | `/os/execute` |
 | Evidence | `/os/evidence` |
@@ -63,7 +65,7 @@ Redirects:
 
 Compares the chain and flags drift:
 
-`CAPABILITIES → MOUNT → BLUEPRINT → GOVERN → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER`
+`CAPABILITIES → BLUEPRINT → GOVERN → MOUNT → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER`
 
 **States:** `Aligned` · `Unreviewed change` · `Deployment drift` · `Policy drift` · `Capability drift` · `Evidence stale` · `Unknown/unmeasured`.
 

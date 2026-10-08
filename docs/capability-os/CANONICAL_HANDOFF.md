@@ -56,7 +56,7 @@ Stale meanings that must not be reintroduced include cAPI as final authority, Lo
 
 The Capability OS user-facing lifecycle is:
 
-**Capabilities → Mount → Blueprint → Govern → Authority → Execute → Evidence → Measure → Settle → Tracker**
+**Capabilities → Blueprint → Govern → Mount → Authority → Execute → Evidence → Measure → Settle → Tracker**
 
 Meaning:
 
@@ -112,7 +112,7 @@ These routes must not be repopulated with placeholder pages or used to recreate 
 
 The product must behave as one capability flowing through one lifecycle, not as independent dashboards.
 
-A selected capability should preserve its identity and relevant state across Mount → Blueprint → Govern → Authority → Execute → Evidence → Measure → Settle → Tracker.
+A selected capability should preserve its identity and relevant state across Blueprint → Govern → Mount → Authority → Execute → Evidence → Measure → Settle → Tracker.
 
 A public/cold client may enter `/os` and `/proof` without an account, but consequence-bearing operations must still fail closed until the required identity, workspace, authority and environment contracts are satisfied.
 

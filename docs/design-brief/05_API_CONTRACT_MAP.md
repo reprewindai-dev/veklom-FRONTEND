@@ -109,6 +109,6 @@ Internal names remain implementation details. User-facing labels use: Blueprint,
 
 ## 7. The Final Flow
 
-`Capability → Mount → Blueprint → Govern → Authority → Execute → Evidence → Measure → Settle → Tracker`
+`Capability → Blueprint → Govern → Mount → Authority → Execute → Evidence → Measure → Settle → Tracker`
 
 Every workspace ultimately consumes one or more routes defined in this contract.

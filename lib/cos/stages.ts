@@ -71,20 +71,6 @@ export const stages: StageDefinition[] = [
     ],
   },
   {
-    id: "mount",
-    label: "Mount",
-    route: "/os/mount",
-    purpose: "Compatibility surface for binding a capability package to a scoped, expiring execution boundary.",
-    owner: `${CAPI_RUNTIME_LABEL} Interlink bridge`,
-    endpoints: [
-      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
-      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "mount decision, scope, and token descriptor", baseUrl: CAPI_RUNTIME_URL },
-      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "present", response: "persisted mount lifecycle status", baseUrl: CAPI_RUNTIME_URL },
-      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "present", response: "action allow or deny decision", baseUrl: CAPI_RUNTIME_URL },
-      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "present", response: "mount termination decision", baseUrl: backend("cappo") },
-    ],
-  },
-  {
     id: "blueprint",
     label: "Blueprint",
     route: "/os/blueprint",
@@ -108,6 +94,22 @@ export const stages: StageDefinition[] = [
       { method: "POST", path: "/api/v1/execution/authorize", classification: "needs_proof", qualification: "generated authorization id; local decision service", response: "decision and authorization hashes", baseUrl: backend("cappo") },
       { method: "POST", path: "/v1/governance/v2/assess", classification: "needs_proof", qualification: "in-memory, not durable", response: "governance assessment", baseUrl: backend("cappo") },
       { method: "GET", path: "/v1/governance/v2/quarantine", classification: "needs_proof", qualification: "in-memory, not durable", response: "quarantine queue", baseUrl: backend("cappo") },
+    ],
+  },
+  // Mount comes after Blueprint/Govern: a user first states the outcome and gets a contract
+  // bound to one exact operation, then mounts authority for exactly that operation (Run 004 path).
+  {
+    id: "mount",
+    label: "Mount",
+    route: "/os/mount",
+    purpose: "Request bounded authority for the exact operation your contract names: one target, one action, one resource, expiring and single-use.",
+    owner: `${CAPI_RUNTIME_LABEL} Interlink bridge`,
+    endpoints: [
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "mount decision, scope, and token descriptor", baseUrl: CAPI_RUNTIME_URL },
+      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "present", response: "persisted mount lifecycle status", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "present", response: "action allow or deny decision", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "present", response: "mount termination decision", baseUrl: backend("cappo") },
     ],
   },
   {

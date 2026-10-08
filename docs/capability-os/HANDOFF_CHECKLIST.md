@@ -75,7 +75,7 @@ List any alias conflict or stale env name found. `BACKEND_URL` / `VEKLOM_BACKEND
 
 Confirm the change fits the canonical Capability OS lifecycle spine:
 
-CAPABILITIES → MOUNT → BLUEPRINT → GOVERN → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER
+CAPABILITIES → BLUEPRINT → GOVERN → MOUNT → AUTHORITY → EXECUTE → EVIDENCE → MEASURE → SETTLE → TRACKER
 
 Cross-cutting surfaces:
 
