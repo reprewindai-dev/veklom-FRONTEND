@@ -55,7 +55,7 @@ OPERATOR
   Settings
 ```
 
-**Reading order of the spine:** `Capabilities → Blueprint → Govern → Mount → Authority → Execute → Evidence → Measure → Settle → Tracker`. 
+**Reading order of the spine:** `Capabilities → Mount → Blueprint → Govern → Authority → Execute → Evidence → Measure → Settle → Tracker`. 
 Every workspace exists to move, observe, or prove a capability as it progresses through its governed lifecycle.
 
 ## Capability Tools
@@ -68,7 +68,7 @@ Every workspace exists to move, observe, or prove a capability as it progresses 
 
 Compares the chain and flags drift:
 
-`Capability → Blueprint → Govern → Mount → Authority → Execute → Evidence → Measure → Settle → Tracker`
+`Capability → Mount → Blueprint → Govern → Authority → Execute → Evidence → Measure → Settle → Tracker`
 
 **States:** `Aligned` · `Unreviewed change` · `Deployment drift` · `Policy drift` · `Capability drift` · `Evidence stale` · `Unknown/unmeasured`.
 
