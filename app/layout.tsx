@@ -5,6 +5,7 @@ import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/lib/auth-context";
+import { AgreementGate } from "@/components/AgreementGate";
 import { WebMCPProvider } from "@/components/vnp/WebMCPProvider";
 import AmbientIntervention from "@/components/ambient/AmbientIntervention";
 import DegradedBanner from "@/components/DegradedBanner";
@@ -120,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               <AmbientIntervention />
               <AnalyticsTracker />
+              <AgreementGate />
             </AuthProvider>
           </WebMCPProvider>
         </ThemeProvider>

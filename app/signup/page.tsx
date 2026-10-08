@@ -8,6 +8,7 @@ import { Button, ErrorBox, SuccessBox, GithubButton } from"@/components/ui";
 import { AuthLayout } from"@/components/AuthLayout";
 import { track, trackGithubSignupClicked } from"@/lib/analytics/tracker";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { PENDING_AGREEMENTS_KEY } from "@/components/AgreementGate";
 
 // Every box on this form, as Identity's document types (both GitHub boxes are the GitHub
 // boundary document). Submit is disabled until all are ticked; Identity holds the versions.
@@ -49,6 +50,11 @@ export default function SignupPage() {
  setErr("Please accept all required agreements below.");
  return;
  }
+ // GitHub creates the account on its callback, so the ticked agreements are kept for the
+ // AgreementGate, which records them (as a GitHub signup) once the session exists.
+ try {
+ window.sessionStorage.setItem(PENDING_AGREEMENTS_KEY, JSON.stringify({ agreements: SIGNUP_AGREEMENTS, at: Date.now() }));
+ } catch { /* storage blocked: the gate asks again after sign-in */ }
  // A returnTo in the page URL is forwarded as next=; otherwise VLink.
  loginWithGithub(returnTo);
  }

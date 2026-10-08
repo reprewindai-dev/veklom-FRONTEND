@@ -20,3 +20,26 @@ describe("signup agreement acceptance", () => {
     expect(fs.existsSync(path.join(process.cwd(), "app/api/auth/acceptance/route.ts"))).toBe(false);
   });
 });
+
+describe("agreement gate for GitHub signups and existing accounts", () => {
+  it("is mounted for every page under the auth provider", () => {
+    const layout = read("app/layout.tsx");
+    expect(layout).toContain('import { AgreementGate } from "@/components/AgreementGate"');
+    expect(layout).toContain("<AgreementGate />");
+  });
+
+  it("keeps the GitHub signup's ticked boxes for the gate to record after the callback", () => {
+    const page = read("app/signup/page.tsx");
+    const store = page.indexOf("PENDING_AGREEMENTS_KEY, JSON.stringify({ agreements: SIGNUP_AGREEMENTS");
+    expect(store).toBeGreaterThan(-1);
+    expect(store).toBeLessThan(page.indexOf("loginWithGithub(returnTo)"));
+  });
+
+  it("records acceptance now, labelled by how it happened, and never back-dates", () => {
+    const gate = read("components/AgreementGate.tsx");
+    expect(gate).toContain('accept(pending, "github_signup")');
+    expect(gate).toContain('"sign_in_prompt"');
+    expect(gate).toContain('"/api/v1/auth/me/agreements"');
+    expect(gate).not.toMatch(/accepted_at|backfill/i);
+  });
+});
