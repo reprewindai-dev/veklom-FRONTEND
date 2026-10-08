@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Cloud, Cpu, Database, KeyRound, ListChecks, MapPin, Plug, RefreshCw, Server } from "lucide-react";
+import { Cloud, Cpu, Database, KeyRound, ListChecks, MapPin, Play, Plug, RefreshCw, Server } from "lucide-react";
+import { RunWorkload } from "@/components/cos/RunWorkload";
 import { HonestEmpty } from "@/components/cos/SectionPillars";
 import { ProofBadge } from "@/components/cos/ProofBadge";
 import { SectionShell } from "@/components/cos/SectionShell";
@@ -393,6 +394,12 @@ export default function PrivateCloudPage() {
             </div>
           )}
         </Panel>
+
+        {!sandbox ? (
+          <Panel title="Run a workload" icon={Play} proof={liveProof}>
+            <RunWorkload hasMachines={s.machines_available > 0} />
+          </Panel>
+        ) : null}
       </div>
 
     </SectionShell>
