@@ -44,7 +44,18 @@ interface FabricState {
   workers: FabricWorker[];
   jobs: FabricJob[];
 }
-interface Enrollment { environment: string; fabric_url: string; cappo_url: string; requirements: string[]; powershell: string; grants_authority: boolean }
+interface Enrollment {
+  environment: string;
+  fabric_url?: string;
+  cappo_url?: string;
+  requirements?: string[];
+  powershell?: string;
+  grants_authority: boolean;
+  // Customer workspaces get a one-time setup key; the owner fabric returns its join command.
+  enrollment_key?: string;
+  single_use?: boolean;
+  expires_at?: string;
+}
 
 const MODE_LABEL: Record<FabricState["policy"]["mode"], string> = {
   owned_only: "Private only",
@@ -146,20 +157,26 @@ export default function PrivateCloudPage() {
     await refresh();
   };
 
+  // A customer gets a one-time setup key for its own workspace. The fabric owner has no
+  // customer key route (404) and uses the owner join command instead.
   const loadEnrollment = async () => {
-    const ep = endpoint("GET", "/api/fabric/enrollment");
-    if (!ep) return;
+    const keyEp = endpoint("POST", "/api/fabric/enrollment-keys");
+    const ownerEp = endpoint("GET", "/api/fabric/enrollment");
+    if (!keyEp || !ownerEp) return;
     setEnrollError(null);
-    const result = await call<Enrollment>(ep);
-    if (result.data && typeof result.data.powershell === "string") setEnrollment(result.data);
-    else setEnrollError(result.record.error || "Join command was not returned");
+    const keyed = await call<Enrollment>(keyEp, {});
+    if (keyed.data && typeof keyed.data.enrollment_key === "string") { setEnrollment(keyed.data); return; }
+    if (keyed.record.status !== 404) { setEnrollError(keyed.record.error || "Setup key was not returned"); return; }
+    const owner = await call<Enrollment>(ownerEp);
+    if (owner.data && typeof owner.data.powershell === "string") setEnrollment(owner.data);
+    else setEnrollError(owner.record.error || "Join command was not returned");
   };
 
   const proof = data.stageProof;
   // Each panel carries the proof of the call it renders, not the aggregate of uncalled routes.
   const recordFor = (method: string, path: string) => data.records.find((r) => r.method === method && r.path === path);
   const liveProof = recordFor("GET", "/api/fabric/state")?.proof ?? proof;
-  const enrollProof = recordFor("GET", "/api/fabric/enrollment")?.proof ?? proof;
+  const enrollProof = (recordFor("POST", "/api/fabric/enrollment-keys") ?? recordFor("GET", "/api/fabric/enrollment"))?.proof ?? proof;
   const envLabel = sandbox ? "Sandbox fabric · separate machines and workloads; nothing here touches production" : "Production fabric";
 
   if (!state) {
@@ -337,13 +354,16 @@ export default function PrivateCloudPage() {
         <Panel title="Connect a machine" icon={Plug} proof={enrollProof}>
           {enrollment ? (
             <div className="space-y-3">
-              <ul className="space-y-1 text-xs text-cos-muted">{enrollment.requirements.map((r) => <li key={r}>• {r}</li>)}</ul>
-              <code className="block break-all rounded-lg border border-cos-border bg-cos-bg/60 p-3 font-mono text-[10px] leading-5 text-cos-text">{enrollment.powershell}</code>
+              {enrollment.requirements ? <ul className="space-y-1 text-xs text-cos-muted">{enrollment.requirements.map((r) => <li key={r}>• {r}</li>)}</ul> : null}
+              <code className="block break-all rounded-lg border border-cos-border bg-cos-bg/60 p-3 font-mono text-[10px] leading-5 text-cos-text">{enrollment.powershell ?? enrollment.enrollment_key}</code>
+              {enrollment.enrollment_key ? (
+                <p className="text-[11px] leading-5 text-cos-steel">Your one-time setup key: it connects one machine to your own workspace only, works once, and expires {enrollment.expires_at ? new Date(enrollment.expires_at).toLocaleTimeString() : "soon"}. It is shown only now.</p>
+              ) : null}
               <p className="text-[11px] leading-5 text-cos-steel">Run in PowerShell on the machine. It joins the {enrollment.environment} fabric; joining grants no authority.</p>
             </div>
           ) : (
             <div className="space-y-2">
-              <button type="button" onClick={() => void loadEnrollment()} className="rounded-lg bg-cos-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg">Show join command</button>
+              <button type="button" onClick={() => void loadEnrollment()} className="rounded-lg bg-cos-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg">Connect a machine</button>
               {enrollError ? <p className="text-xs text-cos-danger">{enrollError}</p> : null}
             </div>
           )}

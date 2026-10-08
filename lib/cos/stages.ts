@@ -52,6 +52,7 @@ export const stages: StageDefinition[] = [
       { method: "GET", path: "/api/fabric/state", classification: "present", response: "enrolled machines, measured capacity, policy, workloads and placement decisions", baseUrl: backend("computless") },
       { method: "GET", path: "/api/fabric/jobs/{job_id}", classification: "present", response: "one workload: authority reference, placement reasons, outcome", baseUrl: backend("computless") },
       { method: "PUT", path: "/api/fabric/policy", classification: "present", response: "placement policy (owned only / owned first / cloud first; cloud enabled)", baseUrl: backend("computless") },
+      { method: "POST", path: "/api/fabric/enrollment-keys", classification: "present", response: "one-time setup key for connecting a machine to your own workspace (grants no authority)", baseUrl: backend("computless") },
       { method: "GET", path: "/api/fabric/enrollment", classification: "present", response: "join command for connecting a machine (enrollment grants no authority)", baseUrl: backend("computless") },
     ],
     crossCutting: true,

@@ -7,7 +7,13 @@ import {
   isCappoPublicPath,
 } from "@/lib/cappo-proxy-paths";
 import { isOperatorLockerPath } from "@/lib/wallet/proxy-paths";
-import { computlessForwardPath, isFabricOwner, parseFabricOwners } from "@/lib/computless-proxy-paths";
+import {
+  computlessForwardPath,
+  isFabricOwner,
+  OWNER_ONLY,
+  parseFabricOwners,
+  principalWorkspace,
+} from "@/lib/computless-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
@@ -26,6 +32,9 @@ const COMPUTLESS_URL = (process.env.COMPUTLESS_URL || "").replace(/\/+$/, "");
 const FABRIC_OWNER_TOKEN = process.env.FABRIC_OWNER_TOKEN || "";
 const COMPUTLESS_SANDBOX_URL = (process.env.COMPUTLESS_SANDBOX_URL || "").replace(/\/+$/, "");
 const FABRIC_SANDBOX_OWNER_TOKEN = process.env.FABRIC_SANDBOX_OWNER_TOKEN || "";
+// Customer workspaces: the proxy calls the fabric's per-workspace routes with this token.
+const FABRIC_SERVICE_TOKEN = process.env.FABRIC_SERVICE_TOKEN || "";
+const FABRIC_SANDBOX_SERVICE_TOKEN = process.env.FABRIC_SANDBOX_SERVICE_TOKEN || "";
 // Accounts allowed to act as the fabric owner (comma-separated emails). Empty = nobody.
 const FABRIC_OWNERS = parseFabricOwners(process.env.FABRIC_OWNER_EMAILS);
 
@@ -135,28 +144,40 @@ async function proxyRequest(req: NextRequest) {
         { status: 503 },
       );
     }
-    const route = computlessForwardPath(req.method, path);
+    const serviceToken = sandboxMode ? FABRIC_SANDBOX_SERVICE_TOKEN : FABRIC_SERVICE_TOKEN;
+    // Every Private Cloud call needs a live session; who the caller is decides the route.
+    const principalError = await requirePrincipal(req);
+    if (principalError) return principalError;
+    const principal = await fetchPrincipal(req);
+    // A listed owner uses the single-owner fabric (owner token). Any other account is a
+    // customer and only ever reaches its own workspace's machines and jobs.
+    const caller = isFabricOwner(principal, FABRIC_OWNERS) ? "owner" : "customer";
+    const route = computlessForwardPath(req.method, path, caller);
+    if (route === OWNER_ONLY) {
+      return NextResponse.json({ error: "PRIVATE_CLOUD_OWNER_REQUIRED" }, { status: 403 });
+    }
     if (!route) {
       return NextResponse.json({ error: "Route not found in proxy table", path }, { status: 404 });
     }
-    // Fabric state describes the organization's machines: an authenticated principal is required.
-    const principalError = await requirePrincipal(req);
-    if (principalError) return principalError;
-    if (route.owner) {
-      // Owner routes act with the fabric owner token (join command, placement policy).
-      // Any signed-in account is not enough: it must be a listed owner.
-      const principal = await fetchPrincipal(req);
-      if (!isFabricOwner(principal, FABRIC_OWNERS)) {
-        return NextResponse.json({ error: "PRIVATE_CLOUD_OWNER_REQUIRED" }, { status: 403 });
-      }
-    }
     headers.delete("authorization");
     headers.delete("cookie");
-    if (route.owner) {
+    // The workspace comes only from the verified session, never from the browser.
+    headers.delete("x-veklom-workspace");
+    if (route.auth === "owner") {
       if (!ownerToken) {
         return NextResponse.json({ error: "Private Cloud owner actions are not configured" }, { status: 503 });
       }
       headers.set("authorization", `Bearer ${ownerToken}`);
+    } else if (route.auth === "service") {
+      const workspace = principalWorkspace(principal);
+      if (!workspace) {
+        return NextResponse.json({ error: "WORKSPACE_REQUIRED" }, { status: 403 });
+      }
+      if (!serviceToken) {
+        return NextResponse.json({ error: "Private Cloud workspaces are not configured" }, { status: 503 });
+      }
+      headers.set("authorization", `Bearer ${serviceToken}`);
+      headers.set("x-veklom-workspace", workspace);
     }
     targetBase = fabricUrl;
     forwardPath = route.forward;
