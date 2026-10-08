@@ -8,6 +8,26 @@ export interface ComputlessRoute {
   owner: boolean;
 }
 
+/**
+ * Owner routes act as the fabric owner (they carry the owner token), so a signed-in
+ * session is not enough: the session's verified email must be on the configured
+ * owner list. An empty list allows no one (fail closed).
+ */
+export function parseFabricOwners(raw: string | undefined): Set<string> {
+  return new Set(
+    (raw || "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+export function isFabricOwner(principal: unknown, owners: Set<string>): boolean {
+  if (!principal || typeof principal !== "object") return false;
+  const email = (principal as { email?: unknown }).email;
+  return typeof email === "string" && owners.has(email.trim().toLowerCase());
+}
+
 export function computlessForwardPath(method: string, path: string): ComputlessRoute | null {
   const forward = path.replace(/^\/api\/computless/, "/api");
   if (method === "GET" && forward === "/api/fabric/state") return { forward, owner: false };

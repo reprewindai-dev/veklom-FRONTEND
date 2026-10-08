@@ -7,7 +7,7 @@ import {
   isCappoPublicPath,
 } from "@/lib/cappo-proxy-paths";
 import { isOperatorLockerPath } from "@/lib/wallet/proxy-paths";
-import { computlessForwardPath } from "@/lib/computless-proxy-paths";
+import { computlessForwardPath, isFabricOwner, parseFabricOwners } from "@/lib/computless-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
 const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
@@ -26,6 +26,8 @@ const COMPUTLESS_URL = (process.env.COMPUTLESS_URL || "").replace(/\/+$/, "");
 const FABRIC_OWNER_TOKEN = process.env.FABRIC_OWNER_TOKEN || "";
 const COMPUTLESS_SANDBOX_URL = (process.env.COMPUTLESS_SANDBOX_URL || "").replace(/\/+$/, "");
 const FABRIC_SANDBOX_OWNER_TOKEN = process.env.FABRIC_SANDBOX_OWNER_TOKEN || "";
+// Accounts allowed to act as the fabric owner (comma-separated emails). Empty = nobody.
+const FABRIC_OWNERS = parseFabricOwners(process.env.FABRIC_OWNER_EMAILS);
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -81,6 +83,19 @@ async function requirePrincipal(req: NextRequest): Promise<NextResponse | null> 
   return null;
 }
 
+/** The signed-in account as LockerPhycer reports it, or null. Call after requirePrincipal. */
+async function fetchPrincipal(req: NextRequest): Promise<unknown> {
+  try {
+    const response = await fetch(`${LOCKERPHYCER_URL}/api/v1/auth/me`, {
+      headers: { authorization: req.headers.get("authorization") || "" },
+      cache: "no-store",
+    });
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 async function proxyRequest(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
@@ -127,6 +142,14 @@ async function proxyRequest(req: NextRequest) {
     // Fabric state describes the organization's machines: an authenticated principal is required.
     const principalError = await requirePrincipal(req);
     if (principalError) return principalError;
+    if (route.owner) {
+      // Owner routes act with the fabric owner token (join command, placement policy).
+      // Any signed-in account is not enough: it must be a listed owner.
+      const principal = await fetchPrincipal(req);
+      if (!isFabricOwner(principal, FABRIC_OWNERS)) {
+        return NextResponse.json({ error: "PRIVATE_CLOUD_OWNER_REQUIRED" }, { status: 403 });
+      }
+    }
     headers.delete("authorization");
     headers.delete("cookie");
     if (route.owner) {
