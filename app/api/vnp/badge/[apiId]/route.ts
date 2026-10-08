@@ -7,23 +7,32 @@ const GOLD_MIN = 85;
 const SILVER_MIN = 75;
 const BRONZE_MIN = 60;
 
-function tierFor(score: number) {
+function tierFor(score: number | null) {
+ if (score === null) return { label: 'VNP', color: '#333333', text: '#FFFFFF' };
  if (score >= GOLD_MIN) return { label: 'GOLD', color: '#FFB800', text: '#000000' };
  if (score >= SILVER_MIN) return { label: 'SILVER', color: '#A1A1A6', text: '#000000' };
  if (score >= BRONZE_MIN) return { label: 'BRONZE', color: '#CD7F32', text: '#000000' };
  return { label: 'VNP', color: '#333333', text: '#FFFFFF' };
 }
 
-function buildSVG(apiName: string, score: number): string {
+// apiId comes from the URL, so it must be escaped before it goes into the SVG.
+const XML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
+function escapeXml(value: string): string {
+ return value.replace(/[&<>"']/g, (c) => XML_ESCAPES[c]);
+}
+
+// score is null when VNP has no measured govScore for this API; the badge then
+// says so instead of rendering an invented 0.0.
+function buildSVG(apiName: string, score: number | null): string {
  const tier = tierFor(score);
- const scoreText = score.toFixed(1);
+ const scoreText = score === null ? 'no data yet' : score.toFixed(1);
  const leftWidth = 68;
  const rightWidth = 110;
  const totalWidth = leftWidth + rightWidth;
  const height = 24;
 
  // Truncate name to fit
- const name = apiName.length > 16 ? apiName.slice(0, 14) + '…' : apiName;
+ const name = escapeXml(apiName.length > 16 ? apiName.slice(0, 14) + '…' : apiName);
 
  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${height}" role="img" aria-label="${name}: VNP ${tier.label} ${scoreText}">
  <title>${name}: VNP ${tier.label} — Score ${scoreText}</title>
@@ -54,7 +63,7 @@ function buildSVG(apiName: string, score: number): string {
  <!-- Score arc indicator (right edge) -->
  <circle cx="${totalWidth - 12}" cy="12" r="8" fill="none" stroke="#1F1F1F" stroke-width="1.5"/>
  <circle cx="${totalWidth - 12}" cy="12" r="8" fill="none" stroke="${tier.color}" stroke-width="1.5"
- stroke-dasharray="${(score / 100) * 50.3} 50.3"
+ stroke-dasharray="${((score ?? 0) / 100) * 50.3} 50.3"
  transform="rotate(-90 ${totalWidth - 12} 12)"/>
  </g>
 </svg>`;
@@ -70,7 +79,7 @@ export async function GET(
  // Strip .svg extension if present
  const cleanId = apiId.replace(/\.svg$/, '');
 
- let score = 0;
+ let score: number | null = null;
  let apiName = cleanId;
 
  try {
@@ -80,16 +89,16 @@ export async function GET(
  });
 
  if (res.ok) {
- const data: Array<{ id: string; name: string; govScore?: number }> = await res.json();
+ const data: Array<{ id: string; name: string; govScore?: number | null }> = await res.json();
  const entry = data.find(d => d.id === cleanId);
  if (entry) {
- score = entry.govScore ?? 0;
+ score = typeof entry.govScore === 'number' ? entry.govScore : null;
  apiName = entry.name;
  }
  }
  } catch {
- // Fallback: return a badge showing"measuring…"
- score = 0;
+ // Fallback: the badge says "no data yet" rather than showing a score
+ score = null;
  apiName = cleanId;
  }
 
@@ -99,8 +108,8 @@ export async function GET(
  headers: {
  'Content-Type': 'image/svg+xml',
  'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
- 'X-VNP-Api-Id': cleanId,
- 'X-VNP-Score': score.toString(),
+ 'X-VNP-Api-Id': encodeURIComponent(cleanId),
+ 'X-VNP-Score': score === null ? 'none' : score.toString(),
  'Access-Control-Allow-Origin': '*',
  },
  });

@@ -37,7 +37,6 @@ import { ArchitectureStackModal } from '@/components/spine/ArchitectureStackModa
 
 export default function SpineApp() {
  const [activeTab, setActiveTab] = useState<string>('fpi');
- const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
  const [isArchitectureModalOpen, setIsArchitectureModalOpen] = useState<boolean>(false);
 
  // App State
@@ -72,15 +71,10 @@ export default function SpineApp() {
  }
  };
 
- // Poll health and sync state on mount
+ // Sync state on mount
  useEffect(() => {
  const fetchInitialData = async () => {
  try {
- const healthRes = await fetch('/api/health');
- if (healthRes.ok) {
- setIsBackendConnected(true);
- }
-
  const [nodesRes, capsRes, grantsRes, tasksRes, pluginsRes, pglRes] = await Promise.all([
  fetch('/api/substrate/nodes'),
  fetch('/api/substrate/capabilities'),
@@ -213,7 +207,6 @@ export default function SpineApp() {
  <Header
  activeTab={activeTab}
  setActiveTab={setActiveTab}
- isBackendConnected={isBackendConnected}
  onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
  pglCount={pglRecords.length}
  />

@@ -1,10 +1,10 @@
 import React from 'react';
 import { ShieldCheck, Cpu, Layers, RefreshCw, Zap, ExternalLink } from 'lucide-react';
+import { SimStatusChip } from '@/components/cos/SimStatusChip';
 
 interface HeaderProps {
  activeTab: string;
  setActiveTab: (tab: string) => void;
- isBackendConnected: boolean;
  onOpenArchitectureModal: () => void;
  pglCount: number;
 }
@@ -12,7 +12,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
  activeTab,
  setActiveTab,
- isBackendConnected,
  onOpenArchitectureModal,
  pglCount,
 }) => {
@@ -57,13 +56,11 @@ export const Header: React.FC<HeaderProps> = ({
 
  <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-theme-surface border border-theme-border text-slate-300">
  <Zap className="h-3.5 w-3.5 text-theme-accent" />
- <span>PGL Proofs: <strong className="text-theme-accent">{pglCount}</strong></span>
+ <span>Mock PGL records: <strong className="text-theme-accent">{pglCount}</strong></span>
  </div>
 
- <div className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-theme-surface border border-theme-border">
- <span className={`h-2 w-2 rounded-full ${isBackendConnected ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`} />
- <span className="text-slate-400">{isBackendConnected ? 'HTTP/REST Live' : 'Connecting...'}</span>
- </div>
+ {/* Every value on /spine comes from lib/spine/mockData.ts; a /api/health ping is not proof of a live fabric. */}
+ <SimStatusChip />
  </div>
  </div>
 
