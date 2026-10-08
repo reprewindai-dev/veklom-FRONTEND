@@ -44,9 +44,7 @@ export default function CapabilityHome() {
     [query],
   );
   const recent = recentIds.map((id) => capabilities.find((capability) => capability.id === id)).filter(Boolean) as Capability[];
-  // Built-in workspaces are part of the OS, not authority; authority exists only as a CAPPO mount.
-  const builtIn = filtered.filter((capability) => capability.mountState === "Built in");
-  const available = filtered.filter((capability) => capability.mountState === "Available");
+  const mounted = filtered.filter((capability) => capability.mountState === "Mounted");
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-8 lg:px-10 lg:py-12">
@@ -97,18 +95,19 @@ export default function CapabilityHome() {
       </div>
 
       <div className="mt-12">
-        <div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">{sandbox ? "Sandbox capabilities" : "Built-in workspaces"}</h2></div>
-        {builtIn.length ? (
+        <div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">{sandbox ? "Sandbox capabilities" : "Mounted capabilities"}</h2></div>
+        {sandbox ? null : <p className="-mt-2 mb-4 text-xs leading-5 text-cos-steel">Installed in this workspace. Mounting a capability grants no authority: authority is requested per operation and decided by CAPPO.</p>}
+        {mounted.length ? (
           <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {builtIn.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
+            {mounted.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
           </motion.div>
-        ) : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">No built-in workspaces match this search.</div>}
+        ) : <div className="rounded-xl border border-dashed border-cos-border bg-cos-surface2/60 px-5 py-8 text-sm text-cos-muted">No mounted capabilities match this search.</div>}
       </div>
 
       <div className="mt-12">
-        <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Capability catalog</h2><span className="font-mono text-[10px] text-cos-steel">{available.length} entries</span></div>
+        <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">Capability catalog</h2><span className="font-mono text-[10px] text-cos-steel">{filtered.length} entries</span></div>
         <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.035 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {available.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
+          {filtered.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}
         </motion.div>
       </div>
 

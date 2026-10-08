@@ -21,9 +21,9 @@ import { SANDBOX_COPY, useSandboxMode } from "@/lib/cos/sandbox";
 
 const icons = { Cable, FileCheck2, FileCode2, PlugZap, Radar, ReceiptText, Route, ScanSearch, Send, ShieldCheck, Workflow };
 
-/** Card badge. A built-in workspace is not mounted authority: authority exists only as a CAPPO mount. */
+/** Card badge: in sandbox a mounted capability is labelled SANDBOX, never MOUNTED. */
 export function capabilityBadgeText(mountState: Capability["mountState"], sandbox: boolean): string {
-  if (mountState === "Built in") return sandbox ? SANDBOX_COPY.badge : "BUILT IN";
+  if (mountState === "Mounted") return sandbox ? SANDBOX_COPY.badge : "MOUNTED";
   return "AVAILABLE";
 }
 

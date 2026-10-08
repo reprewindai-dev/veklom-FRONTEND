@@ -44,7 +44,7 @@ export type CapabilityContract = {
   outputs: Record<string, string>;
 
   // Runtime State
-  mountState: "Built in" | "Available";
+  mountState: "Mounted" | "Available";
   workspace: string;
 };
 
@@ -163,7 +163,7 @@ export const capabilities: CapabilityContract[] = [
   {
     id: "blueprint",
     name: "Blueprint",
-    description: "Built-in workspace for stating an outcome and reviewing its contract.",
+    description: "The mounted blueprint workspace for intent and plan review.",
     icon: "FileCode2",
     lifecycleStage: "Blueprint",
     kind: "Workspace",
@@ -175,7 +175,7 @@ export const capabilities: CapabilityContract[] = [
     evidence: { proofState: "Needs proof", pglRequired: false },
     inputs: {},
     outputs: {},
-    mountState: "Built in",
+    mountState: "Mounted",
     workspace: "/os/blueprint",
   },
   {
@@ -193,7 +193,7 @@ export const capabilities: CapabilityContract[] = [
     evidence: { proofState: "Needs proof", pglRequired: false },
     inputs: {},
     outputs: {},
-    mountState: "Built in",
+    mountState: "Mounted",
     workspace: "/os/mount",
   },
   {
@@ -211,7 +211,7 @@ export const capabilities: CapabilityContract[] = [
     evidence: { proofState: "Needs proof", pglRequired: true },
     inputs: { filter: "object" },
     outputs: { events: "array" },
-    mountState: "Built in",
+    mountState: "Mounted",
     workspace: "/os/evidence",
   },
   {
@@ -229,7 +229,7 @@ export const capabilities: CapabilityContract[] = [
     evidence: { proofState: "Needs proof", pglRequired: true },
     inputs: {},
     outputs: { required: "boolean", options: "array" },
-    mountState: "Built in",
+    mountState: "Mounted",
     workspace: "/os/settle",
   },
   {
@@ -247,7 +247,7 @@ export const capabilities: CapabilityContract[] = [
     evidence: { proofState: "Needs proof", pglRequired: true },
     inputs: {},
     outputs: { driftReport: "object" },
-    mountState: "Built in",
+    mountState: "Mounted",
     workspace: "/os/tracker",
   },
 ];

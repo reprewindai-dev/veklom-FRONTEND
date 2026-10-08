@@ -84,8 +84,8 @@ describe("sandbox chrome", () => {
   });
 
   it("labels mounted capability cards SANDBOX instead of MOUNTED in sandbox", () => {
-    expect(capabilityBadgeText("Built in", true)).toBe("SANDBOX");
-    expect(capabilityBadgeText("Built in", false)).toBe("BUILT IN");
+    expect(capabilityBadgeText("Mounted", true)).toBe("SANDBOX");
+    expect(capabilityBadgeText("Mounted", false)).toBe("MOUNTED");
     expect(capabilityBadgeText("Available", true)).toBe("AVAILABLE");
   });
 
