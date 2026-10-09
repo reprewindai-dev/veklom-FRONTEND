@@ -46,7 +46,6 @@ export function isCappoIdentityPath(path: string) {
     "/v1/audit-logs",
     "/v1/runs",
     "/v1/governance/v2/assess",
-    "/v1/governance/v2/quarantine",
     "/v1/vnp/leaderboard",
     "/v1/vnp/validators",
     "/v1/vnp/incidents",
@@ -58,9 +57,10 @@ export function isCappoIdentityPath(path: string) {
   ].some((candidate) => path === candidate)) {
     return true;
   }
-  if (/^\/v1\/governance\/v2\/quarantine\/[^/]+\/(?:approve|deny)$/.test(path)) {
-    return true;
-  }
+  // The quarantine queue (list, approve, deny) is deliberately NOT forwarded. CAPPO takes the
+  // approver's trust score from the request body and does not scope the queue per workspace,
+  // so any signed-in account could approve with a self-declared score or read every tenant's
+  // items. Reopen only after CAPPO derives approver identity and trust server-side and scopes it.
   if (path.startsWith("/v1/governance/v2/risk/")) return true;
   if (/^\/v1\/identities\/[^/]+\/revoke$/.test(path)) return true;
   if (/^\/v1\/executions\/[^/]+\/(?:evidence|measurements)$/.test(path)) return true;

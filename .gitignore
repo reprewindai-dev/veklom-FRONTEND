@@ -11,6 +11,8 @@ out
 coverage
 tsconfig.tsbuildinfo
 openapi.json
+# The public machine spec is a route (app/machine/openapi.json/route.ts), not a generated file.
+!/app/machine/openapi.json/
 route_catalog.txt
 
 # Generated local/render artifacts
