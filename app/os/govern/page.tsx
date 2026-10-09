@@ -6,6 +6,7 @@ import { Ban, CheckCircle2, Copy, Download, HelpCircle, KeyRound, Workflow } fro
 import { SectionShell } from "@/components/cos/SectionShell";
 import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { Field, FailureNotice } from "@/components/cos/StageParts";
+import { QuarantineQueue } from "@/components/cos/QuarantineQueue";
 import { GpcCanvas, GpcPropertyPanel } from "@/components/gpc/GpcCanvas";
 import { getStage, type StageEndpoint } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
@@ -309,6 +310,11 @@ export default function GovernPage() {
             <p className="mt-3 text-[11px] leading-5 text-cos-steel">The same intent against the same catalog always produces the same plan ID and proof hash, so anyone can rebuild it and check.</p>
           </Pillar>
         ) : null}
+      </div>
+      <div className="xl:col-span-2">
+        <Pillar title="Approvals" proof="Needs proof" detail="Held requests and their approval state, as returned by the authority layer (in-memory queue, not durable).">
+          <QuarantineQueue stageData={data} />
+        </Pillar>
       </div>
     </SectionShell>
   );
