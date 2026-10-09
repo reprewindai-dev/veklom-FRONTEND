@@ -4,7 +4,9 @@ import { ArrowRight, CircleDot } from "lucide-react";
 import type { StageDefinition } from "@/lib/cos/stages";
 import type { ProofStatus } from "@/lib/cos/capabilities";
 import type { StageCallRecord } from "@/lib/cos/useStageData";
+import Link from "next/link";
 import { getStageMaturity, type MaturityStatus, type StageMaturity } from "@/lib/cos/maturity";
+import { stageGuides } from "@/lib/cos/guides";
 import { ProofBadge } from "./ProofBadge";
 import { RouteLedger } from "./RouteLedger";
 
@@ -41,10 +43,11 @@ export function SectionShell({
   records: StageCallRecord[];
 }) {
   const maturity = getStageMaturity(stage.id);
+  const guide = stageGuides[stage.id];
   return (
     <section className="mx-auto max-w-[1500px] px-5 py-8 lg:px-10 lg:py-10">
       <header className="mb-8 flex flex-col gap-6 rounded-2xl border border-cos-border bg-cos-surface2/70 p-5 shadow-cos-card md:flex-row md:items-end md:justify-between lg:p-7">
-        <div className="min-w-0"><div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-cos-accent"><CircleDot size={13} /> Capability workspace</div><div className="flex flex-wrap items-center gap-3"><h1 className="text-3xl font-semibold tracking-tight text-cos-text md:text-4xl">{stage.label}</h1><MaturityBadge maturity={maturity} /></div><p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">{stage.purpose}</p><p className="mt-3 max-w-2xl text-xs leading-5 text-cos-text"><span className="font-semibold">What&rsquo;s proven: </span>{maturity.summary}{maturity.evidence ? <span className="text-cos-steel"> Evidence: {maturity.evidence}.</span> : null}</p><p className="mt-2 flex max-w-2xl flex-wrap items-center gap-2 text-xs leading-5 text-cos-steel"><span>This session:</span><ProofBadge status={proof} /><span>Panel badges show what this page has actually seen since you opened it, and change only when a real response comes back.</span></p></div>
+        <div className="min-w-0"><div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-cos-accent"><CircleDot size={13} /> Capability workspace</div><div className="flex flex-wrap items-center gap-3"><h1 className="text-3xl font-semibold tracking-tight text-cos-text md:text-4xl">{stage.label}</h1><MaturityBadge maturity={maturity} /></div><p className="mt-3 max-w-2xl text-sm leading-6 text-cos-muted">{stage.purpose}</p>{guide ? <div className="mt-3 max-w-2xl rounded-lg border border-cos-accent/25 bg-cos-accent/[0.04] px-3 py-2 text-xs leading-5 text-cos-text"><span className="font-semibold">How to use this page: </span>{guide.howTo}{guide.needs ? <span className="text-cos-muted"> Needs: {guide.needs}</span> : null}{guide.next ? <> <Link href={guide.next.route} className="whitespace-nowrap text-cos-accent underline">Next: {guide.next.label} →</Link></> : null}</div> : null}<p className="mt-3 max-w-2xl text-xs leading-5 text-cos-text"><span className="font-semibold">What&rsquo;s proven: </span>{maturity.summary}{maturity.evidence ? <span className="text-cos-steel"> Evidence: {maturity.evidence}.</span> : null}</p><p className="mt-2 flex max-w-2xl flex-wrap items-center gap-2 text-xs leading-5 text-cos-steel"><span>This session:</span><ProofBadge status={proof} /><span>Panel badges show what this page has actually seen since you opened it, and change only when a real response comes back.</span></p></div>
         {primaryAction ? <div className="shrink-0">{primaryAction}</div> : null}
       </header>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)]">{children}</div>

@@ -10,6 +10,7 @@ import { CapabilitySearch } from "@/components/cos/CapabilitySearch";
 import { ConsequenceRing } from "@/components/cos/ConsequenceRing";
 import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
 import { SandboxScenarios } from "@/components/cos/SandboxScenarios";
+import { GettingStarted } from "@/components/cos/GettingStarted";
 import { environmentStorageSuffix, SANDBOX_COPY, useSandboxMode } from "@/lib/cos/sandbox";
 
 export default function CapabilityHome() {
@@ -68,6 +69,8 @@ export default function CapabilityHome() {
           <span className={holdingAuthority ? "text-cos-warn" : undefined} title="Grant held by this browser session in this environment">{holdingAuthority} holding authority ({sandbox ? "sandbox" : "live"})</span>
         </p>
       </motion.div>
+
+      <GettingStarted />
 
       <ConsequenceRing subject="What this workspace can currently prove" />
 

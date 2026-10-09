@@ -129,8 +129,11 @@ describe("onboarding with the PGL ledger unavailable", () => {
     expect(el.textContent).toContain("Not registered · ledger unavailable, retry later");
     expect(el.textContent).toContain("ws-live-1");
 
-    await click(button(el, "Open mount"));
-    expect(mockPush).toHaveBeenCalledWith("/os/mount?workspace=ws-live-1");
+    // The first real action starts in Blueprint; Mount stays one click away with the workspace.
+    const mountLink = Array.from(el.querySelectorAll("a")).find((a) => a.textContent?.trim() === "Open mount");
+    expect(mountLink?.getAttribute("href")).toBe("/os/mount?workspace=ws-live-1");
+    await click(button(el, "Start in Blueprint"));
+    expect(mockPush).toHaveBeenCalledWith("/os/blueprint");
     expect(window.localStorage.getItem("veklom.workspace_id")).toBe("ws-live-1");
     expect(mockReplace).not.toHaveBeenCalled();
   });

@@ -196,6 +196,9 @@ export default function ExecutePage() {
   const blockedAction = lease?.grants?.blocked?.[0];
   const retainedOthers = retained.filter((item) => item.mountId !== lease?.mountId);
   const mountIsLive = Boolean(lease && !lease.terminated);
+  // The authority layer decides expiry; this label only warns that the grant's stated window has passed.
+  const leaseExpiry = lease?.expiresAt ? Date.parse(lease.expiresAt) : Number.NaN;
+  const leaseExpired = Boolean(mountIsLive && Number.isFinite(leaseExpiry) && leaseExpiry <= Date.now());
   const hasAttemptedExecute = Boolean(consequence?.response?.operation_id) || Boolean(lastResponse?.operation_id);
   const successfulResponse = useMemo(() => {
     if (lastResponse?.decision === "allow" && asRecord(lastResponse.consequence)) return lastResponse;
@@ -599,11 +602,14 @@ export default function ExecutePage() {
             {lease.intent ? (
               <BoundOperationCard intent={lease.intent} note="Execute submits exactly this operation with this mount's token. The authority layer decides." />
             ) : (
-              <HonestEmpty
-                title="This mount carries no bound operation"
-                route="POST /api/abide/v1/blueprint/compile"
-                detail="Bind an operation to a contract step in Blueprint and mount it; Execute never assembles an operation itself."
-              />
+              <>
+                <HonestEmpty
+                  title="This mount carries no bound operation"
+                  route="POST /api/abide/v1/blueprint/compile"
+                  detail="Execute runs only an operation bound to a contract step, so every action traces back to what was intended. That is why Execute is disabled for this grant: nothing is broken."
+                />
+                <p className="mt-2 text-xs text-cos-muted">To run an action: describe it in <Link href="/os/blueprint" className="text-cos-accent underline">Blueprint</Link>, bind the step, then mount it and request the grant again. A one-step shortcut on Mount is planned.</p>
+              </>
             )}
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -662,7 +668,7 @@ export default function ExecutePage() {
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Execution ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(executionId)}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Nonce consumed</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(authority?.nonce_consumed)}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Expires at</div><div className="mt-2 font-mono text-xs text-cos-text">{displayValue(lease.expiresAt)}</div></div>
-            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Mount state</div><div className="mt-2 font-mono text-xs text-cos-text">{lease.terminated ? `terminated (${lease.terminatedBy ?? "unknown"})` : "mounted"}</div></div>
+            <div><div className="font-mono text-[9px] uppercase text-cos-steel">Mount state</div><div className="mt-2 font-mono text-xs text-cos-text">{lease.terminated ? `terminated (${lease.terminatedBy ?? "unknown"})` : leaseExpired ? "expired · request a new grant in Authority" : "mounted"}</div></div>
             <div><div className="font-mono text-[9px] uppercase text-cos-steel">Last revoke</div><div className="mt-2 font-mono text-xs text-cos-text">{lastRevoke ? `Revoke: ${lastRevoke.decision.toUpperCase()} · ${lastRevoke.reason}` : "Not returned"}</div></div>
           </div>
         </Pillar>

@@ -506,14 +506,17 @@ export default function OnboardingPage() {
               <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4"><div className="text-[10px] uppercase tracking-[0.14em] text-cos-steel">Certificate ID</div><div className="mt-2 break-all font-mono text-sm text-cos-text">{agent?.certificate_id ?? "None issued"}</div></div>
             </div>
             <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-5 text-sm leading-7 text-cos-muted">
-              Activation runs the real governed loop:
-              <div className="mt-3 font-mono text-xs leading-6 text-cos-text">mount veklom.governed-counter@v1 → counter.reset DENY → counter.increment ALLOW → receipt → terminate → replay DENY</div>
-              <p className="mt-4">The workspace field on the mount page is prefilled with the workspace bound in Step 2 and must stay equal to it.</p>
-              <p className="mt-3">Sandbox vs production is selected on the mount page (project=sandbox is fixed there).</p>
+              Your first real action follows the governed loop:
+              <div className="mt-3 font-mono text-xs leading-6 text-cos-text">Blueprint (describe it, bind the step) → Mount → Authority (single-use grant) → Execute → receipt → retry refused</div>
+              <p className="mt-4">Start in Blueprint: write what you want in plain words, for example &ldquo;read the counter, then increment the counter by one&rdquo;, compile it, enter the resource and inputs on the step, and choose Bind exact operation.</p>
+              <p className="mt-3">Mount is prefilled with the workspace bound in Step 2; it must stay equal to it.</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {canOpenMount(boundWorkspaceId) ? (
-                <Button onClick={() => router.push(mountHref)}>Open mount</Button>
+                <>
+                  <Button onClick={() => router.push("/os/blueprint")}>Start in Blueprint</Button>
+                  <Link className="rounded-lg border border-cos-border px-4 py-2 text-sm text-cos-text hover:border-cos-accent" href={mountHref}>Open mount</Link>
+                </>
               ) : (
                 <Button type="button" onClick={() => setStep(1)}>Bind a workspace first</Button>
               )}

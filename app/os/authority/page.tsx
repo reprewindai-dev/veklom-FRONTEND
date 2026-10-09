@@ -96,7 +96,9 @@ export default function AuthorityPage() {
   const responseProject = asString(responseScope?.project) ?? heldLease?.project;
   const bindingScopeMismatch = binding ? (sandbox ? binding.project !== SANDBOX_PROJECT : binding.project === SANDBOX_PROJECT) : false;
   const heldLeaseScopeMismatch = heldLease ? (sandbox ? heldLease.project !== SANDBOX_PROJECT : heldLease.project === SANDBOX_PROJECT) : false;
-  const holding = Boolean(heldLease && !heldLease.terminated);
+  const heldExpiry = heldLease?.expiresAt ? Date.parse(heldLease.expiresAt) : Number.NaN;
+  const heldExpired = Boolean(heldLease && !heldLease.terminated && Number.isFinite(heldExpiry) && heldExpiry <= Date.now());
+  const holding = Boolean(heldLease && !heldLease.terminated && !heldExpired);
   const rows = identityRows(Object.fromEntries(Object.entries(data.payloads).filter(([key]) => key.includes("/api/v1/agents"))));
 
   async function requestAuthority() {
@@ -202,6 +204,7 @@ export default function AuthorityPage() {
                 <button type="button" onClick={requestAuthority} disabled={busy || bindingScopeMismatch || holding} className="inline-flex items-center gap-2 rounded-lg bg-cos-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg disabled:cursor-not-allowed disabled:opacity-50"><KeyRound size={14} />{busy ? "Requesting…" : "Request grant"}</button>
                 <Link href="/os/mount" className="text-xs text-cos-muted underline hover:text-cos-text">Change the binding in Mount</Link>
                 {holding ? <span className="text-xs text-cos-warn">You already hold a grant. Use or revoke it before requesting another.</span> : null}
+                {heldExpired ? <span className="text-xs text-cos-muted">Your previous grant expired at {heldLease?.expiresAt}. It can no longer be used; request a new one.</span> : null}
               </div>
             </div>
           ) : !mountResponse ? (

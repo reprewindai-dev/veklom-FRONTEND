@@ -15,7 +15,7 @@ import { WalletUnavailable } from "./WalletUnavailable";
 
 export const WALLET_COPY = {
   title: "Your Veklom Wallet",
-  body: "carries funding and execution authority for governed actions.",
+  body: "pays for governed actions. It funds them; it never authorizes them. Authority is a separate single-use grant per action.",
   explore: "You can keep exploring without funding it. Funding is required before paid or externally settled actions.",
 } as const;
 

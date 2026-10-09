@@ -73,7 +73,7 @@ function wagmiConfigFor(config: WalletRuntimeConfig, network: WalletNetwork): { 
         networks,
         metadata: {
           name: config.appName,
-          description: "Veklom Wallet: funding and execution authority for governed actions",
+          description: "Veklom Wallet: funding for governed actions (authority is granted separately, per action)",
           url: origin,
           icons: [`${origin}/favicon.ico`],
         },

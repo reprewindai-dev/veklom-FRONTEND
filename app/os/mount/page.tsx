@@ -52,6 +52,15 @@ export default function MountPage() {
 
   useEffect(() => { setPrepared(readMountBinding()); }, []);
 
+  // Live mode: reuse the project of the last binding or held grant, so a returning user does not
+  // retype it. Never carries the sandbox project into live mode (sandbox forces its own below).
+  useEffect(() => {
+    if (sandbox) return;
+    const last = readMountBinding()?.project ?? readSessionCapabilityLease()?.project;
+    // Runs before the sandbox effect below, so a leftover sandbox value counts as empty here.
+    if (last && last !== SANDBOX_PROJECT) setProject((current) => (current && current !== SANDBOX_PROJECT ? current : last));
+  }, [sandbox]);
+
   useEffect(() => {
     if (!selectedPackage) return;
     if (activeIntent) {
@@ -162,7 +171,7 @@ export default function MountPage() {
         {activeIntent ? <div className="rounded-lg border border-cos-accent/40 bg-cos-accent/[0.05] p-3 text-xs leading-5 text-cos-muted"><div className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Bounded operation from contract {activeIntent.contractId}</div><div className="mt-1 text-cos-text">{activeIntent.clause}</div><div className="mt-1 font-mono text-cos-text">{activeIntent.operation.action} · {activeIntent.operation.target_ref} · resource {activeIntent.operation.resource} · {describeArguments(activeIntent.operation.arguments)}</div><div className="mt-1 text-[10px] text-cos-steel">The grant will be requested for exactly this operation.</div></div> : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-xs text-cos-muted">Workspace<input value={workspace} onChange={(event) => setWorkspace(event.target.value)} className={inputClass} required /><span className="mt-1 block text-[10px] text-cos-steel">Must equal the workspace of your signed-in session</span></label>
-          <label className="text-xs text-cos-muted">Project<input value={project} onChange={(event) => setProject(event.target.value)} readOnly={sandbox} className={inputClass} required /><span className="mt-1 block text-[10px] text-cos-steel">{sandbox ? "Sandbox scope is fixed to project=sandbox" : "The project this mount belongs to"}</span></label>
+          <label className="text-xs text-cos-muted">Project<input value={project} onChange={(event) => setProject(event.target.value)} readOnly={sandbox} className={inputClass} required /><span className="mt-1 block text-[10px] text-cos-steel">{sandbox ? "Sandbox scope is fixed to project=sandbox" : "A name that groups this work, for example contracts. Any name works; the grant is limited to it."}</span></label>
           <label className="text-xs text-cos-muted">Reads to request<input value={reads} onChange={(event) => setReads(event.target.value)} placeholder="comma,separated,actions" className={inputClass} /></label>
           <label className="text-xs text-cos-muted">Writes to request<input value={writes} onChange={(event) => setWrites(event.target.value)} placeholder="comma,separated,actions" className={inputClass} /></label>
           <label className="text-xs text-cos-muted">Blocked actions<input value={blocked} onChange={(event) => setBlocked(event.target.value)} placeholder="comma,separated,actions" className={inputClass} /></label>
