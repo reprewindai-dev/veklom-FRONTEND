@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { FUNNEL_RETURN_TO, safeRelativePath } from "@/lib/funnel";
+import { FUNNEL_RETURN_TO, forgetReturnTo, recallReturnTo, safeRelativePath } from "@/lib/funnel";
 import { AuthLayout } from "@/components/AuthLayout";
 import { ErrorBox, SuccessBox } from "@/components/ui";
 
@@ -13,13 +13,14 @@ export default function VerifyEmailPage() {
   const [state, setState] = useState<"verifying" | "ok" | "error">("verifying");
   const [message, setMessage] = useState("Verifying your email address…");
   // The emailed link is built by the backend and carries only ?token=, so the
-  // destination defaults to VLink unless a safe returnTo is present.
+  // destination is a safe returnTo in the URL, else the one signup remembered in
+  // this browser, else VLink.
   const [loginHref, setLoginHref] = useState(`/login?returnTo=${encodeURIComponent(FUNNEL_RETURN_TO)}`);
 
   useEffect(() => {
     const params = new URL(window.location.href).searchParams;
     const token = params.get("token");
-    const destination = `/login?returnTo=${encodeURIComponent(safeRelativePath(params.get("returnTo")))}`;
+    const destination = `/login?returnTo=${encodeURIComponent(safeRelativePath(params.get("returnTo") ?? recallReturnTo()))}`;
     setLoginHref(destination);
     if (!token) {
       setState("error");
@@ -33,6 +34,7 @@ export default function VerifyEmailPage() {
     })
       .then(() => {
         setState("ok");
+        forgetReturnTo();
         setMessage("Email verified. Your Veklom account is ready to sign in.");
         window.setTimeout(() => router.replace(destination), 1400);
       })

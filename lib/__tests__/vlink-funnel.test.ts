@@ -1,6 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
-import { FUNNEL_RETURN_TO, SIGNUP_URL, safeRelativePath } from "../funnel";
+import {
+  FUNNEL_RETURN_TO,
+  PENDING_RETURN_TO_KEY,
+  SIGNUP_URL,
+  forgetReturnTo,
+  recallReturnTo,
+  rememberReturnTo,
+  safeRelativePath,
+} from "../funnel";
 import { brandForHost, originFromHost } from "../brandMetadata";
 
 const read = (relative: string) => fs.readFileSync(path.join(process.cwd(), relative), "utf8");
@@ -35,6 +43,35 @@ describe("VLink front-door funnel", () => {
     expect(signup).not.toContain("Please sign in to continue");
     expect(signup).not.toContain("free trial");
     expect(read("app/verify-email/page.tsx")).toContain("router.replace(destination)");
+  });
+
+  it("carries a signup returnTo across the email hop, safely and only for the link's life", () => {
+    const at = 1_000_000;
+    window.localStorage.clear();
+    expect(recallReturnTo(at)).toBeNull();
+
+    rememberReturnTo("/os", at);
+    expect(recallReturnTo(at + 60_000)).toBe("/os");
+    expect(recallReturnTo(at + 60_000)).toBe("/os"); // a re-run effect still sees it
+    expect(recallReturnTo(at + 31 * 60_000)).toBeNull(); // the link has expired
+    forgetReturnTo();
+    expect(window.localStorage.getItem(PENDING_RETURN_TO_KEY)).toBeNull();
+
+    // The VLink default is never stored; an unsafe value is never stored or returned.
+    rememberReturnTo(FUNNEL_RETURN_TO, at);
+    expect(window.localStorage.getItem(PENDING_RETURN_TO_KEY)).toBeNull();
+    rememberReturnTo("https://evil.example/", at);
+    expect(window.localStorage.getItem(PENDING_RETURN_TO_KEY)).toBeNull();
+    window.localStorage.setItem(PENDING_RETURN_TO_KEY, JSON.stringify({ path: "//evil.example/", at }));
+    expect(recallReturnTo(at)).toBeNull();
+    window.localStorage.setItem(PENDING_RETURN_TO_KEY, "not json");
+    expect(recallReturnTo(at)).toBeNull();
+
+    const signup = read("app/signup/page.tsx");
+    expect(signup).toContain("rememberReturnTo(returnTo)");
+    const verify = read("app/verify-email/page.tsx");
+    expect(verify).toContain('params.get("returnTo") ?? recallReturnTo()');
+    expect(verify).toContain("forgetReturnTo()");
   });
 
   it("chooses the share card from the request host", () => {

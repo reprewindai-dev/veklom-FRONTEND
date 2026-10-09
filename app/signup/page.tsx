@@ -3,7 +3,7 @@
 import { useEffect, useState } from"react";
 import Link from"next/link";
 import { useAuth } from"@/lib/auth-context";
-import { FUNNEL_RETURN_TO, safeRelativePath } from"@/lib/funnel";
+import { FUNNEL_RETURN_TO, rememberReturnTo, safeRelativePath } from"@/lib/funnel";
 import { Button, ErrorBox, SuccessBox, GithubButton } from"@/components/ui";
 import { AuthLayout } from"@/components/AuthLayout";
 import { track, trackGithubSignupClicked } from"@/lib/analytics/tracker";
@@ -79,6 +79,8 @@ export default function SignupPage() {
  // LockerPhycer never auto-signs-in email accounts and blocks password
  // login until the address is verified, so the next step is the inbox.
  await signup(email, pw, name || undefined, SIGNUP_AGREEMENTS);
+ // The emailed link drops returnTo; keep it in this browser for the verification page.
+ rememberReturnTo(returnTo);
  trackAnalyticsEvent("sign_up", {
    method: "email",
    journey_stage: "identity",
