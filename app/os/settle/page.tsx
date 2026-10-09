@@ -1,5 +1,7 @@
 "use client";
+
 import { useEffect } from "react";
+import Link from "next/link";
 import { CircleDollarSign } from "lucide-react";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
@@ -7,5 +9,48 @@ import { SectionShell } from "@/components/cos/SectionShell";
 import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { JsonPanel, PaymentChallenge } from "@/components/cos/StageParts";
 import { VeklomActivityCue } from "@/components/cos/VeklomActivityCue";
-function pricingEnabled(value: unknown): boolean | undefined { if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; const record = value as Record<string, unknown>; if (typeof record.enabled === "boolean") return record.enabled; if (typeof record.status === "string" && ["enabled", "disabled"].includes(record.status.toLowerCase())) return record.status.toLowerCase() === "enabled"; return undefined; }
-export default function SettlePage(){const stage=getStage("settle"),data=useStageData("settle");useEffect(()=>{for(const e of stage.endpoints)if(e.method==="GET"&&!e.path.includes("{"))void data.call(e)},[data.call,stage.endpoints]);const discovery=data.payloads[`GET ${stage.endpoints[0].path}`],pricing=data.payloads[`GET ${stage.endpoints[1].path}`],enabled=pricingEnabled(pricing);const challenge=Object.values(data.payloads).find((value)=>value&&typeof value==="object"&&"x402_version" in value);return <SectionShell stage={stage} proof={data.stageProof} records={data.records}><div className="xl:col-span-2"><Pillar title="Work" proof={discovery?data.records[0]?.proof??"Needs proof":"Needs proof"} detail="Settlement binding is shown only from returned discovery and pricing documents."><div className="flex items-center gap-3"><CircleDollarSign className="text-cos-accent" size={19}/><span className="text-sm text-cos-text">M2M settlement discovery</span></div><div className="mt-4">{challenge?<PaymentChallenge value={challenge}/>:<JsonPanel value={discovery} empty={`GET ${stage.endpoints[0].path} has not returned a discovery document.`}/>}</div></Pillar></div><Pillar title="Telemetry" proof={pricing?data.records[1]?.proof??"Needs proof":"Needs proof"}><div className="mb-4 flex items-center justify-between"><span className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Pricing state</span>{enabled !== undefined ? <VeklomActivityCue kind="system" condition={enabled ? "active" : "failed"} size={18} showCaption={false} /> : null}</div><JsonPanel value={pricing} empty={`GET ${stage.endpoints[1].path} has not returned pricing.`}/></Pillar><Pillar title="Authority" proof="Needs proof"><HonestEmpty title="No settlement authority returned" route="GET /api/v1/pricing" detail="The pricing manifest does not itself grant authority or expose private payment credentials."/></Pillar><Pillar title="Evidence" proof="Needs proof"><HonestEmpty title="No receipt verification returned" route="GET /.well-known/x402" detail="The discovery document does not itself prove a payment receipt or settlement."/></Pillar><Pillar title="Drift" proof="Needs proof"><HonestEmpty title="No settlement/execution join" route="GET /api/v1/pricing" detail="Balances, receipts, and confirmations are not inferred from a pricing manifest."/></Pillar></SectionShell>}
+
+function pricingEnabled(value: unknown): boolean | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const record = value as Record<string, unknown>;
+  if (typeof record.enabled === "boolean") return record.enabled;
+  if (typeof record.status === "string" && ["enabled", "disabled"].includes(record.status.toLowerCase())) return record.status.toLowerCase() === "enabled";
+  return undefined;
+}
+
+/**
+ * Settle (DESIGN_MODEL): payment, x402 and receipts. Shows only the payment discovery and pricing
+ * documents the service returns. Payment verification and settlement receipts have no live route
+ * yet, so they are stated as not started rather than inferred from a pricing manifest.
+ */
+export default function SettlePage() {
+  const stage = getStage("settle");
+  const data = useStageData("settle");
+  useEffect(() => {
+    for (const endpoint of stage.endpoints) if (endpoint.method === "GET" && !endpoint.path.includes("{")) void data.call(endpoint);
+  }, [data.call, stage.endpoints]);
+  const discovery = data.payloads[`GET ${stage.endpoints[0].path}`];
+  const pricing = data.payloads[`GET ${stage.endpoints[1].path}`];
+  const enabled = pricingEnabled(pricing);
+  const challenge = Object.values(data.payloads).find((value) => value && typeof value === "object" && "x402_version" in value);
+  const proofOf = (path: string) => data.records.find((record) => record.path === path)?.proof ?? "Not started";
+
+  return (
+    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
+      <div className="xl:col-span-2">
+        <Pillar title="Payment discovery" proof={discovery ? proofOf(stage.endpoints[0].path) : "Not started"} detail="How a machine learns what an action costs and how to pay (x402), shown exactly as returned.">
+          <div className="flex items-center gap-3"><CircleDollarSign className="text-cos-accent" size={19} /><span className="text-sm text-cos-text">Machine-to-machine payment terms</span></div>
+          <div className="mt-4">{challenge ? <PaymentChallenge value={challenge} /> : <JsonPanel value={discovery} empty={`GET ${stage.endpoints[0].path} has not returned a discovery document.`} />}</div>
+        </Pillar>
+      </div>
+      <Pillar title="Pricing" proof={pricing ? proofOf(stage.endpoints[1].path) : "Not started"} detail="Whether paid actions are switched on, and their prices.">
+        <div className="mb-4 flex items-center justify-between"><span className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Pricing state</span>{enabled !== undefined ? <span className="flex items-center gap-2 text-xs text-cos-muted"><VeklomActivityCue kind="system" condition={enabled ? "active" : "failed"} size={18} showCaption={false} />{enabled ? "enabled" : "disabled"}</span> : null}</div>
+        <JsonPanel value={pricing} empty={`GET ${stage.endpoints[1].path} has not returned pricing.`} />
+      </Pillar>
+      <Pillar title="Receipts" proof="Not started" detail="Payment verification and settlement receipts.">
+        <HonestEmpty title="Not started" route="x402 verify / receipts: no live route" detail="No payment is verified and no settlement receipt is shown until the payment service exposes them. Paying never grants authority: each action still needs its own single-use grant." />
+        <p className="mt-3 text-xs text-cos-steel">Your wallet balance and top-ups are in <Link href="/os/settings" className="text-cos-accent underline">Settings</Link>.</p>
+      </Pillar>
+    </SectionShell>
+  );
+}

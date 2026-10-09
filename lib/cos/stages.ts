@@ -52,7 +52,7 @@ export const stages: StageDefinition[] = [
     id: "computeless",
     label: "Private Cloud",
     route: "/os/computeless",
-    purpose: "Turn the hardware you already own into governed cloud infrastructure: your machines, capacity, placement, workloads, failover and data locality. Machines hold no authority; every workload runs under its own single-use CAPPO grant.",
+    purpose: "Turn the hardware you already own into governed cloud infrastructure: your machines, capacity, placement, workloads, failover and data locality. Machines hold no authority; every workload runs under its own single-use grant.",
     owner: "COMPUTLESS owned-compute fabric (placement and routing) · CAPPO (authority)",
     endpoints: [
       { method: "GET", path: "/api/fabric/state", classification: "present", response: "enrolled machines, measured capacity, policy, workloads and placement decisions", baseUrl: backend("computless") },
@@ -107,7 +107,7 @@ export const stages: StageDefinition[] = [
     id: "govern",
     label: "Govern",
     route: "/os/govern",
-    purpose: "Lay a plan out as a governed pipeline, see what the catalog covers for every step, and compile it to code that can only act under a CAPPO permit.",
+    purpose: "Lay a plan out as a governed pipeline, see what the catalog covers for every step, and compile it to code that can only act under a single-use permit.",
     owner: "ABIDE pipeline compiler; CAPPO authorization",
     endpoints: [
       { method: "POST", path: "/api/abide/v1/blueprint/compile", classification: "needs_proof", qualification: "deterministic plan id (same intent + catalog = same id), not persisted; grants nothing", response: "steps against the live catalog, verdict, pipeline graph, governed Python, proof hash" },
@@ -150,7 +150,7 @@ export const stages: StageDefinition[] = [
     id: "evidence",
     label: "Evidence",
     route: "/os/evidence",
-    purpose: "Inspect EEE execution receipts and durable PGL/GnomLedger provenance.",
+    purpose: "Look up signed execution receipts, trace each decision, and check the tamper-evident ledger record yourself.",
     owner: "CAPPO audit/PGL ledger routes",
     endpoints: [
       { method: "GET", path: "/v1/audit/ledger", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "audit ledger entries", baseUrl: backend("cappo") },
@@ -192,6 +192,7 @@ export const stages: StageDefinition[] = [
     purpose: "Show what needs attention now by composing authority, execution, evidence and measurement truth.",
     owner: "Capability OS composed view",
     endpoints: [
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "current registry entry for the bound package", baseUrl: CAPI_RUNTIME_URL },
       { method: "GET", path: "/v1/audit/ledger", classification: "present", response: "composed evidence ledger", baseUrl: backend("cappo") },
       { method: "GET", path: "/v1/runs", classification: "present", response: "composed execution runs", baseUrl: backend("cappo") },
     ],
