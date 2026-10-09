@@ -21,7 +21,7 @@ const RUNS = "Recorded runs 001–005 (14/14 steps each), staging, 2026-10-08";
 export const stageMaturity: Record<StageId, StageMaturity> = {
   capabilities: {
     status: "Proven on staging",
-    summary: "The catalog you see is served live by cAPI from CAPPO, including which target each capability may act on.",
+    summary: "The capability packages offered in Mount are served live, including which target each may act on. The baseline capability list on this page is part of the product, not a live feed.",
     evidence: RUNS,
   },
   mount: {

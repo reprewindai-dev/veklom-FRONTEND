@@ -103,7 +103,8 @@ function structure(nodes: GPCNode[], edges: GPCEdge[]): string {
 }
 
 function mountHref(mount: SuggestedMount, workspace: string | null): string {
-  const params = new URLSearchParams({ package: mount.package_ref, project: "sandbox" });
+  // Mode is not Govern's to decide: Mount scopes the request to the current mode (sandbox or live).
+  const params = new URLSearchParams({ package: mount.package_ref });
   if (mount.reads.length) params.set("reads", mount.reads.join(","));
   if (mount.writes.length) params.set("writes", mount.writes.join(","));
   if (mount.blocked.length) params.set("blocked", mount.blocked.join(","));

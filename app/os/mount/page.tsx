@@ -197,7 +197,9 @@ export default function MountPage() {
       if (value) set(value);
     };
     take("package", setPackageRef);
-    take("project", setProject);
+    // A linked "sandbox" scope must never be carried into a live-mode mount, and live mode never
+    // inherits it; sandbox mode always forces the sandbox project (see the effect above).
+    take("project", (value) => setProject(sandbox ? SANDBOX_PROJECT : value === SANDBOX_PROJECT ? "" : value));
     take("reads", setReads);
     take("writes", setWrites);
     take("blocked", setBlocked);

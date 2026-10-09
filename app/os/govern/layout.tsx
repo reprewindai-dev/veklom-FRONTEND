@@ -3,7 +3,7 @@ import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Govern",
-  description: "Apply jurisdiction, policy rules, and PII shaping to capability executions in the Veklom Capability OS.",
+  description: "Lay a plan out as a governed pipeline, check it against the live capability catalog, and compile it to code that can act only under a single-use permit.",
 };
 
 export default function GovernLayout({ children }: { children: React.ReactNode }) {
