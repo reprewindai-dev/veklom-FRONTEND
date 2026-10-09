@@ -1,6 +1,8 @@
 "use client";
 
-import { PhaseTrace } from "@/components/cos/PhaseTrace";
+import { DecisionGraph, type DecisionNode } from "@/components/cos/DecisionGraph";
+import { EvidenceLookup } from "@/components/cos/ExecutionLookups";
+import { JsonPanel } from "@/components/cos/StageParts";
 import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
@@ -27,7 +29,8 @@ export default function EvidencePage() {
   const lease = readSessionCapabilityLease();
   const consequence = readSessionConsequence(lease?.mountId);
   const hasEvidence = Object.keys(data.payloads).length > 0;
-  const phaseStatus = data.loading ? "current" : hasEvidence ? "complete" : "pending";
+  const verifyPayload = data.payloads["GET /v1/audit/verify"];
+  const verifyRecord = data.records.find((record) => record.method === "GET" && record.path === "/v1/audit/verify");
   const response = consequence?.lastAllowedResponse ?? consequence?.response;
   const nestedConsequence = asRecord(response?.consequence);
   const authority = asRecord(response?.authority);
@@ -43,16 +46,27 @@ export default function EvidencePage() {
     ? readback.project
     : lease?.project ?? responseProject;
 
+  // Every node is derived from what this session actually received; nothing is assumed.
+  const readbackVerdict = consequence ? compareReadback(resultingState, readback) : undefined;
+  const anchorStatus = typeof anchoring?.status === "string" ? anchoring.status : undefined;
+  const decisionNodes: DecisionNode[] = [
+    { id: "identity", label: lease?.workspace ? `Workspace ${lease.workspace}` : "Workspace not returned", status: lease?.workspace ? "approved" : "pending", author: "identity" },
+    { id: "grant", label: lease ? `Single-use grant on mount ${lease.mountId}` : "No grant held", status: lease ? "approved" : "pending", author: "authority" },
+    ...(consequence?.denials.length ? [{ id: "denials", label: `${consequence.denials.length} attempt(s) refused`, status: "rejected" as const, author: "authority" }] : []),
+    { id: "execution", label: nestedConsequence?.receipt_id ? `Executed once · receipt ${String(nestedConsequence.receipt_id)}` : "No allowed execution returned", status: nestedConsequence?.receipt_id ? "approved" : "pending", author: "execute" },
+    { id: "evidence", label: anchorStatus ? `Evidence anchoring: ${anchorStatus}` : "Evidence anchoring not returned", status: anchorStatus === "anchored" ? "approved" : "pending", author: "ledger" },
+    { id: "readback", label: readbackVerdict === "Verified" ? "Independent readback matches" : readback ? "Independent readback does not confirm the result" : "Independent readback not run", status: readbackVerdict === "Verified" ? "approved" : readback ? "rejected" : "pending", author: "target" },
+  ];
+
   return (
     <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
       <div className="space-y-4">
-        <Pillar title="Work" proof={data.stageProof}><PhaseTrace phases={[
-          { id: "ledger", name: "Ledger", status: phaseStatus, kind: "transport" },
-          { id: "verify", name: "Verify", status: hasEvidence ? "current" : "pending", kind: "authority" },
-          { id: "replay", name: "Replay", status: "pending", kind: "execution" },
-        ]} /></Pillar>
-        <Pillar title="Telemetry" proof={data.stageProof}><HonestEmpty title="Evidence telemetry is route-backed" route="GET /v1/audit/ledger" detail="Latency and status remain in the route ledger below." /></Pillar>
-        <Pillar title="Authority" proof={data.stageProof}><HonestEmpty title="Evidence authority not returned" route="GET /api/v1/ledger/agents/{id}" detail="An execution identity is required for the parameterized ledger view." /></Pillar>
+        <Pillar title="Look up an execution" proof={data.stageProof} detail="Execution search: the receipt and ledger link for one execution, as returned.">
+          <EvidenceLookup stageData={data} />
+        </Pillar>
+        <Pillar title="Decision chain" proof={consequence ? "Present" : "Not started"} detail="Identity → authority → execution → evidence → independent readback, built only from what this session received.">
+          {consequence || lease ? <DecisionGraph nodes={decisionNodes} /> : <HonestEmpty title="No governed action in this session" route="POST /v1/capability/mounts/{mount_id}/execute" detail="The chain appears after a grant is used in Execute." />}
+        </Pillar>
       </div>
       <div className="space-y-4">
         <Pillar title="Evidence" proof={data.stageProof}>
@@ -85,7 +99,9 @@ export default function EvidencePage() {
             </div>
           ) : <HonestEmpty title={hasEvidence ? "Evidence payload observed" : "No evidence payload observed"} route="GET /v1/audit/verify" detail={hasEvidence ? "The response is available to the route-backed data layer." : "No verifier result has been returned."} />}
         </Pillar>
-        <Pillar title="Drift" proof={data.stageProof}><HonestEmpty title="Evidence drift not measured" route="GET /v1/audit/verify" detail="No comparison result was returned." /></Pillar>
+        <Pillar title="Ledger verification" proof={verifyRecord?.proof ?? "Not started"} detail="The ledger's own verification result, shown exactly as returned.">
+          <JsonPanel value={verifyPayload} empty="No ledger verification result has been returned." />
+        </Pillar>
       </div>
     </SectionShell>
   );

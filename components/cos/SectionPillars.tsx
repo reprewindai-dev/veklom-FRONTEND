@@ -2,17 +2,18 @@ import { ShieldCheck, Radio, KeyRound, FileCheck2, GitCompareArrows } from "luci
 import type { ProofStatus } from "@/lib/cos/capabilities";
 import { ProofBadge } from "./ProofBadge";
 
-const icons = { Work: Radio, Telemetry: Radio, Authority: KeyRound, Evidence: FileCheck2, Drift: GitCompareArrows };
+const icons: Record<string, typeof Radio> = { Work: Radio, Telemetry: Radio, Authority: KeyRound, Evidence: FileCheck2, Drift: GitCompareArrows };
 
 export interface PillarProps {
   proof: ProofStatus;
-  title: keyof typeof icons;
+  /** Named for what the panel does in its workspace; the five legacy names keep their icons. */
+  title: string;
   children: React.ReactNode;
   detail?: string;
 }
 
 export function Pillar({ title, proof, children, detail }: PillarProps) {
-  const Icon = icons[title];
+  const Icon = icons[title] ?? ShieldCheck;
   return (
     <article className="rounded-2xl border border-cos-border bg-cos-surface/80 p-5 shadow-cos-card">
       <div className="flex items-start justify-between gap-3">
