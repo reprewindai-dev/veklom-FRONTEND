@@ -33,7 +33,9 @@ const nextConfig = {
   // (target call plus synchronous ledger anchors in CAPPO, bounded by cAPI's 45 s bridge),
   // and cutting it here would report failure for a consequence that already happened.
   // Must stay above cAPI's consequence timeout and below the edge's 100 s.
-  experimental: { proxyTimeout: 60_000 },
+  // cpus: static page generation defaults to one worker per host CPU (7 here) and ran the
+  // memory-capped build container out of memory on 2026-10-09; two workers fit comfortably.
+  experimental: { proxyTimeout: 60_000, cpus: 2 },
   turbopack: {},
 
   async headers() {
