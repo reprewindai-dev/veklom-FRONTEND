@@ -63,7 +63,7 @@ export function HandToVLink({ lease, onChange }: Props) {
       return;
     }
     if (!lease.holderCredential) {
-      setError("CAPPO holder credential is no longer present in this browser session");
+      setError("The machine holder credential is no longer present in this browser session");
       return;
     }
     if (!vlinkId.trim() || !grant.startsWith("vle_")) {
@@ -184,7 +184,7 @@ export function HandToVLink({ lease, onChange }: Props) {
         <HonestEmpty
           title="No VLink handoff credential"
           route="POST /api/v1/vlinks/{vlink_id}/leases"
-          detail="A VLink lease appears only after CAPPO returns a holder credential and VLink seals it."
+          detail="A VLink lease appears only after the authority layer returns a holder credential and VLink seals it."
         />
       ) : (
         <div className="space-y-4">

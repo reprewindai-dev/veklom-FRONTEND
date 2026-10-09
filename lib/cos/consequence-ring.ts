@@ -73,7 +73,7 @@ export const ringPositions: RingPositionDefinition[] = [
     index: 1,
     label: "Identity",
     role: "Which workspace is asking, proven to the authority that will answer.",
-    owner: "Identity assertion → CAPPO",
+    owner: "Identity → authority layer",
     route: "/os/authority",
     probe: {
       method: "GET",
@@ -87,7 +87,7 @@ export const ringPositions: RingPositionDefinition[] = [
     index: 2,
     label: "Connection",
     role: "What the connected systems advertise they can do.",
-    owner: "cAPI capability registry",
+    owner: "Capability registry",
     route: "/os",
     probe: {
       method: "GET",
@@ -101,7 +101,7 @@ export const ringPositions: RingPositionDefinition[] = [
     index: 3,
     label: "Authority",
     role: "A scoped, expiring lease for one operation on one target.",
-    owner: "CAPPO consequence authority",
+    owner: "Authority layer",
     route: "/os/mount",
     probe: null,
     unobservableReason:
@@ -112,7 +112,7 @@ export const ringPositions: RingPositionDefinition[] = [
     index: 4,
     label: "Compute",
     role: "A bounded environment that runs the work and is then wiped.",
-    owner: "Governed Compute",
+    owner: "Where it runs",
     route: "/os/execute",
     probe: null,
     unobservableReason:
@@ -123,7 +123,7 @@ export const ringPositions: RingPositionDefinition[] = [
     index: 5,
     label: "Evidence",
     role: "A signed receipt of what happened, durable and replayable.",
-    owner: "EEE / PGL",
+    owner: "Receipts and evidence ledger",
     route: "/os/evidence",
     probe: {
       method: "GET",
@@ -137,7 +137,7 @@ export const ringPositions: RingPositionDefinition[] = [
     index: 6,
     label: "Measure",
     role: "What the run actually cost and delivered.",
-    owner: "VNP",
+    owner: "Measurement service",
     route: "/os/measure",
     probe: {
       method: "GET",
@@ -165,12 +165,12 @@ const RECORDED_RUNS = "Recorded runs 001–005, 14/14 steps each, staging, 2026-
 export const ringProof: Record<RingPositionId, RingProof> = {
   identity: {
     status: "Proven on staging",
-    summary: "A signed-in workspace is recognised by CAPPO before any authority is issued.",
+    summary: "A signed-in workspace is recognised by the authority layer before any authority is issued.",
     evidence: RECORDED_RUNS,
   },
   connection: {
     status: "Proven on staging",
-    summary: "cAPI serves the signed capability catalog. Its routes that once bypassed CAPPO are closed in production (410).",
+    summary: "The registry serves the signed capability catalog. Routes that once bypassed the authority layer are closed in production (410).",
     evidence: `${RECORDED_RUNS}; production bypass check 2026-10-08`,
   },
   authority: {
@@ -180,12 +180,12 @@ export const ringProof: Record<RingPositionId, RingProof> = {
   },
   compute: {
     status: "Partly proven",
-    summary: "Governed jobs on one owned machine ran beside their data and committed only through CAPPO. Not observable from this page.",
+    summary: "Governed jobs on one owned machine ran beside their data and committed only through the authority layer. Not observable from this page.",
     evidence: "Own-Your-Cloud stage 1, one physical machine, 2026-10-04/05",
   },
   evidence: {
     status: "Partly proven",
-    summary: "CAPPO signs every consequence receipt. The ledger verifies its hash chain; signature verification of ledger entries is not yet proven.",
+    summary: "The authority layer signs every consequence receipt. The ledger verifies its hash chain; signature verification of ledger entries is not yet proven.",
     evidence: RECORDED_RUNS,
   },
   measure: {

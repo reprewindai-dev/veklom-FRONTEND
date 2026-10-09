@@ -80,7 +80,7 @@ const LIVE_ME = {
 
 describe("onboarding verification state", () => {
   it("shows an active LockerPhycer account as verified", async () => {
-    expect(await renderWithMe(LIVE_ME)).toBe("Verified by LockerPhycer");
+    expect(await renderWithMe(LIVE_ME)).toBe("Verified by Veklom identity");
   });
 
   it("prefers an explicit email_verified flag", async () => {

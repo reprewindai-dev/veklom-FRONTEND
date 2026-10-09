@@ -93,8 +93,8 @@ const READINESS: Array<{ value: Readiness; label: string }> = [
 ];
 
 const VERDICT: Record<Contract["verdict"], { label: string; tone: string; detail: string }> = {
-  ready_for_mount: { label: "Contract is complete", tone: "border-cos-ok/40 bg-cos-ok/5 text-cos-ok", detail: "Every step is covered by a capability in the live catalog. It still grants nothing: CAPPO decides each action when it runs." },
-  blocked: { label: "Contract hits a blocked action", tone: "border-cos-danger/40 bg-cos-danger/5 text-cos-danger", detail: "A step asks for something the catalog blocks. CAPPO will deny it; change the outcome or the capability." },
+  ready_for_mount: { label: "Contract is complete", tone: "border-cos-ok/40 bg-cos-ok/5 text-cos-ok", detail: "Every step is covered by a capability in the live catalog. It still grants nothing: the authority layer decides each action when it runs." },
+  blocked: { label: "Contract hits a blocked action", tone: "border-cos-danger/40 bg-cos-danger/5 text-cos-danger", detail: "A step asks for something the catalog blocks. The authority layer will deny it; change the outcome or the capability." },
   incomplete: { label: "Contract has gaps", tone: "border-cos-warn/40 bg-cos-warn/5 text-cos-warn", detail: "Some steps have no capability behind them. The contract records them so nobody assumes they are covered." },
   empty: { label: "Nothing to contract", tone: "border-cos-border text-cos-muted", detail: "The outcome produced no steps." },
 };
@@ -165,7 +165,7 @@ export default function BlueprintPage() {
     });
     setBusy(false);
     if (!isCompileResult(response.data)) {
-      setError(response.record.error || `ABIDE did not return a contract (HTTP ${response.record.status ?? "unreachable"}).`);
+      setError(response.record.error || `The blueprint compiler did not return a contract (HTTP ${response.record.status ?? "unreachable"}).`);
       return;
     }
     setBound(operations);
@@ -222,7 +222,7 @@ export default function BlueprintPage() {
     if (!result) return;
     const response = await call<{ filename: string; content: string }>(PROJECT, { contract: result.contract, format });
     if (response.data?.content) saveFile(response.data.filename, response.data.content, "text/markdown");
-    else setError(response.record.error || "ABIDE refused to project this contract.");
+    else setError(response.record.error || "The compiler refused to project this contract.");
   }
 
   async function sealContract() {
@@ -284,13 +284,13 @@ export default function BlueprintPage() {
                   <button type="button" aria-label="Remove claim" onClick={() => setClaims((list) => list.filter((_, i) => i !== index))} className="text-cos-steel hover:text-cos-danger"><Trash2 size={14} /></button>
                 </div>
               ))}
-              <p className="text-[11px] leading-4 text-cos-steel">Production or verified labels only stand if the technology is available to anyone today; otherwise ABIDE downgrades them.</p>
+              <p className="text-[11px] leading-4 text-cos-steel">Production or verified labels only stand if the technology is available to anyone today; otherwise the compiler downgrades them.</p>
             </div>
 
             <button type="submit" disabled={busy || !intent.trim()} className="inline-flex items-center gap-2 rounded-lg bg-cos-accent px-4 py-2 text-sm font-semibold text-cos-bg disabled:opacity-50">
               <FileCheck2 size={15} /> {busy ? "Compiling…" : "Compile contract"}
             </button>
-            <p className="text-xs leading-5 text-cos-muted">ABIDE compiles your outcome against the capability catalog cAPI actually serves. The contract is intent, never authority.</p>
+            <p className="text-xs leading-5 text-cos-muted">Veklom compiles your outcome against the capability catalog the registry actually serves. The contract is intent, never authority.</p>
           </form>
           {error ? <div className="mt-3"><FailureNotice detail={error} /></div> : null}
         </Pillar>

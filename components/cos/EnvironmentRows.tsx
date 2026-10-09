@@ -46,7 +46,7 @@ export function EnvironmentRows({
       )) : <p className="text-xs text-cos-muted">{empty}</p>}
       {hidden > 0 ? (
         <p className="font-mono text-[10px] text-cos-steel">
-          {hidden} {sandbox ? "live or unscoped" : "sandbox"} row{hidden === 1 ? "" : "s"} hidden in this environment{sandbox ? " (CAPPO returned no project=sandbox scope for them)" : ""}.
+          {hidden} {sandbox ? "live or unscoped" : "sandbox"} row{hidden === 1 ? "" : "s"} hidden in this environment{sandbox ? " (the authority layer returned no project=sandbox scope for them)" : ""}.
         </p>
       ) : null}
     </div>

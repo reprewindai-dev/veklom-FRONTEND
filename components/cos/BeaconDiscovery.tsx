@@ -73,9 +73,9 @@ export function BeaconDiscovery() {
     <section className="mt-10 rounded-2xl border border-cos-border bg-cos-surface2/70 p-5 shadow-cos-card lg:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-accent"><KeyRound size={13} /> CAPPO beacon discovery</div>
+          <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-accent"><KeyRound size={13} /> Signed capability beacons</div>
           <h2 className="mt-2 text-lg font-semibold text-cos-text">Independently verifiable capability advertisements</h2>
-          <p className="mt-2 max-w-2xl text-xs leading-5 text-cos-muted">Each row is rendered from CAPPO’s signed beacon and the separate verification response. The published key document is shown as returned.</p>
+          <p className="mt-2 max-w-2xl text-xs leading-5 text-cos-muted">Each row is rendered from the signed beacon and the separate verification response. The published key document is shown as returned.</p>
         </div>
         <ProofBadge status={data.stageProof} />
       </div>
@@ -84,7 +84,7 @@ export function BeaconDiscovery() {
         {sandbox ? SANDBOX_COPY.beaconHeader : SANDBOX_COPY.liveBeaconHeader}
       </div>
       <BeaconStatStrip stats={stats} />
-      {!beacons.length ? <div className="mt-5"><HonestEmpty title="No beacon set returned" route="GET /v1/capability/beacons" detail="No capability advertisement is displayed until CAPPO returns one." /></div> : <div className="mt-5 space-y-3">{beacons.map((beacon) => {
+      {!beacons.length ? <div className="mt-5"><HonestEmpty title="No beacon set returned" route="GET /v1/capability/beacons" detail="No capability advertisement is displayed until the registry returns one." /></div> : <div className="mt-5 space-y-3">{beacons.map((beacon) => {
         const packageRef = stringValue(beacon.package_ref);
         const result = verification[packageRef];
         const valid = result?.valid === true;
@@ -103,7 +103,7 @@ export function BeaconDiscovery() {
             <Field label="Policy hash" value={beacon.policy_hash} />
             <Field label="Signature" value={beacon.signature ? "Returned; not rendered" : undefined} />
           </div>
-          {result?.reason === "beacon_expired" ? <p className="mt-3 text-xs text-cos-warn">This beacon is expired according to CAPPO verification.</p> : null}
+          {result?.reason === "beacon_expired" ? <p className="mt-3 text-xs text-cos-warn">This beacon is expired according to signature verification.</p> : null}
         </article>;
       })}</div>}
       <div className="mt-5 rounded-xl border border-cos-border bg-cos-bg/40 p-4">

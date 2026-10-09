@@ -65,7 +65,7 @@ export default function CapabilityHome() {
         </div>
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cos-steel">
           {capabilities.length} in catalog ·{" "}
-          <span className={holdingAuthority ? "text-cos-warn" : undefined} title="Session-held CAPPO mount in this environment">{holdingAuthority} holding authority ({sandbox ? "sandbox" : "live"})</span>
+          <span className={holdingAuthority ? "text-cos-warn" : undefined} title="Grant held by this browser session in this environment">{holdingAuthority} holding authority ({sandbox ? "sandbox" : "live"})</span>
         </p>
       </motion.div>
 
@@ -96,7 +96,7 @@ export default function CapabilityHome() {
 
       <div className="mt-12">
         <div className="mb-4 flex items-center gap-2"><Boxes size={16} className="text-cos-accent" /><h2 className="text-sm font-medium uppercase tracking-[0.16em] text-cos-text">{sandbox ? "Sandbox capabilities" : "Mounted capabilities"}</h2></div>
-        {sandbox ? null : <p className="-mt-2 mb-4 text-xs leading-5 text-cos-steel">Installed in this workspace. Mounting a capability grants no authority: authority is requested per operation and decided by CAPPO.</p>}
+        {sandbox ? null : <p className="-mt-2 mb-4 text-xs leading-5 text-cos-steel">Installed in this workspace. Mounting a capability grants no authority: authority is requested per operation and decided by Veklom's authority layer.</p>}
         {mounted.length ? (
           <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {mounted.map((capability) => <motion.div key={capability.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}><CapabilityCard capability={capability} onOpen={openCapability} /></motion.div>)}

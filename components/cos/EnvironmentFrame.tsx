@@ -24,7 +24,7 @@ export function ScopeTag({ project }: { project?: string }) {
   return (
     <span
       data-environment-tag={environment}
-      title={environment === "unscoped" ? "CAPPO returned no project scope for this record" : `project=${project}`}
+      title={environment === "unscoped" ? "The authority layer returned no project scope for this record" : `project=${project}`}
       className={`inline-flex items-center rounded-full border px-2 py-1 font-mono text-[9px] uppercase tracking-[0.16em] ${style}`}
     >
       {label}
@@ -63,7 +63,7 @@ export function EnvironmentFrame() {
         <div className="flex w-full items-stretch border-b border-cos-warn/30 bg-cos-warn/[0.06] text-cos-warn">
           <div className="w-2 shrink-0 bg-[repeating-linear-gradient(135deg,rgba(255,184,0,0.9)_0_6px,transparent_6px_12px)]" />
           <div className="flex min-h-8 flex-1 flex-wrap items-center gap-2 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] lg:px-7">
-            <span>CAPPO scope · project={SANDBOX_PROJECT} · mounts, executions and evidence are sandbox-scoped</span>
+            <span>Sandbox scope · project={SANDBOX_PROJECT} · mounts, executions and evidence are sandbox-scoped</span>
             {lease ? <span>· mount {lease.mountId} · expires {lease.expiresAt ?? "Not returned"}</span> : null}
           </div>
         </div>

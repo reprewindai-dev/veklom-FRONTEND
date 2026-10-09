@@ -62,12 +62,12 @@ const VERDICTS: Record<Verdict, { label: string; tone: string; detail: string }>
   ready_for_mount: {
     label: "Every step is covered",
     tone: "border-cos-ok/40 bg-cos-ok/5 text-cos-ok",
-    detail: "Each step maps to a capability in the live catalog. Nothing is granted yet: CAPPO issues a single-use permit per action when the pipeline runs.",
+    detail: "Each step maps to a capability in the live catalog. Nothing is granted yet: the authority layer issues a single-use permit per action when the pipeline runs.",
   },
   blocked: {
     label: "Blocked step",
     tone: "border-cos-danger/40 bg-cos-danger/5 text-cos-danger",
-    detail: "A step asks for an action the catalog blocks. CAPPO denies it even under a mount; the generated code records the denial and stops.",
+    detail: "A step asks for an action the catalog blocks. The authority layer denies it even under a mount; the generated code records the denial and stops.",
   },
   incomplete: {
     label: "Gaps in the pipeline",
@@ -135,7 +135,7 @@ export default function GovernPage() {
     const result = await call<CompiledPlan>(COMPILE, { intent: text.trim() });
     setBusy(false);
     if (!isCompiledPlan(result.data)) {
-      setError(result.record.error || `ABIDE did not return a pipeline (HTTP ${result.record.status ?? "unreachable"}).`);
+      setError(result.record.error || `The compiler did not return a pipeline (HTTP ${result.record.status ?? "unreachable"}).`);
       return;
     }
     setPlan(result.data);

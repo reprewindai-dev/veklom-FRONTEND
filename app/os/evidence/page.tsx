@@ -54,7 +54,7 @@ export default function EvidencePage() {
     { id: "grant", label: lease ? `Single-use grant on mount ${lease.mountId}` : "No grant held", status: lease ? "approved" : "pending", author: "authority" },
     ...(consequence?.denials.length ? [{ id: "denials", label: `${consequence.denials.length} attempt(s) refused`, status: "rejected" as const, author: "authority" }] : []),
     { id: "execution", label: nestedConsequence?.receipt_id ? `Executed once · receipt ${String(nestedConsequence.receipt_id)}` : "No allowed execution returned", status: nestedConsequence?.receipt_id ? "approved" : "pending", author: "execute" },
-    { id: "evidence", label: anchorStatus ? `Evidence anchoring: ${anchorStatus}` : "Evidence anchoring not returned", status: anchorStatus === "anchored" ? "approved" : "pending", author: "ledger" },
+    { id: "evidence", label: anchorStatus ? `Evidence anchoring: ${anchorStatus}` : "Evidence anchoring not returned", status: anchorStatus === "confirmed" ? "approved" : anchorStatus === "pending_reconciliation" ? "bypassed" : "pending", author: "ledger" },
     { id: "readback", label: readbackVerdict === "Verified" ? "Independent readback matches" : readback ? "Independent readback does not confirm the result" : "Independent readback not run", status: readbackVerdict === "Verified" ? "approved" : readback ? "rejected" : "pending", author: "target" },
   ];
 
@@ -84,7 +84,7 @@ export default function EvidencePage() {
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Execution ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(authority?.execution_id)}</div></div>
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchor ID</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.anchor_id)}</div></div>
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Anchoring status</div><div className="mt-2 flex flex-wrap items-center gap-2"><ProofBadge status={pglProof(anchoring, consequence.pglProof)} /><span className="font-mono text-xs text-cos-text">{pglProofLabel(anchoring, consequence.pglProof)}</span></div></div>
-                <div><div className="font-mono text-[9px] uppercase text-cos-steel">PGL event hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.pgl_event_hash)}</div></div>
+                <div><div className="font-mono text-[9px] uppercase text-cos-steel">Ledger event hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.pgl_event_hash)}</div></div>
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Independent PGL lookup</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{consequence.pglProof?.checked_at ? `Checked ${consequence.pglProof.checked_at}` : "Not run"}</div></div>
                 {consequence.pglProof?.chain ? <><div><div className="font-mono text-[9px] uppercase text-cos-steel">PGL chain status</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(consequence.pglProof.chain.status)}</div></div><div><div className="font-mono text-[9px] uppercase text-cos-steel">PGL chain valid</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(consequence.pglProof.chain.valid)}</div></div></> : null}
                 <div><div className="font-mono text-[9px] uppercase text-cos-steel">Receipt hash</div><div className="mt-2 break-all font-mono text-xs text-cos-text">{displayValue(anchoring?.content_hash)}</div></div>
@@ -95,7 +95,7 @@ export default function EvidencePage() {
                 {readbackError ? <div className="sm:col-span-2 rounded border border-cos-warn/40 bg-cos-warn/5 p-2 font-mono text-xs text-cos-warn">{readbackError}</div> : null}
                 <div className="sm:col-span-2 font-mono text-[10px] text-cos-steel">Denials recorded: {consequence.denials.length}</div>
               </div>
-              <p className="mt-4 border-t border-cos-border pt-3 text-[11px] leading-5 text-cos-muted">Receipt as returned by CAPPO at execute time; ledger persistence is verified only via the audit routes below</p>
+              <p className="mt-4 border-t border-cos-border pt-3 text-[11px] leading-5 text-cos-muted">Receipt as returned by the authority layer at execute time; ledger persistence is verified only via the audit routes below</p>
             </div>
           ) : <HonestEmpty title={hasEvidence ? "Evidence payload observed" : "No evidence payload observed"} route="GET /v1/audit/verify" detail={hasEvidence ? "The response is available to the route-backed data layer." : "No verifier result has been returned."} />}
         </Pillar>

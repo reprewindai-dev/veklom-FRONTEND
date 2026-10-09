@@ -389,7 +389,7 @@ export default function OnboardingPage() {
                 <div className="rounded-xl border border-cos-border bg-cos-bg/40 p-4">
                   <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Verification state</div>
                   <div data-testid="verification-state" className={`mt-2 text-sm ${emailVerified ? "text-cos-accent" : "text-cos-muted"}`}>
-                    {emailVerified ? "Verified by LockerPhycer" : "Email not yet verified"}
+                    {emailVerified ? "Verified by Veklom identity" : "Email not yet verified"}
                   </div>
                 </div>
               </div>
@@ -428,12 +428,12 @@ export default function OnboardingPage() {
                 {workspaceError ? (
                   <p data-testid="workspace-error" role="alert" className="rounded-lg border border-cos-danger/40 bg-cos-danger/10 px-3 py-2 text-sm text-cos-text">{workspaceError}</p>
                 ) : null}
-                {sandbox ? <LiveOnlyNotice action="Bind workspace" reason="LockerPhycer POST /api/v1/workspace has no sandbox scope; a workspace created here would be live." /> : null}
+                {sandbox ? <LiveOnlyNotice action="Bind workspace" reason="Workspace binding (POST /api/v1/workspace) has no sandbox scope; a workspace created here would be live." /> : null}
                 {/* One action: binding is what moves this step forward. */}
                 <Button type="submit" loading={busy} disabled={sandbox || !workspaceName.trim() || !slugify(workspaceSlug)} disabledReason={sandbox ? "Workspace binding is live only; switch to Live" : "Enter a workspace name first"}>{sandbox ? "Bind workspace · Live only" : "Bind workspace and continue"}</Button>
               </form>
             )}
-            <p className="text-xs leading-6 text-cos-muted">Authentication established who you are. This step binds the session to a workspace. It grants no capability — authority is only issued by CAPPO at mount time.</p>
+            <p className="text-xs leading-6 text-cos-muted">Authentication established who you are. This step binds the session to a workspace. It grants no capability — authority is only issued by the authority layer, one operation at a time.</p>
             {boundWorkspaceId ? <Button onClick={continueStep}>Continue</Button> : null}
           </div>
         ) : null}
@@ -469,7 +469,7 @@ export default function OnboardingPage() {
               <Field label="Safety rules (comma-separated)" value={safetyRules} onChange={setSafetyRules} required={false} />
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="PGL POST /api/pgl/ writes to the live ledger and has no sandbox scope." /> : null}
+              {sandbox ? <LiveOnlyNotice action="Register agent genome" reason="The evidence ledger (POST /api/pgl/) writes to the live ledger and has no sandbox scope." /> : null}
               <Button type="submit" loading={busy} disabled={sandbox || !boundWorkspaceId || !agentName || !me} disabledReason={sandbox ? "Agent registration is live only; switch to Live" : !boundWorkspaceId ? "Bind a workspace first" : "Enter an agent name first"}>{sandbox ? "Register agent genome · Live only" : agentUnavailable ? "Retry registration" : "Register agent genome"}</Button>
               {agent || agentUnavailable ? (
                 <Button type="button" onClick={continueStep} variant="outline">{agent ? "Continue" : "Continue without agent genome"}</Button>
@@ -489,7 +489,7 @@ export default function OnboardingPage() {
                   <div><span className="text-cos-steel">Agent ID</span><div className="mt-1 break-all font-mono text-cos-text">{agent.agent_id}</div></div>
                   <div><span className="text-cos-steel">Certificate ID</span><div className="mt-1 break-all font-mono text-cos-text">{agent.certificate_id}</div></div>
                 </div>
-                <div className="flex items-center justify-between gap-3"><span className="text-cos-steel">Ledger chain verification (returned by GnomLedger)</span><span className={`rounded-full border px-2 py-1 font-mono text-[10px] ${ledger.status === "Live" ? "border-cos-accent/40 text-cos-accent" : "border-cos-warn/40 text-cos-warn"}`}>{ledger.status}</span></div>
+                <div className="flex items-center justify-between gap-3"><span className="text-cos-steel">Ledger chain verification (returned by the evidence ledger)</span><span className={`rounded-full border px-2 py-1 font-mono text-[10px] ${ledger.status === "Live" ? "border-cos-accent/40 text-cos-accent" : "border-cos-warn/40 text-cos-warn"}`}>{ledger.status}</span></div>
                 {ledger.error ? <ErrorBox message={ledger.error} /> : null}
                 {ledger.result ? <pre className="max-h-72 overflow-auto rounded-lg border border-cos-border bg-cos-bg p-3 font-mono text-[10px] leading-5 text-cos-muted">{JSON.stringify(ledger.result, null, 2)}</pre> : null}
               </div>

@@ -102,8 +102,8 @@ export function SandboxScenarios() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-warn"><FlaskConical size={13} /> Sandbox scenarios · project={SANDBOX_PROJECT}</div>
-          <h2 className="mt-2 text-lg font-semibold text-cos-text">Rehearse governed consequence against real CAPPO</h2>
-          <p className="mt-2 max-w-3xl text-xs leading-5 text-cos-muted">Each scenario mounts <code className="font-mono">veklom.governed-counter@v1</code> with <code className="font-mono">execution_scope.project=&quot;sandbox&quot;</code>, calls the real CAPPO routes, and compares CAPPO&apos;s decision and an independent counter readback with the expected outcome. Nothing here is simulated.</p>
+          <h2 className="mt-2 text-lg font-semibold text-cos-text">Rehearse governed consequence against the real authority layer</h2>
+          <p className="mt-2 max-w-3xl text-xs leading-5 text-cos-muted">Each scenario mounts <code className="font-mono">veklom.governed-counter@v1</code> with <code className="font-mono">execution_scope.project=&quot;sandbox&quot;</code>, calls the real authority routes, and compares the authority layer&apos;s decision and an independent counter readback with the expected outcome. Nothing here is simulated.</p>
         </div>
         <button type="button" onClick={() => void runAll()} disabled={anyRunning} className="inline-flex items-center gap-2 rounded-lg bg-cos-warn px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-bg disabled:cursor-not-allowed disabled:opacity-50"><Play size={13} /> Run all</button>
       </div>
@@ -131,9 +131,9 @@ export function SandboxScenarios() {
               </div>
               <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
                 <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Expected</dt><dd className="mt-1 font-mono text-cos-text">{scenario.expected}</dd></div>
-                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Actual (returned by CAPPO)</dt><dd className="mt-1 font-mono text-cos-text">{result?.actual ?? (state?.running ? "Waiting for CAPPO…" : "Not run")}</dd></div>
+                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Actual (returned by the authority layer)</dt><dd className="mt-1 font-mono text-cos-text">{result?.actual ?? (state?.running ? "Waiting for the authority layer…" : "Not run")}</dd></div>
                 <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Receipt ID</dt><dd className="mt-1"><CopyValue value={result?.evidence.receiptId} /></dd></div>
-                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Evidence hash (anchor / PGL event)</dt><dd className="mt-1 space-y-1"><CopyValue value={result?.evidence.anchorId} />{result?.evidence.pglEventHash ? <CopyValue value={result.evidence.pglEventHash} /> : null}</dd></div>
+                <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Evidence hash (anchor / ledger event)</dt><dd className="mt-1 space-y-1"><CopyValue value={result?.evidence.anchorId} />{result?.evidence.pglEventHash ? <CopyValue value={result.evidence.pglEventHash} /> : null}</dd></div>
                 <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Mount</dt><dd className="mt-1"><CopyValue value={result?.evidence.mountId} /></dd></div>
                 <div><dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-cos-steel">Readback (value · version)</dt><dd className="mt-1 font-mono text-cos-text">{result?.before && result.after ? `${result.before.value}·v${result.before.version} → ${result.after.value}·v${result.after.version}` : "—"}</dd></div>
               </dl>
