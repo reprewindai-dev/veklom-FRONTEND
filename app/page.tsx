@@ -67,6 +67,14 @@ export default function LandingPage() {
               <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</TrackedLink>
             </div>
 
+            {/* Product Hunt launch badge (embed code from Product Hunt, unchanged). */}
+            <div className="mt-8" data-testid="product-hunt-badge">
+              <a href="https://www.producthunt.com/products/veklom?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-veklom" target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element -- third-party badge image served by Product Hunt */}
+                <img alt="Veklom - Give machines capability. Not a blank check. | Product Hunt" width={250} height={54} src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1275205&theme=dark&t=1791572797882" />
+              </a>
+            </div>
+
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
               <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Authority</div><div className="mt-2 text-sm font-medium text-theme-ink">Bound before execution</div></div>
               <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Compute</div><div className="mt-2 text-sm font-medium text-theme-ink">Lifecycle is explicit</div></div>

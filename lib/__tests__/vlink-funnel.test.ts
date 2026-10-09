@@ -37,6 +37,14 @@ describe("VLink front-door funnel", () => {
     expect(read("app/get/page.tsx")).toContain("router.push(SIGNUP_URL)");
   });
 
+  it("shows the Product Hunt launch badge on the home page", () => {
+    const home = read("app/page.tsx");
+    expect(home).toContain('data-testid="product-hunt-badge"');
+    expect(home).toContain("https://www.producthunt.com/products/veklom?embed=true");
+    expect(home).toContain("featured.svg?post_id=1275205");
+    expect(home).toContain('rel="noopener noreferrer"');
+  });
+
   it("tells email signups to verify instead of signing in", () => {
     const signup = read("app/signup/page.tsx");
     expect(signup).toContain("Sign-in is refused until the address is verified.");
