@@ -52,12 +52,24 @@ describe("tracker drift", () => {
   it("reports an unreviewed change when the target differs from the receipt, and stale evidence when unconfirmed", () => {
     const consequence = {
       mountId: "mnt_1",
-      response: { consequence: { resulting_state: { value: "approved", version: 2 } }, anchoring: { status: "pending_reconciliation" } },
-      readback: { state: { value: "something-else", version: 3 } },
+      // Comparable state is numeric (the counter's value and version): the receipt said 5 at
+      // version 2, the target's own readback now says 7 at version 3.
+      response: { consequence: { resulting_state: { value: 5, version: 2 } }, anchoring: { status: "pending_reconciliation" } },
+      readback: { state: { value: 7, version: 3 } },
       denials: [],
     } as unknown as SessionConsequenceRecord;
     const checks = driftChecks(lease(), consequence, null);
     expect(state(checks, "Receipt ↔ target")).toBe("Unreviewed change");
     expect(state(checks, "Receipt ↔ ledger")).toBe("Evidence stale");
+  });
+
+  it("does not guess when the receipt and the readback are not comparable", () => {
+    const consequence = {
+      mountId: "mnt_1",
+      response: { consequence: { resulting_state: { value: "approved" } }, anchoring: { status: "confirmed" } },
+      readback: { state: { value: "something-else" } },
+      denials: [],
+    } as unknown as SessionConsequenceRecord;
+    expect(state(driftChecks(lease(), consequence, null), "Receipt ↔ target")).toBe("Unknown / unmeasured");
   });
 });
