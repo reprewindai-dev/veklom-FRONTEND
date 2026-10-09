@@ -14,7 +14,11 @@ type Auth = ReturnType<typeof useAuth>;
 let latest: Auth | null = null;
 
 function Probe() {
-  latest = useAuth();
+  const auth = useAuth();
+  // Published after commit (inside act), not during render, so render stays pure.
+  React.useEffect(() => {
+    latest = auth;
+  });
   return null;
 }
 
