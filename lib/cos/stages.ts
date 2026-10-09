@@ -266,11 +266,11 @@ export const stages: StageDefinition[] = [
     id: "settings",
     label: "Settings",
     route: "/os/settings",
-    purpose: "Your account, API keys, wallet and webhooks. Your workspace comes from your signed-in identity, never from a typed value.",
-    owner: "LockerPhycer identity and wallet (W-02) · VLink webhooks",
+    purpose: "Your account and wallet. Your workspace comes from your signed-in identity, never from a typed value. API keys and webhooks are not offered by any current service yet.",
+    owner: "LockerPhycer identity and wallet (W-02)",
     endpoints: [
       { method: "GET", path: "/api/v1/auth/me", classification: "present", response: "signed-in account" },
-      { method: "GET", path: "/api/v1/auth/api-keys", classification: "present", response: "API key list (identifiers only)" },
+      { method: "GET", path: "/api/v1/wallet/balance", classification: "present", response: "wallet balance" },
     ],
   },
 ];
