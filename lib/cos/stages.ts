@@ -18,7 +18,13 @@ export type StageId =
   | "measure"
   | "settle"
   | "tracker"
-  | "terminal";
+  | "terminal"
+  | "registry"
+  | "marketplace"
+  | "harnesses"
+  | "contracts"
+  | "verification"
+  | "settings";
 
 export interface StageEndpoint {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -200,6 +206,71 @@ export const stages: StageDefinition[] = [
       { method: "POST", path: "/v1/exec", classification: "present", response: "execution response", baseUrl: backend("cappo") },
     ],
     crossCutting: true,
+  },
+  // Capability tools (docs/design-brief/02_NAVIGATION_MAP.md). Each consumes the owning service's
+  // routes; none owns execution, governance or settlement.
+  {
+    id: "registry",
+    label: "Registry",
+    route: "/os/registry",
+    purpose: "Every capability package the live registry serves, and the signed advertisements (beacons) that announce them, with their signatures checked. Discovery is not authority.",
+    owner: "cAPI capability registry (W-03) · CAPPO signed beacons",
+    endpoints: [
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
+    ],
+  },
+  {
+    id: "marketplace",
+    label: "Marketplace",
+    route: "/os/marketplace",
+    purpose: "Find capabilities and install them into this workspace: the product's baseline capabilities and the live package catalog. Installing grants nothing; authority is requested per operation.",
+    owner: "cAPI capability registry (W-03, W-04)",
+    endpoints: [
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
+    ],
+  },
+  {
+    id: "harnesses",
+    label: "Harnesses",
+    route: "/os/harnesses",
+    purpose: "What each capability package binds to: its target, adapter family and allowed actions, the binding this session holds, and an independent readback of a target's state.",
+    owner: "cAPI mounts (W-04) · execution substrate (W-08)",
+    endpoints: [
+      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
+      { method: "GET", path: "/v1/capability/targets/{target_ref}/state", classification: "present", response: "independent target state readback (no authority consumed)", baseUrl: backend("cappo") },
+    ],
+  },
+  {
+    id: "contracts",
+    label: "Contracts",
+    route: "/os/contracts",
+    purpose: "Bounded contracts compiled from intent in Blueprint. Check any contract against the compiler: a tampered contract is refused. A contract is intent, never authority.",
+    owner: "ABIDE blueprint/contract service (W-06)",
+    endpoints: [
+      { method: "POST", path: "/api/abide/v1/contract/project", classification: "needs_proof", qualification: "refuses a tampered contract", response: "agent work order, or a refusal" },
+    ],
+  },
+  {
+    id: "verification",
+    label: "Verification",
+    route: "/os/verification",
+    purpose: "Check evidence yourself instead of trusting a status: look up a ledger event by its hash and verify an agent's hash chain. Repository scanning is not connected yet.",
+    owner: "GnomLedger / PGL (W-11) · RepoGate (W-13, not connected)",
+    endpoints: [
+      { method: "GET", path: "/api/pgl/ledger/proof/{event_hash}", classification: "present", response: "ledger event persistence and chain status" },
+      { method: "GET", path: "/api/pgl/ledger/agents/{agent_id}/verify", classification: "present", response: "agent hash-chain verification" },
+    ],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    route: "/os/settings",
+    purpose: "Your account, API keys, wallet and webhooks. Your workspace comes from your signed-in identity, never from a typed value.",
+    owner: "LockerPhycer identity and wallet (W-02) · VLink webhooks",
+    endpoints: [
+      { method: "GET", path: "/api/v1/auth/me", classification: "present", response: "signed-in account" },
+      { method: "GET", path: "/api/v1/auth/api-keys", classification: "present", response: "API key list (identifiers only)" },
+    ],
   },
 ];
 

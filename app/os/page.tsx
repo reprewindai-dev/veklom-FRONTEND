@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Boxes, Clock3, Sparkles } from "lucide-react";
 import { capabilities, type Capability } from "@/lib/cos/capabilities";
 import { CapabilityCard } from "@/components/cos/CapabilityCard";
 import { CapabilitySearch } from "@/components/cos/CapabilitySearch";
-import { BeaconDiscovery } from "@/components/cos/BeaconDiscovery";
 import { ConsequenceRing } from "@/components/cos/ConsequenceRing";
 import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
 import { SandboxScenarios } from "@/components/cos/SandboxScenarios";
@@ -80,7 +80,7 @@ export default function CapabilityHome() {
         </div>
       ) : null}
       <SandboxScenarios />
-      <BeaconDiscovery />
+      <p className="mt-4 text-xs text-cos-steel">Every package the live registry serves, and its signed advertisements, are in <Link href="/os/registry" className="text-cos-accent underline">Registry</Link>.</p>
 
       <div className="mt-12">
         <div className="mb-4 flex items-center justify-between">

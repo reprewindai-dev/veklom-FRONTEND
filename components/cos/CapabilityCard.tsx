@@ -1,5 +1,6 @@
 "use client";
 
+import { capabilityHref } from "@/lib/cos/capability-context";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -38,7 +39,7 @@ export function CapabilityCard({ capability, onOpen }: { capability: Capability;
       className="group relative rounded-xl bg-cos-border p-px shadow-cos-card transition-shadow hover:shadow-cos-glow"
     >
     <Link
-      href={capability.route.startsWith("/os/") ? capability.route : `/os/mount?capability=${capability.id}`}
+      href={capabilityHref(capability)}
       onClick={() => onOpen?.(capability)}
       className="relative flex min-h-[228px] flex-col justify-between overflow-hidden rounded-[11px] bg-cos-surface p-5"
     >
