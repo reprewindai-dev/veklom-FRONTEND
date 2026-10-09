@@ -75,7 +75,7 @@ export const stages: StageDefinition[] = [
     id: "mount",
     label: "Mount",
     route: "/os/mount",
-    purpose: "Compatibility surface for binding a capability package to a scoped, expiring execution boundary.",
+    purpose: "Discover capability packages, see the target and actions each one binds, and prepare the scope you will ask for. Mounting grants nothing: the single-use grant is requested in Authority.",
     owner: `${CAPI_RUNTIME_LABEL} Interlink bridge`,
     endpoints: [
       { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
@@ -115,9 +115,13 @@ export const stages: StageDefinition[] = [
     id: "authority",
     label: "Authority",
     route: "/os/authority",
-    purpose: "Inspect operation-specific CapabilityLeases, scope, expiry, revocation and target-state authority.",
+    purpose: "Request one bounded, single-use grant for a binding prepared in Mount, see exactly what was granted against what you asked for, hold it, and revoke it. Authority does not create permissions; it materializes what governance approved.",
     owner: "CAPPO consequence authority",
     endpoints: [
+      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "grant decision, granted scope and grant descriptor", baseUrl: CAPI_RUNTIME_URL },
+      { method: "GET", path: "/v1/capability/mounts/{mount_id}", classification: "present", response: "persisted grant lifecycle status", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/actions", classification: "present", response: "action allow or deny decision", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/terminate", classification: "present", response: "revocation decision", baseUrl: backend("cappo") },
       { method: "GET", path: "/api/v1/agents/{id}/certificate", classification: "present", response: "certificate metadata", baseUrl: backend("cappo") },
       { method: "GET", path: "/api/v1/agents/{id}/lifecycle", classification: "present", response: "lifecycle state", baseUrl: backend("cappo") },
       { method: "GET", path: "/api/v1/agents", classification: "present", response: "public agent certificate summaries", baseUrl: backend("cappo") },

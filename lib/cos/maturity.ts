@@ -26,8 +26,8 @@ export const stageMaturity: Record<StageId, StageMaturity> = {
   },
   mount: {
     status: "Proven on staging",
-    summary: "A mount grants one exact operation on one resource and one target, and is used up after one consequence. 23 attempts to stretch, reuse or forge authority were refused.",
-    evidence: `${RUNS}; hostile battery 23/23`,
+    summary: "Choosing a package and binding its scope is the first step of every recorded run. A binding grants nothing on its own.",
+    evidence: RUNS,
   },
   blueprint: {
     status: "Proven on staging",
@@ -40,8 +40,9 @@ export const stageMaturity: Record<StageId, StageMaturity> = {
     evidence: RUNS,
   },
   authority: {
-    status: "Needs proof",
-    summary: "This page has not yet been exercised in a recorded run.",
+    status: "Proven on staging",
+    summary: "A grant covers one exact operation on one resource and one target, and is used up after one consequence; revoked grants are refused. 23 attempts to stretch, reuse or forge authority were refused. Recorded when this step was performed from the Mount page; not yet re-recorded here.",
+    evidence: `${RUNS}; hostile battery 23/23`,
   },
   execute: {
     status: "Proven on staging",

@@ -551,11 +551,11 @@ export default function ExecutePage() {
               <HonestEmpty
                 title="No capability lease held"
                 route="POST /v1/capability/mounts/{mount_id}/execute"
-                detail="Bind an operation to a contract step in Blueprint, mount it, then return here to execute it through CAPPO."
+                detail="Bind an operation to a contract step in Blueprint, prepare it in Mount, request its single-use grant in Authority, then return here to execute it."
               />
             )}
-            <Link href="/os/mount" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">
-              Go to Mount <ArrowRight size={13} />
+            <Link href="/os/authority" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cos-accent">
+              Get a grant in Authority <ArrowRight size={13} />
             </Link>
           </Pillar>
           <Pillar title="Telemetry" proof="Needs proof"><HonestEmpty title="Execution telemetry not observed" route="POST /v1/capability/mounts/{mount_id}/execute" detail="No execution request is issued without a held lease." /></Pillar>
