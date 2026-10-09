@@ -29,6 +29,11 @@ const nextConfig = {
   images: { unoptimized: true },
   staticPageGenerationTimeout: 1000,
   compress: true,
+  // Rewrites proxy with a 30 s default. A governed execute can legitimately take longer
+  // (target call plus synchronous ledger anchors in CAPPO, bounded by cAPI's 45 s bridge),
+  // and cutting it here would report failure for a consequence that already happened.
+  // Must stay above cAPI's consequence timeout and below the edge's 100 s.
+  experimental: { proxyTimeout: 60_000 },
   turbopack: {},
 
   async headers() {
