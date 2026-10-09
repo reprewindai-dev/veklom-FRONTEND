@@ -53,9 +53,9 @@ export function anchoringProof(
 
 export function anchoringLabel(anchoring: unknown): string {
   const status = asRecord(anchoring)?.status;
-  if (status === "confirmed") return "PGL persisted (CAPPO-reported)";
-  if (status === "pending_reconciliation") return "PGL append unconfirmed";
-  return "PGL status not confirmed";
+  if (status === "confirmed") return "Ledger persisted (reported by the authority layer)";
+  if (status === "pending_reconciliation") return "Ledger append unconfirmed";
+  return "Ledger status not confirmed";
 }
 
 export type PglProofLookup = {
@@ -139,21 +139,21 @@ export function pglProofLabel(anchoring: unknown, lookup: unknown): string {
     return anchoringLabel(anchoring);
   }
   const lookupRecord = asRecord(lookup);
-  if (!lookupRecord) return "Independent PGL lookup not run";
+  if (!lookupRecord) return "Independent ledger lookup not run";
   if (typeof lookupRecord.error === "string" && lookupRecord.error) {
-    return `Independent PGL lookup mismatch/failed: ${lookupRecord.error}`;
+    return `Independent ledger lookup mismatch/failed: ${lookupRecord.error}`;
   }
   if (lookupRecord.persisted !== true) {
-    return "Independent PGL lookup mismatch/failed: persisted flag was not true";
+    return "Independent ledger lookup mismatch/failed: persisted flag was not true";
   }
   if (
     typeof anchoringRecord.pgl_event_hash !== "string"
     || lookupRecord.event_hash !== anchoringRecord.pgl_event_hash
   ) {
-    return "Independent PGL lookup mismatch/failed: event hash did not match CAPPO event hash";
+    return "Independent ledger lookup mismatch/failed: event hash did not match the authority layer's event hash";
   }
   const chainRecord = asRecord(lookupRecord.chain);
-  if (!chainRecord) return "PGL hash independently recorded (chain not verified)";
+  if (!chainRecord) return "Ledger hash independently recorded (chain not verified)";
   if (
     chainRecord.error
     || chainRecord.status !== "verified"
@@ -166,7 +166,7 @@ export function pglProofLabel(anchoring: unknown, lookup: unknown): string {
         : "unknown";
     return `PGL chain verification failed: ${reason}`;
   }
-  return "PGL hash recorded and agent chain verified";
+  return "Ledger hash recorded and agent chain verified";
 }
 
 export function mountStatusProof(

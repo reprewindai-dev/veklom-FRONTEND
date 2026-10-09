@@ -33,10 +33,10 @@ describe("Capability OS readback and anchoring proof", () => {
   });
 
   it.each([
-    ["confirmed", "Live", "PGL persisted (CAPPO-reported)"],
-    ["pending_reconciliation", "Degraded", "PGL append unconfirmed"],
-    ["not_applicable", "Needs proof", "PGL status not confirmed"],
-    ["unconfirmed", "Needs proof", "PGL status not confirmed"],
+    ["confirmed", "Live", "Ledger persisted (reported by the authority layer)"],
+    ["pending_reconciliation", "Degraded", "Ledger append unconfirmed"],
+    ["not_applicable", "Needs proof", "Ledger status not confirmed"],
+    ["unconfirmed", "Needs proof", "Ledger status not confirmed"],
   ] as const)("maps %s anchoring honestly", (status, proof, label) => {
     expect(anchoringProof({ status })).toBe(proof);
     expect(anchoringLabel({ status })).toBe(label);
@@ -44,13 +44,13 @@ describe("Capability OS readback and anchoring proof", () => {
 
   it("requires proof when anchoring is missing", () => {
     expect(anchoringProof(undefined)).toBe("Needs proof");
-    expect(anchoringLabel(undefined)).toBe("PGL status not confirmed");
+    expect(anchoringLabel(undefined)).toBe("Ledger status not confirmed");
   });
 
   it("keeps CAPPO-reported confirmation Live until independently looked up", () => {
     const anchoring = { status: "confirmed", pgl_event_hash: "pgl_abc" };
     expect(pglProof(anchoring, undefined)).toBe("Live");
-    expect(pglProofLabel(anchoring, undefined)).toBe("Independent PGL lookup not run");
+    expect(pglProofLabel(anchoring, undefined)).toBe("Independent ledger lookup not run");
   });
 
   it("keeps a matching persisted hash Live until the agent chain is verified", () => {
@@ -63,7 +63,7 @@ describe("Capability OS readback and anchoring proof", () => {
     };
     expect(pglProof(anchoring, lookup)).toBe("Live");
     expect(pglProofLabel(anchoring, lookup)).toBe(
-      "PGL hash independently recorded (chain not verified)",
+      "Ledger hash independently recorded (chain not verified)",
     );
     expect(pglProof(anchoring, { ...lookup, event_hash: "pgl_other" })).toBe("Degraded");
     expect(pglProofLabel(anchoring, { ...lookup, event_hash: "pgl_other" })).toContain(
@@ -80,7 +80,7 @@ describe("Capability OS readback and anchoring proof", () => {
     };
     expect(pglProof(anchoring, lookup)).toBe("Verified");
     expect(pglProofLabel(anchoring, lookup)).toBe(
-      "PGL hash recorded and agent chain verified",
+      "Ledger hash recorded and agent chain verified",
     );
   });
 
@@ -114,7 +114,7 @@ describe("Capability OS readback and anchoring proof", () => {
     const anchoring = { status: "confirmed", pgl_event_hash: "pgl_abc" };
     expect(pglProof(anchoring, { error: "HTTP 404" })).toBe("Degraded");
     expect(pglProofLabel(anchoring, { error: "HTTP 404" })).toBe(
-      "Independent PGL lookup mismatch/failed: HTTP 404",
+      "Independent ledger lookup mismatch/failed: HTTP 404",
     );
   });
 
