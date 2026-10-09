@@ -29,8 +29,9 @@ export const SANDBOX_COPY = {
   banner: "⚗ SANDBOX — NON-PRODUCTION ENVIRONMENT · SAFE REHEARSAL · NO LIVE CONSEQUENCE",
   strip: ["Sandbox routes only", "Non-production environment", "No live consequence"],
   railFooter: "SANDBOX ENABLES MACHINES TO REHEARSE — NON-PRODUCTION GOVERNED COMPUTE SAFE TO EXPLORE",
-  runtimePill: "Runtime · Sandbox",
-  liveRuntimePill: "Runtime · Live",
+  // The Mode question (playground or live). Not a runtime health signal.
+  runtimePill: "Mode · Sandbox",
+  liveRuntimePill: "Mode · Live",
   footer: "SANDBOX ENVIRONMENT",
   liveFooter: "LIVE ENVIRONMENT",
   badge: "SANDBOX",

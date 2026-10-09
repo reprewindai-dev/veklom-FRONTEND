@@ -76,9 +76,10 @@ describe("sandbox chrome", () => {
     expect(liveHtml).not.toContain("NON-PRODUCTION");
   });
 
-  it("switches runtime pill and footer copy by environment", () => {
-    expect(renderToStaticMarkup(<RuntimePill sandbox />)).toContain("Runtime · Sandbox");
-    expect(renderToStaticMarkup(<RuntimePill sandbox={false} />)).toContain("Runtime · Live");
+  it("switches the mode pill and footer copy by environment", () => {
+    expect(renderToStaticMarkup(<RuntimePill sandbox />)).toContain("Mode · Sandbox");
+    expect(renderToStaticMarkup(<RuntimePill sandbox={false} />)).toContain("Mode · Live");
+    expect(renderToStaticMarkup(<RuntimePill sandbox={false} />)).not.toContain("Runtime");
     expect(renderToStaticMarkup(<EnvironmentFooter sandbox />)).toContain("SANDBOX ENVIRONMENT");
     expect(renderToStaticMarkup(<EnvironmentFooter sandbox={false} />)).not.toContain("SANDBOX");
   });
