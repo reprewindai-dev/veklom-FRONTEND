@@ -88,6 +88,7 @@ function NavContent({ onTerminal, sandbox, capabilityId, onNavigate, layoutKey }
       >
         <Icon size={16} strokeWidth={active ? 2.4 : 1.8} />
         <span>{item.label}</span>
+        {item.hint && !active ? <kbd className="ml-auto font-mono text-[10px] text-cos-steel">{item.hint}</kbd> : null}
         {active && <motion.span layoutId={`cos-nav-active-${layoutKey}`} className="ml-auto h-1.5 w-1.5 rounded-full bg-cos-accent shadow-[0_0_10px_rgb(var(--theme-accent))]" transition={{ type: "spring", stiffness: 500, damping: 35 }} />}
       </Link>
     );

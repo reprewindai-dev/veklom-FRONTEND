@@ -39,7 +39,7 @@ export const navGroups: NavGroup[] = [
     id: "operator",
     label: "Operator",
     items: [
-      { id: "terminal", label: "Terminal", action: "terminal", hint: "Ctrl+`" },
+      { id: "terminal", label: "Terminal", route: "/os/terminal", hint: "Ctrl+`" },
       { id: "settings", label: "Settings", route: "/os/settings" },
     ],
   },

@@ -90,7 +90,7 @@ const WEBMCP_TOOLS = [
   },
   {
     name: "veklom_execute_action",
-    description: "Executes a governed action against the target consequence boundary under an active capability mount. Physical execution occurs ONLY if authorized by CAPPO policy. Returns physical consequence state and immutable PGL receipt.",
+    description: "Executes a governed action against the target consequence boundary under an active capability mount. Physical execution occurs ONLY if authorized by CAPPO policy. Returns the resulting consequence state and the signed receipt, with its tamper-evident (hash-chained) ledger anchor.",
     inputSchema: {
       type: "object",
       properties: {
@@ -165,7 +165,7 @@ const WEBMCP_TOOLS = [
   },
   {
     name: "veklom_verify_evidence",
-    description: "Cryptographically verifies an execution receipt or PGL anchor against the GnomLedger immutable audit trail.",
+    description: "Checks an execution receipt or ledger event against the tamper-evident (hash-chained) evidence ledger. Ledger signature verification is not yet proven.",
     inputSchema: {
       type: "object",
       properties: {

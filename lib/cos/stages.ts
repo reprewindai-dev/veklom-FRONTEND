@@ -200,10 +200,10 @@ export const stages: StageDefinition[] = [
     id: "terminal",
     label: "Terminal",
     route: "/os/terminal",
-    purpose: "Expert alternate interface over the same governed paths; never an authority bypass.",
-    owner: "Capability OS",
+    purpose: "The operator console: type directives that run through the same governed tool server machines use. Consequential tools act only under your own credential and a single-use grant; a refusal is final and is never retried. Never an authority bypass.",
+    owner: "Capability OS operator console (W-17) · MCP tool server",
     endpoints: [
-      { method: "POST", path: "/v1/exec", classification: "present", response: "execution response", baseUrl: backend("cappo") },
+      { method: "POST", path: "/api/mcp", classification: "present", response: "JSON-RPC tools/list and tools/call results" },
     ],
     crossCutting: true,
   },
