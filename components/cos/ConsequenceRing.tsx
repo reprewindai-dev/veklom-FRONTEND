@@ -19,6 +19,7 @@ import {
   type RingState,
 } from "@/lib/cos/consequence-ring";
 import { readSessionCapabilityLease } from "@/lib/cos/lease-session";
+import { useAuth } from "@/lib/auth-context";
 import { ApiError, api } from "@/lib/api";
 import { classifyPayload } from "@/lib/cos/proof";
 import { isCappoProxyPath } from "@/lib/cappo-proxy-paths";
@@ -40,6 +41,8 @@ const stateColor: Record<RingState, string> = {
   LIVE: PAPER,
   DEGRADED: BRASS,
   FAILED: "#C2564B",
+  "SIGN IN REQUIRED": "#5A6484",
+  "NEEDS PROOF": "#5A6484",
   UNKNOWN: "#5A6484",
   "NOT IN SESSION": "#5A6484",
   "NOT SERVED": "#5A6484",
@@ -84,6 +87,10 @@ function describeObservation(position: RingPosition): string {
     case "failed":
       return observation.detail
         || `${position.probe?.path ?? "This route"} answered ${observation.status ?? "with a transport failure"}.`;
+    case "sign-in-required":
+      return "This check needs a signed-in workspace. Sign in to see it for your account.";
+    case "unproven":
+      return observation.detail || "The service answered and reported that this is not yet proven.";
     case "reachable":
       return position.probe?.proves ?? "Authority is held right now.";
     case "attested":
@@ -100,6 +107,11 @@ async function observe(path: string, attestable: boolean): Promise<RingObservati
     if (observation.kind === "failed") {
       return { kind: "failed", status: observation.status, detail: "The route reported a degraded payload." };
     }
+    // The service itself said "needs proof": never present that as live.
+    if (observation.kind === "unproven") {
+      const signal = payload && typeof payload === "object" ? (payload as Record<string, unknown>).proofSignal : undefined;
+      return { kind: "unproven", status: 200, detail: typeof signal === "string" ? signal : undefined };
+    }
     if (observation.kind === "source-of-truth" && attestable && observation.signed) {
       return { kind: "attested", status: observation.status };
     }
@@ -107,6 +119,9 @@ async function observe(path: string, attestable: boolean): Promise<RingObservati
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       return { kind: "route-absent" };
+    }
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      return { kind: "sign-in-required", status: error.status };
     }
     return {
       kind: "failed",
@@ -132,6 +147,8 @@ export function ConsequenceRing({ subject }: { subject: string }) {
   const [lease, setLease] = useState<RingLease | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [selected, setSelected] = useState<string>("identity");
+  const { me } = useAuth();
+  const signedIn = Boolean(me);
 
   useEffect(() => {
     setLease(readSessionCapabilityLease());
@@ -149,7 +166,7 @@ export function ConsequenceRing({ subject }: { subject: string }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [signedIn]);
 
   // The lease countdown is the only motion on this surface, and it is
   // truth-bearing rather than decorative, so it also runs under reduced motion.
@@ -170,9 +187,14 @@ export function ConsequenceRing({ subject }: { subject: string }) {
           observation: { kind: "not-observable", reason: definition.unobservableReason! },
         };
       }
-      return { ...definition, observation: observations[definition.id] ?? { kind: "unobserved" } };
+      const observed = observations[definition.id] ?? { kind: "unobserved" };
+      // A signed-in operator whose session the service rejects is a real failure, not a sign-in prompt.
+      if (observed.kind === "sign-in-required" && signedIn) {
+        return { ...definition, observation: { kind: "failed", status: observed.status, detail: "You are signed in, but this service did not accept your session." } };
+      }
+      return { ...definition, observation: observed };
     }),
-    [observations, lease, now],
+    [observations, lease, now, signedIn],
   );
 
   const proven = provenTransitionCount(positions);

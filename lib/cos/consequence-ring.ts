@@ -21,6 +21,10 @@ export type RingObservation =
   | { kind: "not-observable"; reason: string }
   | { kind: "route-absent" }
   | { kind: "failed"; status?: number; detail?: string }
+  // The route answered 401/403 to a visitor who is not signed in. Not a failure of the position.
+  | { kind: "sign-in-required"; status: number }
+  // The service answered, and itself reported that this position is not yet proven.
+  | { kind: "unproven"; status: number; detail?: string }
   | { kind: "reachable"; status: number }
   | { kind: "attested"; status: number };
 
@@ -29,6 +33,8 @@ export type RingState =
   | "LIVE"
   | "DEGRADED"
   | "FAILED"
+  | "SIGN IN REQUIRED"
+  | "NEEDS PROOF"
   | "UNKNOWN"
   | "NOT IN SESSION"
   | "NOT SERVED";
@@ -201,6 +207,10 @@ export function positionState(observation: RingObservation): RingState {
       return "NOT SERVED";
     case "failed":
       return observation.status && observation.status >= 500 ? "DEGRADED" : "FAILED";
+    case "sign-in-required":
+      return "SIGN IN REQUIRED";
+    case "unproven":
+      return "NEEDS PROOF";
     case "reachable":
       return "LIVE";
     case "attested":

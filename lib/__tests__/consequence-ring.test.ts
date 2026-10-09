@@ -54,6 +54,11 @@ describe("consequence ring truth states", () => {
     expect(positionState({ kind: "unobserved" })).toBe("UNKNOWN");
   });
 
+  it("never shows a sign-in prompt or a service-reported gap as a failure or as live", () => {
+    expect(positionState({ kind: "sign-in-required", status: 401 })).toBe("SIGN IN REQUIRED");
+    expect(positionState({ kind: "unproven", status: 200 })).toBe("NEEDS PROOF");
+  });
+
   it("reports transport failure as failed and provider failure as degraded", () => {
     expect(positionState({ kind: "failed", status: 404 })).toBe("FAILED");
     expect(positionState({ kind: "failed", status: 503 })).toBe("DEGRADED");
