@@ -123,3 +123,12 @@ Where each former tool lives:
 - Wallet = inside Settle (payment).
 
 Settings stays, as a plain settings page (owner's definition): account, your own model key, an API key for your software, the MCP connection, a simple webhook, enterprise integrations (Slack, Linear). Each section states what is live today; only account and the MCP connection are.
+
+## Authority is task-bound, never time-bound (owner, 2026-10-10)
+
+A grant is the duration of one task, not a time window. The first allowed consequence consumes it;
+every later use, same operation or a new one, is refused; revocation is immediate; the TTL
+(ten minutes at most) only backstops a grant that is never used. No design in this product may
+pre-issue authority for a span of time or epochs. The binding clause lives in the authority service:
+`cappo-backend/docs/AUTHORITY_IS_TASK_BOUND.md`. The V-Chip lab's "ghost lease epoch 100–200"
+violated it and is rejected by `verify_task_bound_lease.py` (evidence: `TASK_BOUND_LEASE_2026-10-10`).
