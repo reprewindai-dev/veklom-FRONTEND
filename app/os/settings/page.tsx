@@ -1,36 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Wallet } from "lucide-react";
-import { api } from "@/lib/api";
-import { useApi } from "@/hooks/useApi";
+import { Cable, KeyRound, LogOut, Plug, Webhook } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { unwrapList } from "@/types/api";
-import { Pillar } from "@/components/cos/SectionPillars";
+import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { SectionShell } from "@/components/cos/SectionShell";
-import { Field, FailureNotice } from "@/components/cos/StageParts";
+import { Field } from "@/components/cos/StageParts";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
 
 /**
- * Settings (navigation map, Operator): account and wallet, as served by the identity service.
+ * Settings (Operator): a plain settings page, nothing more. The owner's definition (2026-10-10):
+ * your account, your own model key, an API key for your software, the MCP connection, a simple
+ * webhook, and enterprise integrations. Each section states exactly what is live today. Nothing
+ * here grants authority: a key, a connection or a notification never causes a consequence by itself.
  *
- * API keys and webhooks were part of the original treasury module
- * (rescue/capability-os-before-20260904 app/(uacp)/treasury), served by the retired BYOS backend.
- * No current service owns them (checked 2026-10-09: /api/v1/auth/api-keys and
- * /api/v1/webhooks/* return 404 on every live service), so this page says so instead of calling
- * routes that do not exist. The workspace comes from the signed-in identity, never a typed value.
+ * Live today: account (identity service) and the MCP connection (the governed tool server at
+ * /api/mcp, the same one the Terminal uses). Not yet served by any Veklom service (checked
+ * 2026-10-09: 404 on every live service): model keys, API keys, webhooks, Slack/Linear integrations.
  */
-type TopupOption = { amount?: number; tokens?: number; price?: number; label?: string };
-type Transaction = { ts?: string; created_at?: string; type?: string; kind?: string; reference?: string; endpoint?: string; amount?: number; tokens?: number };
-
 const buttonClass = "inline-flex items-center gap-2 rounded-lg border border-cos-accent/40 px-3 py-2 text-xs text-cos-accent disabled:opacity-50";
-
-function money(value: unknown): string {
-  return value === undefined || value === null || Number.isNaN(Number(value)) ? "—" : `$${Number(value).toFixed(2)}`;
-}
 
 export default function SettingsPage() {
   const stage = getStage("settings");
@@ -38,28 +28,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { me, loading, logout } = useAuth();
   const signedIn = Boolean(me);
-
-  const balance = useApi<Record<string, unknown>>(signedIn ? "/api/v1/wallet/balance" : null);
-  const transactions = useApi<unknown>(signedIn ? "/api/v1/wallet/transactions" : null);
-  const topups = useApi<unknown>(signedIn ? "/api/v1/wallet/topup/options" : null);
-
-  const [walletError, setWalletError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function topUp(amount?: number) {
-    setBusy(true); setWalletError(null);
-    try {
-      const result = await api<{ url?: string }>("/api/v1/wallet/topup/checkout", { method: "POST", body: { amount } });
-      if (result?.url) window.location.href = result.url;
-      else setWalletError("Checkout did not return a payment page. Nothing was charged.");
-    } catch (error) {
-      setWalletError(error instanceof Error ? error.message : "Checkout is unavailable.");
-    }
-    setBusy(false);
-  }
-
-  const transactionList = unwrapList<Transaction>(transactions.data);
-  const topupList = unwrapList<TopupOption>(topups.data);
+  const mcpUrl = typeof window === "undefined" ? "/api/mcp" : `${window.location.origin}/api/mcp`;
 
   if (!loading && !signedIn) {
     return (
@@ -78,41 +47,42 @@ export default function SettingsPage() {
 
   return (
     <SectionShell stage={stage} proof={signedIn ? "Present" : "Not started"} records={data.records}>
-      <Pillar title="Account" proof={signedIn ? "Present" : "Not started"} detail="As returned by the identity service.">
+      <Pillar title="Account" proof={signedIn ? "Present" : "Not started"} detail="As returned by the identity service. Your workspace comes from your signed-in identity, never from a typed value.">
         <div className="grid gap-2 sm:grid-cols-2">
           <Field label="Email" value={me?.email} />
           <Field label="Role" value={me?.role ?? (me?.is_superuser ? "admin" : undefined)} />
           <Field label="Workspace" value={me?.workspace_id} />
-          <Field label="Account status" value={me?.status} />
-          <Field label="Email verified" value={me?.email_verified === undefined ? undefined : String(me.email_verified)} />
           <Field label="Plan" value={me?.tier} />
         </div>
         <button type="button" onClick={() => { logout(); router.push("/login?returnTo=%2Fos"); }} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-cos-border px-3 py-2 text-xs text-cos-muted hover:text-cos-text"><LogOut size={13} />Sign out</button>
       </Pillar>
-      <Pillar title="Wallet" proof={balance.data !== undefined ? "Present" : balance.error ? "Degraded" : "Not started"} detail="Balance and history as returned by the wallet service. Top-ups go to a real checkout page or nowhere.">
-        {balance.error ? <FailureNotice detail="The wallet is unavailable." /> : (
-          <div className="space-y-3">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Field label="Balance" value={balance.data ? money(balance.data.balance ?? balance.data.tokens) : undefined} />
-              <Field label="Recent transactions" value={transactions.data !== undefined ? String(transactionList.length) : undefined} />
-            </div>
-            {topupList.length ? <div className="flex flex-wrap gap-2">{topupList.map((option, index) => (
-              <button key={`${option.amount ?? index}`} type="button" onClick={() => void topUp(option.amount)} disabled={busy} className={buttonClass}><Wallet size={13} />{option.label ?? money(option.price ?? option.amount)}</button>
-            ))}</div> : topups.data !== undefined ? <p className="text-xs text-cos-steel">No top-up options returned.</p> : null}
-            {walletError ? <FailureNotice detail={walletError} /> : null}
-            {transactionList.length ? (
-              <ul className="space-y-1 font-mono text-[11px]">{transactionList.slice(0, 10).map((row, index) => (
-                <li key={index} className="flex justify-between gap-3 border-t border-cos-border pt-1 text-cos-muted"><span>{row.ts ?? row.created_at ?? "—"} · {row.type ?? row.kind ?? "—"}</span><span className="text-cos-text">{money(row.amount ?? row.tokens)}</span></li>
-              ))}</ul>
-            ) : null}
-          </div>
-        )}
+
+      <Pillar title="Connect by MCP" proof="Present" detail="Point any MCP client at the governed tool server. Discovery is not authority: every consequential tool still needs its own single-use grant, decided by the authority layer.">
+        <div className="space-y-2 text-xs text-cos-muted">
+          <div className="flex items-center gap-2"><Cable size={13} className="text-cos-accent" /><span className="font-mono text-cos-text">{mcpUrl}</span></div>
+          <p>JSON-RPC over HTTP. Start with <code className="font-mono text-cos-text">tools/list</code>; the Terminal in this OS uses the same server. To pair a machine instead, create a link in <Link href="/vlink/connect" className="text-cos-accent">VLink</Link>.</p>
+        </div>
       </Pillar>
-      <Pillar title="API keys and webhooks" proof="Not started" detail="Not available yet. No current Veklom service issues API keys or sends webhooks, so nothing here pretends to. Your software connects through VLink today; event notifications and per-key management are planned.">
-        <ul className="space-y-1 text-xs text-cos-muted">
-          <li>To connect software now, create a link in <Link href="/vlink/connect" className="text-cos-accent">VLink</Link>.</li>
-          <li>A key or a notification would never be authority to cause a consequence: that still needs a single-use grant.</li>
-        </ul>
+
+      <Pillar title="Your model key" proof="Not started" detail="Bring your own provider key and choose the model your capabilities run on.">
+        <HonestEmpty title="Not available yet" route="model key store: no routed endpoint" detail="No Veklom service stores a provider key or a model choice for your account yet. Nothing here pretends to." />
+      </Pillar>
+
+      <Pillar title="API key" proof="Not started" detail="A key for your own software to call Veklom.">
+        <HonestEmpty title="Not available yet" route="POST /api/v1/auth/api-keys: 404 on every live service" detail="Software connects through MCP or VLink today. A key would identify the caller; it would never be authority to cause a consequence." />
+      </Pillar>
+
+      <Pillar title="Webhook" proof="Not started" detail="One URL that receives a notification when something happens to your capabilities.">
+        <HonestEmpty title="Not available yet" route="/api/v1/webhooks: 404 on every live service" detail="No notifications are sent yet. A notification is evidence of an event, never permission for the next one." />
+      </Pillar>
+
+      <Pillar title="Integrations" proof="Not started" detail="Enterprise connections such as Slack and Linear.">
+        <div className="flex flex-wrap gap-2 text-xs text-cos-muted">
+          <span className="inline-flex items-center gap-1 rounded border border-cos-border px-2 py-1"><Plug size={12} /> Slack · not connected</span>
+          <span className="inline-flex items-center gap-1 rounded border border-cos-border px-2 py-1"><Plug size={12} /> Linear · not connected</span>
+          <span className="inline-flex items-center gap-1 rounded border border-cos-border px-2 py-1"><Webhook size={12} /> Custom · not connected</span>
+        </div>
+        <p className="mt-3 text-xs text-cos-steel"><KeyRound size={12} className="mr-1 inline" />No integration service is routed yet. When one is, it connects here and its actions still cross the authority layer.</p>
       </Pillar>
     </SectionShell>
   );

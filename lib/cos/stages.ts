@@ -19,11 +19,6 @@ export type StageId =
   | "settle"
   | "tracker"
   | "terminal"
-  | "registry"
-  | "marketplace"
-  | "harnesses"
-  | "contracts"
-  | "verification"
   | "settings";
 
 export interface StageEndpoint {
@@ -158,6 +153,8 @@ export const stages: StageDefinition[] = [
       { method: "GET", path: "/api/v1/ledger/agents/{id}", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "agent ledger entries", baseUrl: backend("cappo") },
       { method: "GET", path: "/api/v1/ledger/agents/{id}/verify", classification: "needs_proof", qualification: "route is CAPPO-owned; PGL/Gnomledger owner pending", response: "agent chain verification result", baseUrl: backend("cappo") },
       { method: "GET", path: "/v1/capability/targets/{target_ref}/state", classification: "present", response: "independent target state readback (no authority consumed)", baseUrl: backend("cappo") },
+      { method: "GET", path: "/api/pgl/ledger/proof/{event_hash}", classification: "present", response: "ledger event persistence and chain status" },
+      { method: "GET", path: "/api/pgl/ledger/agents/{agent_id}/verify", classification: "present", response: "agent hash-chain verification" },
     ],
   },
   {
@@ -200,7 +197,8 @@ export const stages: StageDefinition[] = [
   {
     id: "terminal",
     label: "Terminal",
-    route: "/os/terminal",
+    // Overlay opened from the shell control (Ctrl+`); /os/terminal redirects to /os (CANONICAL_HANDOFF §4).
+    route: "/os",
     purpose: "The operator console: type directives that run through the same governed tool server machines use. Consequential tools act only under your own credential and a single-use grant; a refusal is final and is never retried. Never an authority bypass.",
     owner: "Capability OS operator console (W-17) · MCP tool server",
     endpoints: [
@@ -208,69 +206,15 @@ export const stages: StageDefinition[] = [
     ],
     crossCutting: true,
   },
-  // Capability tools (docs/design-brief/02_NAVIGATION_MAP.md). Each consumes the owning service's
-  // routes; none owns execution, governance or settlement.
-  {
-    id: "registry",
-    label: "Registry",
-    route: "/os/registry",
-    purpose: "Every capability package the live registry serves, and the signed advertisements (beacons) that announce them, with their signatures checked. Discovery is not authority.",
-    owner: "cAPI capability registry (W-03) · CAPPO signed beacons",
-    endpoints: [
-      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
-    ],
-  },
-  {
-    id: "marketplace",
-    label: "Marketplace",
-    route: "/os/marketplace",
-    purpose: "Find capabilities and install them into this workspace: the product's baseline capabilities and the live package catalog. Installing grants nothing; authority is requested per operation.",
-    owner: "cAPI capability registry (W-03, W-04)",
-    endpoints: [
-      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
-    ],
-  },
-  {
-    id: "harnesses",
-    label: "Harnesses",
-    route: "/os/harnesses",
-    purpose: "What each capability package binds to: its target, adapter family and allowed actions, the binding this session holds, and an independent readback of a target's state.",
-    owner: "cAPI mounts (W-04) · execution substrate (W-08)",
-    endpoints: [
-      { method: "GET", path: "/v1/capability/packages", classification: "present", response: "capability package catalog", baseUrl: CAPI_RUNTIME_URL },
-      { method: "GET", path: "/v1/capability/targets/{target_ref}/state", classification: "present", response: "independent target state readback (no authority consumed)", baseUrl: backend("cappo") },
-    ],
-  },
-  {
-    id: "contracts",
-    label: "Contracts",
-    route: "/os/contracts",
-    purpose: "Bounded contracts compiled from intent in Blueprint. Check any contract against the compiler: a tampered contract is refused. A contract is intent, never authority.",
-    owner: "ABIDE blueprint/contract service (W-06)",
-    endpoints: [
-      { method: "POST", path: "/api/abide/v1/contract/project", classification: "needs_proof", qualification: "refuses a tampered contract", response: "agent work order, or a refusal" },
-    ],
-  },
-  {
-    id: "verification",
-    label: "Verification",
-    route: "/os/verification",
-    purpose: "Check evidence yourself instead of trusting a status: look up a ledger event by its hash and verify an agent's hash chain. Repository scanning is not connected yet.",
-    owner: "GnomLedger / PGL (W-11) · RepoGate (W-13, not connected)",
-    endpoints: [
-      { method: "GET", path: "/api/pgl/ledger/proof/{event_hash}", classification: "present", response: "ledger event persistence and chain status" },
-      { method: "GET", path: "/api/pgl/ledger/agents/{agent_id}/verify", classification: "present", response: "agent hash-chain verification" },
-    ],
-  },
   {
     id: "settings",
     label: "Settings",
     route: "/os/settings",
-    purpose: "Your account and wallet. Your workspace comes from your signed-in identity, never from a typed value. API keys and webhooks are not offered by any current service yet.",
-    owner: "LockerPhycer identity and wallet (W-02)",
+    purpose: "A plain settings page: your account, your own model key, an API key for your software, the MCP connection, a simple webhook and enterprise integrations. Each section says what is live today. Nothing here grants authority.",
+    owner: "LockerPhycer identity (W-02) · cAPI/MCP connection (W-05)",
     endpoints: [
       { method: "GET", path: "/api/v1/auth/me", classification: "present", response: "signed-in account" },
-      { method: "GET", path: "/api/v1/wallet/balance", classification: "present", response: "wallet balance" },
+      { method: "POST", path: "/api/mcp", classification: "present", response: "MCP tools/list for connecting a client" },
     ],
   },
 ];

@@ -1,8 +1,11 @@
 "use client";
 
+import { FormEvent, useEffect, useState } from "react";
+import { GitBranch, Link2 } from "lucide-react";
+import { api } from "@/lib/api";
 import { DecisionGraph, type DecisionNode } from "@/components/cos/DecisionGraph";
 import { EvidenceLookup } from "@/components/cos/ExecutionLookups";
-import { JsonPanel } from "@/components/cos/StageParts";
+import { Field, FailureNotice, JsonPanel } from "@/components/cos/StageParts";
 import { HonestEmpty, Pillar } from "@/components/cos/SectionPillars";
 import { SectionShell } from "@/components/cos/SectionShell";
 import { getStage } from "@/lib/cos/stages";
@@ -10,7 +13,7 @@ import { useStageData } from "@/lib/cos/useStageData";
 import { readSessionCapabilityLease, readSessionConsequence } from "@/lib/cos/lease-session";
 import { ProofBadge } from "@/components/cos/ProofBadge";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
-import { compareReadback, pglProof, pglProofLabel } from "@/lib/cos/readback";
+import { compareReadback, pglChainVerifyPath, pglProof, pglProofLabel, pglProofPath, type PglProofLookup } from "@/lib/cos/readback";
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -38,6 +41,41 @@ export default function EvidencePage() {
   const resultingState = asRecord(nestedConsequence?.resulting_state);
   const readback = consequence?.readback;
   const readbackState = asRecord(readback?.state);
+
+  // Check the ledger yourself (PGL, W-11): by event hash, and by recomputing an agent's chain.
+  const [eventHash, setEventHash] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const [lookup, setLookup] = useState<PglProofLookup>();
+  const [lookupError, setLookupError] = useState<string>();
+  const [chain, setChain] = useState<unknown>();
+  const [chainError, setChainError] = useState<string>();
+  const [busy, setBusy] = useState<"event" | "chain" | null>(null);
+  const anchoredEvent = typeof anchoring?.pgl_event_hash === "string" ? anchoring.pgl_event_hash : "";
+  const anchoredAgent = typeof anchoring?.pgl_agent_id === "string" ? anchoring.pgl_agent_id : "";
+  useEffect(() => {
+    if (anchoredEvent) setEventHash((current) => current || anchoredEvent);
+    if (anchoredAgent) setAgentId((current) => current || anchoredAgent);
+  }, [anchoredEvent, anchoredAgent]);
+  async function lookupEvent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const hash = eventHash.trim();
+    if (!hash) return;
+    setBusy("event"); setLookup(undefined); setLookupError(undefined);
+    try { setLookup(await api.get<PglProofLookup>(pglProofPath(hash))); }
+    catch (error) { setLookupError(error instanceof Error ? error.message : "The ledger did not return this event."); }
+    setBusy(null);
+  }
+  async function verifyChain(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const id = agentId.trim();
+    if (!id) return;
+    setBusy("chain"); setChain(undefined); setChainError(undefined);
+    try { setChain(await api.get<unknown>(pglChainVerifyPath(id))); }
+    catch (error) { setChainError(error instanceof Error ? error.message : "The ledger did not verify this chain."); }
+    setBusy(null);
+  }
+  const inputClass = "mt-2 w-full rounded-lg border border-cos-border bg-cos-bg px-3 py-2 font-mono text-sm text-cos-text";
+  const buttonClass = "inline-flex items-center gap-2 rounded-lg border border-cos-accent/40 px-3 py-2 text-xs text-cos-accent disabled:opacity-50";
   const readbackError = typeof readback?.error === "string" ? readback.error : undefined;
   const readbackProof = compareReadback(resultingState, readback);
   const responseScope = asRecord(response?.scope);
@@ -98,6 +136,30 @@ export default function EvidencePage() {
               <p className="mt-4 border-t border-cos-border pt-3 text-[11px] leading-5 text-cos-muted">Receipt as returned by the authority layer at execute time; ledger persistence is verified only via the audit routes below</p>
             </div>
           ) : <HonestEmpty title={hasEvidence ? "Evidence payload observed" : "No evidence payload observed"} route="GET /v1/audit/verify" detail={hasEvidence ? "The response is available to the route-backed data layer." : "No verifier result has been returned."} />}
+        </Pillar>
+        <Pillar title="Look up a ledger event" proof={lookup ? (lookup.persisted ? "Present" : "Degraded") : lookupError ? "Degraded" : "Not started"} detail="Is this event really in the ledger? Asked of the ledger itself, by the event's hash.">
+          <form onSubmit={lookupEvent} className="space-y-3">
+            <label className="block text-xs text-cos-muted">Event hash<input value={eventHash} onChange={(event) => setEventHash(event.target.value)} placeholder="ledger event hash" className={inputClass} /></label>
+            <button type="submit" disabled={busy !== null || !eventHash.trim()} className={buttonClass}><Link2 size={13} />{busy === "event" ? "Looking up…" : "Look up"}</button>
+          </form>
+          <div className="mt-3 space-y-3">
+            {lookupError ? <FailureNotice detail={lookupError} /> : null}
+            {lookup ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Field label="Persisted" value={lookup.persisted === undefined ? undefined : String(lookup.persisted)} />
+                <Field label="Status" value={lookup.status} />
+                <Field label="Event hash" value={lookup.event_hash} />
+                <Field label="Signature verification" value={lookup.cryptographic_verification ?? "Not returned"} />
+              </div>
+            ) : null}
+          </div>
+        </Pillar>
+        <Pillar title="Verify a hash chain" proof={chain ? "Present" : chainError ? "Degraded" : "Not started"} detail="Recompute an agent's ledger chain. Tamper-evident means a changed entry breaks the chain; it is not a claim of storage finality.">
+          <form onSubmit={verifyChain} className="space-y-3">
+            <label className="block text-xs text-cos-muted">Agent<input value={agentId} onChange={(event) => setAgentId(event.target.value)} placeholder="ledger agent id" className={inputClass} /></label>
+            <button type="submit" disabled={busy !== null || !agentId.trim()} className={buttonClass}><GitBranch size={13} />{busy === "chain" ? "Verifying…" : "Verify chain"}</button>
+          </form>
+          <div className="mt-3">{chainError ? <FailureNotice detail={chainError} /> : chain ? <JsonPanel value={chain} /> : null}</div>
         </Pillar>
         <Pillar title="Ledger verification" proof={verifyRecord?.proof ?? "Not started"} detail="The ledger's own verification result, shown exactly as returned.">
           <JsonPanel value={verifyPayload} empty="No ledger verification result has been returned." />

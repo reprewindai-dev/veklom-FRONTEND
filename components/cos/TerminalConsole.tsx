@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Command, Maximize2, X } from "lucide-react";
+import { Command, X } from "lucide-react";
 import { TerminalSession } from "./TerminalSession";
 
-/** The always-available operator console overlay (Ctrl+`). Same session UI as /os/terminal. */
+/** The always-available operator console overlay (Ctrl+`). Opened from the shell control; it has no route of its own. */
 export function TerminalConsole({ open, onClose }: { open: boolean; onClose: () => void }) {
   const reduceMotion = useReducedMotion();
   return (
@@ -15,7 +14,6 @@ export function TerminalConsole({ open, onClose }: { open: boolean; onClose: () 
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-cos-text"><Command size={15} className="text-cos-accent" />Terminal <span className="font-mono text-[10px] text-cos-steel">governed tool server · /api/mcp</span></div>
           <div className="flex items-center gap-3 text-cos-steel">
-            <Link href="/os/terminal" onClick={onClose} aria-label="Open the terminal full screen" className="hover:text-cos-text"><Maximize2 size={15} /></Link>
             <button onClick={onClose} aria-label="Close terminal" className="hover:text-cos-text"><X size={17} /></button>
           </div>
         </div>

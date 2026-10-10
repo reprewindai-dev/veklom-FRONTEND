@@ -55,12 +55,7 @@ export const stageGuides: Partial<Record<StageId, StageGuide>> = {
   tracker: {
     howTo: "What needs attention: it compares your grant, receipt and the target's own state, and flags anything that does not line up.",
   },
-  registry: { howTo: "Every capability the live registry serves, with its signed advertisement checked. Listing a capability grants nothing." },
-  marketplace: { howTo: "Browse capabilities and add them to this workspace. Installing grants nothing; each action still needs its own grant." },
-  harnesses: { howTo: "The targets each capability is allowed to act on, as declared by the registry." },
-  contracts: { howTo: "Contracts compiled in Blueprint, with their hashes, so you can check what was intended before anything ran." },
-  verification: { howTo: "Re-check receipts and ledger records independently of the page that produced them." },
   computeless: { howTo: "Your own machines as governed compute: register them, place work, and see results. Machines hold no authority of their own." },
   terminal: { howTo: "Type directives that run through the same governed tools machines use. A refusal is final and never retried." },
-  settings: { howTo: "Your account and wallet. API keys and webhooks are not available yet." },
+  settings: { howTo: "Your account, your own model key, an API key, the MCP connection, a webhook and integrations. Each says whether it is live yet." },
 };

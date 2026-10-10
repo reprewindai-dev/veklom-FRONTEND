@@ -73,33 +73,9 @@ export const stageMaturity: Record<StageId, StageMaturity> = {
     status: "Needs proof",
     summary: "Not yet exercised in a recorded run.",
   },
-  registry: {
-    status: "Partly proven",
-    summary: "The package catalog listed here is the one every recorded run mounted from. Signed beacons are live but not part of the recorded proof.",
-    evidence: RUNS,
-  },
-  marketplace: {
-    status: "Needs proof",
-    summary: "Not yet exercised in a recorded run. Installing hands a package to Mount; it grants nothing.",
-  },
-  harnesses: {
-    status: "Partly proven",
-    summary: "The package-to-target binding and the independent target readback are the ones used in every recorded run.",
-    evidence: RUNS,
-  },
-  contracts: {
-    status: "Partly proven",
-    summary: "Contracts compiled in Blueprint carried the bound operation in every recorded run. Checking a pasted contract here has not been recorded.",
-    evidence: RUNS,
-  },
-  verification: {
-    status: "Partly proven",
-    summary: "The ledger lookups here are the ones the recorded runs used from Execute. The ledger is hash-chain verified; signature verification is not yet proven. Repository scanning is not connected.",
-    evidence: RUNS,
-  },
   settings: {
     status: "Needs proof",
-    summary: "Account, keys, wallet and webhooks are served by the identity service; this page has not been exercised in a recorded run.",
+    summary: "Account comes from the identity service and the MCP connection is the live tool server; model keys, API keys, webhooks and integrations are not served by any Veklom service yet.",
   },
 };
 

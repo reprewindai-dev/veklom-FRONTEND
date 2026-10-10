@@ -110,3 +110,16 @@ The page's guardrails are binding:
 - Do not claim sealed eBPF LockerPhycer enforcement without direct proof.
 - Threat-analysis hooks are not an autonomous IDS.
 - An implemented mechanism is not a runtime-sealed host maturity claim.
+
+## One shell, not two (2026-10-10)
+
+On 2026-10-09 a "Capability tools" navigation group (Registry, Marketplace, Harnesses, Contracts, Verification) and a Terminal route page were added. That made the OS read as two products: a lifecycle, and a parallel set of tool pages that re-did Mount's job. It is removed. The rule, from `CANONICAL_HANDOFF.md` §3-4 and the owner's walk-through: one shell; the primary navigation is exactly the lifecycle; a workspace is a place and a capability comes into it; the home page is the catalog; Terminal is an overlay opened from the shell control.
+
+Where each former tool lives:
+- Marketplace = the home catalog at `/os` (search, recently used, mounted, full catalog, signed beacons).
+- Registry and Harnesses = inside Mount (Discover, Bind, Harness).
+- Contracts = inside Blueprint.
+- Verification (ledger event lookup, hash-chain verify) = inside Evidence. RepoGate has no routed endpoint yet.
+- Wallet = inside Settle (payment).
+
+Settings stays, as a plain settings page (owner's definition): account, your own model key, an API key for your software, the MCP connection, a simple webhook, enterprise integrations (Slack, Linear). Each section states what is live today; only account and the MCP connection are.
