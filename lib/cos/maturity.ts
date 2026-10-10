@@ -17,22 +17,27 @@ export interface StageMaturity {
 }
 
 const RUNS = "Recorded runs 001–005 (14/14 steps each), staging, 2026-10-08";
+// The first recorded run on veklom.com itself: a signed-in account, every stamp the server's own
+// answer (deny without grant, grant with ledger anchoring confirmed, forbidden action refused,
+// execute once with receipt, independent re-read, replay refused, revoke, refused after revoke,
+// Terminal whoami/tools/discover/verify-by-hash → verified: true). Evidence: DEMO_FREEZE_2026-10-10.
+const PROD = "Recorded run on veklom.com, 2026-10-10 (production, signed-in account)";
 
 export const stageMaturity: Record<StageId, StageMaturity> = {
   capabilities: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "The capability packages offered in Mount are served live, including which target each may act on. The baseline capability list on this page is part of the product, not a live feed.",
-    evidence: RUNS,
+    evidence: `${PROD}; ${RUNS}`,
   },
   mount: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "Choosing a package and binding its scope is the first step of every recorded run. A binding grants nothing on its own.",
-    evidence: RUNS,
+    evidence: `${PROD}; ${RUNS}`,
   },
   blueprint: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "Your plain-English outcome becomes a contract bound to the exact operation, before any authority exists.",
-    evidence: RUNS,
+    evidence: `${PROD}; ${RUNS}`,
   },
   govern: {
     status: "Partly proven",
@@ -40,18 +45,19 @@ export const stageMaturity: Record<StageId, StageMaturity> = {
     evidence: RUNS,
   },
   authority: {
-    status: "Proven on staging",
-    summary: "A grant covers one exact operation on one resource and one target, and is used up after one consequence; revoked grants are refused. 23 attempts to stretch, reuse or forge authority were refused. Recorded when this step was performed from the Mount page; not yet re-recorded here.",
-    evidence: `${RUNS}; hostile battery 23/23`,
+    status: "Proven in production",
+    summary: "A grant covers one exact operation on one resource and one target, and is used up after one consequence; revoked grants are refused. 23 attempts to stretch, reuse or forge authority were refused on staging. On veklom.com the grant was requested from this page, with ledger anchoring confirmed.",
+    evidence: `${PROD}; ${RUNS}; hostile battery 23/23`,
   },
   execute: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "With no authority: refused. With exact authority: done once. Retained, revoked or replayed authority: refused. Each checked against the target's own data.",
-    evidence: RUNS,
+    evidence: `${PROD}; ${RUNS}`,
   },
   evidence: {
-    status: "Needs proof",
-    summary: "Receipts and ledger anchoring are proven from the Execute page; this page itself has not yet been exercised in a recorded run.",
+    status: "Partly proven",
+    summary: "Receipts, ledger anchoring and verification by event hash are proven on veklom.com (from Execute and the Terminal). This page's own lookups have not yet been exercised in a recorded run.",
+    evidence: PROD,
   },
   measure: {
     status: "Needs proof",
@@ -70,8 +76,9 @@ export const stageMaturity: Record<StageId, StageMaturity> = {
     summary: "Diagnostics only. Not part of the recorded proof.",
   },
   terminal: {
-    status: "Needs proof",
-    summary: "Not yet exercised in a recorded run.",
+    status: "Proven in production",
+    summary: "whoami, tools, discover, verify-by-hash (verified: true) and held were typed on veklom.com and answered by the governed tool server. Consequential tools still need a single-use grant.",
+    evidence: PROD,
   },
   settings: {
     status: "Needs proof",

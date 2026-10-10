@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LeftNav, MobileNav } from "./LeftNav";
 import { AccountMenu } from "./AccountMenu";
 import { CapabilityContextBar } from "./CapabilityContextBar";
+import { WorkspaceNotice } from "./WorkspaceNotice";
 import { useCapabilityContext } from "@/lib/cos/capability-context";
 import { VeklomLogo } from "./VeklomLogo";
 import { ProofBadge } from "./ProofBadge";
@@ -114,6 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <EnvironmentFrame />
         <CapabilityContextBar capability={capability} onClear={clearCapability} />
+        <WorkspaceNotice />
         <div className="flex min-h-0 flex-1">
           <LeftNav onTerminal={() => setTerminalOpen(true)} sandbox={sandbox} capabilityId={capabilityId} />
           {/* Keyed by environment: switching modes remounts every page so no
