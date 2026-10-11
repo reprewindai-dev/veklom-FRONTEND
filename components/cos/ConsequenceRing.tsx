@@ -38,6 +38,7 @@ const PAPER = "#EDE4D3";
 
 const stateColor: Record<RingState, string> = {
   VERIFIED: SIGNAL,
+  SIGNED: PAPER, // deliberately the same as LIVE: an unchecked signature buys no signal colour
   LIVE: PAPER,
   DEGRADED: BRASS,
   FAILED: "#C2564B",
@@ -93,6 +94,8 @@ function describeObservation(position: RingPosition): string {
       return observation.detail || "The service answered and reported that this is not yet proven.";
     case "reachable":
       return position.probe?.proves ?? "Authority is held right now.";
+    case "signed":
+      return "The service answered with a signed payload. This page has not verified that signature against a trusted key, so it is drawn as signed, not verified.";
     case "attested":
       return position.probe?.proves ?? "Attested.";
   }
@@ -112,8 +115,13 @@ async function observe(path: string, attestable: boolean): Promise<RingObservati
       const signal = payload && typeof payload === "object" ? (payload as Record<string, unknown>).proofSignal : undefined;
       return { kind: "unproven", status: 200, detail: typeof signal === "string" ? signal : undefined };
     }
-    if (observation.kind === "source-of-truth" && attestable && observation.signed) {
-      return { kind: "attested", status: observation.status };
+    if (observation.kind === "source-of-truth" && attestable) {
+      // classifyPayload never trusts a payload's own word: `verified` is true only when a
+      // client-side verifier has checked the signature. A signature that is merely present
+      // is reported as SIGNED, which cannot close an arc. Promoting it to VERIFIED here was
+      // the ring's one overclaim (found in the 2026-10-11 review).
+      if (observation.verified) return { kind: "attested", status: observation.status };
+      if (observation.signed) return { kind: "signed", status: observation.status };
     }
     return { kind: "reachable", status: 200 };
   } catch (error) {

@@ -26,10 +26,15 @@ export type RingObservation =
   // The service answered, and itself reported that this position is not yet proven.
   | { kind: "unproven"; status: number; detail?: string }
   | { kind: "reachable"; status: number }
+  // The service answered with a payload that carries a signature, but this page has not
+  // verified that signature against a key it trusts. Signed is not verified.
+  | { kind: "signed"; status: number }
+  // The payload's signature was verified by this client against a trusted key.
   | { kind: "attested"; status: number };
 
 export type RingState =
   | "VERIFIED"
+  | "SIGNED"
   | "LIVE"
   | "DEGRADED"
   | "FAILED"
@@ -161,22 +166,24 @@ export interface RingProof {
 }
 
 const RECORDED_RUNS = "Recorded runs 001–005, 14/14 steps each, staging, 2026-10-08";
+// Same wording as lib/cos/maturity.ts; the two records must move together.
+const PRODUCTION_RUN = "Recorded run on veklom.com, 2026-10-10 (production, signed-in account)";
 
 export const ringProof: Record<RingPositionId, RingProof> = {
   identity: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "A signed-in workspace is recognised by the authority layer before any authority is issued.",
-    evidence: RECORDED_RUNS,
+    evidence: `${PRODUCTION_RUN}; ${RECORDED_RUNS}`,
   },
   connection: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "The registry serves the signed capability catalog. Routes that once bypassed the authority layer are closed in production (410).",
-    evidence: `${RECORDED_RUNS}; production bypass check 2026-10-08`,
+    evidence: `${PRODUCTION_RUN}; ${RECORDED_RUNS}; production bypass check 2026-10-08`,
   },
   authority: {
-    status: "Proven on staging",
+    status: "Proven in production",
     summary: "One exact operation is allowed once. Consumed, revoked, replayed or stretched authority is refused, each checked against the target's own data.",
-    evidence: `${RECORDED_RUNS}; hostile battery 23/23`,
+    evidence: `${PRODUCTION_RUN}; ${RECORDED_RUNS}; hostile battery 23/23 (staging)`,
   },
   compute: {
     status: "Partly proven",
@@ -213,6 +220,10 @@ export function positionState(observation: RingObservation): RingState {
       return "NEEDS PROOF";
     case "reachable":
       return "LIVE";
+    // A signature the page has not checked earns no more than LIVE's colour. Only a
+    // client-verified signature is VERIFIED, and only VERIFIED positions can close an arc.
+    case "signed":
+      return "SIGNED";
     case "attested":
       return "VERIFIED";
   }
