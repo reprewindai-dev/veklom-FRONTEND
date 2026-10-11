@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LeftNav } from "./LeftNav";
 import { VeklomLogo } from "./VeklomLogo";
-import { VeklomActivityCue } from "./VeklomActivityCue";
+import { AttentionCue } from "./AttentionCue";
 import { ProofBadge } from "./ProofBadge";
 import { CommandPalette } from "./CommandPalette";
 import { TerminalConsole } from "./TerminalConsole";
@@ -104,7 +104,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <RuntimePill sandbox={sandbox} />
             <ProdSandboxToggle sandbox={sandbox} onChange={setSandbox} />
             {lease && !lease.terminated ? <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted md:flex"><Cpu size={14} className="text-cos-steel" />Held mount <ProofBadge status="Present" /></div> : null}
-            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><VeklomActivityCue kind="system" condition={loading ? "active" : me ? "present" : "failed"} size={18} showCaption={false} /><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
+            <AttentionCue signedIn={Boolean(me)} loading={loading} />
+            <div className="hidden items-center gap-2 rounded-full border border-cos-border bg-cos-surface2/40 px-3 py-2 text-cos-muted xl:flex"><ShieldCheck size={14} className="text-cos-steel" />{identity}</div>
             <ThemeToggle />
             <button onClick={() => setPaletteOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:border-cos-accent/50 hover:text-cos-accent" aria-label="Open command palette"><Command size={16} /></button>
             <span className="hidden items-center gap-1 rounded-full border border-cos-border px-3 py-2 font-mono text-[10px] text-cos-steel xl:flex"><Clock3 size={13} />{clock}</span>

@@ -27,23 +27,31 @@ export function EnvironmentRows({
   empty,
   idOf,
   extra,
+  anchorOf,
+  highlightId,
 }: {
   rows: Row[];
   empty: string;
   idOf: (row: Row, index: number) => string;
   extra?: (row: Row) => ReactNode;
+  /** DOM id for a row, so other surfaces (the attention cue) can link straight to it. */
+  anchorOf?: (row: Row, index: number) => string;
+  highlightId?: string;
 }) {
   const sandbox = useSandboxMode();
   const visible = rows.filter((row) => rowVisibleInEnvironment(row, sandbox));
   const hidden = rows.length - visible.length;
   return (
     <div className="space-y-2" data-testid="environment-rows">
-      {visible.length ? visible.map((row, index) => (
-        <div key={`${idOf(row, index)}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-cos-border bg-cos-bg/35 px-3 py-2">
+      {visible.length ? visible.map((row, index) => {
+        const anchor = anchorOf?.(row, index);
+        return (
+        <div key={`${idOf(row, index)}-${index}`} id={anchor} className={`flex scroll-mt-24 items-center justify-between gap-3 rounded-lg border bg-cos-bg/35 px-3 py-2 ${anchor && anchor === highlightId ? "border-cos-accent ring-1 ring-cos-accent/60" : "border-cos-border"}`}>
           <div className="flex min-w-0 items-center gap-2"><ScopeTag project={projectOfRecord(row)} /><span className="truncate font-mono text-xs text-cos-text">{idOf(row, index)}</span></div>
           {extra ? extra(row) : null}
         </div>
-      )) : <p className="text-xs text-cos-muted">{empty}</p>}
+        );
+      }) : <p className="text-xs text-cos-muted">{empty}</p>}
       {hidden > 0 ? (
         <p className="font-mono text-[10px] text-cos-steel">
           {hidden} {sandbox ? "live or unscoped" : "sandbox"} row{hidden === 1 ? "" : "s"} hidden in this environment{sandbox ? " (CAPPO returned no project=sandbox scope for them)" : ""}.

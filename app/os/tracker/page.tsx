@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
@@ -8,20 +8,10 @@ import { SectionShell } from "@/components/cos/SectionShell";
 import { Pillar } from "@/components/cos/SectionPillars";
 import { JsonPanel } from "@/components/cos/StageParts";
 import { UnknownLink } from "@/components/cos/StageCollection";
-import { VeklomActivityCue, type ActivityCondition } from "@/components/cos/VeklomActivityCue";
+import { VeklomActivityCue } from "@/components/cos/VeklomActivityCue";
 import { EnvironmentRows, rowsFromPayload } from "@/components/cos/EnvironmentRows";
 import { useSandboxMode } from "@/lib/cos/sandbox";
-
-function runCondition(value: Record<string, unknown>): ActivityCondition | undefined {
-  const raw = value.status ?? value.state ?? value.outcome;
-  if (typeof raw !== "string") return undefined;
-  const status = raw.toLowerCase();
-  if (["running", "active", "executing", "in_progress"].includes(status)) return "active";
-  if (["uncertain", "outcome_uncertain", "unknown"].includes(status)) return "degraded";
-  if (["failed", "denied", "revoked", "expired", "cancelled"].includes(status)) return "failed";
-  if (["completed", "succeeded", "success", "allow"].includes(status)) return "present";
-  return undefined;
-}
+import { approvalItems, attentionAnchor, runItems } from "@/lib/cos/attention";
 
 function runRows(value: unknown): Record<string, unknown>[] {
   if (Array.isArray(value)) return value.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && !Array.isArray(item)));
@@ -51,6 +41,19 @@ export default function TrackerPage() {
   const runs = runRows(data.payloads["GET /v1/runs"]);
   const ledgerRows = rowsFromPayload(data.payloads["GET /v1/audit/ledger"]);
   const sandbox = useSandboxMode();
+  const approvals = rowsFromPayload(data.payloads["GET /v1/governance/v2/quarantine"], ["items"]);
+  // The attention cue links here with #run-<id> or #approval-<id>; rows load after navigation,
+  // so scroll once the matching row exists.
+  const [focus, setFocus] = useState("");
+  useEffect(() => {
+    const read = () => setFocus(window.location.hash.slice(1));
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, []);
+  useEffect(() => {
+    if (focus) document.getElementById(focus)?.scrollIntoView({ block: "center" });
+  }, [focus, runs.length, approvals?.length]);
 
   return (
     <>
@@ -61,9 +64,14 @@ export default function TrackerPage() {
           </Pillar>
         </div>
         <Pillar title="Telemetry" proof="Needs proof">
-          {runs.length ? <EnvironmentRows rows={runs} empty="No execution runs in this environment — GET /v1/runs" idOf={(run, index) => String(run.run_id ?? run.id ?? `run-${index}`)} extra={(run) => { const condition = runCondition(run); return condition ? <VeklomActivityCue kind="execution" condition={condition} size={18} showCaption={false} /> : null; }} /> : sandbox ? <p className="text-xs text-cos-muted">No sandbox-scoped execution runs returned — GET /v1/runs</p> : <JsonPanel value={data.payloads["GET /v1/runs"]} empty="No execution runs returned — GET /v1/runs" />}
+          {runs.length ? <EnvironmentRows rows={runs} empty="No execution runs in this environment — GET /v1/runs" idOf={(run, index) => String(run.run_id ?? run.id ?? `run-${index}`)} anchorOf={(run, index) => attentionAnchor("run", String(run.run_id ?? run.id ?? `run-${index}`))} highlightId={focus} extra={(run) => { const item = runItems([run], sandbox)[0]; return item ? <span className="flex items-center gap-2 text-[11px] text-cos-muted">{item.title}<VeklomActivityCue kind="execution" condition={item.condition} size={18} showCaption={false} /></span> : null; }} /> : sandbox ? <p className="text-xs text-cos-muted">No sandbox-scoped execution runs returned — GET /v1/runs</p> : <JsonPanel value={data.payloads["GET /v1/runs"]} empty="No execution runs returned — GET /v1/runs" />}
         </Pillar>
-        <Pillar title="Authority" proof="Needs proof"><UnknownLink label="Authorization ↔ Execution" detail="a run record carrying the authorization decision or execution binding" /></Pillar>
+        <Pillar title="Authority" proof="Needs proof" detail="Requests held for approval. CAPPO keeps this queue in memory, so it is lost if CAPPO restarts.">
+          <div className="space-y-3">
+            {approvals ? <EnvironmentRows rows={approvals} empty="Nothing is waiting for approval in this environment — GET /v1/governance/v2/quarantine" idOf={(row, index) => String(row.quarantine_id ?? `approval-${index}`)} anchorOf={(row, index) => attentionAnchor("approval", String(row.quarantine_id ?? `approval-${index}`))} highlightId={focus} extra={(row) => { const item = approvalItems([row], sandbox)[0]; return item ? <span className="flex items-center gap-2 text-[11px] text-cos-muted">{item.title}<VeklomActivityCue kind="authority" condition={item.condition} size={18} showCaption={false} /></span> : null; }} /> : <JsonPanel value={data.payloads["GET /v1/governance/v2/quarantine"]} empty="No approval queue returned — GET /v1/governance/v2/quarantine" />}
+            <UnknownLink label="Authorization ↔ Execution" detail="a run record carrying the authorization decision or execution binding" />
+          </div>
+        </Pillar>
         <Pillar title="Evidence" proof="Needs proof">{ledgerRows ? <EnvironmentRows rows={ledgerRows} empty="No ledger entries in this environment — GET /v1/audit/ledger" idOf={(row, index) => String(row.id ?? row.event_id ?? row.entry_hash ?? row.hash ?? `entry-${index}`)} /> : sandbox ? <p className="text-xs text-cos-muted">No sandbox-scoped ledger entries returned — GET /v1/audit/ledger</p> : <JsonPanel value={data.payloads["GET /v1/audit/ledger"]} empty="No ledger returned — GET /v1/audit/ledger" />}</Pillar>
         <Pillar title="Drift" proof="Needs proof"><div className="space-y-3">{sources.map((source) => <UnknownLink key={source.path} label={source.label} detail={source.detail} />)}</div></Pillar>
       </SectionShell>

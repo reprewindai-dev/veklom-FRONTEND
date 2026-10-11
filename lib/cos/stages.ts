@@ -184,6 +184,7 @@ export const stages: StageDefinition[] = [
     endpoints: [
       { method: "GET", path: "/v1/audit/ledger", classification: "present", response: "composed evidence ledger", baseUrl: backend("cappo") },
       { method: "GET", path: "/v1/runs", classification: "present", response: "composed execution runs", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/governance/v2/quarantine", classification: "needs_proof", qualification: "in-memory, not durable", response: "requests held for approval", baseUrl: backend("cappo") },
     ],
   },
   {
