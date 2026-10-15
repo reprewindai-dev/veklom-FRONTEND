@@ -12,6 +12,7 @@ services:
         PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
         VLINK_URL: ${VLINK_URL:-http://host.docker.internal:3000}
         NEXT_PUBLIC_API_BASE_URL: ""
+        SOURCE_COMMIT_SHA: ${SOURCE_COMMIT_SHA:-}
     image: veklom-frontend:main
     container_name: veklom-frontend
     restart: unless-stopped
@@ -21,6 +22,8 @@ services:
       HOSTNAME: 0.0.0.0
       # Same-origin browser API. Server-side Next routes/proxies use these URLs.
       NEXT_PUBLIC_API_BASE_URL: ""
+      VEKLOM_SOURCE_COMMIT_SHA: ${SOURCE_COMMIT_SHA:-}
+      VEKLOM_RUNTIME_IMAGE_ID: ${VEKLOM_RUNTIME_IMAGE_ID:-}
       BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:8088}
       LOCKERPHYCER_URL: ${LOCKERPHYCER_URL:-http://host.docker.internal:8092}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
