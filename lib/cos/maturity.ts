@@ -24,6 +24,10 @@ const RUNS = "Recorded runs 001–005 (14/14 steps each), staging, 2026-10-08";
 const PROD = "Recorded run on veklom.com, 2026-10-10 (production, signed-in account)";
 
 export const stageMaturity: Record<StageId, StageMaturity> = {
+  workspace: {
+    status: "Needs proof",
+    summary: "One conversation that runs the whole lifecycle: compile, approve once, grant, execute, read back. Built on the proven Mount/Authority/Execute path; no recorded run of this surface yet.",
+  },
   capabilities: {
     status: "Proven in production",
     summary: "The capability packages offered in Mount are served live, including which target each may act on. The baseline capability list on this page is part of the product, not a live feed.",

@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   Library,
   LockKeyhole,
+  MessageSquareText,
   Play,
   Route,
   Scale,
@@ -47,6 +48,7 @@ const icons: Record<string, typeof Boxes> = {
   computeless: Server,
   terminal: Command,
   settings: Settings,
+  workspace: MessageSquareText,
 };
 
 type NavProps = {

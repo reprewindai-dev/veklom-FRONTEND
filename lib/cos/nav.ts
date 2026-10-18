@@ -25,7 +25,16 @@ export const navGroups: NavGroup[] = [
   // where it runs, and the operator's Terminal overlay and Settings. Marketplace is the home
   // catalog; harness and contracts live inside Mount and Blueprint; ledger checks live inside
   // Evidence. There is no second group of tool pages.
-  { id: "home", label: "Home", items: [{ id: "capabilities", label: "Capabilities", route: "/os" }] },
+  {
+    id: "home",
+    label: "Home",
+    items: [
+      { id: "capabilities", label: "Capabilities", route: "/os" },
+      // Workspace is the same lifecycle in one conversation, not a second product: it calls the
+      // Mount, Authority and Execute routes and leaves the operator pages reading the same session.
+      { id: "workspace", label: "Workspace", route: "/os/workspace" },
+    ],
+  },
   { id: "lifecycle", label: "Lifecycle", items: lifecycle },
   { id: "cloud", label: "Where it runs", items: [{ id: "computeless", label: "Private Cloud", route: "/os/computeless" }] },
   {

@@ -158,8 +158,13 @@ export function ConsequenceRing({ subject }: { subject: string }) {
   const { me } = useAuth();
   const signedIn = Boolean(me);
 
+  // The lease is read on mount and again whenever this tab's session grant changes, so a grant
+  // requested or consumed on another surface (Authority, Execute, Workspace) is drawn here at once.
   useEffect(() => {
-    setLease(readSessionCapabilityLease());
+    const sync = () => setLease(readSessionCapabilityLease());
+    sync();
+    window.addEventListener("veklom.capability_lease.changed", sync);
+    return () => window.removeEventListener("veklom.capability_lease.changed", sync);
   }, []);
 
   useEffect(() => {

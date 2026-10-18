@@ -19,7 +19,8 @@ export type StageId =
   | "settle"
   | "tracker"
   | "terminal"
-  | "settings";
+  | "settings"
+  | "workspace";
 
 export interface StageEndpoint {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -55,6 +56,20 @@ export const stages: StageDefinition[] = [
       { method: "PUT", path: "/api/fabric/policy", classification: "present", response: "placement policy (owned only / owned first / cloud first; cloud enabled)", baseUrl: backend("computless") },
       { method: "POST", path: "/api/fabric/enrollment-keys", classification: "present", response: "one-time setup key for connecting a machine to your own workspace (grants no authority)", baseUrl: backend("computless") },
       { method: "GET", path: "/api/fabric/enrollment", classification: "present", response: "join command for connecting a machine (enrollment grants no authority)", baseUrl: backend("computless") },
+    ],
+    crossCutting: true,
+  },
+  {
+    id: "workspace",
+    label: "Workspace",
+    route: "/os/workspace",
+    purpose: "Say what you need done. Veklom compiles it into a bounded contract, asks you to approve the one action it will take, requests a single-use grant, executes it, and shows the independent readback. Nothing runs until you approve; what the catalog cannot cover is refused in plain words.",
+    owner: "ABIDE contract compiler; CAPPO consequence authority",
+    endpoints: [
+      { method: "POST", path: "/api/abide/v1/blueprint/compile", classification: "needs_proof", qualification: "deterministic contract (same intent + catalog = same hash), not persisted; grants nothing", response: "bounded contract: steps, coverage, bound operations, canonical hash" },
+      { method: "POST", path: "/v1/capability/mounts", classification: "present", response: "grant decision, granted scope and grant descriptor", baseUrl: CAPI_RUNTIME_URL },
+      { method: "POST", path: "/v1/capability/mounts/{mount_id}/execute", classification: "present", response: "governed consequence response and receipt", baseUrl: backend("cappo") },
+      { method: "GET", path: "/v1/capability/targets/{target_ref}/state", classification: "present", response: "independent target state readback (no authority consumed)", baseUrl: backend("cappo") },
     ],
     crossCutting: true,
   },

@@ -15,6 +15,10 @@ export interface StageGuide {
 }
 
 export const stageGuides: Partial<Record<StageId, StageGuide>> = {
+  workspace: {
+    howTo: "Type what you need done. Review the one action Veklom proposes, approve it, and read the receipt and the independent re-read. Anything the catalog cannot cover is refused and says why.",
+    needs: "a signed-in account with a bound workspace",
+  },
   capabilities: {
     howTo: "Start here. To run a real action: describe it in Blueprint, then follow Mount, Authority and Execute.",
     next: { label: "Blueprint", route: "/os/blueprint" },
