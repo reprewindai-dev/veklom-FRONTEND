@@ -75,6 +75,11 @@ function onCompiled(state: TaskState, plan: WorkspacePlan): TaskState {
     next = say(next, "veklom", `This compiles to ${plan.steps.length} steps. The Workspace runs one governed step at a time, starting with step ${step.sequence}: "${step.clause}".`);
   }
   if (!step.operation) {
+    // The user already supplied a binding for this step and the compiler still returned no
+    // operation: say so, instead of asking the same question again as if nothing happened.
+    if (state.bindings[step.sequence]) {
+      return say({ ...next, phase: "needs_input" }, "veklom", `The compiler accepted the request but did not bind step ${step.sequence} to an operation on ${state.bindings[step.sequence].resource}. Its catalog entry for ${step.packageRef ?? "this capability"} may declare no target, or the service rejected the binding. Nothing can be approved until the contract carries the exact operation.`, "warn");
+    }
     return say({ ...next, phase: "needs_input" }, "veklom", `Step ${step.sequence} ("${step.clause}") is covered by ${step.packageRef ?? "a capability"}${step.action ? ` as ${step.action}` : ""}. Tell me the exact resource it should act on, and any arguments, and I will bind it. Nothing is granted yet.`);
   }
   return say({ ...next, phase: "needs_review" }, "veklom", `Ready for your review: ${step.operation.action} on ${step.operation.resource} through ${step.operation.target_ref}. Approving asks the authority layer for a single-use grant for exactly this operation and runs it once.`);
