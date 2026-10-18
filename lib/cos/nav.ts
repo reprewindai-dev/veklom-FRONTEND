@@ -1,9 +1,11 @@
 import { spineStages } from "./stages";
 
 /**
- * The Capability OS navigation, as specified in docs/capability-os/CANONICAL_HANDOFF.md §3-4 and
- * docs/capability-os/DESIGN_MODEL.md: one shell, one lifecycle spine. Primary navigation uses functional names only; internal
- * service names belong in diagnostics and developer views.
+ * The Capability OS navigation, revamped to an executive product hierarchy:
+ * 1. Core Product: Workspace (Cockpit), Evidence Vault (Ledger), Private Cloud (Substrate), Settings.
+ * 2. Advanced / Inspect: Encapsulated developer stages and diagnostic tools (Mount, Blueprint, Govern, Authority, Execute, Measure, Settle, Terminal).
+ *
+ * Invariant: Zero broken wiring. All routes and backend endpoints remain fully connected.
  */
 export type NavItem = {
   id: string;
@@ -14,35 +16,40 @@ export type NavItem = {
   hint?: string;
 };
 
-export type NavGroup = { id: string; label: string; items: NavItem[] };
+export type NavGroup = {
+  id: string;
+  label: string;
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
+  items: NavItem[];
+};
 
-const lifecycle: NavItem[] = spineStages
-  .filter((stage) => stage.id !== "capabilities")
+// Intermediate developer stages (tucked cleanly into the Inspect drawer)
+const inspectStages: NavItem[] = spineStages
+  .filter((stage) => stage.id !== "evidence") // Evidence is elevated to a primary product surface
   .map((stage) => ({ id: stage.id, label: stage.label, route: stage.route }));
 
 export const navGroups: NavGroup[] = [
-  // One shell (CANONICAL_HANDOFF §3-4, owner 2026-10-10): the home catalog, the lifecycle spine,
-  // where it runs, and the operator's Terminal overlay and Settings. Marketplace is the home
-  // catalog; harness and contracts live inside Mount and Blueprint; ledger checks live inside
-  // Evidence. There is no second group of tool pages.
+  // Primary Product Cockpit (The 4 essential product areas)
   {
-    id: "home",
-    label: "Home",
+    id: "product",
+    label: "Core Product",
     items: [
-      { id: "capabilities", label: "Capabilities", route: "/os" },
-      // Workspace is the same lifecycle in one conversation, not a second product: it calls the
-      // Mount, Authority and Execute routes and leaves the operator pages reading the same session.
-      { id: "workspace", label: "Workspace", route: "/os/workspace" },
+      { id: "workspace", label: "Workspace", route: "/os/workspace", hint: "Cockpit" },
+      { id: "evidence", label: "Evidence Vault", route: "/os/evidence", hint: "Ledger" },
+      { id: "computeless", label: "Private Cloud", route: "/os/computeless", hint: "Substrate" },
+      { id: "settings", label: "Settings", route: "/os/settings" },
     ],
   },
-  { id: "lifecycle", label: "Lifecycle", items: lifecycle },
-  { id: "cloud", label: "Where it runs", items: [{ id: "computeless", label: "Private Cloud", route: "/os/computeless" }] },
+  // Advanced / Inspect Mode (Tucked away, collapsible, fully connected)
   {
-    id: "operator",
-    label: "Operator",
+    id: "inspect",
+    label: "Advanced / Inspect",
+    collapsible: true,
+    defaultCollapsed: true,
     items: [
-      { id: "terminal", label: "Terminal", action: "terminal", hint: "Ctrl+`" },
-      { id: "settings", label: "Settings", route: "/os/settings" },
+      { id: "terminal", label: "Live Terminal", action: "terminal", hint: "Ctrl+`" },
+      ...inspectStages,
     ],
   },
 ];

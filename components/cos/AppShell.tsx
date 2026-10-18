@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock3, Command, Cpu, FileCheck2, FlaskConical, Menu } from "lucide-react";
+import { Clock3, Command, Cpu, FileCheck2, FlaskConical, Menu, MessageSquareText } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LeftNav, MobileNav } from "./LeftNav";
 import { AccountMenu } from "./AccountMenu";
@@ -101,6 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 lg:gap-5">
             <button type="button" onClick={() => setNavOpen(true)} className="rounded-full border border-cos-border bg-cos-surface2/50 p-2.5 text-cos-steel transition hover:text-cos-accent lg:hidden" aria-label="Open navigation"><Menu size={16} /></button>
             <VeklomLogo />
+            <Link href="/os/workspace" className="hidden items-center gap-1.5 rounded-full border border-cos-accent/30 bg-cos-accent/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-cos-accent transition hover:bg-cos-accent/20 md:inline-flex"><MessageSquareText size={13} />Workspace</Link>
             <Link href="/proof" className="hidden items-center gap-1 text-xs text-cos-steel transition hover:text-cos-accent lg:inline-flex" title="What is proven, with its evidence"><FileCheck2 size={13} />Proof</Link>
           </div>
           <div className="flex items-center gap-2 text-xs">
