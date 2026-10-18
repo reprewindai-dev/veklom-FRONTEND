@@ -1,8 +1,4 @@
 import React from "react";
-import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { originFromHost } from "@/lib/brandMetadata";
-import { SIGNUP_URL } from "@/lib/funnel";
 import { TrackedLink } from "@/components/TrackedLink";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { AmbientField, AuthorityOrb, LiveSignal, StageLabel } from "@/components/brand/PremiumPrimitives";
@@ -21,13 +17,57 @@ const demands = [
   { title: "Leave evidence after compute disappears.", body: "Execution can be temporary. The authority record, consequence evidence and causal history are designed to remain inspectable after the runtime is gone." },
 ];
 
+const painSignals = [
+  {
+    badge: "Pain #1 · Budget Blowup",
+    title: "OpenAI’s limits don’t actually stop spending. Veklom’s do.",
+    problem: "One team set a $4,000/month limit and got billed $20,000 anyway. Another woke up to a $70,000 surprise bill. GenAI pilots routinely overrun projections by 3–5×.",
+    fix: "Hard workspace budget caps (PUT /v1/budget), real-time wallet balance, and pre-execution cutoffs before a runaway loop reaches your CFO.",
+    price: "Standalone Add-On · $199–$500/mo",
+  },
+  {
+    badge: "Pain #2 · Vanishing Audit Logs",
+    title: "When the regulator asks what your AI decided — Veklom has the answer.",
+    problem: "Copilot audit logs silently break, and law firms are getting sanctioned in federal court for unverified AI outputs with no chain of custody.",
+    fix: "Tamper-evident SHA-256 + HMAC audit chain (GET /v1/audit/ledger & /verify) where every prompt, policy check, and outcome is cryptographically provable.",
+    price: "Audit-Ready Bundle · $1,500/mo",
+  },
+  {
+    badge: "Pain #3 · $500K Agent Liability",
+    title: "When your AI agent makes a $500,000 decision — prove you were in control.",
+    problem: "Delegating to an autonomous agent does not delegate legal liability. If an agent denies a claim or deletes a production database in 9 seconds, you own the fallout.",
+    fix: "Instant workspace kill switch (PUT /v1/kill-switch), single-use capability leases, and store-side epoch fencing that stops revoked agents in 0ms.",
+    price: "Agent Governance · $800/mo",
+  },
+  {
+    badge: "Pain #4 · 4× Price Hikes & Lock-In",
+    title: "Swap the model in a config change — not a $315,000 migration project.",
+    problem: "58% of AI platform migrations fail or stall while model providers raise token prices 4× overnight once your prompts and logs are trapped in their cloud.",
+    fix: "Model-agnostic VLink routing with automatic fallback and circuit breaking. Your audit trail and governance rules stay in Veklom regardless of the model underneath.",
+    price: "Core Platform · Sovereign Tier",
+  },
+  {
+    badge: "Pain #5 · 95% of Pilots Die",
+    title: "95% of AI pilots die between demo and production. Ship in the 5%.",
+    problem: "MIT Sloan and IDC found 88–95% of AI PoCs never reach production — not because the model failed, but because security, cost, and compliance were missing.",
+    fix: "Production-grade governance from the very first API call. Connect your existing agent through VLink in 60 seconds instead of spending 6 months rebuilding.",
+    price: "Day-One Production · Core API",
+  },
+  {
+    badge: "Pain #6 · EU AI Act & SOC2 Theater",
+    title: "The EU AI Act fine is 7% of revenue. SOC2 PDFs won’t save you.",
+    problem: "487 of 494 leaked SOC2 reports were copy-pasted templates, and EU AI Act enforcement hits finance, insurance, healthcare, and HR with up to €35M fines.",
+    fix: "Built-in PHI/PII redaction, vertical policy packs, and live reproducible proof bundles (414 stress ops, 0 breaches) any auditor can verify directly.",
+    price: "EU AI Act Bundle · $2,000/mo",
+  },
+];
+
 const flow = ["Request capability", "Bind authority", "Materialize compute", "Execute", "Observe consequence", "Preserve evidence"];
 
-// Share card comes from the root layout (per host); only the canonical is page-specific.
-export async function generateMetadata(): Promise<Metadata> {
-  const origin = originFromHost((await headers()).get("host"));
-  return { alternates: { canonical: `${origin}/` } };
-}
+const deferredSectionStyle: React.CSSProperties = {
+  contentVisibility: "auto",
+  containIntrinsicSize: "auto none auto 520px",
+};
 
 export default function LandingPage() {
   return (
@@ -39,7 +79,7 @@ export default function LandingPage() {
           <div className="relative z-10 max-w-[760px]">
             <div className="mb-8 flex flex-wrap items-center gap-3">
               <LiveSignal label="Core V1 Protocol: Sealed & Deployed" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Public Delivery Layer Active</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">Hard Budget Caps · Kill Switch · Courtroom-Grade Audit</span>
             </div>
 
             <h1 className="text-[clamp(4rem,8.6vw,8.8rem)] font-semibold leading-[0.82] tracking-[-0.075em] text-theme-ink">
@@ -47,18 +87,12 @@ export default function LandingPage() {
             </h1>
 
             <p className="mt-9 max-w-2xl text-lg leading-8 text-theme-inkDim md:text-[1.35rem] md:leading-9">
-              Veklom is building governed compute infrastructure: bounded capability, identity, authority, lifecycle, execution, observation and evidence under one execution contract. Persistent services and ephemeral work can run without turning compute into ambient authority.
+              95% of enterprise AI projects die before production — because vendor budget limits don’t stop a $20,000 surprise bill, audit logs vanish when regulators ask questions, and nobody can stop a rogue agent mid-flight. Veklom wraps every AI action in a hard budget cap, an instant kill switch, and a tamper-evident audit chain.
             </p>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <div className="flex flex-col items-center gap-2 sm:items-start">
-                <TrackedLink href={SIGNUP_URL} eventName="start_free_vlink" ctaLabel="Start free with VLink" ctaLocation="home_hero" data-analytics-cta="start-free-vlink:hero" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
-                  Start free with VLink <span className="transition-transform group-hover:translate-x-1">→</span>
-                </TrackedLink>
-                <span className="text-[11px] text-theme-inkDim">14-day full-access trial · no card required</span>
-              </div>
-              <TrackedLink href="/get" eventName="get_veklom_start" ctaLabel="Get Veklom" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">
-                Get Veklom
+              <TrackedLink href="/get" eventName="get_veklom_start" ctaLabel="Get Veklom" ctaLocation="home_hero" className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                Get Veklom <span className="transition-transform group-hover:translate-x-1">→</span>
               </TrackedLink>
               <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">
                 Open Capability OS
@@ -67,18 +101,10 @@ export default function LandingPage() {
               <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</TrackedLink>
             </div>
 
-            {/* Product Hunt launch badge (embed code from Product Hunt, unchanged). */}
-            <div className="mt-8" data-testid="product-hunt-badge">
-              <a href="https://www.producthunt.com/products/veklom?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-veklom" target="_blank" rel="noopener noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element -- third-party badge image served by Product Hunt */}
-                <img alt="Veklom - Give machines capability. Not a blank check. | Product Hunt" width={250} height={54} src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1275205&theme=dark&t=1791572797882" />
-              </a>
-            </div>
-
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
-              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Authority</div><div className="mt-2 text-sm font-medium text-theme-ink">Bound before execution</div></div>
-              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Compute</div><div className="mt-2 text-sm font-medium text-theme-ink">Lifecycle is explicit</div></div>
-              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Evidence</div><div className="mt-2 text-sm font-medium text-theme-ink">Preserved after action</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Hard Spend Cap</div><div className="mt-2 text-sm font-medium text-theme-ink">Stops $20K bill shock</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Kill Switch</div><div className="mt-2 text-sm font-medium text-theme-ink">Revokes agents in 0ms</div></div>
+              <div><div className="text-[10px] uppercase tracking-[.2em] text-theme-inkDim">Real Evidence</div><div className="mt-2 text-sm font-medium text-theme-ink">Not SOC2 PDF theater</div></div>
             </div>
           </div>
 
@@ -87,7 +113,39 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-12 sm:px-8 lg:px-10">
+        <section style={deferredSectionStyle} className="relative mx-auto w-full max-w-[1480px] px-5 py-14 sm:px-8 lg:px-10">
+          <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <StageLabel>Why teams buy Veklom today</StageLabel>
+              <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">
+                Six production disasters Veklom stops on day one.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-7 text-theme-inkDim">
+              Big AI vendors built powerful engines and left out the brakes, the cost ceiling, and the courtroom audit trail. You don’t have to build any of it — you call the API.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {painSignals.map((item) => (
+              <article key={item.badge} className="flex flex-col justify-between rounded-[26px] border border-theme-border bg-theme-surface p-7 shadow-[0_16px_50px_rgba(2,8,23,.04)]">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-inkDim">{item.badge}</div>
+                  <h3 className="mt-3 text-xl font-semibold leading-snug tracking-[-.03em] text-theme-ink">{item.title}</h3>
+                  <p className="mt-4 text-sm leading-6 text-theme-inkDim">{item.problem}</p>
+                  <p className="mt-3 border-t border-theme-border pt-3 text-sm font-medium leading-6 text-theme-ink">{item.fix}</p>
+                </div>
+                <div className="mt-5 flex items-center justify-between border-t border-theme-border pt-4 text-xs font-mono text-theme-inkDim">
+                  <span>{item.price}</span>
+                  <TrackedLink href="/get" eventName="pain_card_get" ctaLabel={item.badge} ctaLocation="home_pain_grid" className="font-semibold text-theme-ink hover:underline">
+                    Enable →
+                  </TrackedLink>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section style={deferredSectionStyle} className="relative mx-auto w-full max-w-[1480px] px-5 py-12 sm:px-8 lg:px-10">
           <div className="relative overflow-hidden rounded-[36px] border border-theme-border bg-theme-surface/75 px-6 py-10 shadow-[0_20px_80px_rgba(2,8,23,.05)] backdrop-blur-md sm:px-10 md:px-14 md:py-16">
             <div className="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-center">
               <div>
@@ -100,8 +158,8 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <TrackedLink href={SIGNUP_URL} eventName="start_free_vlink" ctaLabel="Start free with VLink" ctaLocation="home_vlink" data-analytics-cta="start-free-vlink:mid" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
-                  Start free with VLink <span className="transition-transform group-hover:translate-x-1">→</span>
+                <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink now" ctaLocation="home_vlink" className="group inline-flex min-h-14 items-center justify-center gap-4 rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg shadow-[0_20px_55px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,0,0,.22)]">
+                  Try VLink now <span className="transition-transform group-hover:translate-x-1">→</span>
                 </TrackedLink>
                 <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Scan to connect" ctaLocation="home_vlink" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20 hover:bg-theme-surface">
                   Scan to connect <span className="text-theme-inkDim">→</span>
@@ -111,7 +169,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
+        <section style={deferredSectionStyle} className="relative mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
           <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
             <div>
               <StageLabel>Governed compute</StageLabel>
@@ -191,8 +249,7 @@ export default function LandingPage() {
                 <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Use what is available now. Inspect what is proven. Build from a bounded capability.</h2>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <TrackedLink href={SIGNUP_URL} eventName="start_free_vlink" ctaLabel="Start free with VLink" ctaLocation="home_capability_os" data-analytics-cta="start-free-vlink:footer" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Start free with VLink →</TrackedLink>
-                <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Open Capability OS</TrackedLink>
+                <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</TrackedLink>
                 <TrackedLink href="/machine" eventName="machine_surface_open" ctaLabel="For Machines" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">For Machines</TrackedLink>
                 <TrackedLink href="/proof" eventName="proof_inspect" ctaLabel="Inspect proof" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</TrackedLink>
                 <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</TrackedLink>

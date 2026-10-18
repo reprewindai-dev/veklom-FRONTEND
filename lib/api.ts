@@ -31,6 +31,17 @@ export function getToken(): string | null {
     const v = window.localStorage.getItem(k);
     if (v) return v;
   }
+  try {
+    const rawLease = window.sessionStorage.getItem("veklom.capability_lease.v1");
+    if (rawLease) {
+      const parsed = JSON.parse(rawLease) as { holderCredential?: unknown; terminated?: unknown };
+      if (typeof parsed?.holderCredential === "string" && parsed.holderCredential && !parsed.terminated) {
+        return parsed.holderCredential;
+      }
+    }
+  } catch {
+    // Ignore sessionStorage parse errors
+  }
   return null;
 }
 
@@ -120,6 +131,7 @@ export interface RequestOpts {
 
 const PUBLIC_ROUTE_PREFIXES = [
   "/",
+  "/os",
   "/blog",
   "/vnp",
   "/benchmarks",

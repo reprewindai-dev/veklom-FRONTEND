@@ -12,9 +12,14 @@ services:
         PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
         VLINK_URL: ${VLINK_URL:-http://host.docker.internal:3000}
         NEXT_PUBLIC_API_BASE_URL: ""
+      extra_hosts:
+        - "dl-cdn.alpinelinux.org:151.101.66.132"
+        - "registry.npmjs.org:104.16.6.34"
     image: veklom-frontend:main
     container_name: veklom-frontend
     restart: unless-stopped
+    mem_limit: 2g
+    mem_reservation: 512m
     environment:
       NODE_ENV: production
       PORT: "3002"

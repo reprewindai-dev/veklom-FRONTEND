@@ -1,10 +1,12 @@
 # ─── Stage 1: dependencies ────────────────────────────────────────────────────
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat || true
 WORKDIR /app
 
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps --no-audit --no-fund --prefer-offline
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --fetch-retries 5 --maxsockets 5
 
 # ─── Stage 2: builder ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder

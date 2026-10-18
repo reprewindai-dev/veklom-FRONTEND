@@ -2,6 +2,8 @@ const CAPPO_PUBLIC_PATHS = [
   "/.well-known/x402",
   "/.well-known/capability-beacon-keys",
   "/api/v1/pricing",
+  "/api/v1/x402/config",
+  "/api/v1/benchmarks/staking/markets",
   "/v1/vnp/metrics",
   "/v1/capability/packages",
 ] as const;

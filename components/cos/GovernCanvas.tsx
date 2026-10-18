@@ -45,6 +45,7 @@ const CosGovernNode = React.memo(({ data, selected, isConnectable }: any) => {
       ) : null}
       <div className="text-[9px] font-mono opacity-70 tracking-widest uppercase">
         {data.node_type}
+        {typeof data.entropy === 'number' ? ` · H=${data.entropy.toFixed(2)}` : ''}
       </div>
       <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} className="!bg-cos-muted" />
     </div>
@@ -58,25 +59,110 @@ export default function GovernCanvas({ nodes, edges, onNodeClick, isExecuting }:
 
   const nodeTypes = useMemo(() => ({ custom: CosGovernNode }), []);
 
-  const rfNodes = useMemo(() => {
-    return nodes.map(n => ({
-      ...n,
-      type: 'custom',
-      selected: n.id === selectedNodeId
-    }));
-  }, [nodes, selectedNodeId]);
+  const { rfNodes, rfEdges } = useMemo(() => {
+    const normalizedEdges: Edge[] = (edges || []).map((e: any, index: number) => {
+      const source = String(e.source ?? e.from ?? '');
+      const target = String(e.target ?? e.to ?? '');
+      return {
+        ...e,
+        id: e.id || `${source || 'edge'}-${target || index}-${index}`,
+        source,
+        target,
+        animated: Boolean(isExecuting || e.animated),
+        style: { stroke: isExecuting ? 'rgb(var(--theme-accent))' : 'var(--theme-border)', strokeWidth: 2 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: isExecuting ? 'rgb(var(--theme-accent))' : 'var(--theme-border)',
+        },
+      };
+    });
 
-  const rfEdges = useMemo(() => {
-    return edges.map(e => ({
-      ...e,
-      animated: isExecuting || e.animated,
-      style: { stroke: isExecuting ? 'rgb(var(--theme-accent))' : 'var(--theme-border)', strokeWidth: 2 },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: isExecuting ? 'rgb(var(--theme-accent))' : 'var(--theme-border)',
-      },
-    }));
-  }, [edges, isExecuting]);
+    const indegree = new Map<string, number>();
+    const outgoing = new Map<string, string[]>();
+    for (const n of nodes || []) {
+      indegree.set(n.id, 0);
+      outgoing.set(n.id, []);
+    }
+    for (const e of normalizedEdges) {
+      if (outgoing.has(e.source) && indegree.has(e.target)) {
+        outgoing.get(e.source)!.push(e.target);
+        indegree.set(e.target, (indegree.get(e.target) ?? 0) + 1);
+      }
+    }
+
+    const rankById = new Map<string, number>();
+    const queue: string[] = [];
+    for (const [id, deg] of indegree.entries()) {
+      if (deg === 0) {
+        rankById.set(id, 0);
+        queue.push(id);
+      }
+    }
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const currentRank = rankById.get(current) ?? 0;
+      for (const next of outgoing.get(current) ?? []) {
+        const nextRank = Math.max(rankById.get(next) ?? 0, currentRank + 1);
+        rankById.set(next, nextRank);
+        const remaining = (indegree.get(next) ?? 1) - 1;
+        indegree.set(next, remaining);
+        if (remaining === 0) queue.push(next);
+      }
+    }
+
+    const rankBuckets = new Map<number, number>();
+    const rankIndices = new Map<string, number>();
+    (nodes || []).forEach((n, idx) => {
+      const r = rankById.get(n.id) ?? idx;
+      rankById.set(n.id, r);
+      const posInRank = rankBuckets.get(r) ?? 0;
+      rankIndices.set(n.id, posInRank);
+      rankBuckets.set(r, posInRank + 1);
+    });
+
+    const normalizedNodes: Node[] = (nodes || []).map((n: any, idx: number) => {
+      const rank = rankById.get(n.id) ?? idx;
+      const countInRank = rankBuckets.get(rank) ?? 1;
+      const indexInRank = rankIndices.get(n.id) ?? 0;
+      const xOffset = (indexInRank - (countInRank - 1) / 2) * 250;
+      const hasValidPosition =
+        n.position && typeof n.position.x === 'number' && typeof n.position.y === 'number';
+      const existingData = n.data && typeof n.data === 'object' ? n.data : {};
+      const label = existingData.label || n.description || n.id;
+      const subtitle = existingData.subtitle ?? (n.description ? n.id : undefined);
+      const nodeType = existingData.node_type || [n.type, n.policy_tag].filter(Boolean).join(' · ') || 'governed';
+      const entropy = typeof existingData.entropy === 'number' ? existingData.entropy : n.entropy;
+      const policyTag = existingData.policy_tag || n.policy_tag || 'governance';
+      const status = existingData.status || (isExecuting ? 'running' : 'idle');
+
+      return {
+        ...n,
+        id: String(n.id),
+        type: 'custom',
+        position: hasValidPosition ? n.position : { x: 260 + xOffset, y: 36 + rank * 145 },
+        selected: n.id === selectedNodeId,
+        data: {
+          ...existingData,
+          label,
+          subtitle,
+          node_type: nodeType,
+          status,
+          entropy,
+          policy_tag: policyTag,
+          rank,
+          config: existingData.config || {
+            node_id: n.id,
+            policy_tag: policyTag,
+            entropy: typeof entropy === 'number' ? entropy : 0,
+            dag_rank: rank,
+            description: label,
+          },
+        },
+      };
+    });
+
+    return { rfNodes: normalizedNodes, rfEdges: normalizedEdges };
+  }, [nodes, edges, isExecuting, selectedNodeId]);
 
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
@@ -95,12 +181,20 @@ export default function GovernCanvas({ nodes, edges, onNodeClick, isExecuting }:
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
+        onlyRenderVisibleElements
         fitView
-        proOptions={{ hideAttribution: true }} // hide default react flow attribution
+        proOptions={{ hideAttribution: true }}
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="var(--theme-border)" />
         <Controls className="!bg-cos-surface !border-cos-border !text-cos-text !fill-cos-text" />
+        <MiniMap
+          pannable
+          zoomable
+          className="!bg-cos-surface !border !border-cos-border rounded-md"
+          maskColor="rgba(0, 0, 0, 0.45)"
+        />
       </ReactFlow>
     </div>
   );
 }
+

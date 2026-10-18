@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "lockerphycer" | "computless";
+export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -32,13 +32,13 @@ const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 export function canonicalBackends(): CanonicalBackendConfig[] {
   const capiUrl = CAPI_RUNTIME_URL;
   const cappoUrl = process.env.CAPPO_BACKEND_URL || process.env.CAPPO_URL || "https://cappo.veklom.com";
-  const ledgerUrl = process.env.LEDGER_URL || process.env.PGL_URL || "https://pgl.veklom.com";
-  const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
   const pglUrl = process.env.PGL_URL || "https://pgl.veklom.com";
-  const vnpUrl = process.env.VNP_URL || "https://vnp.veklom.com";
+  const ledgerUrl = process.env.LEDGER_URL || pglUrl;
+  const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
+  const vnpUrl = process.env.VNP_URL || cappoUrl;
+  const apexUrl = process.env.APEX_URL || cappoUrl;
+  const abideUrl = process.env.ABIDE_URL || cappoUrl;
   const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
-  // Private Cloud: COMPUTLESS owned-compute fabric (placement and routing; never authority).
-  const computlessUrl = process.env.COMPUTLESS_URL || "";
 
   return [
     {
@@ -48,8 +48,8 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       role: "governed-runtime",
       baseUrl: trimTrailingSlash(capiUrl),
       healthPath: "/health",
-      overviewPath: "/v1/vnp/methodology",
-      sourceOfTruthPath: "/v1/audit/ledger",
+      overviewPath: undefined,
+      sourceOfTruthPath: undefined,
       authMode: "server-api-key",
     },
     {
@@ -59,7 +59,8 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       role: "execution-engine",
       baseUrl: trimTrailingSlash(cappoUrl),
       healthPath: "/health",
-      overviewPath: undefined,
+      overviewPath: "/v1/vnp/methodology",
+      sourceOfTruthPath: "/v1/audit/ledger",
       authMode: "server-api-key",
     },
     {
@@ -103,6 +104,26 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       authMode: "none",
     },
     {
+      id: "apex",
+      label: "Apex Blueprint",
+      repo: "ApexBlueprintV4",
+      role: "policy-oracle",
+      baseUrl: trimTrailingSlash(apexUrl),
+      healthPath: "/health",
+      overviewPath: undefined,
+      authMode: "none",
+    },
+    {
+      id: "abide",
+      label: "ABIDE",
+      repo: "ABIDE",
+      role: "sovereign-control-plane",
+      baseUrl: trimTrailingSlash(abideUrl),
+      healthPath: "/health",
+      overviewPath: undefined,
+      authMode: "forward-bearer",
+    },
+    {
       id: "lockerphycer",
       label: "LockerPhycer Security Core",
       repo: "lockerphycer",
@@ -110,16 +131,6 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       baseUrl: trimTrailingSlash(lockerphycerUrl),
       healthPath: "/health",
       overviewPath: undefined,
-      authMode: "server-api-key",
-    },
-    {
-      id: "computless",
-      label: "COMPUTLESS Private Cloud",
-      repo: "computless",
-      role: "execution-engine",
-      baseUrl: trimTrailingSlash(computlessUrl),
-      healthPath: "/api/health",
-      overviewPath: "/api/fabric/state",
       authMode: "server-api-key",
     },
   ];
