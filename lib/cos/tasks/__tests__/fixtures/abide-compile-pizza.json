@@ -1,0 +1,64 @@
+{
+  "id": "bp_b1b2b94cf4c957a5",
+  "status": "compiled",
+  "name": "Blueprint: order a pizza to 123 Main St",
+  "compiler": "abide-blueprint-compiler/1",
+  "intent": "order a pizza to 123 Main St",
+  "catalog_digest": "c9f890a58ff552ca62029fdf70b789be32c319f8643b3c96ba838ac85ff04616",
+  "steps": [
+    {
+      "id": "step_1",
+      "clause": "order a pizza to 123 Main St",
+      "kind": "uncovered",
+      "action": null,
+      "package_ref": null,
+      "reason": "no capability in the catalog covers this step"
+    }
+  ],
+  "suggested_mounts": [],
+  "verdict": "incomplete",
+  "graph": {
+    "nodes": [
+      { "id": "intent", "type": "intent", "description": "order a pizza to 123 Main St", "policy_tag": "intent" },
+      { "id": "step_1", "type": "uncovered", "description": "order a pizza to 123 Main St", "policy_tag": "uncovered" }
+    ],
+    "edges": [ { "from": "intent", "to": "step_1" } ]
+  },
+  "proof_hash": "sha256:b1b2b94cf4c957a58891a4417ff7c93cbb932bcc03c8456a4da0df0668321c1b",
+  "grants_authority": false,
+  "contract": {
+    "contract_id": "bc_0647799807568a37",
+    "contract_version": "abide-contract/1",
+    "status": "compiled",
+    "intent": "order a pizza to 123 Main St",
+    "plan_id": "bp_b1b2b94cf4c957a5",
+    "plan_proof_hash": "sha256:b1b2b94cf4c957a58891a4417ff7c93cbb932bcc03c8456a4da0df0668321c1b",
+    "catalog_digest": "c9f890a58ff552ca62029fdf70b789be32c319f8643b3c96ba838ac85ff04616",
+    "verdict": "incomplete",
+    "steps": [
+      {
+        "step_id": "st_8357b10af0b6",
+        "sequence": 1,
+        "clause": "order a pizza to 123 Main St",
+        "capability": null,
+        "package_ref": null,
+        "coverage": "uncovered",
+        "lane": 2,
+        "risk_level": "HIGH",
+        "requires_approval": true,
+        "idempotency_key": "8357b10af0b600851a09c080b1db69d2d7ec93d2260dcbcac3d6c0269623a226",
+        "reason": "no capability in the catalog covers this step",
+        "bindable": false,
+        "operation": null
+      }
+    ],
+    "suggested_mounts": [],
+    "claims": [],
+    "canonical_hash": "0647799807568a37ca5cce6ea2caef9853f02dcac37656d4f06c0a9415ca1d85",
+    "grants_authority": false,
+    "authority": "CAPPO issues a single-use permit per action at run time; this contract grants nothing."
+  },
+  "validation": { "valid": true, "errors": [], "warnings": ["step 1: no capability in the catalog covers this step"] },
+  "compile_ms": 54.94,
+  "compiled_at": "2026-10-18T12:24:11.266186+00:00"
+}

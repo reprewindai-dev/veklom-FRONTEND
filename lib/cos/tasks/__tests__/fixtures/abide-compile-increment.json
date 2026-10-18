@@ -1,0 +1,72 @@
+{
+  "id": "bp_9e818dad37e73d81",
+  "status": "compiled",
+  "name": "Blueprint: increment the counter",
+  "compiler": "abide-blueprint-compiler/1",
+  "intent": "increment the counter",
+  "catalog_digest": "c9f890a58ff552ca62029fdf70b789be32c319f8643b3c96ba838ac85ff04616",
+  "steps": [
+    {
+      "id": "step_1",
+      "clause": "increment the counter",
+      "kind": "write",
+      "action": "counter.increment",
+      "package_ref": "veklom.governed-counter@v1",
+      "reason": "covered by veklom.governed-counter@v1 (write); a permit is still issued per action"
+    }
+  ],
+  "suggested_mounts": [
+    { "package_ref": "veklom.governed-counter@v1", "reads": [], "writes": ["counter.increment"], "blocked": ["counter.reset"] }
+  ],
+  "verdict": "ready_for_mount",
+  "graph": {
+    "nodes": [
+      { "id": "intent", "type": "intent", "description": "increment the counter", "policy_tag": "intent" },
+      { "id": "mount:veklom.governed-counter@v1", "type": "mount", "description": "Mount veklom.governed-counter@v1", "policy_tag": "authority" },
+      { "id": "step_1", "type": "write", "description": "counter.increment", "policy_tag": "write" }
+    ],
+    "edges": [
+      { "from": "intent", "to": "mount:veklom.governed-counter@v1" },
+      { "from": "mount:veklom.governed-counter@v1", "to": "step_1" }
+    ]
+  },
+  "proof_hash": "sha256:9e818dad37e73d81068219e857b368efb2299f9f14864ff25ea642db87ba37cd",
+  "grants_authority": false,
+  "contract": {
+    "contract_id": "bc_0c84fd40c4962310",
+    "contract_version": "abide-contract/1",
+    "status": "compiled",
+    "intent": "increment the counter",
+    "plan_id": "bp_9e818dad37e73d81",
+    "plan_proof_hash": "sha256:9e818dad37e73d81068219e857b368efb2299f9f14864ff25ea642db87ba37cd",
+    "catalog_digest": "c9f890a58ff552ca62029fdf70b789be32c319f8643b3c96ba838ac85ff04616",
+    "verdict": "ready_for_mount",
+    "steps": [
+      {
+        "step_id": "st_c364a80b19b8",
+        "sequence": 1,
+        "clause": "increment the counter",
+        "capability": "counter.increment",
+        "package_ref": "veklom.governed-counter@v1",
+        "coverage": "write",
+        "lane": 2,
+        "risk_level": "MEDIUM",
+        "requires_approval": false,
+        "idempotency_key": "c364a80b19b8ba9784b20d8a2f72bb7adaa2699321e28cdd288a97e32c3a244a",
+        "reason": "covered by veklom.governed-counter@v1 (write); a permit is still issued per action",
+        "bindable": false,
+        "operation": null
+      }
+    ],
+    "suggested_mounts": [
+      { "package_ref": "veklom.governed-counter@v1", "reads": [], "writes": ["counter.increment"], "blocked": ["counter.reset"] }
+    ],
+    "claims": [],
+    "canonical_hash": "0c84fd40c49623109b4ea05a47d06eecc18df399a029ba6c82a8e720f99ef5b5",
+    "grants_authority": false,
+    "authority": "CAPPO issues a single-use permit per action at run time; this contract grants nothing."
+  },
+  "validation": { "valid": true, "errors": [], "warnings": [] },
+  "compile_ms": 2864.71,
+  "compiled_at": "2026-10-18T12:24:02.493819+00:00"
+}
