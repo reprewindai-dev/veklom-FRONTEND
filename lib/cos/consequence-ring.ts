@@ -171,17 +171,17 @@ const PRODUCTION_RUN = "Recorded run on veklom.com, 2026-10-10 (production, sign
 
 export const ringProof: Record<RingPositionId, RingProof> = {
   identity: {
-    status: "Proven in production",
+    status: "Proven on staging",
     summary: "A signed-in workspace is recognised by the authority layer before any authority is issued.",
     evidence: `${PRODUCTION_RUN}; ${RECORDED_RUNS}`,
   },
   connection: {
-    status: "Proven in production",
+    status: "Proven on staging",
     summary: "The registry serves the signed capability catalog. Routes that once bypassed the authority layer are closed in production (410).",
     evidence: `${PRODUCTION_RUN}; ${RECORDED_RUNS}; production bypass check 2026-10-08`,
   },
   authority: {
-    status: "Proven in production",
+    status: "Proven on staging",
     summary: "One exact operation is allowed once. Consumed, revoked, replayed or stretched authority is refused, each checked against the target's own data.",
     evidence: `${PRODUCTION_RUN}; ${RECORDED_RUNS}; hostile battery 23/23 (staging)`,
   },

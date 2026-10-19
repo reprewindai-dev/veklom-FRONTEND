@@ -37,6 +37,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { id: "workspace", label: "Workspace", route: "/os/workspace", hint: "Cockpit" },
       { id: "capabilities", label: "Capabilities", route: "/os", hint: "Catalog" },
+      { id: "connectors", label: "Connectors", route: "/os/connectors", hint: "MCP Hub" },
       { id: "govern", label: "Governed", route: "/os/govern", hint: "Policy" },
       { id: "evidence", label: "Evidence Vault", route: "/os/evidence", hint: "Ledger" },
       { id: "measure", label: "Measure", route: "/os/measure", hint: "SLA" },

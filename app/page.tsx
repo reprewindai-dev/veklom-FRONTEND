@@ -1,5 +1,6 @@
 import React from "react";
 import { TrackedLink } from "@/components/TrackedLink";
+import { SIGNUP_URL } from "@/lib/funnel";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { AmbientField, AuthorityOrb, LiveSignal, StageLabel } from "@/components/brand/PremiumPrimitives";
 import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
@@ -100,6 +101,13 @@ export default function LandingPage() {
               </TrackedLink>
               <TrackedLink href="/proof" eventName="proof_inspect" ctaLabel="Inspect proof" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Inspect proof</TrackedLink>
               <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_hero" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-surface/70 px-7 text-sm font-semibold text-theme-ink backdrop-blur transition hover:border-theme-ink/20 hover:bg-theme-surface">Try VLink</TrackedLink>
+            </div>
+            {/* Product Hunt launch badge */}
+            <div className="mt-8" data-testid="product-hunt-badge">
+              <a href="https://www.producthunt.com/products/veklom?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-veklom" target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img alt="Veklom - Give machines capability. Not a blank check. | Product Hunt" width={250} height={54} src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1275205&theme=dark&t=1791572797882" />
+              </a>
             </div>
 
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-theme-border pt-6">
@@ -252,7 +260,8 @@ export default function LandingPage() {
                 <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-7xl">Use what is available now. Inspect what is proven. Build from a bounded capability.</h2>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Open Capability OS →</TrackedLink>
+                <TrackedLink href={SIGNUP_URL} eventName="start_free_vlink" ctaLabel="Start free with VLink" ctaLocation="home_capability_os" data-analytics-cta="start-free-vlink:footer" className="inline-flex min-h-14 items-center justify-center rounded-full bg-theme-ink px-7 text-sm font-semibold text-theme-bg">Start free with VLink →</TrackedLink>
+                <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Open Capability OS</TrackedLink>
                 <TrackedLink href="/machine" eventName="machine_surface_open" ctaLabel="For Machines" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">For Machines</TrackedLink>
                 <TrackedLink href="/proof" eventName="proof_inspect" ctaLabel="Inspect proof" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Inspect proof</TrackedLink>
                 <TrackedLink href="/vlink/connect/" eventName="vlink_connect_start" ctaLabel="Try VLink" ctaLocation="home_capability_os" className="inline-flex min-h-14 items-center justify-center rounded-full border border-theme-border bg-theme-bg px-7 text-sm font-semibold text-theme-ink">Try VLink</TrackedLink>

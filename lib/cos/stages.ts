@@ -20,6 +20,7 @@ export type StageId =
   | "tracker"
   | "terminal"
   | "settings"
+  | "connectors"
   | "workspace";
 
 export interface StageEndpoint {
@@ -231,6 +232,17 @@ export const stages: StageDefinition[] = [
       { method: "GET", path: "/api/v1/auth/me", classification: "present", response: "signed-in account" },
       { method: "POST", path: "/api/mcp", classification: "present", response: "MCP tools/list for connecting a client" },
     ],
+  },
+  {
+    id: "connectors",
+    label: "Connectors",
+    route: "/os/connectors",
+    purpose: "Connect enterprise tools (Teams, OneDrive, Outlook, Slack, Notion) or add custom MCP servers. All tools operate under bounded, single-use leases with zero ambient authority.",
+    owner: "Veklom Connectors & MCP Hub",
+    endpoints: [
+      { method: "GET", path: "/api/cappo/v1/capability/beacons", classification: "present", response: "catalog of available and connected capability beacons", baseUrl: backend("cappo") },
+    ],
+    crossCutting: true,
   },
 ];
 

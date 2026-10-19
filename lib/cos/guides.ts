@@ -62,4 +62,7 @@ export const stageGuides: Partial<Record<StageId, StageGuide>> = {
   computeless: { howTo: "Your own machines as governed compute: register them, place work, and see results. Machines hold no authority of their own." },
   terminal: { howTo: "Type directives that run through the same governed tools machines use. A refusal is final and never retried." },
   settings: { howTo: "Your account, your own model key, an API key, the MCP connection, a webhook and integrations. Each says whether it is live yet." },
+  connectors: {
+    howTo: "Connect enterprise tools (Teams, OneDrive, Outlook, Slack, Notion) or add custom MCP servers. All tools operate under bounded, single-use leases with zero ambient authority.",
+  },
 };

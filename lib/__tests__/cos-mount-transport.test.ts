@@ -24,6 +24,7 @@ describe("Capability OS stage transport", () => {
       "tracker",
       "terminal",
       "settings",
+      "connectors",
     ]);
     expect(stages.map((stage) => stage.label)).toEqual([
       "Private Cloud",
@@ -40,6 +41,7 @@ describe("Capability OS stage transport", () => {
       "Tracker",
       "Terminal",
       "Settings",
+      "Connectors",
     ]);
     expect(stages.flatMap((stage) => stage.endpoints).map((endpoint) => endpoint.path))
       .not.toContain("/api/v1/platform/pulse");

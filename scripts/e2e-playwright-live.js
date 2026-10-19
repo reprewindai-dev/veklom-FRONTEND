@@ -19,7 +19,7 @@ function getFreshToken() {
 }
 
 const AUTH_TOKEN = getFreshToken();
-const WORKSPACE_ID = "cd6691ff-fb19-4e14-996f-6100457177a8";
+const WORKSPACE_ID = "c6afcf2a-d8f0-4756-82a6-65b1d17270b5";
 
 async function runLiveE2ETest() {
   console.log(`=======================================================`);
@@ -186,6 +186,24 @@ async function runLiveE2ETest() {
     const shotGraphqlResult = path.join(ARTIFACTS_DIR, "06_machine_graphql_auditor.png");
     await page.screenshot({ path: shotGraphqlResult, fullPage: false });
     console.log(`[PASS] Captured Machine GraphQL Auditor: ${shotGraphqlResult}`);
+
+    // ---------------------------------------------------------
+    // Phase 6: Connectors & Sovereign MCP Hub (/os/connectors)
+    // ---------------------------------------------------------
+    console.log(`\n--- Phase 6: Connectors & Sovereign MCP Hub ---`);
+    await page.goto(`${BASE_URL}/os/connectors`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForTimeout(2000);
+
+    // Toggle active tools drawer if button is available
+    const toggleToolsBtn = page.locator('button:has-text("Registered MCP Tools")');
+    if (await toggleToolsBtn.isVisible()) {
+      await toggleToolsBtn.click();
+      await page.waitForTimeout(600);
+    }
+
+    const shotConnectorsHub = path.join(ARTIFACTS_DIR, "07_connectors_mcp_hub.png");
+    await page.screenshot({ path: shotConnectorsHub, fullPage: false });
+    console.log(`[PASS] Captured Connectors & MCP Hub: ${shotConnectorsHub}`);
 
     console.log(`\n=======================================================`);
     console.log(`>>> ALL E2E VERIFICATIONS AND TELEMETRY RECORDED SUCCESSFULLY! <<<`);

@@ -52,6 +52,7 @@ const icons: Record<string, typeof Boxes> = {
   terminal: Command,
   settings: Settings,
   workspace: MessageSquareText,
+  connectors: Cable,
 };
 
 type NavProps = {
