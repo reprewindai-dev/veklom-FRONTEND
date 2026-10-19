@@ -45,6 +45,8 @@ const eyebrow = "text-[10px] font-semibold uppercase tracking-[.22em] text-theme
 const heading = "font-semibold leading-[1.02] tracking-[-.045em] text-theme-ink";
 const primaryBtn = "group inline-flex min-h-12 items-center justify-center gap-4 rounded-full bg-theme-ink px-6 text-sm font-semibold text-theme-bg transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(0,0,0,.18)]";
 const secondaryBtn = "inline-flex min-h-12 items-center justify-center rounded-full border border-theme-border bg-theme-surface px-6 text-sm font-semibold text-theme-ink transition hover:border-theme-ink/20";
+const entryCard = "flex flex-col rounded-[24px] border border-theme-border bg-theme-surface p-7";
+const entryLink = "mt-6 text-xs font-semibold text-theme-ink underline-offset-4 hover:underline";
 const container = "mx-auto w-full max-w-[1120px] px-5 sm:px-8";
 
 export default function LandingPage() {
@@ -160,19 +162,21 @@ export default function LandingPage() {
         {/* Other ways in: the machine side, Capability OS and the get-started route stay one click from the landing page. */}
         <section className={`${container} pb-20 md:pb-28`}>
           <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { title: "For machines", body: "The machine-readable surface: agent card, MCP, wallet and conformance for software that connects on its own.", href: "/machine", event: "machine_surface_open", cta: "For Machines" },
-              { title: "Capability OS", body: "Inspect available capabilities, use what is already wired and see what is proven.", href: "/os", event: "capability_os_open", cta: "Open Capability OS" },
-              { title: "Get Veklom", body: "Choose how you want to start and what you want to connect first.", href: "/get", event: "get_veklom_start", cta: "Get Veklom" },
-            ].map((item) => (
-              <article key={item.title} className="flex flex-col rounded-[24px] border border-theme-border bg-theme-surface p-7">
-                <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">{item.title}</h3>
-                <p className="mt-3 flex-1 text-sm leading-7 text-theme-inkDim">{item.body}</p>
-                <TrackedLink href={item.href} eventName={item.event} ctaLabel={item.cta} ctaLocation="home_more" className="mt-6 text-xs font-semibold text-theme-ink underline-offset-4 hover:underline">
-                  {item.cta} →
-                </TrackedLink>
-              </article>
-            ))}
+            <article className={entryCard}>
+              <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">For machines</h3>
+              <p className="mt-3 flex-1 text-sm leading-7 text-theme-inkDim">The machine-readable surface: agent card, MCP, wallet and conformance for software that connects on its own.</p>
+              <TrackedLink href="/machine" eventName="machine_surface_open" ctaLabel="For Machines" ctaLocation="home_more" className={entryLink}>For Machines →</TrackedLink>
+            </article>
+            <article className={entryCard}>
+              <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">Capability OS</h3>
+              <p className="mt-3 flex-1 text-sm leading-7 text-theme-inkDim">Inspect available capabilities, use what is already wired and see what is proven.</p>
+              <TrackedLink href="/os" eventName="capability_os_open" ctaLabel="Open Capability OS" ctaLocation="home_more" className={entryLink}>Open Capability OS →</TrackedLink>
+            </article>
+            <article className={entryCard}>
+              <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">Get Veklom</h3>
+              <p className="mt-3 flex-1 text-sm leading-7 text-theme-inkDim">Choose how you want to start and what you want to connect first.</p>
+              <TrackedLink href="/get" eventName="get_veklom_start" ctaLabel="Get Veklom" ctaLocation="home_more" className={entryLink}>Get Veklom →</TrackedLink>
+            </article>
           </div>
         </section>
 
