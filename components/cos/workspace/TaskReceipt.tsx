@@ -56,7 +56,13 @@ export function TaskReceipt({ state, project }: { state: TaskState; project?: st
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2"><ProofBadge status={receiptProof} /><span className="text-sm text-cos-text">{headline}</span></div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ProofBadge status={receiptProof} />
+          <span className="text-sm text-cos-text">{headline}</span>
+          <span className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-mono text-[9px] text-amber-300">
+            Sandbox Pool: governed-counter test capability
+          </span>
+        </div>
         <ScopeTag project={project} />
       </div>
       {notice ? <p className="rounded-lg border border-cos-warn/40 bg-cos-warn/[0.06] px-3 py-2 text-[11px] leading-5 text-cos-warn">{notice}</p> : null}

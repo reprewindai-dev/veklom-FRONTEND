@@ -116,11 +116,16 @@ export function ActionApprovalCard({
                 <Mail size={20} />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-semibold text-white tracking-tight">
-                  {step.operation.action === "email.send" || state.intent.toLowerCase().includes("email")
-                    ? "Send this report to the sales team?"
-                    : `Execute ${step.operation.action} on ${step.operation.target_ref}?`}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-white tracking-tight">
+                    {step.operation.action === "email.send" || state.intent.toLowerCase().includes("email")
+                      ? "Send this report to the sales team?"
+                      : `Execute ${step.operation.action} on ${step.operation.target_ref}?`}
+                  </h3>
+                  <span className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] text-amber-300">
+                    Sandbox Pool: governed-counter test capability
+                  </span>
+                </div>
                 <div className="flex items-center gap-2 text-xs text-slate-300">
                   <span>6 recipients</span>
                   <span className="text-slate-600">·</span>
