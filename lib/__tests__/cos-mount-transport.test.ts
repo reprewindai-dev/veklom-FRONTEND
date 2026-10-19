@@ -11,6 +11,7 @@ describe("Capability OS stage transport", () => {
   it("uses canonical lifecycle labels and omits decommissioned endpoint ownership", () => {
     expect(stages.map((stage) => stage.id)).toEqual([
       "computeless",
+      "workspace",
       "capabilities",
       "mount",
       "blueprint",
@@ -26,6 +27,7 @@ describe("Capability OS stage transport", () => {
     ]);
     expect(stages.map((stage) => stage.label)).toEqual([
       "Private Cloud",
+      "Workspace",
       "Capabilities",
       "Mount",
       "Blueprint",

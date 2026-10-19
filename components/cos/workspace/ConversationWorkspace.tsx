@@ -24,7 +24,9 @@ import type { StepBinding, TaskState } from "@/lib/cos/tasks/task-types";
 import type { StageCallResult, useStageData } from "@/lib/cos/useStageData";
 import { readBoundWorkspaceId } from "@/lib/cos/workspace-session";
 import { ActionReviewCard } from "./ActionReviewCard";
+import { ActiveTaskCard } from "./ActiveTaskCard";
 import { ConversationLog } from "./ConversationLog";
+import { InspectorPanel } from "./InspectorPanel";
 import { PipelineCanvas } from "./PipelineCanvas";
 import { TaskComposer } from "./TaskComposer";
 import { TaskReceipt } from "./TaskReceipt";
@@ -256,33 +258,45 @@ export function ConversationWorkspace({ data }: { data: StageData }) {
   }
 
   return (
-    <>
-      <div className="space-y-4">
-        <Pillar title="Work" proof={data.stageProof}>
-          <TaskComposer busy={busy} onSubmit={(intent) => dispatch({ type: "submit", intent })} />
-          <div className="mt-4"><ConversationLog messages={state.messages} /></div>
-          {state.error && state.phase === "failed" ? <div className="mt-3"><FailureNotice detail={state.error} /></div> : null}
-        </Pillar>
-        <Pillar title="Authority" proof={state.authority ? (state.authority.decision === "allow" ? "Present" : "Degraded") : "Needs proof"} detail="The one action this task will take. Approval requests a single-use grant for exactly this operation; the authority layer decides.">
-          {state.plan ? (
-            <ActionReviewCard state={state} workspace={workspace} busy={busy} onBind={onBind} onApprove={() => dispatch({ type: "approve" })} />
-          ) : (
-            <HonestEmpty title="No contract yet" route="POST /api/abide/v1/blueprint/compile" detail="Describe what you need above. The compiler returns the steps, which capability covers each, and what it refuses." />
-          )}
-        </Pillar>
+    <div className="xl:col-span-2 space-y-6">
+      {/* 1. Full-Width Task Composer Box */}
+      <TaskComposer
+        busy={busy}
+        onSubmit={(intent) => dispatch({ type: "submit", intent })}
+      />
+
+      {/* 2. Main 2-Column Section: Active Task Card (Left) + Inspector Rail (Right) */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] items-start">
+        {/* Left Column: Active Task Workspace */}
+        <div className="space-y-6">
+          <ActiveTaskCard
+            state={state}
+            workspace={workspace}
+            busy={busy}
+            onBind={onBind}
+            onApprove={() => dispatch({ type: "approve" })}
+            onCancel={() => dispatch({ type: "submit", intent: "" })}
+          />
+
+          {/* Activity / Conversation Log */}
+          <div className="rounded-2xl border border-slate-800/80 bg-[#080d1a]/80 p-5 space-y-3">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Task Activity Stream
+            </div>
+            <ConversationLog messages={state.messages} />
+          </div>
+
+          {/* Failure Notice on Error */}
+          {state.error && state.phase === "failed" ? (
+            <FailureNotice detail={state.error} />
+          ) : null}
+        </div>
+
+        {/* Right Column: Inspector Panel */}
+        <div>
+          <InspectorPanel state={state} project={heldProject} />
+        </div>
       </div>
-      <div className="space-y-4">
-        <Pillar title="Telemetry" proof={state.plan ? "Present" : "Needs proof"} detail="Five positions, each lit only by a response from the service that owns it.">
-          <PipelineCanvas state={state} />
-        </Pillar>
-        <Pillar title="Evidence" proof={state.readback?.proof ?? (state.execution ? "Needs proof" : "Needs proof")}>
-          {state.authority || state.execution ? (
-            <TaskReceipt state={state} project={heldProject} />
-          ) : (
-            <HonestEmpty title="No consequence yet" route="POST /v1/capability/mounts/{mount_id}/execute" detail="The receipt, the ledger anchoring and the target's own re-read appear here after you approve an action." />
-          )}
-        </Pillar>
-      </div>
-    </>
+    </div>
   );
 }

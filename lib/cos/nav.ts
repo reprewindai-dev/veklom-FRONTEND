@@ -30,13 +30,16 @@ const inspectStages: NavItem[] = spineStages
   .map((stage) => ({ id: stage.id, label: stage.label, route: stage.route }));
 
 export const navGroups: NavGroup[] = [
-  // Primary Product Cockpit (The 4 essential product areas)
+  // Primary Product Cockpit (The 7 essential product areas)
   {
     id: "product",
     label: "Core Product",
     items: [
       { id: "workspace", label: "Workspace", route: "/os/workspace", hint: "Cockpit" },
+      { id: "capabilities", label: "Capabilities", route: "/os", hint: "Catalog" },
+      { id: "govern", label: "Governed", route: "/os/govern", hint: "Policy" },
       { id: "evidence", label: "Evidence Vault", route: "/os/evidence", hint: "Ledger" },
+      { id: "measure", label: "Measure", route: "/os/measure", hint: "SLA" },
       { id: "computeless", label: "Private Cloud", route: "/os/computeless", hint: "Substrate" },
       { id: "settings", label: "Settings", route: "/os/settings" },
     ],
@@ -49,7 +52,12 @@ export const navGroups: NavGroup[] = [
     defaultCollapsed: true,
     items: [
       { id: "terminal", label: "Live Terminal", action: "terminal", hint: "Ctrl+`" },
-      ...inspectStages,
+      { id: "mount", label: "Mount", route: "/os/mount" },
+      { id: "blueprint", label: "Blueprint", route: "/os/blueprint" },
+      { id: "authority", label: "Authority", route: "/os/authority" },
+      { id: "execute", label: "Execute", route: "/os/execute" },
+      { id: "settle", label: "Settle", route: "/os/settle" },
+      { id: "tracker", label: "Tracker", route: "/os/tracker" },
     ],
   },
 ];
