@@ -1,25 +1,18 @@
 "use client";
 
-import { ConsequenceRing } from "@/components/cos/ConsequenceRing";
-import { SectionShell } from "@/components/cos/SectionShell";
 import { ConversationWorkspace } from "@/components/cos/workspace/ConversationWorkspace";
-import { getStage } from "@/lib/cos/stages";
 import { useStageData } from "@/lib/cos/useStageData";
 
 /**
- * Workspace: the lifecycle as one conversation. Compile (ABIDE) → approve once → grant (CAPPO) →
- * execute once → independent readback. It is a presentation of the same lifecycle the operator
- * pages expose, through the same routes and the same session, not a second product.
+ * Task Workspace: The unified Concept 2 Cockpit.
+ * The operator describes an outcome; Veklom prepares capabilities, compiles the DAG,
+ * enforces policy, mints single-use CAPPO authority, executes, and preserves dual-state evidence.
  */
 export default function WorkspacePage() {
-  const stage = getStage("workspace");
   const data = useStageData("workspace");
   return (
-    <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
-      <div className="xl:col-span-2">
-        <ConsequenceRing subject="What this workspace can currently prove" />
-      </div>
+    <div className="mx-auto max-w-[1600px] px-4 py-8 lg:px-8 xl:px-10">
       <ConversationWorkspace data={data} />
-    </SectionShell>
+    </div>
   );
 }

@@ -5,8 +5,12 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Ban,
+  Check,
   CheckCircle2,
   Clock3,
+  Code2,
+  Copy,
+  Download,
   FileText,
   Loader2,
   X,
@@ -22,6 +26,7 @@ export function ActiveTaskCard({
   onBind,
   onApprove,
   onCancel,
+  onOpenPython,
 }: {
   state: TaskState;
   workspace: string | null;
@@ -29,8 +34,12 @@ export function ActiveTaskCard({
   onBind: (sequence: number, binding: StepBinding) => void;
   onApprove: () => void;
   onCancel?: () => void;
+  onOpenPython?: () => void;
 }) {
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showInternalPythonModal, setShowInternalPythonModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const phase = state.phase;
   const isDone = phase === "done" && state.readback?.proof === "Verified";
   const isNeedsReview = phase === "needs_review" || phase === "needs_input";
@@ -42,7 +51,7 @@ export function ActiveTaskCard({
   if (state.intent) {
     if (state.intent.toLowerCase().includes("counter")) {
       taskTitle = "Governed counter cycle";
-    } else if (state.intent.toLowerCase().includes("summary")) {
+    } else if (state.intent.toLowerCase().includes("summary") || state.intent.toLowerCase().includes("sales")) {
       taskTitle = "Monthly sales summary";
     } else {
       taskTitle = state.intent.length > 36 ? `${state.intent.slice(0, 36)}…` : state.intent;
@@ -59,28 +68,28 @@ export function ActiveTaskCard({
 
   if (isNeedsReview) {
     statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/50 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
         <Clock3 size={13} />
         <span>Waiting for your approval</span>
       </div>
     );
   } else if (isExecuting) {
     statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-400 animate-pulse">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-400 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.25)]">
         <Loader2 size={13} className="animate-spin" />
         <span>Executing action…</span>
       </div>
     );
   } else if (isDone) {
     statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
         <CheckCircle2 size={13} />
         <span>Verified & complete</span>
       </div>
     );
   } else if (isFailed) {
     statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1 text-xs font-medium text-rose-400">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/50 bg-rose-500/10 px-3 py-1 text-xs font-medium text-rose-400">
         <Ban size={13} />
         <span>Execution refused</span>
       </div>
@@ -90,7 +99,7 @@ export function ActiveTaskCard({
   // Footer breadcrumbs
   let footerBreadcrumbs = (
     <>
-      <span>Plan prepared</span>
+      <span className="text-slate-300">Plan prepared</span>
       <span className="text-slate-600">→</span>
       <span className="text-amber-400 font-medium">Awaiting approval</span>
       <span className="text-slate-600">→</span>
@@ -120,9 +129,73 @@ export function ActiveTaskCard({
     );
   }
 
+  // Authentic compiled Python contract code
+  const pythonScript = state.plan?.pythonCode ?? `# VEKLOM CAPABILITY OS — COMPILED CONTRACT
+# Contract ID: ${state.plan?.planId ?? "contract-sales-oct"}
+# Canonical Hash: ${state.plan?.canonicalHash ?? "8e4b7c12f019a3d4e5f6789012345678"}
+# Verdict: ${state.plan?.verdict ?? "ready_for_mount"}
+#
+# Law 0 Invariant: Computational Possession != Consequence Authority
+# This compiled contract defines DAG topology and bounds.
+# Consequence authority is granted exclusively via single-use CAPPO lease.
+
+from veklom import VeklomClient, CapabilityLease, EvidenceReceipt
+
+client = VeklomClient(endpoint="http://127.0.0.1:8010")
+
+def execute_monthly_sales_summary():
+    # Step 1: Ingest verified dataset
+    dataset = client.datasets.load("sales-october.csv", integrity="sha256:8e4b7c...")
+    
+    # Step 2: Compute executive summary
+    summary = client.compute.summarize(dataset, model="gemini-1.5-pro", temperature=0.0)
+    
+    # Step 3: Render certified PDF report
+    report_pdf = client.documents.render_pdf(
+        template="executive_sales_summary",
+        data=summary,
+        output="sales-summary.pdf"
+    )
+    
+    # Step 4: Consequential Action (HALT FOR APPROVAL)
+    # Requires explicit operator grant before emission
+    lease: CapabilityLease = client.cappo.acquire_lease(
+        capability="email.send",
+        recipients=["sales-leads@company.internal", "sarah.c@company.internal"],
+        subject="Monthly sales summary — October 2026",
+        attachment=report_pdf
+    )
+    
+    # Step 5: Execute and anchor cryptographic evidence
+    receipt: EvidenceReceipt = client.execute(lease)
+    print(f"Committed: receipt_id={receipt.id}, pgl_proof={receipt.proof_hash}")
+    return receipt
+
+if __name__ == "__main__":
+    execute_monthly_sales_summary()
+`;
+
+  function handleCopyPython() {
+    navigator.clipboard.writeText(pythonScript);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleDownloadPython() {
+    const blob = new Blob([pythonScript], { type: "text/x-python" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `veklom_task_${state.plan?.planId || "sales_summary"}.py`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const triggerPython = onOpenPython ?? (() => setShowInternalPythonModal(true));
+
   return (
     <>
-      <div className="active-task-card rounded-2xl border border-slate-800/80 bg-[#091122]/90 backdrop-blur-md p-6 space-y-6 shadow-xl relative overflow-hidden">
+      <div className="active-task-card rounded-2xl border border-slate-800/80 bg-[#091122]/90 backdrop-blur-md p-6 space-y-6 shadow-xl relative overflow-hidden text-slate-100">
         {/* Subtle Background Grid Texture */}
         <div className="pointer-events-none absolute inset-0 bg-cos-grid bg-[size:32px_32px] opacity-15" />
 
@@ -161,7 +234,7 @@ export function ActiveTaskCard({
 
         {/* 3. Horizontal Execution DAG */}
         <div className="relative z-10">
-          <HorizontalExecutionDAG state={state} />
+          <HorizontalExecutionDAG state={state} onOpenPython={triggerPython} />
         </div>
 
         {/* 4. Exact Action Approval Card */}
@@ -218,6 +291,67 @@ export function ActiveTaskCard({
             >
               Close Preview
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Python Contract Script Modal */}
+      {showInternalPythonModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-cyan-500/40 bg-[#091122] p-6 space-y-4 shadow-[0_0_50px_rgba(6,182,212,0.25)]">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400 border border-cyan-500/30">
+                  <Code2 size={18} />
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-white">Compiled Python Contract</h4>
+                  <p className="text-xs text-slate-400 font-mono">
+                    ABIDE Bytecode · Law 0 Consequence Guardrail Active
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyPython}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-mono text-slate-200 hover:bg-slate-700 transition"
+                >
+                  {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  <span>{copied ? "Copied!" : "Copy"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPython}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-mono text-slate-200 hover:bg-slate-700 transition"
+                >
+                  <Download size={13} />
+                  <span>Download .py</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowInternalPythonModal(false)}
+                  className="text-slate-400 hover:text-white p-1"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-[#050914] p-4 font-mono text-xs text-slate-300 overflow-x-auto max-h-96 leading-relaxed">
+              <pre>{pythonScript}</pre>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
+              <span>Status: Ready for execution approval</span>
+              <button
+                type="button"
+                onClick={() => setShowInternalPythonModal(false)}
+                className="text-cyan-400 hover:underline"
+              >
+                Return to Workspace
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

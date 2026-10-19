@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Activity,
-  BadgeCheck,
+  BarChart3,
   Boxes,
   Cable,
-  ChevronDown,
   CircleDollarSign,
-  Command,
+  Cloud,
   FileCheck2,
+  FolderCheck,
   LayoutGrid,
-  Library,
   LockKeyhole,
   MessageSquareText,
   Play,
@@ -24,8 +22,8 @@ import {
   Server,
   Settings,
   Shield,
+  ShieldCheck,
   Terminal,
-  Wrench,
   X,
 } from "lucide-react";
 import { SANDBOX_COPY } from "@/lib/cos/sandbox";
@@ -33,26 +31,20 @@ import { isActiveRoute, navGroups, type NavGroup, type NavItem } from "@/lib/cos
 import { withCapability } from "@/lib/cos/capability-context";
 
 const icons: Record<string, typeof Boxes> = {
-  capabilities: LayoutGrid,
-  mount: Boxes,
-  blueprint: Route,
-  govern: Scale,
-  authority: LockKeyhole,
-  execute: Play,
+  workspace: LayoutGrid,
+  capabilities: Boxes,
+  govern: ShieldCheck,
   evidence: FileCheck2,
   measure: Activity,
+  computeless: Cloud,
+  settings: Settings,
+  connectors: Cable,
+  mount: Boxes,
+  blueprint: Route,
+  authority: LockKeyhole,
+  execute: Play,
   settle: CircleDollarSign,
   tracker: Shield,
-  registry: Library,
-  marketplace: Library,
-  harnesses: Cable,
-  contracts: ScrollText,
-  verification: BadgeCheck,
-  computeless: Server,
-  terminal: Command,
-  settings: Settings,
-  workspace: MessageSquareText,
-  connectors: Cable,
 };
 
 type NavProps = {
@@ -66,7 +58,6 @@ type NavProps = {
 
 function NavGroupSection({
   group,
-  index,
   pathname,
   capabilityId,
   onNavigate,
@@ -74,26 +65,12 @@ function NavGroupSection({
   layoutKey,
 }: {
   group: NavGroup;
-  index: number;
   pathname: string;
   capabilityId?: string | null;
   onNavigate?: () => void;
   onTerminal: () => void;
   layoutKey: string;
 }) {
-  const isAnyItemActive = group.items.some(
-    (item) => item.route && isActiveRoute(pathname, item.route)
-  );
-  const [isOpen, setIsOpen] = useState(
-    group.collapsible ? isAnyItemActive || !group.defaultCollapsed : true
-  );
-
-  useEffect(() => {
-    if (group.collapsible && isAnyItemActive) {
-      setIsOpen(true);
-    }
-  }, [group.collapsible, isAnyItemActive]);
-
   const renderItem = (item: NavItem) => {
     const Icon = icons[item.id] || CircleDollarSign;
     if (item.action === "terminal") {
@@ -107,7 +84,7 @@ function NavGroupSection({
           }}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-cos-muted transition hover:bg-cos-surface2 hover:text-cos-text"
         >
-          <Icon size={15} strokeWidth={1.8} />
+          <Icon size={16} strokeWidth={1.8} />
           <span>{item.label}</span>
           {item.hint ? (
             <kbd className="ml-auto font-mono text-[10px] text-cos-steel">{item.hint}</kbd>
@@ -123,21 +100,18 @@ function NavGroupSection({
         key={item.id}
         onClick={onNavigate}
         aria-current={active ? "page" : undefined}
-        className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+        className={`group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition-all duration-150 ${
           active
-            ? "bg-cos-accent/10 font-medium text-cos-accent"
-            : "text-cos-muted hover:bg-cos-surface2 hover:text-cos-text"
+            ? "bg-cyan-500/15 border border-cyan-500/30 font-medium text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+            : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent"
         }`}
       >
-        <Icon size={16} strokeWidth={active ? 2.4 : 1.8} />
-        <span>{item.label}</span>
-        {item.hint && !active ? (
-          <kbd className="ml-auto font-mono text-[10px] text-cos-steel">{item.hint}</kbd>
-        ) : null}
+        <Icon size={17} strokeWidth={active ? 2.2 : 1.8} className={active ? "text-cyan-400" : "text-slate-400 group-hover:text-slate-200"} />
+        <span className="tracking-tight">{item.label}</span>
         {active && (
           <motion.span
             layoutId={`cos-nav-active-${layoutKey}`}
-            className="ml-auto h-1.5 w-1.5 rounded-full bg-cos-accent shadow-[0_0_10px_rgb(var(--theme-accent))]"
+            className="ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"
             transition={{ type: "spring", stiffness: 500, damping: 35 }}
           />
         )}
@@ -145,88 +119,40 @@ function NavGroupSection({
     );
   };
 
-  if (group.collapsible) {
-    return (
-      <div className="mt-5 border-t border-cos-border/80 pt-4">
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="group flex w-full items-center justify-between rounded-md px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-steel transition hover:bg-cos-surface2/60 hover:text-cos-text"
-          aria-expanded={isOpen}
-        >
-          <span className="flex items-center gap-2">
-            <Wrench size={11} className="text-cos-muted transition-colors group-hover:text-cos-accent" />
-            <span>{group.label}</span>
-          </span>
-          <ChevronDown
-            size={13}
-            className={`text-cos-steel transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-cos-accent" : ""
-            }`}
-          />
-        </button>
-        <AnimatePresence initial={false}>
-          {isOpen && (
-            <motion.nav
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="mt-1 space-y-1 overflow-hidden"
-              aria-label={group.label}
-            >
-              {group.items.map(renderItem)}
-            </motion.nav>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  }
-
   return (
-    <div className={index === 0 ? "" : "mt-5 border-t border-cos-border/80 pt-4"}>
-      <div className="mb-2 px-3 font-mono text-[9px] uppercase tracking-[0.22em] text-cos-steel">
-        {group.label}
-      </div>
-      <nav aria-label={group.label} className="space-y-1">{group.items.map(renderItem)}</nav>
-    </div>
+    <nav aria-label={group.label} className="space-y-1.5">
+      {group.items.map(renderItem)}
+    </nav>
   );
 }
 
 function NavContent(props: NavProps) {
   const pathname = usePathname();
   return (
-    <>
-      {navGroups.map((group, index) => (
-        <NavGroupSection
-          key={group.id}
-          group={group}
-          index={index}
-          pathname={pathname}
-          capabilityId={props.capabilityId}
-          onNavigate={props.onNavigate}
-          onTerminal={props.onTerminal}
-          layoutKey={props.layoutKey}
-        />
-      ))}
+    <div className="flex flex-col justify-between h-full">
+      <div className="space-y-2">
+        {navGroups.map((group) => (
+          <NavGroupSection
+            key={group.id}
+            group={group}
+            pathname={pathname}
+            capabilityId={props.capabilityId}
+            onNavigate={props.onNavigate}
+            onTerminal={props.onTerminal}
+            layoutKey={props.layoutKey}
+          />
+        ))}
+      </div>
+
       {props.sandbox ? (
         <div
           data-testid="sandbox-rail-footer"
-          className="mt-8 rounded-lg border border-cos-warn/40 bg-cos-warn/[0.08] p-3 font-mono text-[10px] uppercase leading-5 tracking-[0.12em] text-cos-warn"
+          className="mt-6 rounded-lg border border-cos-warn/40 bg-cos-warn/[0.08] p-3 font-mono text-[10px] uppercase leading-5 tracking-[0.12em] text-cos-warn"
         >
           {SANDBOX_COPY.railFooter}
         </div>
-      ) : (
-        <div className="mt-8 rounded-lg border border-cos-border bg-cos-surface2 p-3">
-          <div className="flex items-center gap-2 text-xs text-cos-steel">
-            <Shield size={14} /> Honest runtime state
-          </div>
-          <p className="mt-2 text-[11px] leading-5 text-cos-muted">
-            A configured route or manifest is not operational proof.
-          </p>
-        </div>
-      )}
-    </>
+      ) : null}
+    </div>
   );
 }
 
@@ -234,7 +160,7 @@ function NavContent(props: NavProps) {
 export function LeftNav(props: Omit<NavProps, "layoutKey" | "onNavigate">) {
   return (
     <aside
-      className={`hidden w-60 shrink-0 overflow-y-auto border-r border-cos-border bg-cos-bg/90 px-3 py-5 lg:block ${
+      className={`hidden w-60 shrink-0 overflow-y-auto border-r border-slate-800/80 bg-[#060a14]/90 px-3.5 py-6 lg:block backdrop-blur-xl ${
         props.sandbox ? "border-l-2 border-l-cos-warn" : ""
       }`}
     >
