@@ -36,6 +36,8 @@ export type WorkspacePlan = {
   steps: WorkspaceStep[];
   catalogDigest?: string;
   pipeline?: GPCPipelineGraph;
+  graph?: { nodes: unknown[]; edges: unknown[] };
+  pythonCode?: string;
   shape: "contract" | "plan";
 };
 

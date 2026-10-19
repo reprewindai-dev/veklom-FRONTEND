@@ -61,6 +61,8 @@ function parseContract(contract: JsonRecord): WorkspacePlan | null {
       operation: asBoundOperation(step.operation),
     }];
   });
+  const graph = asRecord(contract.graph);
+  const python = asRecord(contract.python);
   return {
     planId,
     canonicalHash,
@@ -68,6 +70,8 @@ function parseContract(contract: JsonRecord): WorkspacePlan | null {
     verdict,
     steps,
     catalogDigest: asString(contract.catalog_digest),
+    graph: graph && Array.isArray(graph.nodes) && Array.isArray(graph.edges) ? (graph as { nodes: unknown[]; edges: unknown[] }) : undefined,
+    pythonCode: asString(python?.python_code),
     shape: "contract",
   };
 }
@@ -96,6 +100,8 @@ function parsePlan(plan: JsonRecord): WorkspacePlan | null {
     }];
   });
   const pipeline = asRecord(plan.pipeline);
+  const graph = asRecord(plan.graph);
+  const python = asRecord(plan.python);
   return {
     planId,
     canonicalHash: asString(plan.proof_hash) ?? planId,
@@ -104,6 +110,8 @@ function parsePlan(plan: JsonRecord): WorkspacePlan | null {
     steps,
     catalogDigest: asString(plan.catalog_digest),
     pipeline: pipeline && Array.isArray(pipeline.nodes) && Array.isArray(pipeline.edges) ? (pipeline as unknown as GPCPipelineGraph) : undefined,
+    graph: graph && Array.isArray(graph.nodes) && Array.isArray(graph.edges) ? (graph as { nodes: unknown[]; edges: unknown[] }) : undefined,
+    pythonCode: asString(python?.python_code),
     shape: "plan",
   };
 }

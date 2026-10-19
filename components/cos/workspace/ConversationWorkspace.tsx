@@ -35,7 +35,6 @@ import { targetStateReadbackPath } from "@/lib/cos/readback";
 import { SANDBOX_PROJECT, useSandboxMode } from "@/lib/cos/sandbox";
 import { getStage, type StageEndpoint } from "@/lib/cos/stages";
 import { parseCompileResponse } from "@/lib/cos/tasks/compile-shape";
-import { generateTaskPython } from "@/lib/cos/tasks/python-generator";
 import { activeStep, initialTaskState, taskReducer } from "@/lib/cos/tasks/task-reducer";
 import type { StepBinding, TaskState } from "@/lib/cos/tasks/task-types";
 import type { StageCallResult, useStageData } from "@/lib/cos/useStageData";
@@ -44,6 +43,7 @@ import { ActionApprovalCard } from "./ActionApprovalCard";
 import { ConversationLog } from "./ConversationLog";
 import { HorizontalExecutionDAG } from "./HorizontalExecutionDAG";
 import { InspectorPanel } from "./InspectorPanel";
+import { TaskReceipt } from "./TaskReceipt";
 
 type StageData = ReturnType<typeof useStageData>;
 
@@ -306,7 +306,25 @@ export function ConversationWorkspace({ data }: { data: StageData }) {
     setActiveTab("graph");
   }
 
-  const generatedPython = generateTaskPython(state, workspace);
+  const generatedPython = state.plan?.pythonCode
+    ? state.plan.pythonCode
+    : state.plan
+      ? `# VEKLOM CAPABILITY OS — COMPILED CONTRACT
+# Contract ID: ${state.plan.planId}
+# Canonical Hash: ${state.plan.canonicalHash}
+# Verdict: ${state.plan.verdict}
+# Bound Steps (${state.plan.steps.length}):
+${state.plan.steps
+  .map(
+    (s) =>
+      `#   Step ${s.sequence}: ${s.clause}\n#     Action: ${s.action ?? "unbound"}\n#     Coverage: ${s.coverage}`
+  )
+  .join("\n")}
+#
+# Note: Full python pipeline bytecode is emitted by ABIDE (/api/abide/v1/blueprint/compile).`
+      : `# No compiled contract yet.
+# Enter intent and click "Compile to Python" to invoke the ABIDE compiler.
+`;
   const compiledPythonReady = Boolean(state.plan);
 
   function handleCompileToPython() {
@@ -536,6 +554,16 @@ export function ConversationWorkspace({ data }: { data: StageData }) {
         {state.error && state.phase === "failed" ? (
           <FailureNotice detail={state.error} />
         ) : null}
+
+        {/* Task-Linked Audit Receipt */}
+        {(state.authority || state.execution) && (
+          <div className="rounded-2xl border border-slate-800/80 bg-[#080d1a]/90 backdrop-blur-md p-5 space-y-4 shadow-xl">
+            <div className="font-mono text-[11px] font-semibold tracking-wider text-slate-300 uppercase">
+              TASK-LINKED AUDIT RECEIPT &amp; SINK READBACK
+            </div>
+            <TaskReceipt state={state} project={heldProject} />
+          </div>
+        )}
 
         {/* Pill Prompt Input Bar */}
         <form onSubmit={handlePromptSubmit} className="relative">

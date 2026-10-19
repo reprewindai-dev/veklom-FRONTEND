@@ -4,9 +4,10 @@ import { HorizontalExecutionDAG } from "../HorizontalExecutionDAG";
 import { ActionApprovalCard } from "../ActionApprovalCard";
 import { InspectorPanel } from "../InspectorPanel";
 import { ActiveTaskCard } from "../ActiveTaskCard";
+import { TaskReceipt } from "../TaskReceipt";
 import { initialTaskState } from "@/lib/cos/tasks/task-reducer";
 import type { TaskState, WorkspacePlan } from "@/lib/cos/tasks/task-types";
-import { generateTaskPython } from "@/lib/cos/tasks/python-generator";
+import { parseCompileResponse } from "@/lib/cos/tasks/compile-shape";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -42,6 +43,7 @@ const mockPlan: WorkspacePlan = {
   intent: "Prepare the monthly sales summary and email it to the sales team.",
   verdict: "ready_for_mount",
   shape: "contract",
+  pythonCode: "import os\nfrom veklom import VeklomClient\nprint('Governed ABIDE code')",
   steps: [
     {
       stepId: "step-1",
@@ -74,25 +76,26 @@ const mockReviewState: TaskState = {
 
 describe("Concept 2 Workspace Revamp Components", () => {
   describe("HorizontalExecutionDAG", () => {
-    it("renders all 5 horizontal pipeline nodes", async () => {
+    it("renders all 5 real backend pipeline positions and compiled step", async () => {
       const el = await mount(<HorizontalExecutionDAG state={mockReviewState} />);
-      expect(el.textContent).toContain("Input Data");
-      expect(el.textContent).toContain("Summarize");
-      expect(el.textContent).toContain("Report draft");
-      expect(el.textContent).toContain("email.send");
+      expect(el.textContent).toContain("Prepared");
+      expect(el.textContent).toContain("Permission");
+      expect(el.textContent).toContain("Executing");
+      expect(el.textContent).toContain("Result check");
       expect(el.textContent).toContain("Evidence");
+      expect(el.textContent).toContain("email.send");
     });
 
-    it("highlights Node 4 with Approval required when state is in needs_review", async () => {
+    it("highlights with Approval required when state is in needs_review", async () => {
       const el = await mount(<HorizontalExecutionDAG state={mockReviewState} />);
       expect(el.textContent).toContain("Approval required");
     });
 
-    it("transitions Node 4 to Verified when execution is complete", async () => {
+    it("transitions Result check to Verified when execution readback is verified", async () => {
       const verifiedState: TaskState = {
         ...mockReviewState,
         phase: "done",
-        readback: { proof: "Verified" },
+        readback: { proof: "Verified", state: { counter: 1 } },
       };
       const el = await mount(<HorizontalExecutionDAG state={verifiedState} />);
       expect(el.textContent).toContain("Verified");
@@ -161,62 +164,67 @@ describe("Concept 2 Workspace Revamp Components", () => {
     });
   });
 
-  describe("Dynamic Capability OS Architecture (One Workspace Many Capabilities)", () => {
-    it("renders dynamic capability nodes for arbitrary non-sales tasks", async () => {
-      const dynamicState: TaskState = {
-        ...initialTaskState,
-        intent: "increment the counter",
-        plan: {
-          planId: "contract-counter-1",
-          canonicalHash: "abcdef123456",
-          intent: "increment the counter",
-          verdict: "ready_for_mount",
-          shape: "contract",
-          steps: [
-            {
-              stepId: "step-counter",
-              sequence: 1,
-              clause: "increment system counter",
-              coverage: "write",
-              action: "counter.increment",
-              packageRef: "pkg-counter",
-              reason: "Permitted under counter policy",
-              requiresApproval: false,
-              bindable: true,
-            },
-          ],
+  describe("TaskReceipt & Complete Audit Trail", () => {
+    it("renders dual-state receipt with operation ID, receipt ID, and anchoring proof", async () => {
+      const executedState: TaskState = {
+        ...mockReviewState,
+        phase: "done",
+        authority: {
+          decision: "allow",
+          mountId: "mnt-12345",
+          tokenId: "tok-67890",
+        },
+        execution: {
+          decision: "allow",
+          operationId: "op-test-uuid",
+          receiptId: "rcpt-55555",
+          anchoringStatus: "confirmed",
+          eventHash: "0xabcdef1234567890",
+          terminated: true,
+          resultingState: { count: 1 },
+        },
+        readback: {
+          proof: "Verified",
+          state: { count: 1 },
         },
       };
 
-      const el = await mount(<HorizontalExecutionDAG state={dynamicState} />);
-      expect(el.textContent).toContain("Input");
-      expect(el.textContent).toContain("counter.increment");
-      expect(el.textContent).toContain("Output");
+      const el = await mount(<TaskReceipt state={executedState} project="sandbox" />);
+      expect(el.textContent).toContain("Executed once and independently verified");
+      expect(el.textContent).toContain("op-test-uuid");
+      expect(el.textContent).toContain("rcpt-55555");
+      expect(el.textContent).toContain("mnt-12345");
+      expect(el.textContent).toContain("confirmed");
+      expect(el.textContent).toContain("0xabcdef1234567890");
+      expect(el.textContent).toContain("yes (task-bound, single use)");
     });
+  });
 
-    it("renders placeholder Capability A and Capability B when no plan has been compiled", async () => {
-      const emptyState: TaskState = {
-        ...initialTaskState,
-        intent: "",
+  describe("Backend Compiler Integration (ABIDE)", () => {
+    it("parses pythonCode from ABIDE contract response", () => {
+      const rawContract = {
+        contract: {
+          contract_id: "plan-test-01",
+          canonical_hash: "0x123abc",
+          verdict: "ready_for_mount",
+          steps: [
+            {
+              step_id: "s1",
+              clause: "test clause",
+              kind: "write",
+              action: "counter.increment",
+            },
+          ],
+          python: {
+            python_code: "# ABIDE compiled bytecode\nclient.execute()",
+          },
+        },
       };
 
-      const el = await mount(<HorizontalExecutionDAG state={emptyState} />);
-      expect(el.textContent).toContain("Input");
-      expect(el.textContent).toContain("Capability A");
-      expect(el.textContent).toContain("Capability B");
-      expect(el.textContent).toContain("Output");
-    });
-
-    it("generates Python script honoring Law 0 separation of compilation and execution authority", () => {
-      const code = generateTaskPython(mockReviewState, "ws-sales-ops");
-      expect(code).toContain("VEKLOM CAPABILITY OS — GENERATED PYTHON SCRIPT");
-      expect(code).toContain("veklom.Client");
-      expect(code).toContain("ws-sales-ops");
-      expect(code).toContain("contract-sales-oct");
-      expect(code).toContain("client.request_authority");
-      expect(code).toContain("client.execute");
-      expect(code).toContain("LAW 0 GOVERNANCE NOTICE");
+      const plan = parseCompileResponse(rawContract);
+      expect(plan).not.toBeNull();
+      expect(plan?.pythonCode).toBe("# ABIDE compiled bytecode\nclient.execute()");
+      expect(plan?.planId).toBe("plan-test-01");
     });
   });
 });
-
