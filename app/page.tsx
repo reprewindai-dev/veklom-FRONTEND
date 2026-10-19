@@ -3,6 +3,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 import { HumanAppShell } from "@/components/shell/HumanAppShell";
 import { AmbientField, AuthorityOrb, LiveSignal, StageLabel } from "@/components/brand/PremiumPrimitives";
 import { LiveProofFabric } from "@/components/proof/LiveProofFabric";
+import { ContinuityBlogSection } from "@/components/blog/ContinuityBlogSection";
 
 const laws = [
   { index: "01", title: "Authority", body: "Every execution begins inside an explicit identity, capability, policy, budget and time boundary." },
@@ -219,6 +220,8 @@ export default function LandingPage() {
           </div>
           <LiveProofFabric compact />
         </section>
+
+        <ContinuityBlogSection />
 
         <section className="relative overflow-hidden border-y border-theme-border bg-[#05070b] text-white">
           <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(103,232,249,.18),transparent_26%),radial-gradient(circle_at_80%_70%,rgba(99,102,241,.16),transparent_28%)]" aria-hidden="true" />

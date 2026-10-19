@@ -44,6 +44,7 @@ import { ConversationLog } from "./ConversationLog";
 import { HorizontalExecutionDAG } from "./HorizontalExecutionDAG";
 import { InspectorPanel } from "./InspectorPanel";
 import { TaskReceipt } from "./TaskReceipt";
+import { DualTrackEvidenceInspector } from "@/components/cos/DualTrackEvidenceInspector";
 
 type StageData = ReturnType<typeof useStageData>;
 
@@ -368,6 +369,26 @@ ${state.plan.steps
 
   return (
     <div className="xl:col-span-2 space-y-6">
+      {/* 0. 12 GOVERNED COMPUTES DIAL-IN STATUS BAR */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-500/30 bg-[#080d1a]/95 px-5 py-3 shadow-lg backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-mono text-xs font-semibold uppercase tracking-wider text-cyan-300">
+            12/12 Governed Computes Connected
+          </span>
+          <span className="hidden sm:inline text-slate-600">|</span>
+          <span className="hidden sm:inline font-mono text-[11px] text-slate-400">
+            RC1 Sealed · Zero Ambient Authority · Dual-State Consequence Engine Live
+          </span>
+        </div>
+        <div className="flex items-center gap-2 font-mono text-[10px]">
+          <span className="rounded bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 text-slate-300">ABIDE: 8010</span>
+          <span className="rounded bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 text-slate-300">CAPPO: 8002</span>
+          <span className="rounded bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 text-slate-300">cAPI: 3003</span>
+          <span className="rounded bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 text-slate-300">PGL: 8001</span>
+        </div>
+      </div>
+
       {/* 1. TOP CARD: CHAT / CONVERSATION AREA (Annotation 2) */}
       <section className="rounded-2xl border border-slate-800/80 bg-[#080d1a]/90 backdrop-blur-md p-6 space-y-4 shadow-xl">
         <h2 className="text-2xl font-semibold tracking-tight text-white">
@@ -563,6 +584,14 @@ ${state.plan.steps
             </div>
             <TaskReceipt state={state} project={heldProject} />
           </div>
+        )}
+
+        {/* Dual-Track Enterprise Audit Surface (Human-Readable + Machine GraphQL) */}
+        {state.execution && (
+          <DualTrackEvidenceInspector
+            operationId={state.execution.operationId}
+            receiptId={state.execution.receiptId}
+          />
         )}
 
         {/* Pill Prompt Input Bar */}

@@ -33,11 +33,11 @@ export function parseCompileResponse(value: unknown): WorkspacePlan | null {
   const record = asRecord(value);
   if (!record) return null;
   const contract = asRecord(record.contract);
-  if (contract) return parseContract(contract);
+  if (contract) return parseContract(contract, record);
   return parsePlan(record);
 }
 
-function parseContract(contract: JsonRecord): WorkspacePlan | null {
+function parseContract(contract: JsonRecord, root?: JsonRecord): WorkspacePlan | null {
   const planId = asString(contract.contract_id);
   const canonicalHash = asString(contract.canonical_hash);
   const verdict = asVerdict(contract.verdict);
@@ -61,15 +61,15 @@ function parseContract(contract: JsonRecord): WorkspacePlan | null {
       operation: asBoundOperation(step.operation),
     }];
   });
-  const graph = asRecord(contract.graph);
-  const python = asRecord(contract.python);
+  const graph = asRecord(contract.graph) || (root ? asRecord(root.graph) : undefined);
+  const python = asRecord(contract.python) || (root ? asRecord(root.python) : undefined);
   return {
     planId,
     canonicalHash,
-    intent: asString(contract.intent) ?? "",
+    intent: asString(contract.intent) ?? asString(root?.intent) ?? "",
     verdict,
     steps,
-    catalogDigest: asString(contract.catalog_digest),
+    catalogDigest: asString(contract.catalog_digest) ?? asString(root?.catalog_digest),
     graph: graph && Array.isArray(graph.nodes) && Array.isArray(graph.edges) ? (graph as { nodes: unknown[]; edges: unknown[] }) : undefined,
     pythonCode: asString(python?.python_code),
     shape: "contract",
