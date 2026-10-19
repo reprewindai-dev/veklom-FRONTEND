@@ -6,6 +6,7 @@ import { InspectorPanel } from "../InspectorPanel";
 import { ActiveTaskCard } from "../ActiveTaskCard";
 import { initialTaskState } from "@/lib/cos/tasks/task-reducer";
 import type { TaskState, WorkspacePlan } from "@/lib/cos/tasks/task-types";
+import { generateTaskPython } from "@/lib/cos/tasks/python-generator";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -159,4 +160,63 @@ describe("Concept 2 Workspace Revamp Components", () => {
       expect(el.textContent).toContain("Awaiting approval");
     });
   });
+
+  describe("Dynamic Capability OS Architecture (One Workspace Many Capabilities)", () => {
+    it("renders dynamic capability nodes for arbitrary non-sales tasks", async () => {
+      const dynamicState: TaskState = {
+        ...initialTaskState,
+        intent: "increment the counter",
+        plan: {
+          planId: "contract-counter-1",
+          canonicalHash: "abcdef123456",
+          intent: "increment the counter",
+          verdict: "ready_for_mount",
+          shape: "contract",
+          steps: [
+            {
+              stepId: "step-counter",
+              sequence: 1,
+              clause: "increment system counter",
+              coverage: "write",
+              action: "counter.increment",
+              packageRef: "pkg-counter",
+              reason: "Permitted under counter policy",
+              requiresApproval: false,
+              bindable: true,
+            },
+          ],
+        },
+      };
+
+      const el = await mount(<HorizontalExecutionDAG state={dynamicState} />);
+      expect(el.textContent).toContain("Input");
+      expect(el.textContent).toContain("counter.increment");
+      expect(el.textContent).toContain("Output");
+    });
+
+    it("renders placeholder Capability A and Capability B when no plan has been compiled", async () => {
+      const emptyState: TaskState = {
+        ...initialTaskState,
+        intent: "",
+      };
+
+      const el = await mount(<HorizontalExecutionDAG state={emptyState} />);
+      expect(el.textContent).toContain("Input");
+      expect(el.textContent).toContain("Capability A");
+      expect(el.textContent).toContain("Capability B");
+      expect(el.textContent).toContain("Output");
+    });
+
+    it("generates Python script honoring Law 0 separation of compilation and execution authority", () => {
+      const code = generateTaskPython(mockReviewState, "ws-sales-ops");
+      expect(code).toContain("VEKLOM CAPABILITY OS — GENERATED PYTHON SCRIPT");
+      expect(code).toContain("veklom.Client");
+      expect(code).toContain("ws-sales-ops");
+      expect(code).toContain("contract-sales-oct");
+      expect(code).toContain("client.request_authority");
+      expect(code).toContain("client.execute");
+      expect(code).toContain("LAW 0 GOVERNANCE NOTICE");
+    });
+  });
 });
+
