@@ -36,6 +36,21 @@ const proofLevels = [
   },
 ];
 
+const laws = [
+  { index: "01", title: "Authority", body: "Every execution begins inside an explicit identity, capability, policy, budget and time boundary." },
+  { index: "02", title: "Lifecycle", body: "Persistent and ephemeral compute can share the same authority semantics. Lifecycle changes; authority does not become ambient." },
+  { index: "03", title: "Evidence", body: "Execution does not become truth because a runtime says it succeeded. Consequences remain bound to observable evidence." },
+];
+
+const demands = [
+  { title: "Bound what can execute.", body: "Define what the machine may do, what it may touch, what it may spend, how long the authority lasts, and which execution context is allowed to use it." },
+  { title: "Use the same contract across compute.", body: "A long-lived service and a short-lived execution should not require two unrelated trust models. Veklom keeps the capability contract stable while lifecycle policy changes." },
+  { title: "Keep consequence separate from claim.", body: "An executor claiming success is not enough. Veklom is built to preserve the distinction between authorization, execution, observation and established outcome." },
+  { title: "Leave evidence after compute disappears.", body: "Execution can be temporary. The authority record, consequence evidence and causal history are designed to remain inspectable after the runtime is gone." },
+];
+
+const flow = ["Request capability", "Bind authority", "Materialize compute", "Execute", "Observe consequence", "Preserve evidence"];
+
 const claims = [
   ["Demonstrated", "A real HTTP execution path is dominated by capability lease checks, scoped authority and a common governed execution handler."],
   ["Demonstrated", "Persistent and ephemeral execution modes can share the same capability/authority contract shape while carrying different lifecycle semantics."],
@@ -90,6 +105,64 @@ export default async function ProofPage() {
                   <h3 className="mt-14 text-2xl font-semibold tracking-[-.035em] text-theme-ink">{item.title}</h3>
                   <p className="mt-4 text-sm leading-7 text-theme-inkDim">{item.body}</p>
                 </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-[1480px] px-5 py-20 sm:px-8 md:py-28 lg:px-10">
+          <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
+            <div>
+              <StageLabel>Governed compute</StageLabel>
+              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">Compute should not exist outside its authority.</h2>
+              <p className="mt-7 max-w-lg text-base leading-8 text-theme-inkDim">Cloud platforms usually start with a resource, workload, service or function. Veklom starts one level higher: what bounded capability is allowed to exist, under whose authority, for what lifecycle, and with what evidence of the result.</p>
+              <p className="mt-5 max-w-lg text-base leading-8 text-theme-inkDim">That makes persistent service, ephemeral execution and consequential action different lifecycle expressions of the same governed execution contract, not separate trust systems.</p>
+            </div>
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">What the contract has to hold</div>
+              <div className="mt-5 grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border sm:grid-cols-2">
+                {demands.map((demand) => (
+                  <article key={demand.title} className="bg-theme-surface p-7">
+                    <h3 className="text-xl font-semibold tracking-[-.03em] text-theme-ink">{demand.title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-theme-inkDim">{demand.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-theme-border bg-theme-surface/68">
+          <div className="mx-auto grid w-full max-w-[1480px] gap-12 px-5 py-20 sm:px-8 md:py-28 lg:grid-cols-[.68fr_1.32fr] lg:px-10">
+            <div>
+              <StageLabel>The operating law</StageLabel>
+              <h2 className="mt-6 max-w-md text-4xl font-semibold leading-[.98] tracking-[-.055em] text-theme-ink md:text-6xl">A machine can know what to do and still not be allowed to do it.</h2>
+            </div>
+            <div className="grid gap-px overflow-hidden rounded-[26px] border border-theme-border bg-theme-border md:grid-cols-3">
+              {laws.map((law) => (
+                <article key={law.index} className="min-h-[320px] bg-theme-bg p-7 md:p-8">
+                  <div className="text-[10px] font-semibold tracking-[.2em] text-theme-inkDim">{law.index}</div>
+                  <h3 className="mt-20 text-2xl font-semibold tracking-[-.035em] text-theme-ink">{law.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-theme-inkDim">{law.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative overflow-hidden border-b border-theme-border bg-[#05070b] text-white">
+          <div className="relative mx-auto grid w-full max-w-[1480px] gap-14 px-5 py-24 sm:px-8 md:py-32 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-white/42">From capability to evidence</div>
+              <h2 className="mt-6 max-w-xl text-4xl font-semibold leading-[.96] tracking-[-.055em] md:text-6xl">The runtime can disappear. The governed record should not.</h2>
+              <p className="mt-7 max-w-lg text-base leading-8 text-white/58">Veklom is designed so execution lifecycle and authority lifecycle are explicit. Compute may persist, terminate or be reconstructed; the authority and consequence record remain separately inspectable.</p>
+            </div>
+            <div className="grid content-center gap-3">
+              {flow.map((item, index) => (
+                <div key={item} className="flex items-center gap-5 rounded-2xl border border-white/10 bg-white/[.035] px-5 py-4">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-[10px] font-semibold text-white/42">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="text-sm font-medium tracking-[-.01em] text-white/88">{item}</span>
+                </div>
               ))}
             </div>
           </div>
