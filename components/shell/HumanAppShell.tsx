@@ -17,7 +17,8 @@ const navItems = [
   ["/machine", "Machine"],
 ] as const;
 
-const footerGroups = [
+// veklom.dev: the technical and evidence side.
+const technicalGroups = [
   {
     title: "Capability OS",
     links: [
@@ -53,25 +54,55 @@ const footerGroups = [
       ["/support", "Support"],
     ],
   },
+] as const;
+
+const legalLinks = [
+  ["/trust", "Trust Center"],
+  ["/privacy", "Privacy"],
+  ["/privacy-choices", "Privacy Choices"],
+  ["/data-rights", "Data Rights"],
+  ["/terms", "Terms"],
+  ["/acceptable-use", "Acceptable Use"],
+  ["/cookies", "Cookies"],
+  ["/dpa", "Data Processing Addendum"],
+  ["/subprocessors", "Subprocessors"],
+] as const;
+
+// veklom.com: what a customer needs. Everything technical lives on veklom.dev.
+const customerGroups = [
   {
-    title: "Legal & Trust",
+    title: "Product",
     links: [
+      ["/get", "Get Veklom"],
+      ["/vlink", "VLink"],
+      ["/os", "Capability OS"],
+      ["/machine", "For machines"],
+    ],
+  },
+  {
+    title: "Help",
+    links: [
+      ["/support", "Support"],
+      ["/security", "Security"],
+      ["/status", "System Status"],
       ["/trust", "Trust Center"],
-      ["/privacy", "Privacy"],
-      ["/privacy-choices", "Privacy Choices"],
-      ["/data-rights", "Data Rights"],
-      ["/terms", "Terms"],
-      ["/acceptable-use", "Acceptable Use"],
-      ["/cookies", "Cookies"],
-      ["/dpa", "Data Processing Addendum"],
-      ["/subprocessors", "Subprocessors"],
     ],
   },
 ] as const;
 
+function useIsDevHost() {
+  const [isDev, setIsDev] = useState(false);
+  useEffect(() => {
+    const host = window.location.hostname.toLowerCase();
+    setIsDev(host === "veklom.dev" || host === "www.veklom.dev");
+  }, []);
+  return isDev;
+}
+
 export function HumanAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isDevHost = useIsDevHost();
 
   useEffect(() => setMobileMenuOpen(false), [pathname]);
 
@@ -150,18 +181,39 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-              {footerGroups.map((group) => (
-                <div key={group.title}>
-                  <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">{group.title}</div>
+            {isDevHost ? (
+              <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+                {technicalGroups.map((group) => (
+                  <div key={group.title}>
+                    <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">{group.title}</div>
+                    <div className="mt-5 grid gap-3 text-sm">
+                      {group.links.map(([href, label]) => (
+                        <Link key={href} href={href} className="text-theme-inkDim transition hover:translate-x-0.5 hover:text-theme-ink">{label}</Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-10 sm:grid-cols-3">
+                {customerGroups.map((group) => (
+                  <div key={group.title}>
+                    <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">{group.title}</div>
+                    <div className="mt-5 grid gap-3 text-sm">
+                      {group.links.map(([href, label]) => (
+                        <Link key={href} href={href} className="text-theme-inkDim transition hover:translate-x-0.5 hover:text-theme-ink">{label}</Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[.22em] text-theme-inkDim">For engineers</div>
                   <div className="mt-5 grid gap-3 text-sm">
-                    {group.links.map(([href, label]) => (
-                      <Link key={href} href={href} className="text-theme-inkDim transition hover:translate-x-0.5 hover:text-theme-ink">{label}</Link>
-                    ))}
+                    <a href="https://veklom.dev" className="text-theme-inkDim transition hover:translate-x-0.5 hover:text-theme-ink">Proof and technical docs ↗</a>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -171,11 +223,9 @@ export function HumanAppShell({ children }: { children: React.ReactNode }) {
             <span>© {new Date().getFullYear()} Veklom · Governed machine infrastructure</span>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               <Link href="/.well-known/security.txt" className="hover:text-theme-ink">security.txt</Link>
-              <Link href="/trust" className="hover:text-theme-ink">Trust Center</Link>
-              <Link href="/privacy-choices" className="hover:text-theme-ink">Privacy Choices</Link>
-              <Link href="/privacy" className="hover:text-theme-ink">Privacy</Link>
-              <Link href="/terms" className="hover:text-theme-ink">Terms</Link>
-              <Link href="/support" className="hover:text-theme-ink">Support</Link>
+              {legalLinks.map(([href, label]) => (
+                <Link key={href} href={href} className="hover:text-theme-ink">{label}</Link>
+              ))}
             </div>
           </div>
         </div>
