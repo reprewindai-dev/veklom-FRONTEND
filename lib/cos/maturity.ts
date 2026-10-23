@@ -24,6 +24,10 @@ const RUNS = "Recorded runs 001–005 (14/14 steps each), staging, 2026-10-08";
 const PROD = "Recorded run on veklom.com, 2026-10-10 (production, signed-in account)";
 
 export const stageMaturity: Record<StageId, StageMaturity> = {
+  connectors: {
+    status: "Needs proof",
+    summary: "Catalog of capability beacons as CAPPO reports them. No recorded run of connecting a beacon through this surface yet.",
+  },
   workspace: {
     status: "Needs proof",
     summary: "One conversation that runs the whole lifecycle: compile, approve once, grant, execute, read back. Built on the proven Mount/Authority/Execute path; no recorded run of this surface yet.",
