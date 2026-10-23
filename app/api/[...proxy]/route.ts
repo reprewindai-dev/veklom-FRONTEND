@@ -18,7 +18,7 @@ import {
 } from "@/lib/computless-proxy-paths";
 
 const CAPI_ADMIN_KEY = capiAuthHeaderValue();
-const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || CAPPO_BACKEND_URL || "https://api.veklom.com";
+const VBB_BACKEND_URL = process.env.VBB_BACKEND_URL || process.env.BACKEND_URL || "https://api.veklom.com";
 const PGL_URL = process.env.PGL_URL || "https://pgl.veklom.com";
 const PGL_LEDGER_API_KEY = process.env.PGL_LEDGER_API_KEY || "";
 const LOCKERPHYCER_URL = (process.env.LOCKERPHYCER_URL || "").replace(/\/+$/, "");
@@ -214,11 +214,8 @@ async function proxyRequest(req: NextRequest) {
       forwardPath.startsWith("/v1/capability/") ||
       forwardPath.startsWith("/v1/executions/")
     ) {
-      const cookieToken = req.cookies.get("access_token")?.value;
       if (req.headers.has("authorization")) {
         headers.set("authorization", req.headers.get("authorization")!);
-      } else if (cookieToken) {
-        headers.set("authorization", `Bearer ${cookieToken}`);
       }
     }
   } else if (path.startsWith("/api/capi/")) {

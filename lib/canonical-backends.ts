@@ -4,7 +4,7 @@ import {
   CAPI_RUNTIME_URL,
 } from "@/lib/capi-runtime";
 
-export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer";
+export type CanonicalBackendId = "capi" | "cappo" | "gnomledger" | "gpc" | "genome" | "vnp" | "apex" | "abide" | "lockerphycer" | "computless";
 
 export type CanonicalBackendRole =
   | "sovereign-control-plane"
@@ -36,9 +36,13 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
   const ledgerUrl = process.env.LEDGER_URL || pglUrl;
   const gpcUrl = process.env.GPC_URL || "https://gpc.veklom.com";
   const vnpUrl = process.env.VNP_URL || cappoUrl;
-  const apexUrl = process.env.APEX_URL || cappoUrl;
-  const abideUrl = process.env.ABIDE_URL || cappoUrl;
+  // ABIDE and Apex are separate services. An unset URL stays empty rather than pointing at
+  // CAPPO: a compile or policy request must never be answered by the authority layer.
+  const apexUrl = process.env.APEX_URL || "";
+  const abideUrl = process.env.ABIDE_URL || "";
   const lockerphycerUrl = process.env.LOCKERPHYCER_URL || "";
+  // Private Cloud: COMPUTLESS owned-compute fabric (placement and routing; never authority).
+  const computlessUrl = process.env.COMPUTLESS_URL || "";
 
   return [
     {
@@ -131,6 +135,16 @@ export function canonicalBackends(): CanonicalBackendConfig[] {
       baseUrl: trimTrailingSlash(lockerphycerUrl),
       healthPath: "/health",
       overviewPath: undefined,
+      authMode: "server-api-key",
+    },
+    {
+      id: "computless",
+      label: "COMPUTLESS Private Cloud",
+      repo: "computless",
+      role: "execution-engine",
+      baseUrl: trimTrailingSlash(computlessUrl),
+      healthPath: "/api/health",
+      overviewPath: "/api/fabric/state",
       authMode: "server-api-key",
     },
   ];
