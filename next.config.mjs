@@ -23,7 +23,7 @@ const CAPI_URL = (process.env.CAPI_URL || "https://capi.veklom.com").replace(/\/
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: true },
+  typescript: { ignoreBuildErrors: false },
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   images: { unoptimized: true },
