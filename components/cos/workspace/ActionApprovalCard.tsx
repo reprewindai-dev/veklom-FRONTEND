@@ -2,12 +2,25 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, FileText, KeyRound, Mail, X } from "lucide-react";
+import { Ban, CheckCircle2, HelpCircle, KeyRound, ShieldCheck } from "lucide-react";
 import { describeArguments, type ArgumentValue } from "@/lib/cos/execution-intent";
 import { activeStep } from "@/lib/cos/tasks/task-reducer";
-import type { StepBinding, TaskState } from "@/lib/cos/tasks/task-types";
+import type { StepBinding, TaskState, WorkspaceStep } from "@/lib/cos/tasks/task-types";
 import { capabilityNotice } from "./ActionReviewCard";
 
+const COVERAGE: Record<WorkspaceStep["coverage"], { label: string; icon: typeof CheckCircle2; tone: string }> = {
+  read: { label: "Read", icon: CheckCircle2, tone: "text-emerald-400" },
+  write: { label: "Write", icon: KeyRound, tone: "text-cyan-400" },
+  blocked: { label: "Blocked by the catalog", icon: Ban, tone: "text-rose-400" },
+  uncovered: { label: "No capability covers this", icon: HelpCircle, tone: "text-amber-400" },
+};
+
+const inputClass = "mt-1 w-full rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400";
+
+/**
+ * What the contract says and the one action approval would authorize. Every field is the
+ * compiler's: action, target, resource, arguments and the contract hash the approval pins to.
+ */
 export function ActionApprovalCard({
   state,
   workspace,
@@ -25,8 +38,6 @@ export function ActionApprovalCard({
 }) {
   const step = activeStep(state);
   const plan = state.plan;
-  const [showRecipientsModal, setShowRecipientsModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [resource, setResource] = useState("");
   const [args, setArgs] = useState("");
   const [argsError, setArgsError] = useState<string>();
@@ -56,231 +67,105 @@ export function ActionApprovalCard({
   const notice = capabilityNotice(step?.operation?.package_ref ?? step?.packageRef);
   const reviewable = state.phase === "needs_review" && Boolean(step?.operation);
 
-  const recipients = [
-    "sarah.c@company.internal",
-    "marcus.v@company.internal",
-    "elena.r@company.internal",
-    "david.k@company.internal",
-    "rachel.b@company.internal",
-    "sales-leads@company.internal",
-  ];
-
   return (
-    <>
-      <div className="action-approval-card rounded-2xl border-2 border-cyan-500/60 bg-[#0a1628]/95 p-6 space-y-5 shadow-2xl text-slate-100">
-        {/* Step input needed form if un-bound */}
-        {state.phase === "needs_input" && step ? (
-          <form onSubmit={bind} className="space-y-3 rounded-lg border border-amber-500/40 bg-amber-500/[0.05] p-4">
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-amber-400">
-              <KeyRound size={13} /> Step {step.sequence} needs its exact target resource
-            </div>
-            <p className="text-xs leading-5 text-slate-300">
-              The catalog covers &ldquo;{step.clause}&rdquo;{step.action ? ` as ${step.action}` : ""}. Name the resource it should act on:
-            </p>
-            <label className="block text-xs text-slate-300">
-              Resource target
-              <input
-                value={resource}
-                onChange={(e) => setResource(e.target.value)}
-                placeholder="e.g. sales-report or demo-counter"
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400"
-                required
-              />
-            </label>
-            <label className="block text-xs text-slate-300">
-              Arguments (JSON object, optional)
-              <input
-                value={args}
-                onChange={(e) => setArgs(e.target.value)}
-                placeholder='{"recipients": 6, "format": "pdf"}'
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400"
-              />
-            </label>
-            {argsError ? <p className="text-xs text-rose-400">{argsError}</p> : null}
-            <button
-              type="submit"
-              disabled={busy || !resource.trim()}
-              className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
-            >
-              <KeyRound size={14} /> Bind this step
-            </button>
-          </form>
-        ) : null}
-
-        {/* Action Review Confirmation (Concept 2 Card) */}
-        {reviewable && step?.operation ? (
-          <div className="space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="mt-0.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 p-3 text-cyan-400">
-                <Mail size={22} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-white tracking-tight">
-                  {step.operation.action === "email.send" || state.intent.toLowerCase().includes("email") || state.intent.toLowerCase().includes("sales")
-                    ? "Send this report to the sales team?"
-                    : `Execute ${step.operation.action} on ${step.operation.target_ref}?`}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <span>6 recipients</span>
-                  <span className="text-slate-600">·</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowRecipientsModal(true)}
-                    className="text-cyan-400 hover:underline inline-flex items-center gap-0.5 font-medium"
-                  >
-                    View recipients <ArrowUpRight size="11" />
-                  </button>
+    <div className="action-approval-card space-y-5 rounded-2xl border border-slate-800/80 bg-[#0a1628]/95 p-5 text-slate-100">
+      <div>
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400">What the contract says · {plan.planId}</div>
+        <ol className="space-y-2">
+          {plan.steps.map((item) => {
+            const coverage = COVERAGE[item.coverage];
+            const Icon = coverage.icon;
+            const isActive = item.stepId === state.activeStepId;
+            return (
+              <li key={item.stepId} className={`flex items-start gap-3 rounded-lg border p-3 ${isActive ? "border-cyan-500/50 bg-cyan-500/[0.05]" : "border-slate-800 bg-slate-900/40"}`}>
+                <span className="font-mono text-[10px] text-slate-500">{item.sequence}</span>
+                <Icon size={16} className={`mt-0.5 shrink-0 ${coverage.tone}`} />
+                <div className="min-w-0">
+                  <div className="text-sm text-slate-100">{item.clause}</div>
+                  <div className="mt-0.5 font-mono text-[11px] text-slate-400"><span className={coverage.tone}>{coverage.label}</span>{item.action ? ` · ${item.action}` : ""}{item.packageRef ? ` · ${item.packageRef}` : ""}</div>
+                  {item.reason ? <div className="mt-0.5 text-[11px] text-slate-500">{item.reason}</div> : null}
                 </div>
-              </div>
-            </div>
-
-            {/* Scope & Parameters Grid */}
-            <div className="space-y-3 rounded-xl border border-slate-800/80 bg-[#0d1627]/60 p-4 text-xs">
-              <div>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Subject</span>
-                <div className="text-slate-100 font-medium mt-0.5">
-                  {state.intent.includes("summary") || state.intent.includes("sales") ? "Monthly sales summary" : state.intent}
-                </div>
-              </div>
-
-              <div>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Attachment</span>
-                <div className="mt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-mono text-slate-200">
-                    <FileText size="13" className="text-slate-400" />
-                    <span>sales-summary.pdf</span>
-                  </span>
-                </div>
-              </div>
-
-              {step.operation.arguments && Object.keys(step.operation.arguments).length > 0 ? (
-                <div>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Arguments</span>
-                  <div className="font-mono text-[11px] text-slate-300 mt-0.5">
-                    {describeArguments(step.operation.arguments)}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {notice ? (
-              <p className="rounded-lg border border-amber-500/40 bg-amber-500/[0.06] px-3 py-2 text-[11px] leading-5 text-amber-300">
-                {notice}
-              </p>
-            ) : null}
-
-            {/* Action Buttons Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowPreviewModal(true)}
-                  className="rounded-xl border border-slate-700 bg-slate-800/90 px-4 py-2.5 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:text-white transition"
-                >
-                  Preview email
-                </button>
-                <button
-                  type="button"
-                  onClick={onApprove}
-                  disabled={busy}
-                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300 transition shadow-[0_0_12px_rgba(6,182,212,0.3)] disabled:opacity-50"
-                >
-                  <CheckCircle2 size={15} /> Approve & send
-                </button>
-              </div>
-
-              {onCancel ? (
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  className="rounded-xl border border-transparent px-3 py-2 text-xs text-slate-400 hover:text-slate-200 transition"
-                >
-                  Cancel
-                </button>
-              ) : null}
-            </div>
-
-            {/* Invariant Binding Notice */}
-            <p className="font-mono text-[10px] text-slate-400 pt-1">
-              Approval applies only to this email and these recipients.
-            </p>
-          </div>
-        ) : null}
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
-      {/* Recipients Modal */}
-      {showRecipientsModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-[#0d1627] p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-semibold text-white">Target Recipients (6)</h4>
-              <button
-                type="button"
-                onClick={() => setShowRecipientsModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X size={18} />
-              </button>
+      {state.phase === "needs_input" && step ? (
+        <form onSubmit={bind} className="space-y-3 rounded-lg border border-amber-500/40 bg-amber-500/[0.05] p-4">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-amber-400">
+            <KeyRound size={13} /> Step {step.sequence} needs its exact target resource
+          </div>
+          <p className="text-xs leading-5 text-slate-300">
+            The catalog covers &ldquo;{step.clause}&rdquo;{step.action ? ` as ${step.action}` : ""}. Name the one resource it should act on. ABIDE binds the operation; the browser only carries it.
+          </p>
+          <label className="block text-xs text-slate-300">
+            Resource
+            <input value={resource} onChange={(e) => setResource(e.target.value)} placeholder="e.g. demo-counter" className={inputClass} required />
+          </label>
+          <label className="block text-xs text-slate-300">
+            Arguments (JSON object, optional)
+            <input value={args} onChange={(e) => setArgs(e.target.value)} placeholder='{"amount": 5}' className={inputClass} />
+          </label>
+          {argsError ? <p className="text-xs text-rose-400">{argsError}</p> : null}
+          {notice ? <p className="rounded-lg border border-amber-500/40 bg-amber-500/[0.06] px-3 py-2 text-[11px] leading-5 text-amber-300">{notice}</p> : null}
+          <button type="submit" disabled={busy || !resource.trim()} className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50">
+            <KeyRound size={14} /> Bind this step
+          </button>
+        </form>
+      ) : null}
+
+      {reviewable && step?.operation ? (
+        <div className="space-y-4 rounded-xl border-2 border-cyan-500/60 bg-cyan-500/[0.04] p-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 p-2.5 text-cyan-400"><ShieldCheck size={20} /></div>
+            <div className="min-w-0 space-y-1">
+              <h3 className="text-lg font-semibold tracking-tight text-white">Run {step.operation.action} on {step.operation.resource}?</h3>
+              <p className="text-xs text-slate-300">This is the one action the grant would cover. Nothing else in the contract runs.</p>
             </div>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {recipients.map((email) => (
-                <div key={email} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs font-mono text-slate-300">
-                  {email}
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-slate-400 leading-4">
-              All 6 addresses belong to the verified internal Sales Operations organization group.
-            </p>
+          </div>
+
+          <dl className="grid gap-2 rounded-xl border border-slate-800/80 bg-[#0d1627]/60 p-4 font-mono text-xs sm:grid-cols-2">
+            <div><dt className="text-[10px] uppercase tracking-wider text-slate-400">Action</dt><dd className="mt-0.5 text-slate-100">{step.operation.action}</dd></div>
+            <div><dt className="text-[10px] uppercase tracking-wider text-slate-400">Target</dt><dd className="mt-0.5 break-all text-slate-100">{step.operation.target_ref}</dd></div>
+            <div><dt className="text-[10px] uppercase tracking-wider text-slate-400">Resource</dt><dd className="mt-0.5 break-all text-slate-100">{step.operation.resource}</dd></div>
+            <div><dt className="text-[10px] uppercase tracking-wider text-slate-400">Arguments</dt><dd className="mt-0.5 break-all text-slate-100">{describeArguments(step.operation.arguments)}</dd></div>
+            <div><dt className="text-[10px] uppercase tracking-wider text-slate-400">Capability package</dt><dd className="mt-0.5 break-all text-slate-100">{step.operation.package_ref}</dd></div>
+            <div><dt className="text-[10px] uppercase tracking-wider text-slate-400">Workspace</dt><dd className="mt-0.5 break-all text-slate-100">{workspace ?? "none bound"}</dd></div>
+            <div className="sm:col-span-2"><dt className="text-[10px] uppercase tracking-wider text-slate-400">Contract hash (approval is pinned to it)</dt><dd className="mt-0.5 break-all text-slate-100">{plan.canonicalHash}</dd></div>
+          </dl>
+
+          {notice ? <p className="rounded-lg border border-amber-500/40 bg-amber-500/[0.06] px-3 py-2 text-[11px] leading-5 text-amber-300">{notice}</p> : null}
+
+          <p className="text-xs leading-5 text-slate-300">
+            Approving asks the authority layer for a single-use grant for exactly this operation, runs it once, and reads the target back independently. The grant is consumed by the first allowed consequence; a retry is refused.
+          </p>
+          {!workspace ? (
+            <p className="text-xs text-amber-300">No workspace is bound to this session. <Link href="/os/onboarding" className="underline">Create or bind one</Link> before approving.</p>
+          ) : null}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <button
               type="button"
-              onClick={() => setShowRecipientsModal(false)}
-              className="w-full rounded-lg bg-slate-800 py-2 text-xs font-medium text-white hover:bg-slate-700"
+              onClick={onApprove}
+              disabled={busy || !workspace}
+              className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-xs font-semibold text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition hover:bg-cyan-300 disabled:opacity-50"
             >
-              Close
+              <CheckCircle2 size={15} /> Approve and run once
             </button>
+            {onCancel ? (
+              <button type="button" onClick={onCancel} className="rounded-xl px-3 py-2 text-xs text-slate-400 transition hover:text-slate-200">Discard this task</button>
+            ) : null}
           </div>
+          <p className="font-mono text-[10px] text-slate-400">Approval applies only to this operation under this contract hash.</p>
         </div>
       ) : null}
 
-      {/* Email Preview Modal */}
-      {showPreviewModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-[#0d1627] p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-semibold text-white">Preview: Outbound Report Email</h4>
-              <button
-                type="button"
-                onClick={() => setShowPreviewModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3 text-xs">
-              <div className="text-slate-400"><span className="text-slate-500 font-mono">To: </span>sales-leads@company.internal, +5 others</div>
-              <div className="text-slate-400"><span className="text-slate-500 font-mono">Subject: </span>Monthly sales summary — October 2026</div>
-              <div className="text-slate-400"><span className="text-slate-500 font-mono">Attachment: </span>sales-summary.pdf (142 KB)</div>
-              <div className="border-t border-slate-800 pt-3 text-slate-200 leading-5">
-                Hi team,<br /><br />
-                Here is the verified monthly sales summary for October 2026 generated through the Veklom Capability OS.<br /><br />
-                Total Volume: $142,500 CAD<br />
-                Active Commitment Pools: 14<br />
-                Verified Interventions: 38<br /><br />
-                Best regards,<br />
-                Sales Operations
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowPreviewModal(false)}
-              className="w-full rounded-lg bg-cyan-500 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400"
-            >
-              Done Previewing
-            </button>
-          </div>
+      {!reviewable && state.phase !== "needs_input" && onCancel ? (
+        <div className="flex justify-end">
+          <button type="button" onClick={onCancel} className="rounded-xl px-3 py-2 text-xs text-slate-400 transition hover:text-slate-200">Start another task</button>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

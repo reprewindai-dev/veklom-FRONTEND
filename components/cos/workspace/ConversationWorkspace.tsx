@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { FailureNotice } from "@/components/cos/StageParts";
+import { asRecord, asString, mountEndpoint, returnedGrants, type JsonRecord, type MountResponse } from "@/components/cos/MountParts";
 import { useAuth } from "@/lib/auth-context";
 import type { ExecutionIntent } from "@/lib/cos/execution-intent";
 import {
@@ -16,139 +18,45 @@ import { targetStateReadbackPath } from "@/lib/cos/readback";
 import { SANDBOX_PROJECT, useSandboxMode } from "@/lib/cos/sandbox";
 import { getStage, type StageEndpoint } from "@/lib/cos/stages";
 import { parseCompileResponse } from "@/lib/cos/tasks/compile-shape";
-import { activeStep, initialTaskState, taskReducer } from "@/lib/cos/tasks/task-reducer";
-import type { StepBinding, TaskState, WorkspacePlan } from "@/lib/cos/tasks/task-types";
+import { initialTaskState, taskReducer } from "@/lib/cos/tasks/task-reducer";
+import type { StepBinding, TaskState } from "@/lib/cos/tasks/task-types";
 import type { StageCallResult, useStageData } from "@/lib/cos/useStageData";
 import { readBoundWorkspaceId } from "@/lib/cos/workspace-session";
-import { asRecord, asString, mountEndpoint, returnedGrants, type JsonRecord, type MountResponse } from "@/components/cos/MountParts";
-import { FailureNotice } from "@/components/cos/StageParts";
-import { TaskComposer } from "./TaskComposer";
 import { ActiveTaskCard } from "./ActiveTaskCard";
 import { InspectorPanel } from "./InspectorPanel";
-import { DualTrackEvidenceInspector } from "@/components/cos/DualTrackEvidenceInspector";
+import { TaskComposer } from "./TaskComposer";
 
 type StageData = ReturnType<typeof useStageData>;
 
-const COMPILE: StageEndpoint = {
-  method: "POST",
-  path: "/api/abide/v1/blueprint/compile",
-  classification: "present",
-  response: "ABIDE contract",
-};
+const COMPILE: StageEndpoint = { method: "POST", path: "/api/abide/v1/blueprint/compile", classification: "present", response: "ABIDE contract" };
 
 function newOperationId() {
-  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `op-${Date.now()}`;
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `op-${Date.now()}`;
 }
 
 function failureDetail(result: StageCallResult<unknown>): string {
   return result.record.error || `HTTP ${result.record.status ?? "unreachable"}`;
 }
 
-const BUSY_PHASES: ReadonlySet<TaskState["phase"]> = new Set([
-  "compiling",
-  "requesting_authority",
-  "executing",
-  "reading_back",
-]);
+const BUSY_PHASES: ReadonlySet<TaskState["phase"]> = new Set(["compiling", "requesting_authority", "executing", "reading_back"]);
 
-// Approved Default Plan matching Concept 2 image (media_1792447504521_6d08be07.png)
-const DEFAULT_SALES_PLAN: WorkspacePlan = {
-  planId: "contract-sales-oct",
-  canonicalHash: "8e4b7c12f019a3d4e5f6789012345678",
-  intent: "Prepare the monthly sales summary and email it to the sales team.",
-  verdict: "ready_for_mount",
-  shape: "contract",
-  pythonCode: `from veklom import VeklomClient, CapabilityLease, EvidenceReceipt
-
-client = VeklomClient(endpoint="http://127.0.0.1:8010")
-
-def execute_monthly_sales_summary():
-    # Step 1: Ingest verified dataset
-    dataset = client.datasets.load("sales-october.csv", integrity="sha256:8e4b7c...")
-    
-    # Step 2: Compute executive summary
-    summary = client.compute.summarize(dataset, model="gemini-1.5-pro", temperature=0.0)
-    
-    # Step 3: Render certified PDF report
-    report_pdf = client.documents.render_pdf(
-        template="executive_sales_summary",
-        data=summary,
-        output="sales-summary.pdf"
-    )
-    
-    # Step 4: Consequential Action (HALT FOR APPROVAL)
-    # Requires explicit operator grant before emission
-    lease: CapabilityLease = client.cappo.acquire_lease(
-        capability="email.send",
-        recipients=["sales-leads@company.internal", "sarah.c@company.internal"],
-        subject="Monthly sales summary — October 2026",
-        attachment=report_pdf
-    )
-    
-    # Step 5: Execute and anchor cryptographic evidence
-    receipt: EvidenceReceipt = client.execute(lease)
-    print(f"Committed: receipt_id={receipt.id}, pgl_proof={receipt.proof_hash}")
-    return receipt
-
-if __name__ == "__main__":
-    execute_monthly_sales_summary()
-`,
-  steps: [
-    {
-      stepId: "step-1",
-      sequence: 1,
-      clause: "send report email to sales team",
-      coverage: "write",
-      action: "email.send",
-      packageRef: "pkg-email-corp",
-      reason: "Permitted under sales operations policy",
-      requiresApproval: true,
-      bindable: true,
-      operation: {
-        package_ref: "pkg-email-corp",
-        target_ref: "target-exchange",
-        resource: "sales-leads@company.internal",
-        action: "email.send",
-        arguments: { recipients: 6, format: "pdf" },
-      },
-    },
-  ],
-};
-
-const DEFAULT_SALES_STATE: TaskState = {
-  phase: "needs_review",
-  intent: "Prepare the monthly sales summary and email it to the sales team.",
-  plan: DEFAULT_SALES_PLAN,
-  activeStepId: "step-1",
-  bindings: {},
-  messages: [
-    {
-      id: "m1",
-      role: "user",
-      text: "Prepare the monthly sales summary and email it to the sales team.",
-    },
-    {
-      id: "m2",
-      role: "assistant",
-      text: "Plan compiled via ABIDE. Consequential action identified: email.send requires operator approval before execution.",
-    },
-  ],
-  seq: 2,
-};
-
+/**
+ * One conversation that drives the lifecycle the operator pages drive, through the same routes
+ * and the same session storage: the Mount/Authority/Execute pages and the Consequence Ring read
+ * whatever this surface does. Every transition is a response or the user's click (see
+ * task-reducer). The screen starts empty: nothing is shown that a service did not return.
+ */
 export function ConversationWorkspace({ data }: { data: StageData }) {
   const [state, dispatch] = useReducer(taskReducer, initialTaskState);
   const { me } = useAuth();
   const sandbox = useSandboxMode();
   const [workspace, setWorkspace] = useState<string | null>(null);
+  // The project CAPPO scoped the held grant to, kept in state because the receipt renders it.
   const [heldProject, setHeldProject] = useState<string | undefined>(undefined);
-  const [hasUserSubmitted, setHasUserSubmitted] = useState(false);
-
   const capiBase = getStage("mount").endpoints[0]?.baseUrl;
   const cappoBase = getStage("execute").endpoints[0]?.baseUrl;
-
+  // The lease and the operation id of the run in progress live outside the reducer: they are
+  // credentials and transport details, not task state.
   const lease = useRef<SessionCapabilityLease | null>(null);
   const operationId = useRef<string>("");
   const authorityEpoch = useRef<number | undefined>(undefined);
@@ -157,57 +65,47 @@ export function ConversationWorkspace({ data }: { data: StageData }) {
 
   useEffect(() => {
     const profileWorkspace = typeof me?.workspace_id === "string" ? me.workspace_id : null;
-    setWorkspace(readBoundWorkspaceId() || profileWorkspace || "ws-sales-ops");
+    setWorkspace(readBoundWorkspaceId() || profileWorkspace);
   }, [me?.workspace_id]);
 
   const compile = useCallback(async (current: TaskState) => {
     const result = await call<unknown>(COMPILE, {
       intent: current.intent,
       claims: [],
-      operations: Object.entries(current.bindings).map(([sequence, binding]) => ({
-        sequence: Number(sequence),
-        ...binding,
-      })),
+      operations: Object.entries(current.bindings).map(([sequence, binding]) => ({ sequence: Number(sequence), ...binding })),
     });
     const plan = parseCompileResponse(result.data);
     if (!plan) {
-      dispatch({
-        type: "compile_failed",
-        detail: result.data
-          ? "The compiler answered, but not with a contract this page understands."
-          : failureDetail(result),
-      });
+      dispatch({ type: "compile_failed", detail: result.data ? "The compiler answered, but not with a contract this page understands." : failureDetail(result) });
       return;
     }
     dispatch({ type: "compiled", plan });
   }, [call]);
 
   const requestAuthority = useCallback(async (current: TaskState) => {
-    const step = activeStep(current);
+    const approval = current.approval;
     const plan = current.plan;
-    const targetWs = workspace || "ws-sales-ops";
-    if (!step?.operation || !plan) {
-      dispatch({
-        type: "authority_unreachable",
-        detail: "no bound operation to request a grant for",
-      });
+    if (!approval || !plan || !workspace) {
+      dispatch({ type: "authority_unreachable", detail: workspace ? "no approved operation to request a grant for" : "no workspace is bound to this session" });
       return;
     }
-    const operation = step.operation;
+    const step = plan.steps.find((item) => item.stepId === approval.stepId);
+    const operation = approval.operation;
     const intent: ExecutionIntent = {
       contractId: plan.planId,
       canonicalHash: plan.canonicalHash,
-      stepId: step.stepId,
-      sequence: step.sequence,
-      clause: step.clause,
+      stepId: approval.stepId,
+      sequence: step?.sequence ?? 1,
+      clause: step?.clause ?? "",
       operation,
       boundAt: new Date().toISOString(),
     };
+    // Same binding the Mount page would prepare, same request body Authority would send.
     const lastProject = readMountBinding()?.project;
     const binding: MountBinding = {
       packageRef: operation.package_ref,
       targetRef: operation.target_ref,
-      workspace: targetWs,
+      workspace,
       project: sandbox ? SANDBOX_PROJECT : (lastProject && lastProject !== SANDBOX_PROJECT ? lastProject : "workspace"),
       reads: [],
       writes: [operation.action],
@@ -245,6 +143,8 @@ export function ConversationWorkspace({ data }: { data: StageData }) {
         ...(holderCredential ? { holderCredential } : {}),
         intent,
       };
+      // The epoch the grant was issued at, when the authority layer states it; it is presented
+      // back on execute so a stale holder cannot pass by omitting it.
       const epoch = token?.authority_epoch ?? mount?.authority_epoch;
       authorityEpoch.current = typeof epoch === "number" ? epoch : undefined;
       lease.current = held;
@@ -255,156 +155,118 @@ export function ConversationWorkspace({ data }: { data: StageData }) {
     dispatch({ type: "authority", response: response as JsonRecord });
   }, [call, capiBase, sandbox, workspace]);
 
-  const execute = useCallback(async (current: TaskState) => {
+  const execute = useCallback(async () => {
     const held = lease.current;
-    const step = activeStep(current);
-    if (!held || !step?.operation) {
-      dispatch({ type: "execution_unreachable", detail: "no held grant to execute under" });
+    const operation = held?.intent?.operation;
+    if (!held || !operation) {
+      dispatch({ type: "execute_unreachable", detail: "no grant is held for this operation", operationId: operationId.current || newOperationId() });
       return;
     }
-    operationId.current = newOperationId();
-    inFlight.current = operationId.current;
-    const endpoint: StageEndpoint = {
-      method: "POST",
-      path: "/v1/exec",
-      classification: "consequential",
-      response: "execution result",
-      baseUrl: cappoBase,
-    };
+    const opId = newOperationId();
+    operationId.current = opId;
     const body: JsonRecord = {
       token_id: held.tokenId,
       nonce: held.nonce,
-      package_ref: held.packageRef,
-      action: step.operation.action,
-      resource: held.resource,
-      arguments: step.operation.arguments ?? {},
-      operation_id: operationId.current,
+      action: operation.action,
+      target_ref: operation.target_ref,
+      resource: operation.resource,
+      arguments: operation.arguments,
+      operation_id: opId,
       ...(authorityEpoch.current !== undefined ? { authority_epoch: authorityEpoch.current } : {}),
-      ...(held.holderCredential ? { holder_credential: held.holderCredential } : {}),
     };
-    const result = await call<JsonRecord>(endpoint, body);
-    inFlight.current = null;
+    // Intent is recorded before the sink call so a lost answer is still visible as "pending".
+    storeSessionConsequence({ mountId: held.mountId, response: { operation_id: opId, decision: "pending" }, denials: [] });
+    const result = await call<JsonRecord>(mountEndpoint("POST", `/v1/capability/mounts/${held.mountId}/execute`, cappoBase), body);
     if (!result.data) {
-      dispatch({ type: "execution_unreachable", detail: failureDetail(result) });
+      dispatch({ type: "execute_unreachable", detail: failureDetail(result), operationId: opId });
       return;
     }
     const response = result.data;
-    const consequence = applyExecuteResponse(held, response);
-    if (consequence) {
-      storeSessionConsequence(consequence);
-    }
-    dispatch({ type: "executed", response });
-  }, [call, cappoBase]);
-
-  const readback = useCallback(async (current: TaskState) => {
-    const step = activeStep(current);
-    const held = lease.current;
-    if (!step?.operation) {
-      dispatch({ type: "readback", proof: "TargetUnchanged" });
-      return;
-    }
-    const path = targetStateReadbackPath(step.operation.action, held?.resource ?? step.operation.resource);
-    if (!path) {
-      dispatch({ type: "readback", proof: "Verified" });
-      return;
-    }
-    const endpoint: StageEndpoint = {
-      method: "GET",
-      path,
-      classification: "independent",
-      response: "target state",
-      baseUrl: cappoBase,
-    };
-    const result = await call<JsonRecord>(endpoint);
-    const previous = readSessionConsequence()?.stateBefore;
-    dispatch({
-      type: "readback",
-      proof: result.data ? "Verified" : "TargetUnchanged",
-      state: result.data ?? undefined,
-      previous,
+    storeSessionConsequence({
+      mountId: held.mountId,
+      response,
+      lastAllowedResponse: response.decision === "allow" ? response : undefined,
+      denials: [],
     });
+    const next = { ...applyExecuteResponse(held, response), lastOperationId: opId };
+    lease.current = next;
+    storeSessionCapabilityLease(next);
+    dispatch({ type: "executed", response, operationId: opId });
   }, [call, cappoBase]);
 
-  // Reactive state machine transitions
+  const readBack = useCallback(async () => {
+    const held = lease.current;
+    const operation = held?.intent?.operation;
+    if (!held || !operation) {
+      dispatch({ type: "readback", response: { error: "no held grant names the target to read back" } });
+      return;
+    }
+    const result = await call<JsonRecord>(mountEndpoint("GET", targetStateReadbackPath(operation.target_ref, operation.resource, held.mountId), cappoBase));
+    const response = result.data ?? { error: failureDetail(result) };
+    const existing = readSessionConsequence(held.mountId);
+    storeSessionConsequence({
+      mountId: held.mountId,
+      response: existing?.response ?? {},
+      lastAllowedResponse: existing?.lastAllowedResponse,
+      readback: response,
+      pglProof: existing?.pglProof,
+      denials: existing?.denials ?? [],
+    });
+    dispatch({ type: "readback", response });
+  }, [call, cappoBase]);
+
+  // Each phase that needs a network call runs it exactly once per entry into that phase.
   useEffect(() => {
-    if (state.phase === "compiling") {
-      void compile(state);
-    } else if (state.phase === "requesting_authority") {
-      void requestAuthority(state);
-    } else if (state.phase === "executing") {
-      void execute(state);
-    } else if (state.phase === "reading_back") {
-      void readback(state);
+    const key = `${state.phase}:${state.seq}`;
+    if (inFlight.current === key) return;
+    switch (state.phase) {
+      case "compiling":
+        inFlight.current = key;
+        void compile(state);
+        break;
+      case "requesting_authority":
+        inFlight.current = key;
+        void requestAuthority(state);
+        break;
+      case "executing":
+        inFlight.current = key;
+        void execute();
+        break;
+      case "reading_back":
+        inFlight.current = key;
+        void readBack();
+        break;
+      case "outcome_unknown":
+        // A lost execute answer: read the target before anyone decides what happened.
+        if (!state.readback) {
+          inFlight.current = key;
+          void readBack();
+        }
+        break;
+      default:
+        break;
     }
-  }, [compile, execute, readback, requestAuthority, state]);
+  }, [state, compile, requestAuthority, execute, readBack]);
 
-  // Determine effective state (user active state or default concept state)
-  const effectiveState: TaskState = hasUserSubmitted ? state : DEFAULT_SALES_STATE;
-  const busy = BUSY_PHASES.has(hasUserSubmitted ? state.phase : "idle");
-
-  const handleSubmitIntent = (intent: string) => {
-    setHasUserSubmitted(true);
-    dispatch({ type: "submit", intent });
-  };
-
-  const handleApprove = () => {
-    if (!hasUserSubmitted) {
-      setHasUserSubmitted(true);
-      dispatch({ type: "submit", intent: DEFAULT_SALES_PLAN.intent });
-      dispatch({ type: "compiled", plan: DEFAULT_SALES_PLAN });
-      dispatch({ type: "approve" });
-    } else {
-      dispatch({ type: "approve" });
-    }
-  };
-
-  const onBind = (sequence: number, binding: StepBinding) => {
-    dispatch({ type: "bind_step", sequence, binding });
+  const busy = BUSY_PHASES.has(state.phase);
+  const onBind = (sequence: number, binding: StepBinding) => dispatch({ type: "bind", sequence, binding });
+  const onApprove = () => dispatch({ type: "approve" });
+  const onReset = () => {
+    lease.current = null;
+    authorityEpoch.current = undefined;
+    setHeldProject(undefined);
+    dispatch({ type: "reset" });
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      {/* Left/Main Column: 7 cols on lg, 8 cols on xl */}
-      <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-        {/* 1. Task Composer Box */}
-        <TaskComposer
-          busy={busy}
-          onSubmit={handleSubmitIntent}
-        />
-
-        {/* 2. Active Task Card */}
-        <ActiveTaskCard
-          state={effectiveState}
-          workspace={workspace}
-          busy={busy}
-          onBind={onBind}
-          onApprove={handleApprove}
-          onCancel={() => {
-            setHasUserSubmitted(true);
-            dispatch({ type: "submit", intent: "" });
-          }}
-        />
-
-        {/* Failure Notice if error occurred */}
-        {state.error && state.phase === "failed" ? (
-          <FailureNotice detail={state.error} />
-        ) : null}
-
-        {/* Task-Linked Dual Track Evidence Inspector (anchored upon execution) */}
-        {effectiveState.execution && (
-          <DualTrackEvidenceInspector
-            operationId={effectiveState.execution.operationId}
-            receiptId={effectiveState.execution.receiptId}
-          />
-        )}
+    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+      <div className="space-y-6 lg:col-span-7 xl:col-span-8">
+        <TaskComposer busy={busy} onSubmit={(intent) => dispatch({ type: "submit", intent })} />
+        <ActiveTaskCard state={state} workspace={workspace} busy={busy} onBind={onBind} onApprove={onApprove} onCancel={state.phase === "idle" ? undefined : onReset} />
+        {state.error && state.phase === "failed" ? <FailureNotice detail={state.error} /> : null}
       </div>
-
-      {/* Right Column: Persistent Inspector Panel (5 cols on lg, 4 cols on xl) */}
-      <div className="lg:col-span-5 xl:col-span-4 sticky top-6">
-        <InspectorPanel
-          state={effectiveState}
-          project={heldProject || workspace || "Sales Operations"}
-        />
+      <div className="lg:sticky lg:top-6 lg:col-span-5 xl:col-span-4">
+        <InspectorPanel state={state} project={heldProject} workspace={workspace} stageProof={data.stageProof} />
       </div>
     </div>
   );

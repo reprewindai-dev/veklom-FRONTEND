@@ -14,7 +14,6 @@ import { readSessionCapabilityLease, readSessionConsequence } from "@/lib/cos/le
 import { ProofBadge } from "@/components/cos/ProofBadge";
 import { ScopeTag } from "@/components/cos/EnvironmentFrame";
 import { compareReadback, pglChainVerifyPath, pglProof, pglProofLabel, pglProofPath, type PglProofLookup } from "@/lib/cos/readback";
-import { DualTrackEvidenceInspector } from "@/components/cos/DualTrackEvidenceInspector";
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -99,12 +98,6 @@ export default function EvidencePage() {
 
   return (
     <SectionShell stage={stage} proof={data.stageProof} records={data.records}>
-      <div className="xl:col-span-2">
-        <DualTrackEvidenceInspector
-          operationId={typeof authority?.execution_id === "string" ? authority.execution_id : undefined}
-          receiptId={typeof nestedConsequence?.receipt_id === "string" ? nestedConsequence.receipt_id : undefined}
-        />
-      </div>
       <div className="space-y-4">
         <Pillar title="Look up an execution" proof={data.stageProof} detail="Execution search: the receipt and ledger link for one execution, as returned.">
           <EvidenceLookup stageData={data} />

@@ -11,10 +11,9 @@ services:
         CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
         PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
         VLINK_URL: ${VLINK_URL:-http://host.docker.internal:3000}
+        ABIDE_URL: ${ABIDE_URL:-http://host.docker.internal:8010}
+        COMPUTLESS_URL: ${COMPUTLESS_URL:-}
         NEXT_PUBLIC_API_BASE_URL: ""
-      extra_hosts:
-        - "dl-cdn.alpinelinux.org:151.101.66.132"
-        - "registry.npmjs.org:104.16.6.34"
     image: veklom-frontend:main
     container_name: veklom-frontend
     restart: unless-stopped
@@ -34,6 +33,10 @@ services:
       CAPPO_BACKEND_URL: ${CAPPO_BACKEND_URL:-http://host.docker.internal:8002}
       PGL_URL: ${PGL_URL:-http://host.docker.internal:8001}
       VLINK_URL: ${VLINK_URL:-http://host.docker.internal:3000}
+      # ABIDE compiles blueprints and contracts (the Workspace, Blueprint and Govern pages);
+      # it runs as its own container on the Docker host.
+      ABIDE_URL: ${ABIDE_URL:-http://host.docker.internal:8010}
+      COMPUTLESS_URL: ${COMPUTLESS_URL:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

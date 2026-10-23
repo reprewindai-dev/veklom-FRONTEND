@@ -1,12 +1,12 @@
 # ─── Stage 1: dependencies ────────────────────────────────────────────────────
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat || true
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps --no-audit --no-fund --fetch-retries 5 --maxsockets 5
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --prefer-offline --fetch-retries 5
 
 # ─── Stage 2: builder ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -15,15 +15,18 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Default service mesh hostnames for container networking
-ARG BACKEND_URL="http://cappo-backend:8002"
-ARG LOCKERPHYCER_URL="http://lockerphycer-api:8092"
-ARG CAPI_URL="http://capi:3003"
-ARG CAPPO_URL="http://cappo-backend:8002"
-ARG CAPPO_BACKEND_URL="http://cappo-backend:8002"
-ARG PGL_URL="http://gnomledger-api:8001"
-ARG VLINK_URL="http://vlink:3000"
-ARG ABIDE_URL="http://abide:8010"
+# Browser API calls remain same-origin. These server-side URLs are compiled into
+# Next rewrites and used by server routes such as the live proof fabric. The
+# defaults are the Docker host, which is where docker-compose.public.yml and the
+# Windows host run the backend containers; override per deployment.
+ARG BACKEND_URL="http://host.docker.internal:8088"
+ARG LOCKERPHYCER_URL="http://host.docker.internal:8092"
+ARG CAPI_URL="http://host.docker.internal:3003"
+ARG CAPPO_URL="http://host.docker.internal:8002"
+ARG CAPPO_BACKEND_URL="http://host.docker.internal:8002"
+ARG PGL_URL="http://host.docker.internal:8001"
+ARG VLINK_URL="http://host.docker.internal:3000"
+ARG ABIDE_URL="http://host.docker.internal:8010"
 ARG COMPUTLESS_URL="http://host.docker.internal:23000"
 ARG NEXT_PUBLIC_API_BASE_URL=""
 
@@ -50,17 +53,6 @@ ENV NODE_ENV=production
 ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Baked-in service discovery defaults (can be overridden by -e or orchestration)
-ENV BACKEND_URL="http://cappo-backend:8002"
-ENV LOCKERPHYCER_URL="http://lockerphycer-api:8092"
-ENV CAPI_URL="http://capi:3003"
-ENV CAPPO_URL="http://cappo-backend:8002"
-ENV CAPPO_BACKEND_URL="http://cappo-backend:8002"
-ENV PGL_URL="http://gnomledger-api:8001"
-ENV VLINK_URL="http://vlink:3000"
-ENV ABIDE_URL="http://abide:8010"
-ENV COMPUTLESS_URL="http://host.docker.internal:23000"
 
 LABEL org.opencontainers.image.source="veklom-control-plane"
 

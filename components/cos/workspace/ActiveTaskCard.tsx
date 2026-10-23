@@ -1,24 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AlertTriangle,
-  ArrowUpRight,
-  Ban,
-  Check,
-  CheckCircle2,
-  Clock3,
-  Code2,
-  Copy,
-  Download,
-  FileText,
-  Loader2,
-  X,
-} from "lucide-react";
+import { Ban, Check, CheckCircle2, Clock3, Code2, Copy, Download, FileText, Loader2, ShieldAlert, X } from "lucide-react";
 import type { StepBinding, TaskState } from "@/lib/cos/tasks/task-types";
-import { HorizontalExecutionDAG } from "./HorizontalExecutionDAG";
 import { ActionApprovalCard } from "./ActionApprovalCard";
+import { HorizontalExecutionDAG } from "./HorizontalExecutionDAG";
 
+type Tone = "idle" | "wait" | "busy" | "ok" | "bad" | "warn";
+
+const TONE_CLASS: Record<Tone, string> = {
+  idle: "border-slate-700 bg-slate-800/80 text-slate-300",
+  wait: "border-amber-500/50 bg-amber-500/10 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]",
+  busy: "animate-pulse border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]",
+  ok: "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]",
+  bad: "border-rose-500/50 bg-rose-500/10 text-rose-400",
+  warn: "border-amber-500/50 bg-amber-500/10 text-amber-300",
+};
+
+/** The task's status in the words the lifecycle uses. Derived from the phase and the responses only. */
+export function describePhase(state: TaskState): { label: string; tone: Tone } {
+  switch (state.phase) {
+    case "idle": return { label: "No task yet", tone: "idle" };
+    case "compiling": return { label: "Compiling against the catalog", tone: "busy" };
+    case "needs_input": return { label: "Needs the exact target", tone: "wait" };
+    case "needs_review": return { label: "Waiting for your approval", tone: "wait" };
+    case "refused": return { label: "Refused: not covered by the catalog", tone: "bad" };
+    case "requesting_authority": return { label: "Requesting a single-use grant", tone: "busy" };
+    case "executing": return { label: "Executing once", tone: "busy" };
+    case "reading_back": return { label: "Reading the target back", tone: "busy" };
+    case "denied": return { label: state.execution ? "Execution refused by the authority layer" : "Grant refused by the authority layer", tone: "bad" };
+    case "outcome_unknown": return { label: "Outcome unknown: reconciliation required", tone: "warn" };
+    case "failed": return { label: "Failed", tone: "bad" };
+    case "done":
+      if (state.readback?.proof === "Verified") return { label: "Verified and complete", tone: "ok" };
+      if (state.readback?.proof === "Degraded") return { label: "Executed; readback does not match", tone: "bad" };
+      return { label: "Executed; not yet verified", tone: "warn" };
+  }
+}
+
+function Crumb({ label, on, tone = "text-slate-300" }: { label: string; on: boolean; tone?: string }) {
+  return <span className={on ? `${tone} font-medium` : "text-slate-500"}>{label}</span>;
+}
+
+/**
+ * One task, from the compiled contract to the independent readback. Everything on it is
+ * read from the task state; the card shows nothing before a contract exists.
+ */
 export function ActiveTaskCard({
   state,
   workspace,
@@ -26,7 +53,6 @@ export function ActiveTaskCard({
   onBind,
   onApprove,
   onCancel,
-  onOpenPython,
 }: {
   state: TaskState;
   workspace: string | null;
@@ -34,324 +60,115 @@ export function ActiveTaskCard({
   onBind: (sequence: number, binding: StepBinding) => void;
   onApprove: () => void;
   onCancel?: () => void;
-  onOpenPython?: () => void;
 }) {
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [showInternalPythonModal, setShowInternalPythonModal] = useState(false);
+  const [showPython, setShowPython] = useState(false);
   const [copied, setCopied] = useState(false);
+  const status = describePhase(state);
+  const Icon = status.tone === "busy" ? Loader2 : status.tone === "ok" ? CheckCircle2 : status.tone === "bad" ? Ban : status.tone === "warn" ? ShieldAlert : Clock3;
 
-  const phase = state.phase;
-  const isDone = phase === "done" && state.readback?.proof === "Verified";
-  const isNeedsReview = phase === "needs_review" || phase === "needs_input";
-  const isExecuting = phase === "executing" || phase === "requesting_authority";
-  const isFailed = phase === "failed" || phase === "denied" || phase === "refused";
-
-  // Task title derived from intent
-  let taskTitle = "Monthly sales summary";
-  if (state.intent) {
-    if (state.intent.toLowerCase().includes("counter")) {
-      taskTitle = "Governed counter cycle";
-    } else if (state.intent.toLowerCase().includes("summary") || state.intent.toLowerCase().includes("sales")) {
-      taskTitle = "Monthly sales summary";
-    } else {
-      taskTitle = state.intent.length > 36 ? `${state.intent.slice(0, 36)}…` : state.intent;
-    }
-  }
-
-  // Status pill badge
-  let statusBadge = (
-    <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/80 px-3 py-1 text-xs font-medium text-slate-300">
-      <Clock3 size={13} />
-      <span>Idle</span>
-    </div>
-  );
-
-  if (isNeedsReview) {
-    statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/50 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-        <Clock3 size={13} />
-        <span>Waiting for your approval</span>
-      </div>
-    );
-  } else if (isExecuting) {
-    statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-400 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.25)]">
-        <Loader2 size={13} className="animate-spin" />
-        <span>Executing action…</span>
-      </div>
-    );
-  } else if (isDone) {
-    statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-        <CheckCircle2 size={13} />
-        <span>Verified & complete</span>
-      </div>
-    );
-  } else if (isFailed) {
-    statusBadge = (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/50 bg-rose-500/10 px-3 py-1 text-xs font-medium text-rose-400">
-        <Ban size={13} />
-        <span>Execution refused</span>
+  if (state.phase === "idle" && !state.plan) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-800 bg-[#091122]/60 p-6 text-slate-300">
+        <div className="flex items-start gap-3">
+          <FileText size={18} className="mt-0.5 shrink-0 text-slate-500" />
+          <div>
+            <h2 className="text-sm font-semibold text-white">No task yet</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-400">
+              Describe what you need above. The compiler returns the steps, which capability covers each, and what it refuses. Nothing is granted or run until you approve the one action it shows you.
+            </p>
+            <code className="mt-3 block font-mono text-[10px] text-slate-500">POST /api/abide/v1/blueprint/compile</code>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Footer breadcrumbs
-  let footerBreadcrumbs = (
-    <>
-      <span className="text-slate-300">Plan prepared</span>
-      <span className="text-slate-600">→</span>
-      <span className="text-amber-400 font-medium">Awaiting approval</span>
-      <span className="text-slate-600">→</span>
-      <span className="text-slate-500">No email sent</span>
-    </>
-  );
+  const title = state.intent.length > 72 ? `${state.intent.slice(0, 72)}…` : state.intent || "Task";
+  const python = state.plan?.pythonCode;
+  const granted = state.authority?.decision === "allow";
+  const executed = state.execution?.decision === "allow";
+  const readBack = Boolean(state.readback);
 
-  if (isDone) {
-    footerBreadcrumbs = (
-      <>
-        <span className="text-slate-300">Plan prepared</span>
-        <span className="text-slate-600">→</span>
-        <span className="text-slate-300">Approved</span>
-        <span className="text-slate-600">→</span>
-        <span className="text-emerald-400 font-medium">Executed & Readback Verified</span>
-      </>
-    );
-  } else if (isExecuting) {
-    footerBreadcrumbs = (
-      <>
-        <span className="text-slate-300">Plan prepared</span>
-        <span className="text-slate-600">→</span>
-        <span className="text-cyan-400 font-medium">Grant issued · In flight</span>
-        <span className="text-slate-600">→</span>
-        <span className="text-slate-500">Verifying target</span>
-      </>
-    );
-  }
-
-  // Authentic compiled Python contract code
-  const pythonScript = state.plan?.pythonCode ?? `# VEKLOM CAPABILITY OS — COMPILED CONTRACT
-# Contract ID: ${state.plan?.planId ?? "contract-sales-oct"}
-# Canonical Hash: ${state.plan?.canonicalHash ?? "8e4b7c12f019a3d4e5f6789012345678"}
-# Verdict: ${state.plan?.verdict ?? "ready_for_mount"}
-#
-# Law 0 Invariant: Computational Possession != Consequence Authority
-# This compiled contract defines DAG topology and bounds.
-# Consequence authority is granted exclusively via single-use CAPPO lease.
-
-from veklom import VeklomClient, CapabilityLease, EvidenceReceipt
-
-client = VeklomClient(endpoint="http://127.0.0.1:8010")
-
-def execute_monthly_sales_summary():
-    # Step 1: Ingest verified dataset
-    dataset = client.datasets.load("sales-october.csv", integrity="sha256:8e4b7c...")
-    
-    # Step 2: Compute executive summary
-    summary = client.compute.summarize(dataset, model="gemini-1.5-pro", temperature=0.0)
-    
-    # Step 3: Render certified PDF report
-    report_pdf = client.documents.render_pdf(
-        template="executive_sales_summary",
-        data=summary,
-        output="sales-summary.pdf"
-    )
-    
-    # Step 4: Consequential Action (HALT FOR APPROVAL)
-    # Requires explicit operator grant before emission
-    lease: CapabilityLease = client.cappo.acquire_lease(
-        capability="email.send",
-        recipients=["sales-leads@company.internal", "sarah.c@company.internal"],
-        subject="Monthly sales summary — October 2026",
-        attachment=report_pdf
-    )
-    
-    # Step 5: Execute and anchor cryptographic evidence
-    receipt: EvidenceReceipt = client.execute(lease)
-    print(f"Committed: receipt_id={receipt.id}, pgl_proof={receipt.proof_hash}")
-    return receipt
-
-if __name__ == "__main__":
-    execute_monthly_sales_summary()
-`;
-
-  function handleCopyPython() {
-    navigator.clipboard.writeText(pythonScript);
+  function copyPython() {
+    if (!python) return;
+    void navigator.clipboard.writeText(python);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handleDownloadPython() {
-    const blob = new Blob([pythonScript], { type: "text/x-python" });
+  function downloadPython() {
+    if (!python) return;
+    const blob = new Blob([python], { type: "text/x-python" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `veklom_task_${state.plan?.planId || "sales_summary"}.py`;
+    link.download = `veklom_${state.plan?.planId ?? "contract"}.py`;
     link.click();
     URL.revokeObjectURL(url);
   }
 
-  const triggerPython = onOpenPython ?? (() => setShowInternalPythonModal(true));
-
   return (
     <>
-      <div className="active-task-card rounded-2xl border border-slate-800/80 bg-[#091122]/90 backdrop-blur-md p-6 space-y-6 shadow-xl relative overflow-hidden text-slate-100">
-        {/* Subtle Background Grid Texture */}
-        <div className="pointer-events-none absolute inset-0 bg-cos-grid bg-[size:32px_32px] opacity-15" />
+      <div className="active-task-card relative space-y-6 overflow-hidden rounded-2xl border border-slate-800/80 bg-[#091122]/90 p-6 text-slate-100 shadow-xl backdrop-blur-md">
+        <div className="pointer-events-none absolute inset-0 bg-cos-grid opacity-15 [background-size:32px_32px]" />
 
-        {/* 1. Header Row */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <FileText size={18} className="text-slate-300" />
-            <h2 className="text-base font-semibold text-white tracking-tight">{taskTitle}</h2>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <FileText size={18} className="shrink-0 text-slate-300" />
+            <h2 className="truncate text-base font-semibold tracking-tight text-white" title={state.intent}>{title}</h2>
           </div>
-          {statusBadge}
-        </div>
-
-        {/* 2. Generated Document Preview Sub-Card */}
-        <div className="relative z-10 rounded-xl border border-slate-800/80 bg-[#0d1627]/70 p-3.5 flex items-center justify-between max-w-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-rose-400">
-              <FileText size={18} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-white font-mono">sales-summary.pdf</span>
-                <button
-                  type="button"
-                  onClick={() => setShowReportModal(true)}
-                  className="text-[11px] text-cyan-400 hover:underline flex items-center gap-0.5 font-medium"
-                >
-                  Preview report <ArrowUpRight size="11" />
-                </button>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                {isDone ? "Report archived · Evidence verified" : "Draft available · Email not sent"}
-              </p>
-            </div>
+          <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${TONE_CLASS[status.tone]}`}>
+            <Icon size={13} className={status.tone === "busy" ? "animate-spin" : undefined} />
+            <span>{status.label}</span>
           </div>
         </div>
 
-        {/* 3. Horizontal Execution DAG */}
         <div className="relative z-10">
-          <HorizontalExecutionDAG state={state} onOpenPython={triggerPython} />
+          <HorizontalExecutionDAG state={state} onOpenPython={python ? () => setShowPython(true) : undefined} />
         </div>
 
-        {/* 4. Exact Action Approval Card */}
         {state.plan ? (
           <div className="relative z-10">
-            <ActionApprovalCard
-              state={state}
-              workspace={workspace}
-              busy={busy}
-              onBind={onBind}
-              onApprove={onApprove}
-              onCancel={onCancel}
-            />
+            <ActionApprovalCard state={state} workspace={workspace} busy={busy} onBind={onBind} onApprove={onApprove} onCancel={onCancel} />
           </div>
         ) : null}
 
-        {/* 5. Task Card Footer Status Bar */}
-        <div className="relative z-10 pt-2 border-t border-slate-800/60 flex flex-wrap items-center gap-2 font-mono text-xs text-slate-400">
+        <div className="relative z-10 flex flex-wrap items-center gap-2 border-t border-slate-800/60 pt-2 font-mono text-xs text-slate-400">
           <Clock3 size={13} className="text-slate-400" />
-          {footerBreadcrumbs}
+          <Crumb label="Compiled" on={Boolean(state.plan)} />
+          <span className="text-slate-600">→</span>
+          <Crumb label="Approved" on={Boolean(state.approval) || granted} tone="text-amber-400" />
+          <span className="text-slate-600">→</span>
+          <Crumb label="Granted" on={granted} tone="text-cyan-400" />
+          <span className="text-slate-600">→</span>
+          <Crumb label="Executed once" on={executed} tone="text-cyan-400" />
+          <span className="text-slate-600">→</span>
+          <Crumb label={state.readback?.proof === "Verified" ? "Readback verified" : readBack ? `Readback: ${state.readback?.proof}` : "Read back"} on={readBack} tone={state.readback?.proof === "Verified" ? "text-emerald-400" : "text-amber-400"} />
         </div>
       </div>
 
-      {/* Report Preview Modal */}
-      {showReportModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-[#0d1627] p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-semibold text-white">Generated Document Preview</h4>
-              <button
-                type="button"
-                onClick={() => setShowReportModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-3 font-mono text-xs">
-              <div className="text-cyan-400 font-semibold">[DOCUMENT: sales-summary.pdf]</div>
-              <div className="text-slate-400">Digest: 8e4b7c12f019a3d4...</div>
-              <div className="border-t border-slate-800 pt-3 text-slate-200 font-sans text-xs leading-5">
-                <strong>Executive Summary:</strong><br />
-                October 2026 sales performance across enterprise and community voucher rails.<br /><br />
-                • Total Gross Volume: $142,500 CAD<br />
-                • Velocity Multiplier: 26.4x<br />
-                • Active Hardship Reserve Sweeps: $2,137.50 CAD<br />
-                • Cryptographic Receipt Anchors: 100% verified (PGL GnomLedger)
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowReportModal(false)}
-              className="w-full rounded-lg bg-cyan-500 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400"
-            >
-              Close Preview
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Python Contract Script Modal */}
-      {showInternalPythonModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-cyan-500/40 bg-[#091122] p-6 space-y-4 shadow-[0_0_50px_rgba(6,182,212,0.25)]">
+      {showPython && python ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
+          <div className="w-full max-w-2xl space-y-4 rounded-2xl border border-cyan-500/40 bg-[#091122] p-6 shadow-[0_0_50px_rgba(6,182,212,0.25)]">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400 border border-cyan-500/30">
-                  <Code2 size={18} />
-                </div>
+                <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-2 text-cyan-400"><Code2 size={18} /></div>
                 <div>
-                  <h4 className="text-base font-semibold text-white">Compiled Python Contract</h4>
-                  <p className="text-xs text-slate-400 font-mono">
-                    ABIDE Bytecode · Law 0 Consequence Guardrail Active
-                  </p>
+                  <h4 className="text-base font-semibold text-white">Governed Python from ABIDE</h4>
+                  <p className="font-mono text-xs text-slate-400">Returned with contract {state.plan?.planId}. It can only act under a single-use permit; this code grants nothing.</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyPython}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-mono text-slate-200 hover:bg-slate-700 transition"
-                >
-                  {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                  <span>{copied ? "Copied!" : "Copy"}</span>
+                <button type="button" onClick={copyPython} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 font-mono text-xs text-slate-200 hover:bg-slate-700">
+                  {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}<span>{copied ? "Copied" : "Copy"}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={handleDownloadPython}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-mono text-slate-200 hover:bg-slate-700 transition"
-                >
-                  <Download size={13} />
-                  <span>Download .py</span>
+                <button type="button" onClick={downloadPython} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 font-mono text-xs text-slate-200 hover:bg-slate-700">
+                  <Download size={13} /><span>Download .py</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowInternalPythonModal(false)}
-                  className="text-slate-400 hover:text-white p-1"
-                >
-                  <X size={18} />
-                </button>
+                <button type="button" onClick={() => setShowPython(false)} className="p-1 text-slate-400 hover:text-white" aria-label="Close"><X size={18} /></button>
               </div>
             </div>
-
-            <div className="rounded-xl border border-slate-800 bg-[#050914] p-4 font-mono text-xs text-slate-300 overflow-x-auto max-h-96 leading-relaxed">
-              <pre>{pythonScript}</pre>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
-              <span>Status: Ready for execution approval</span>
-              <button
-                type="button"
-                onClick={() => setShowInternalPythonModal(false)}
-                className="text-cyan-400 hover:underline"
-              >
-                Return to Workspace
-              </button>
-            </div>
+            <pre className="max-h-96 overflow-auto rounded-xl border border-slate-800 bg-[#050914] p-4 font-mono text-xs leading-relaxed text-slate-300">{python}</pre>
           </div>
         </div>
       ) : null}
